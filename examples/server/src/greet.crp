@@ -1,0 +1,3 @@
+-- server greet module
+
+pub greet() = "welcome to crisp server"

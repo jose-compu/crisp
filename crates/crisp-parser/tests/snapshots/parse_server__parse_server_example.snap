@@ -4,182 +4,75 @@ expression: file
 ---
 SourceFile {
     items: [
-        TypeDef(
-            TypeDef {
+        Use(
+            UseDecl {
                 is_pub: false,
-                name: Ident {
-                    name: "Config",
-                    span: Span {
-                        start: 60,
-                        end: 66,
+                path: [
+                    Ident {
+                        name: "config",
+                        span: Span {
+                            start: 46,
+                            end: 52,
+                        },
                     },
-                },
-                generics: [],
-                body: Struct(
+                ],
+                imports: Some(
                     [
-                        FieldDef {
+                        UseImport {
                             name: Ident {
-                                name: "host",
+                                name: "Config",
                                 span: Span {
-                                    start: 75,
-                                    end: 79,
+                                    start: 55,
+                                    end: 61,
                                 },
                             },
-                            ty: Type {
-                                kind: Named(
-                                    Ident {
-                                        name: "str",
-                                        span: Span {
-                                            start: 81,
-                                            end: 84,
-                                        },
-                                    },
-                                ),
-                                span: Span {
-                                    start: 81,
-                                    end: 84,
-                                },
-                            },
-                            default: Some(
-                                Expr {
-                                    kind: Str(
-                                        StringParts(
-                                            [
-                                                Lit(
-                                                    "localhost",
-                                                ),
-                                            ],
-                                        ),
-                                    ),
-                                    span: Span {
-                                        start: 88,
-                                        end: 99,
-                                    },
-                                },
-                            ),
+                            alias: None,
                             span: Span {
-                                start: 75,
-                                end: 99,
-                            },
-                        },
-                        FieldDef {
-                            name: Ident {
-                                name: "port",
-                                span: Span {
-                                    start: 104,
-                                    end: 108,
-                                },
-                            },
-                            ty: Type {
-                                kind: Named(
-                                    Ident {
-                                        name: "uint",
-                                        span: Span {
-                                            start: 110,
-                                            end: 114,
-                                        },
-                                    },
-                                ),
-                                span: Span {
-                                    start: 110,
-                                    end: 114,
-                                },
-                            },
-                            default: Some(
-                                Expr {
-                                    kind: Int(
-                                        8080,
-                                    ),
-                                    span: Span {
-                                        start: 117,
-                                        end: 121,
-                                    },
-                                },
-                            ),
-                            span: Span {
-                                start: 104,
-                                end: 121,
-                            },
-                        },
-                        FieldDef {
-                            name: Ident {
-                                name: "max_connections",
-                                span: Span {
-                                    start: 126,
-                                    end: 141,
-                                },
-                            },
-                            ty: Type {
-                                kind: Named(
-                                    Ident {
-                                        name: "uint",
-                                        span: Span {
-                                            start: 143,
-                                            end: 147,
-                                        },
-                                    },
-                                ),
-                                span: Span {
-                                    start: 143,
-                                    end: 147,
-                                },
-                            },
-                            default: Some(
-                                Expr {
-                                    kind: Int(
-                                        100,
-                                    ),
-                                    span: Span {
-                                        start: 150,
-                                        end: 153,
-                                    },
-                                },
-                            ),
-                            span: Span {
-                                start: 126,
-                                end: 153,
+                                start: 55,
+                                end: 61,
                             },
                         },
                     ],
                 ),
                 span: Span {
-                    start: 55,
-                    end: 155,
+                    start: 42,
+                    end: 63,
                 },
             },
         ),
-        Function(
-            FunctionDef {
+        Use(
+            UseDecl {
                 is_pub: false,
-                name: Ident {
-                    name: "greet",
-                    span: Span {
-                        start: 157,
-                        end: 162,
+                path: [
+                    Ident {
+                        name: "greet",
+                        span: Span {
+                            start: 68,
+                            end: 73,
+                        },
                     },
-                },
-                generics: [],
-                params: [],
-                ret_type: None,
-                error_type: None,
-                body: Expr {
-                    kind: Str(
-                        StringParts(
-                            [
-                                Lit(
-                                    "welcome to crisp server",
-                                ),
-                            ],
-                        ),
-                    ),
-                    span: Span {
-                        start: 167,
-                        end: 192,
-                    },
-                },
+                ],
+                imports: Some(
+                    [
+                        UseImport {
+                            name: Ident {
+                                name: "greet",
+                                span: Span {
+                                    start: 76,
+                                    end: 81,
+                                },
+                            },
+                            alias: None,
+                            span: Span {
+                                start: 76,
+                                end: 81,
+                            },
+                        },
+                    ],
+                ),
                 span: Span {
-                    start: 157,
-                    end: 192,
+                    start: 64,
+                    end: 83,
                 },
             },
         ),
@@ -189,8 +82,8 @@ SourceFile {
                 name: Ident {
                     name: "main",
                     span: Span {
-                        start: 198,
-                        end: 202,
+                        start: 89,
+                        end: 93,
                     },
                 },
                 generics: [],
@@ -205,16 +98,16 @@ SourceFile {
                                     pat: Pat {
                                         kind: Ident(
                                             Ident {
-                                                name: "config",
+                                                name: "cfg",
                                                 span: Span {
-                                                    start: 213,
-                                                    end: 219,
+                                                    start: 104,
+                                                    end: 107,
                                                 },
                                             },
                                         ),
                                         span: Span {
-                                            start: 213,
-                                            end: 219,
+                                            start: 104,
+                                            end: 107,
                                         },
                                     },
                                     mutable: false,
@@ -223,8 +116,8 @@ SourceFile {
                                             name: Ident {
                                                 name: "Config",
                                                 span: Span {
-                                                    start: 223,
-                                                    end: 229,
+                                                    start: 111,
+                                                    end: 117,
                                                 },
                                             },
                                             fields: [
@@ -232,8 +125,8 @@ SourceFile {
                                                     name: Ident {
                                                         name: "port",
                                                         span: Span {
-                                                            start: 232,
-                                                            end: 236,
+                                                            start: 120,
+                                                            end: 124,
                                                         },
                                                     },
                                                     value: Expr {
@@ -241,20 +134,20 @@ SourceFile {
                                                             3000,
                                                         ),
                                                         span: Span {
-                                                            start: 238,
-                                                            end: 242,
+                                                            start: 126,
+                                                            end: 130,
                                                         },
                                                     },
                                                     span: Span {
-                                                        start: 232,
-                                                        end: 242,
+                                                        start: 120,
+                                                        end: 130,
                                                     },
                                                 },
                                             ],
                                         },
                                         span: Span {
-                                            start: 223,
-                                            end: 244,
+                                            start: 111,
+                                            end: 132,
                                         },
                                     },
                                 },
@@ -266,14 +159,14 @@ SourceFile {
                                                     Ident {
                                                         name: "log",
                                                         span: Span {
-                                                            start: 249,
-                                                            end: 252,
+                                                            start: 137,
+                                                            end: 140,
                                                         },
                                                     },
                                                 ),
                                                 span: Span {
-                                                    start: 249,
-                                                    end: 252,
+                                                    start: 137,
+                                                    end: 140,
                                                 },
                                             },
                                             args: [
@@ -290,29 +183,29 @@ SourceFile {
                                                                             base: Expr {
                                                                                 kind: Ident(
                                                                                     Ident {
-                                                                                        name: "config",
+                                                                                        name: "cfg",
                                                                                         span: Span {
                                                                                             start: 0,
-                                                                                            end: 6,
+                                                                                            end: 3,
                                                                                         },
                                                                                     },
                                                                                 ),
                                                                                 span: Span {
                                                                                     start: 0,
-                                                                                    end: 6,
+                                                                                    end: 3,
                                                                                 },
                                                                             },
                                                                             field: Ident {
                                                                                 name: "host",
                                                                                 span: Span {
-                                                                                    start: 7,
-                                                                                    end: 11,
+                                                                                    start: 4,
+                                                                                    end: 8,
                                                                                 },
                                                                             },
                                                                         },
                                                                         span: Span {
                                                                             start: 0,
-                                                                            end: 11,
+                                                                            end: 8,
                                                                         },
                                                                     },
                                                                 ),
@@ -325,29 +218,29 @@ SourceFile {
                                                                             base: Expr {
                                                                                 kind: Ident(
                                                                                     Ident {
-                                                                                        name: "config",
+                                                                                        name: "cfg",
                                                                                         span: Span {
                                                                                             start: 0,
-                                                                                            end: 6,
+                                                                                            end: 3,
                                                                                         },
                                                                                     },
                                                                                 ),
                                                                                 span: Span {
                                                                                     start: 0,
-                                                                                    end: 6,
+                                                                                    end: 3,
                                                                                 },
                                                                             },
                                                                             field: Ident {
                                                                                 name: "port",
                                                                                 span: Span {
-                                                                                    start: 7,
-                                                                                    end: 11,
+                                                                                    start: 4,
+                                                                                    end: 8,
                                                                                 },
                                                                             },
                                                                         },
                                                                         span: Span {
                                                                             start: 0,
-                                                                            end: 11,
+                                                                            end: 8,
                                                                         },
                                                                     },
                                                                 ),
@@ -355,15 +248,15 @@ SourceFile {
                                                         ),
                                                     ),
                                                     span: Span {
-                                                        start: 253,
-                                                        end: 295,
+                                                        start: 141,
+                                                        end: 177,
                                                     },
                                                 },
                                             ],
                                         },
                                         span: Span {
-                                            start: 249,
-                                            end: 296,
+                                            start: 137,
+                                            end: 178,
                                         },
                                     },
                                 ),
@@ -376,14 +269,14 @@ SourceFile {
                                                 Ident {
                                                     name: "log",
                                                     span: Span {
-                                                        start: 301,
-                                                        end: 304,
+                                                        start: 183,
+                                                        end: 186,
                                                     },
                                                 },
                                             ),
                                             span: Span {
-                                                start: 301,
-                                                end: 304,
+                                                start: 183,
+                                                end: 186,
                                             },
                                         },
                                         args: [
@@ -394,51 +287,51 @@ SourceFile {
                                                             Ident {
                                                                 name: "greet",
                                                                 span: Span {
-                                                                    start: 305,
-                                                                    end: 310,
+                                                                    start: 187,
+                                                                    end: 192,
                                                                 },
                                                             },
                                                         ),
                                                         span: Span {
-                                                            start: 305,
-                                                            end: 310,
+                                                            start: 187,
+                                                            end: 192,
                                                         },
                                                     },
                                                     args: [],
                                                 },
                                                 span: Span {
-                                                    start: 305,
-                                                    end: 312,
+                                                    start: 187,
+                                                    end: 194,
                                                 },
                                             },
                                         ],
                                     },
                                     span: Span {
-                                        start: 301,
-                                        end: 313,
+                                        start: 183,
+                                        end: 195,
                                     },
                                 },
                             ),
                             span: Span {
-                                start: 207,
-                                end: 315,
+                                start: 98,
+                                end: 197,
                             },
                         },
                     ),
                     span: Span {
-                        start: 207,
-                        end: 315,
+                        start: 98,
+                        end: 197,
                     },
                 },
                 span: Span {
-                    start: 198,
-                    end: 315,
+                    start: 89,
+                    end: 197,
                 },
             },
         ),
     ],
     span: Span {
-        start: 55,
-        end: 315,
+        start: 42,
+        end: 197,
     },
 }

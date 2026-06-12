@@ -1,0 +1,7 @@
+-- server config module
+
+pub type Config = {
+    host: str  = "localhost"
+    port: uint = 8080
+    max_connections: uint = 100
+}

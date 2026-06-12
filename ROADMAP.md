@@ -60,18 +60,18 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** parse `examples/hello/src/main.crp` to AST; snapshot tests.
 
-### Milestone 0.3 — Name resolution & modules *(current)*
+### Milestone 0.3 — Name resolution & modules *(done — v0.3.0)*
 
 **Resolver** (§12)
 
-- [ ] File-based module tree (no `mod` in source)
-- [ ] `use` / `pub use` / `as` imports
-- [ ] Prelude injection (`std/prelude.crp`)
-- [ ] Symbol tables, visibility (`pub` / private)
+- [x] File-based module tree (no `mod` in source)
+- [x] `use` / `pub use` / `as` imports
+- [x] Prelude injection (`std/prelude.crp`)
+- [x] Symbol tables, visibility (`pub` / private)
 
 **Deliverable:** multi-file `examples/server` resolves without errors.
 
-### Milestone 0.4 — Type inference
+### Milestone 0.4 — Type inference *(current)*
 
 **Typeck** (§3)
 
@@ -296,4 +296,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.2.0 front end shipped; milestone 0.3 in progress.*
+*Last updated: 2026-06-12 — v0.3.0 name resolution shipped; milestone 0.4 in progress.*

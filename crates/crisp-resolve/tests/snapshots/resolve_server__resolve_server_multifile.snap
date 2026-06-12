@@ -1,0 +1,410 @@
+---
+source: crates/crisp-resolve/tests/resolve_server.rs
+expression: resolved
+---
+ResolvedCrate {
+    crate_root: ".",
+    modules: [
+        ResolvedModule {
+            module_path: "config",
+            file: "./src/config.crp",
+            imports: [
+                ResolvedBinding {
+                    local_name: "int",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "uint",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "uint",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "float",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "float",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "bool",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "bool",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "char",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "char",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "str",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "str",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Never",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Never",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "vec",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "map",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "map",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "set",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "set",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "log",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "log",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "print",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "print",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "some",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "some",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "none",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "none",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Config",
+                    symbol: SymbolKey {
+                        module: "config",
+                        name: "Config",
+                    },
+                },
+            ],
+            scope: [
+                "int",
+                "uint",
+                "float",
+                "bool",
+                "char",
+                "str",
+                "Never",
+                "vec",
+                "map",
+                "set",
+                "log",
+                "print",
+                "some",
+                "none",
+                "Config",
+            ],
+        },
+        ResolvedModule {
+            module_path: "greet",
+            file: "./src/greet.crp",
+            imports: [
+                ResolvedBinding {
+                    local_name: "int",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "uint",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "uint",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "float",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "float",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "bool",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "bool",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "char",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "char",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "str",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "str",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Never",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Never",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "vec",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "map",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "map",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "set",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "set",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "log",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "log",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "print",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "print",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "some",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "some",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "none",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "none",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "greet",
+                    symbol: SymbolKey {
+                        module: "greet",
+                        name: "greet",
+                    },
+                },
+            ],
+            scope: [
+                "int",
+                "uint",
+                "float",
+                "bool",
+                "char",
+                "str",
+                "Never",
+                "vec",
+                "map",
+                "set",
+                "log",
+                "print",
+                "some",
+                "none",
+                "greet",
+            ],
+        },
+        ResolvedModule {
+            module_path: "main",
+            file: "./src/main.crp",
+            imports: [
+                ResolvedBinding {
+                    local_name: "int",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "uint",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "uint",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "float",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "float",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "bool",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "bool",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "char",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "char",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "str",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "str",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Never",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Never",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "vec",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "map",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "map",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "set",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "set",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "log",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "log",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "print",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "print",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "some",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "some",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "none",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "none",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "main",
+                    symbol: SymbolKey {
+                        module: "main",
+                        name: "main",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Config",
+                    symbol: SymbolKey {
+                        module: "config",
+                        name: "Config",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "greet",
+                    symbol: SymbolKey {
+                        module: "greet",
+                        name: "greet",
+                    },
+                },
+            ],
+            scope: [
+                "int",
+                "uint",
+                "float",
+                "bool",
+                "char",
+                "str",
+                "Never",
+                "vec",
+                "map",
+                "set",
+                "log",
+                "print",
+                "some",
+                "none",
+                "main",
+                "Config",
+                "greet",
+            ],
+        },
+    ],
+    symbol_count: 17,
+}

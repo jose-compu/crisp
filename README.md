@@ -7,14 +7,15 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.2.0** — lexer + parser (milestone 0.2). Bootstrap compiler in Rust (v1); self-hosted Crisp (v2) planned.
+**v0.3.0** — name resolution + modules (milestone 0.3). Bootstrap compiler in Rust (v1); self-hosted Crisp (v2) planned.
 
 ## Quick start
 
 ```bash
 cargo build --release
-./target/release/crispc parse examples/hello/src/main.crp
-cargo test -p crisp-parser -- --nocapture
+./target/release/crispc resolve examples/server
+./target/release/crispc check examples/server
+cargo test -p crisp-resolve -- --nocapture
 ```
 
 ## Repository layout

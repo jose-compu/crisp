@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use crisp_parser::Parser as CrispParser;
+use crisp_resolve::{Resolver, find_crate_root};
 use std::fs;
 use std::path::PathBuf;
 
@@ -18,6 +19,11 @@ struct Cli {
 enum Commands {
     /// Parse .crp source and print AST (debug)
     Parse { file: PathBuf },
+    /// Resolve modules, imports, and names for a crate
+    Resolve {
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
     /// Analyze, emit Rust, invoke rustc
     Build {
         #[arg(default_value = ".")]
@@ -57,6 +63,12 @@ fn main() -> anyhow::Result<()> {
             println!("{module:#?}");
             Ok(())
         }
+        Commands::Resolve { path } => {
+            let root = find_crate_root(&path).unwrap_or(path);
+            let resolved = Resolver::resolve_crate(&root)?;
+            println!("{resolved:#?}");
+            Ok(())
+        }
         Commands::Build { path } => {
             eprintln!("crispc build: not yet implemented (path: {path})");
             std::process::exit(1);
@@ -70,8 +82,11 @@ fn main() -> anyhow::Result<()> {
             std::process::exit(1);
         }
         Commands::Check { path } => {
-            eprintln!("crispc check: not yet implemented (path: {path})");
-            std::process::exit(1);
+            let root = find_crate_root(PathBuf::from(&path).as_path())
+                .unwrap_or_else(|| PathBuf::from(&path));
+            Resolver::resolve_crate(&root)?;
+            eprintln!("crispc check: name resolution ok ({})", root.display());
+            Ok(())
         }
         Commands::Emit { path } => {
             eprintln!("crispc emit: not yet implemented (path: {path})");

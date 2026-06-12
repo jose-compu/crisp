@@ -33,34 +33,34 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 ## Phase 1 — Bootstrap compiler (Rust)
 
-### Milestone 0.1 — Scaffold *(current)*
+### Milestone 0.1 — Scaffold *(done — v0.1.0)*
 
 - [x] Cargo workspace aligned to pipeline crates
 - [x] `crispc` / `reveal` CLI stubs
 - [x] Spec in `docs/spec/`
 - [x] Example `.crp` projects
-- [ ] `cargo build` green across workspace
-- [ ] CI: `cargo test`, `cargo clippy`, `cargo fmt`
+- [x] `cargo build` green across workspace
+- [x] CI: `cargo test`, `cargo clippy`, `cargo fmt`
 
-### Milestone 0.2 — Front end
+### Milestone 0.2 — Front end *(done — v0.2.0)*
 
 **Lexer** (§2)
 
-- [ ] UTF-8, comments (`--`, `{- -}`)
-- [ ] Keywords, identifiers, raw-escape map for Rust keywords
-- [ ] Operators: `&&&`, `|||`, `^^^`, `:=`, `mut:=`, `|>`, postfix `?`
-- [ ] Literals: int, float, string interpolation, raw/multi-line strings, char
+- [x] UTF-8, comments (`--`, `{- -}`)
+- [x] Keywords, identifiers, raw-escape map for Rust keywords
+- [x] Operators: `&&&`, `|||`, `^^^`, `:=`, `mut:=`, `|>`, postfix `?`
+- [x] Literals: int, float, string interpolation, raw/multi-line strings, char
 
 **Parser** (Appendix A)
 
-- [ ] Expression-based AST with brace blocks
-- [ ] Items: fn, type, trait, shape, impl, test, test_compile_fail
-- [ ] Control flow: if/match/for/while/loop, async/await
-- [ ] Diagnostic spans on every AST node
+- [x] Expression-based AST with brace blocks
+- [x] Items: fn, type, trait, shape, impl, test, test_compile_fail
+- [x] Control flow: if/match/for/while/loop, async/await
+- [x] Diagnostic spans on every AST node
 
 **Deliverable:** parse `examples/hello/src/main.crp` to AST; snapshot tests.
 
-### Milestone 0.3 — Name resolution & modules
+### Milestone 0.3 — Name resolution & modules *(current)*
 
 **Resolver** (§12)
 
@@ -296,4 +296,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — aligned to CrispLang-SPECS-0.2.0-draft.*
+*Last updated: 2026-06-12 — v0.2.0 front end shipped; milestone 0.3 in progress.*

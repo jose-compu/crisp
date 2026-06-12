@@ -1,0 +1,444 @@
+---
+source: crates/crisp-parser/tests/parse_server.rs
+expression: file
+---
+SourceFile {
+    items: [
+        TypeDef(
+            TypeDef {
+                is_pub: false,
+                name: Ident {
+                    name: "Config",
+                    span: Span {
+                        start: 60,
+                        end: 66,
+                    },
+                },
+                generics: [],
+                body: Struct(
+                    [
+                        FieldDef {
+                            name: Ident {
+                                name: "host",
+                                span: Span {
+                                    start: 75,
+                                    end: 79,
+                                },
+                            },
+                            ty: Type {
+                                kind: Named(
+                                    Ident {
+                                        name: "str",
+                                        span: Span {
+                                            start: 81,
+                                            end: 84,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 81,
+                                    end: 84,
+                                },
+                            },
+                            default: Some(
+                                Expr {
+                                    kind: Str(
+                                        StringParts(
+                                            [
+                                                Lit(
+                                                    "localhost",
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                    span: Span {
+                                        start: 88,
+                                        end: 99,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 75,
+                                end: 99,
+                            },
+                        },
+                        FieldDef {
+                            name: Ident {
+                                name: "port",
+                                span: Span {
+                                    start: 104,
+                                    end: 108,
+                                },
+                            },
+                            ty: Type {
+                                kind: Named(
+                                    Ident {
+                                        name: "uint",
+                                        span: Span {
+                                            start: 110,
+                                            end: 114,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 110,
+                                    end: 114,
+                                },
+                            },
+                            default: Some(
+                                Expr {
+                                    kind: Int(
+                                        8080,
+                                    ),
+                                    span: Span {
+                                        start: 117,
+                                        end: 121,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 104,
+                                end: 121,
+                            },
+                        },
+                        FieldDef {
+                            name: Ident {
+                                name: "max_connections",
+                                span: Span {
+                                    start: 126,
+                                    end: 141,
+                                },
+                            },
+                            ty: Type {
+                                kind: Named(
+                                    Ident {
+                                        name: "uint",
+                                        span: Span {
+                                            start: 143,
+                                            end: 147,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 143,
+                                    end: 147,
+                                },
+                            },
+                            default: Some(
+                                Expr {
+                                    kind: Int(
+                                        100,
+                                    ),
+                                    span: Span {
+                                        start: 150,
+                                        end: 153,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 126,
+                                end: 153,
+                            },
+                        },
+                    ],
+                ),
+                span: Span {
+                    start: 55,
+                    end: 155,
+                },
+            },
+        ),
+        Function(
+            FunctionDef {
+                is_pub: false,
+                name: Ident {
+                    name: "greet",
+                    span: Span {
+                        start: 157,
+                        end: 162,
+                    },
+                },
+                generics: [],
+                params: [],
+                ret_type: None,
+                error_type: None,
+                body: Expr {
+                    kind: Str(
+                        StringParts(
+                            [
+                                Lit(
+                                    "welcome to crisp server",
+                                ),
+                            ],
+                        ),
+                    ),
+                    span: Span {
+                        start: 167,
+                        end: 192,
+                    },
+                },
+                span: Span {
+                    start: 157,
+                    end: 192,
+                },
+            },
+        ),
+        Function(
+            FunctionDef {
+                is_pub: true,
+                name: Ident {
+                    name: "main",
+                    span: Span {
+                        start: 198,
+                        end: 202,
+                    },
+                },
+                generics: [],
+                params: [],
+                ret_type: None,
+                error_type: None,
+                body: Expr {
+                    kind: Block(
+                        Block {
+                            stmts: [
+                                Bind {
+                                    pat: Pat {
+                                        kind: Ident(
+                                            Ident {
+                                                name: "config",
+                                                span: Span {
+                                                    start: 213,
+                                                    end: 219,
+                                                },
+                                            },
+                                        ),
+                                        span: Span {
+                                            start: 213,
+                                            end: 219,
+                                        },
+                                    },
+                                    mutable: false,
+                                    value: Expr {
+                                        kind: StructLit {
+                                            name: Ident {
+                                                name: "Config",
+                                                span: Span {
+                                                    start: 223,
+                                                    end: 229,
+                                                },
+                                            },
+                                            fields: [
+                                                FieldInit {
+                                                    name: Ident {
+                                                        name: "port",
+                                                        span: Span {
+                                                            start: 232,
+                                                            end: 236,
+                                                        },
+                                                    },
+                                                    value: Expr {
+                                                        kind: Int(
+                                                            3000,
+                                                        ),
+                                                        span: Span {
+                                                            start: 238,
+                                                            end: 242,
+                                                        },
+                                                    },
+                                                    span: Span {
+                                                        start: 232,
+                                                        end: 242,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        span: Span {
+                                            start: 223,
+                                            end: 244,
+                                        },
+                                    },
+                                },
+                                Expr(
+                                    Expr {
+                                        kind: Call {
+                                            func: Expr {
+                                                kind: Ident(
+                                                    Ident {
+                                                        name: "log",
+                                                        span: Span {
+                                                            start: 249,
+                                                            end: 252,
+                                                        },
+                                                    },
+                                                ),
+                                                span: Span {
+                                                    start: 249,
+                                                    end: 252,
+                                                },
+                                            },
+                                            args: [
+                                                Expr {
+                                                    kind: Str(
+                                                        StringParts(
+                                                            [
+                                                                Lit(
+                                                                    "listening on ",
+                                                                ),
+                                                                Expr(
+                                                                    Expr {
+                                                                        kind: Field {
+                                                                            base: Expr {
+                                                                                kind: Ident(
+                                                                                    Ident {
+                                                                                        name: "config",
+                                                                                        span: Span {
+                                                                                            start: 0,
+                                                                                            end: 6,
+                                                                                        },
+                                                                                    },
+                                                                                ),
+                                                                                span: Span {
+                                                                                    start: 0,
+                                                                                    end: 6,
+                                                                                },
+                                                                            },
+                                                                            field: Ident {
+                                                                                name: "host",
+                                                                                span: Span {
+                                                                                    start: 7,
+                                                                                    end: 11,
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        span: Span {
+                                                                            start: 0,
+                                                                            end: 11,
+                                                                        },
+                                                                    },
+                                                                ),
+                                                                Lit(
+                                                                    ":",
+                                                                ),
+                                                                Expr(
+                                                                    Expr {
+                                                                        kind: Field {
+                                                                            base: Expr {
+                                                                                kind: Ident(
+                                                                                    Ident {
+                                                                                        name: "config",
+                                                                                        span: Span {
+                                                                                            start: 0,
+                                                                                            end: 6,
+                                                                                        },
+                                                                                    },
+                                                                                ),
+                                                                                span: Span {
+                                                                                    start: 0,
+                                                                                    end: 6,
+                                                                                },
+                                                                            },
+                                                                            field: Ident {
+                                                                                name: "port",
+                                                                                span: Span {
+                                                                                    start: 7,
+                                                                                    end: 11,
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        span: Span {
+                                                                            start: 0,
+                                                                            end: 11,
+                                                                        },
+                                                                    },
+                                                                ),
+                                                            ],
+                                                        ),
+                                                    ),
+                                                    span: Span {
+                                                        start: 253,
+                                                        end: 295,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        span: Span {
+                                            start: 249,
+                                            end: 296,
+                                        },
+                                    },
+                                ),
+                            ],
+                            tail: Some(
+                                Expr {
+                                    kind: Call {
+                                        func: Expr {
+                                            kind: Ident(
+                                                Ident {
+                                                    name: "log",
+                                                    span: Span {
+                                                        start: 301,
+                                                        end: 304,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 301,
+                                                end: 304,
+                                            },
+                                        },
+                                        args: [
+                                            Expr {
+                                                kind: Call {
+                                                    func: Expr {
+                                                        kind: Ident(
+                                                            Ident {
+                                                                name: "greet",
+                                                                span: Span {
+                                                                    start: 305,
+                                                                    end: 310,
+                                                                },
+                                                            },
+                                                        ),
+                                                        span: Span {
+                                                            start: 305,
+                                                            end: 310,
+                                                        },
+                                                    },
+                                                    args: [],
+                                                },
+                                                span: Span {
+                                                    start: 305,
+                                                    end: 312,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    span: Span {
+                                        start: 301,
+                                        end: 313,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 207,
+                                end: 315,
+                            },
+                        },
+                    ),
+                    span: Span {
+                        start: 207,
+                        end: 315,
+                    },
+                },
+                span: Span {
+                    start: 198,
+                    end: 315,
+                },
+            },
+        ),
+    ],
+    span: Span {
+        start: 55,
+        end: 315,
+    },
+}

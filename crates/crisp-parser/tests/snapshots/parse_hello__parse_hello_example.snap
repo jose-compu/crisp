@@ -1,0 +1,224 @@
+---
+source: crates/crisp-parser/tests/parse_hello.rs
+expression: file
+---
+SourceFile {
+    items: [
+        Function(
+            FunctionDef {
+                is_pub: false,
+                name: Ident {
+                    name: "greet",
+                    span: Span {
+                        start: 56,
+                        end: 61,
+                    },
+                },
+                generics: [],
+                params: [
+                    Param {
+                        lifetime: None,
+                        ownership: None,
+                        name: Ident {
+                            name: "name",
+                            span: Span {
+                                start: 62,
+                                end: 66,
+                            },
+                        },
+                        ty: None,
+                        span: Span {
+                            start: 62,
+                            end: 66,
+                        },
+                    },
+                ],
+                ret_type: None,
+                error_type: None,
+                body: Expr {
+                    kind: Binary {
+                        op: Concat,
+                        left: Expr {
+                            kind: Str(
+                                StringParts(
+                                    [
+                                        Lit(
+                                            "hello ",
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            span: Span {
+                                start: 70,
+                                end: 78,
+                            },
+                        },
+                        right: Expr {
+                            kind: Ident(
+                                Ident {
+                                    name: "name",
+                                    span: Span {
+                                        start: 82,
+                                        end: 86,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 82,
+                                end: 86,
+                            },
+                        },
+                    },
+                    span: Span {
+                        start: 70,
+                        end: 86,
+                    },
+                },
+                span: Span {
+                    start: 56,
+                    end: 86,
+                },
+            },
+        ),
+        Function(
+            FunctionDef {
+                is_pub: true,
+                name: Ident {
+                    name: "main",
+                    span: Span {
+                        start: 92,
+                        end: 96,
+                    },
+                },
+                generics: [],
+                params: [],
+                ret_type: None,
+                error_type: None,
+                body: Expr {
+                    kind: Block(
+                        Block {
+                            stmts: [
+                                Bind {
+                                    pat: Pat {
+                                        kind: Ident(
+                                            Ident {
+                                                name: "msg",
+                                                span: Span {
+                                                    start: 107,
+                                                    end: 110,
+                                                },
+                                            },
+                                        ),
+                                        span: Span {
+                                            start: 107,
+                                            end: 110,
+                                        },
+                                    },
+                                    mutable: false,
+                                    value: Expr {
+                                        kind: Call {
+                                            func: Expr {
+                                                kind: Ident(
+                                                    Ident {
+                                                        name: "greet",
+                                                        span: Span {
+                                                            start: 114,
+                                                            end: 119,
+                                                        },
+                                                    },
+                                                ),
+                                                span: Span {
+                                                    start: 114,
+                                                    end: 119,
+                                                },
+                                            },
+                                            args: [
+                                                Expr {
+                                                    kind: Str(
+                                                        StringParts(
+                                                            [
+                                                                Lit(
+                                                                    "crisp",
+                                                                ),
+                                                            ],
+                                                        ),
+                                                    ),
+                                                    span: Span {
+                                                        start: 120,
+                                                        end: 127,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        span: Span {
+                                            start: 114,
+                                            end: 128,
+                                        },
+                                    },
+                                },
+                            ],
+                            tail: Some(
+                                Expr {
+                                    kind: Call {
+                                        func: Expr {
+                                            kind: Ident(
+                                                Ident {
+                                                    name: "print",
+                                                    span: Span {
+                                                        start: 133,
+                                                        end: 138,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 133,
+                                                end: 138,
+                                            },
+                                        },
+                                        args: [
+                                            Expr {
+                                                kind: Ident(
+                                                    Ident {
+                                                        name: "msg",
+                                                        span: Span {
+                                                            start: 139,
+                                                            end: 142,
+                                                        },
+                                                    },
+                                                ),
+                                                span: Span {
+                                                    start: 139,
+                                                    end: 142,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    span: Span {
+                                        start: 133,
+                                        end: 143,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 101,
+                                end: 145,
+                            },
+                        },
+                    ),
+                    span: Span {
+                        start: 101,
+                        end: 145,
+                    },
+                },
+                span: Span {
+                    start: 92,
+                    end: 145,
+                },
+            },
+        ),
+    ],
+    span: Span {
+        start: 56,
+        end: 145,
+    },
+}

@@ -1,7 +1,14 @@
 use clap::{Parser, Subcommand};
+use crisp_parser::Parser as CrispParser;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "crispc", version, about = "Crisp transpiler — .crp to Rust to native")]
+#[command(
+    name = "crispc",
+    version,
+    about = "Crisp transpiler — .crp to Rust to native"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -9,6 +16,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Parse .crp source and print AST (debug)
+    Parse { file: PathBuf },
     /// Analyze, emit Rust, invoke rustc
     Build {
         #[arg(default_value = ".")]
@@ -41,6 +50,13 @@ fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
     match cli.command {
+        Commands::Parse { file } => {
+            let src = fs::read_to_string(&file)?;
+            let mut parser = CrispParser::new(&src)?;
+            let module = parser.parse_file()?;
+            println!("{module:#?}");
+            Ok(())
+        }
         Commands::Build { path } => {
             eprintln!("crispc build: not yet implemented (path: {path})");
             std::process::exit(1);

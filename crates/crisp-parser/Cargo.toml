@@ -9,3 +9,6 @@ license.workspace = true
 crisp-ast.workspace = true
 crisp-lexer.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+insta = "1"

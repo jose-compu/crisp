@@ -1,32 +1,23 @@
 //! Lexical analysis for `.crp` sources (spec §2).
 
-use thiserror::Error;
+mod lexer;
+mod token;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum TokenKind {
-    IntLit(i64),
-    Ident(String),
-    // TODO: keywords, operators (&&&, |||, ^^^), delimiters
-    Eof,
+pub use lexer::{LexError, Lexer};
+pub use token::{Kw, Token, TokenKind};
+
+pub fn lex(source: &str) -> Result<Vec<Token>, LexError> {
+    Lexer::new(source).tokenize()
 }
 
-#[derive(Debug, Clone)]
-pub struct Token {
-    pub kind: TokenKind,
-    pub start: u32,
-    pub end: u32,
-}
+/// Rust keywords that are legal Crisp identifiers (spec §2.3).
+pub const RUST_KEYWORDS: &[&str] = &[
+    "fn", "let", "impl", "move", "dyn", "async", "await", "struct", "enum", "trait", "type",
+    "where", "for", "loop", "match", "if", "else", "return", "break", "continue", "const",
+    "static", "mut", "ref", "self", "Self", "super", "crate", "pub", "use", "mod", "unsafe",
+    "extern", "true", "false", "as", "in", "box", "yield", "try", "macro", "union",
+];
 
-#[derive(Debug, Error)]
-pub enum LexError {
-    #[error("invalid character at byte {0}")]
-    InvalidChar(u32),
-}
-
-pub fn lex(_source: &str) -> Result<Vec<Token>, LexError> {
-    Ok(vec![Token {
-        kind: TokenKind::Eof,
-        start: 0,
-        end: 0,
-    }])
+pub fn is_rust_keyword(name: &str) -> bool {
+    RUST_KEYWORDS.contains(&name)
 }

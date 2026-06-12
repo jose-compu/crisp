@@ -1,0 +1,9 @@
+[package]
+name = "crisp-lsp"
+description = "Language Server Protocol — powered by reveal (spec §16.3)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-reveal.workspace = true

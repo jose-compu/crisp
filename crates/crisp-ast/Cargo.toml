@@ -1,0 +1,9 @@
+[package]
+name = "crisp-ast"
+description = "Crisp abstract syntax tree and source spans"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true

@@ -1,0 +1,9 @@
+[package]
+name = "crisp-errors"
+description = "Fallibility analysis and CrispError enum synthesis (spec §9)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true

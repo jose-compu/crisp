@@ -1,0 +1,11 @@
+[package]
+name = "crisp-rust-emit"
+description = "Pretty-print Rust from CIR; invoke cargo/rustc (spec §17.1)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-cir.workspace = true
+crisp-diagnostics.workspace = true
+anyhow.workspace = true

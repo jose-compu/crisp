@@ -1,0 +1,13 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+
+[dependencies]
+# http = "1.2"
+# json = { version = "0.5", features = ["pretty"] }

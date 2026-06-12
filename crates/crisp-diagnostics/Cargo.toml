@@ -1,0 +1,10 @@
+[package]
+name = "crisp-diagnostics"
+description = "Crisp-level diagnostics and CIR→Crisp span mapping (spec §17.2–17.4)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+thiserror.workspace = true

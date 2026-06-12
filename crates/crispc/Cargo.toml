@@ -1,0 +1,33 @@
+[package]
+name = "crispc"
+description = "Crisp transpiler CLI — source (.crp) to Rust to native binary"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "crispc"
+path = "src/main.rs"
+
+[[bin]]
+name = "reveal"
+path = "src/reveal.rs"
+
+[dependencies]
+clap.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+crisp-lexer.workspace = true
+crisp-parser.workspace = true
+crisp-ast.workspace = true
+crisp-resolve.workspace = true
+crisp-typeck.workspace = true
+crisp-ownership.workspace = true
+crisp-regions.workspace = true
+crisp-errors.workspace = true
+crisp-cir.workspace = true
+crisp-rust-emit.workspace = true
+crisp-diagnostics.workspace = true
+crisp-reveal.workspace = true

@@ -1,0 +1,57 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/crispc",
+    "crates/crisp-lexer",
+    "crates/crisp-parser",
+    "crates/crisp-ast",
+    "crates/crisp-resolve",
+    "crates/crisp-typeck",
+    "crates/crisp-ownership",
+    "crates/crisp-regions",
+    "crates/crisp-errors",
+    "crates/crisp-cir",
+    "crates/crisp-rust-emit",
+    "crates/crisp-diagnostics",
+    "crates/crisp-reveal",
+    "crates/crisp-lsp",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/crisplang/crisp"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Internal crates
+crisp-ast = { path = "crates/crisp-ast" }
+crisp-lexer = { path = "crates/crisp-lexer" }
+crisp-parser = { path = "crates/crisp-parser" }
+crisp-resolve = { path = "crates/crisp-resolve" }
+crisp-typeck = { path = "crates/crisp-typeck" }
+crisp-ownership = { path = "crates/crisp-ownership" }
+crisp-regions = { path = "crates/crisp-regions" }
+crisp-errors = { path = "crates/crisp-errors" }
+crisp-cir = { path = "crates/crisp-cir" }
+crisp-rust-emit = { path = "crates/crisp-rust-emit" }
+crisp-diagnostics = { path = "crates/crisp-diagnostics" }
+crisp-reveal = { path = "crates/crisp-reveal" }
+
+# External
+thiserror = "2"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+lto = true
+codegen-units = 1

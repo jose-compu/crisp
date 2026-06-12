@@ -1,0 +1,10 @@
+[package]
+name = "crisp-typeck"
+description = "HM-style type inference and constraint solving (spec §3.4)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+thiserror.workspace = true

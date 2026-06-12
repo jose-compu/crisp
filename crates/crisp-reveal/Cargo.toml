@@ -1,0 +1,11 @@
+[package]
+name = "crisp-reveal"
+description = "reveal toolchain — surface inferred precision (spec §16)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+crisp-cir.workspace = true
+crisp-ownership.workspace = true

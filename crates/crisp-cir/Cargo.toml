@@ -1,0 +1,10 @@
+[package]
+name = "crisp-cir"
+description = "Typed, ownership-resolved intermediate representation (spec §17.1)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+crisp-ownership.workspace = true

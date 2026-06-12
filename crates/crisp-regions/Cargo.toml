@@ -1,0 +1,10 @@
+[package]
+name = "crisp-regions"
+description = "Lifetime/region assignment (spec §8)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+crisp-ownership.workspace = true

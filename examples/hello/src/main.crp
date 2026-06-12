@@ -1,0 +1,8 @@
+-- examples/hello — minimal Crisp program (spec §5)
+
+greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("crisp")
+    print(msg)
+}

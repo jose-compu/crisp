@@ -1,0 +1,15 @@
+-- spec §20 complete example (trimmed for bootstrap)
+
+type Config = {
+    host: str  = "localhost"
+    port: uint = 8080
+    max_connections: uint = 100
+}
+
+greet() = "welcome to crisp server"
+
+pub main() = {
+    config := Config { port: 3000 }
+    log("listening on {config.host}:{config.port}")
+    log(greet())
+}

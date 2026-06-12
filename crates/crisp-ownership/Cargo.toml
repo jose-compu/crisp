@@ -1,0 +1,10 @@
+[package]
+name = "crisp-ownership"
+description = "Global ownership/borrow inference via dataflow fixpoint (spec §7)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+thiserror.workspace = true

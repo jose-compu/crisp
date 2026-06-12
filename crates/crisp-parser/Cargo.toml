@@ -1,0 +1,11 @@
+[package]
+name = "crisp-parser"
+description = "Crisp parser — tokens to AST (spec Appendix A)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+crisp-ast.workspace = true
+crisp-lexer.workspace = true
+thiserror.workspace = true

@@ -1,0 +1,7 @@
+-- Crisp standard library prelude (spec §15)
+-- Maps onto Rust std + thin Crisp shims.
+
+-- Core types: ?T, Result<T,E>, str, vec, map, set
+-- IO: std.io, std.fs, std.net, std.http
+-- Concurrency: std.async, std.sync, std.atomic
+-- Traits: Show, Eq, Ord, Hash, Clone, Copy, Drop, Default, Into, From, Iterator

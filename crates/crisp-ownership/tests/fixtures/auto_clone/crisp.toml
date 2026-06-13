@@ -1,0 +1,6 @@
+[package]
+name = "auto_clone"
+version = "0.1.0"
+
+[build]
+target = "rust"

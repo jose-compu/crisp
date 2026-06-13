@@ -1,0 +1,7 @@
+forward(msg) = {
+    x := msg
+    print(x)
+    print(msg)
+}
+
+pub main() = forward("hi")

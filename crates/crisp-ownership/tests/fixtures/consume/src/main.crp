@@ -1,0 +1,6 @@
+identity(x) = x
+
+pub main() = {
+    msg := identity("hi")
+    print(msg)
+}

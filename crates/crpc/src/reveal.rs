@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crisp_reveal::reveal_types;
+use crisp_reveal::{reveal_lifetimes, reveal_ownership, reveal_types};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -16,10 +16,12 @@ enum Commands {
         path: PathBuf,
     },
     Ownership {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Lifetimes {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Errors {
         file: String,
@@ -53,9 +55,15 @@ fn main() -> anyhow::Result<()> {
             println!("{}", reveal_types(&path)?);
             Ok(())
         }
-        Commands::Ownership { .. }
-        | Commands::Lifetimes { .. }
-        | Commands::Errors { .. }
+        Commands::Ownership { path } => {
+            println!("{}", reveal_ownership(&path)?);
+            Ok(())
+        }
+        Commands::Lifetimes { path } => {
+            println!("{}", reveal_lifetimes(&path)?);
+            Ok(())
+        }
+        Commands::Errors { .. }
         | Commands::Traits { .. }
         | Commands::Rust { .. }
         | Commands::Seal { .. }

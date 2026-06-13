@@ -1,0 +1,3 @@
+set_value(counter, val) = counter = val
+
+pub main() = set_value(0, 1)

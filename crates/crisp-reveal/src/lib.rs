@@ -1,19 +1,8 @@
-//! `reveal` commands — types, ownership, lifetimes, errors, traits, rust, seal (spec §16).
+mod ownership;
+mod lifetimes;
 
-mod types;
-
+pub use lifetimes::reveal_lifetimes;
+pub use ownership::reveal_ownership;
 pub use types::reveal_types;
 
-#[derive(Debug, Clone, Copy)]
-pub enum RevealMode {
-    Types,
-    Ownership,
-    Lifetimes,
-    Errors,
-    Traits,
-    Rust,
-    Seal,
-    Expand,
-    Diff,
-    Map,
-}
+mod types;

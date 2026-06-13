@@ -86,24 +86,24 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **CLI rename:** transpiler binary is now **`crpc`** (was `crispc`).
 
-### Milestone 0.5 — Ownership & regions *(current)*
+### Milestone 0.5 — Ownership & regions *(done — v0.5.0)*
 
 **Ownership** (§7)
 
-- [ ] Usage collection: read / mutate / move-out / copy
-- [ ] Lattice join (`&` ⊑ `&mut` ⊑ owned) + global call-graph fixpoint
-- [ ] Clone insertion policy (reported via `reveal ownership`)
-- [ ] Explicit `&` / `&mut` / `own` annotations
-- [ ] rustc disagreement fallbacks (§7.6)
+- [x] Usage collection: read / mutate / move-out / copy
+- [x] Lattice join (`&` ⊑ `&mut` ⊑ owned) + global call-graph fixpoint
+- [x] Clone insertion policy (reported via `reveal ownership`)
+- [x] Explicit `&` / `&mut` / `own` annotations
+- [ ] rustc disagreement fallbacks (§7.6) — deferred to emit (0.7)
 
 **Regions** (§8)
 
-- [ ] Lifetime assignment; Rust elision where applicable
-- [ ] Explicit `'a` emission where needed
+- [x] Lifetime assignment; Rust elision where applicable
+- [x] Explicit `'a` emission where needed
 
 **Deliverable:** `reveal ownership` / `reveal lifetimes` on ownership test suite.
 
-### Milestone 0.6 — Error handling
+### Milestone 0.6 — Error handling *(current)*
 
 **Error pass** (§9)
 

@@ -1,0 +1,6 @@
+[package]
+name = "explicit_ok"
+version = "0.1.0"
+
+[build]
+target = "rust"

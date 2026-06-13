@@ -1,0 +1,6 @@
+---
+source: crates/crisp-reveal/tests/reveal_ownership.rs
+expression: out
+---
+greet(name: &str) -> str
+main() -> ()

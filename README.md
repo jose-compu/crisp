@@ -18,7 +18,8 @@ cargo build --release -p crpc
 ./target/release/crpc run examples/hello
 ./target/release/crpc run examples/ffi
 ./target/release/crpc run examples/kitchen_sink
-./target/release/crpc test examples/patterns
+./target/release/crpc run examples/inventory
+./target/release/crpc test examples/inventory
 ./target/release/reveal rust examples/hello
 cargo test --verbose
 ```
@@ -28,7 +29,7 @@ cargo test --verbose
 ```
 crates/          Rust compiler workspace (crpc pipeline)
 docs/spec/       Language specification
-examples/        Sample .crp projects (hello, server, math, defaults, sealed, …)
+examples/        Sample .crp projects (hello, server, inventory, math, …)
 std/             Standard library (Crisp)
 tests/           Integration and compile-fail fixtures
 ```

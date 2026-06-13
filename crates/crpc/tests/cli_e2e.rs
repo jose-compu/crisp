@@ -53,7 +53,7 @@ fn bin_path(name: &str) -> PathBuf {
 fn crpc_check_all_examples() {
     for ex in [
         "hello", "server", "fallible", "math", "defaults", "sealed", "with_tests",
-        "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo",
+        "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory",
     ] {
         run_ok("crpc", &["check", &examples_dir().join(ex).to_string_lossy()]);
     }

@@ -1,0 +1,39 @@
+-- inventory — multi-module warehouse demo (spec §20)
+--
+-- modules:
+--   errors.crp  error records for fallible IO
+--   catalog.crp domain module (types, stock, formatters, orchestration, tests)
+--   main.crp    fallible load path + demo entrypoint
+
+use errors { NotFoundError, StockError }
+
+use catalog {
+    Item, seed_widget, format_widget, format_gasket,
+    format_widget_stock, format_gasket_stock, summary, pair_skus,
+}
+
+lookup_item(sku) -> Item ! NotFoundError = throw NotFoundError { sku: sku }
+
+reserve(sku) -> int ! StockError = {
+    throw StockError {
+        sku: sku
+        requested: 1
+        available: 3
+    }
+}
+
+pub version() = "inventory-1.0"
+
+pub main() = {
+    log("inventory {version()}")
+    log(summary())
+    log(pair_skus())
+    log(format_widget_stock())
+    log(format_gasket_stock())
+    item := lookup_item("W-1") catch _ -> seed_widget()
+    log("picked {item.sku} ({item.name})")
+    qty := reserve("W-1") catch _ -> 2
+    log("reserved={qty}")
+    missing := lookup_item("UNKNOWN") catch _ -> seed_widget()
+    log("fallback={missing.name}")
+}

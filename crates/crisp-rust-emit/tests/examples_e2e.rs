@@ -33,6 +33,7 @@ const EXAMPLES: &[&str] = &[
     "patterns",
     "kitchen_sink",
     "ownership_demo",
+    "inventory",
 ];
 
 #[test]
@@ -110,7 +111,7 @@ fn examples_with_tests_pass_crpc_test() {
 
 #[test]
 fn runnable_examples_build_and_run() {
-    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo"] {
+    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory"] {
         let root = example(name);
         eprintln!("build+run: {name}");
         match run_emitted(&root) {
@@ -167,6 +168,7 @@ const BUILDABLE: &[&str] = &[
     "patterns",
     "kitchen_sink",
     "ownership_demo",
+    "inventory",
 ];
 
 #[test]

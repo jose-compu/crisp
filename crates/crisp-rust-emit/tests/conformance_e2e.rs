@@ -153,6 +153,7 @@ fn spec_s20_all_examples_typecheck() {
         "patterns",
         "kitchen_sink",
         "ownership_demo",
+        "inventory",
     ] {
         eprintln!("§20 typecheck {name}");
         TypeChecker::check_crate(&example(name))

@@ -88,7 +88,7 @@ fn hover_server_config_field() {
 fn analyze_all_examples() {
     for name in [
         "hello", "server", "fallible", "math", "match", "async_hello", "ffi", "stdlib_smoke",
-        "patterns", "kitchen_sink", "ownership_demo",
+        "patterns", "kitchen_sink", "ownership_demo", "inventory",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

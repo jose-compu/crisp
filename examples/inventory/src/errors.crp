@@ -1,0 +1,11 @@
+-- inventory/errors.crp — domain error types (spec §9)
+
+pub type NotFoundError = {
+    sku: str
+}
+
+pub type StockError = {
+    sku: str
+    requested: int
+    available: int
+}

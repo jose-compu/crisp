@@ -1,0 +1,82 @@
+-- inventory/catalog.crp — domain types and catalog (spec §3, §12)
+
+pub type Item = {
+    sku: str
+    name: str
+    price_cents: int = 0
+}
+
+pub type StockLine = {
+    sku: str
+    qty: int = 0
+}
+
+pub seed_widget() = Item {
+    sku: "W-1"
+    name: "Widget"
+    price_cents: 499
+}
+
+pub seed_gasket() = Item {
+    sku: "G-9"
+    name: "Gasket"
+    price_cents: 129
+}
+
+pub widget_stock() = StockLine {
+    sku: "W-1"
+    qty: 25
+}
+
+pub gasket_stock() = StockLine {
+    sku: "G-9"
+    qty: 3
+}
+
+pub format_widget() = {
+    i := seed_widget()
+    "{i.sku} {i.name} ({i.price_cents}c)"
+}
+
+pub format_gasket() = {
+    i := seed_gasket()
+    "{i.sku} {i.name} ({i.price_cents}c)"
+}
+
+pub format_widget_stock() = {
+    s := widget_stock()
+    "stock {s.sku}={s.qty}"
+}
+
+pub format_gasket_stock() = {
+    s := gasket_stock()
+    "stock {s.sku}={s.qty}"
+}
+
+test "widget seed price" = {
+    assert_eq(seed_widget().price_cents, 499)
+}
+
+test "widget stock level" = {
+    assert_eq(widget_stock().qty, 25)
+}
+
+pub summary() = {
+    w := format_widget()
+    g := format_gasket()
+    "{w} | {g}"
+}
+
+pub pair_skus() = {
+    a := seed_widget()
+    b := seed_gasket()
+    "{a.sku}+{b.sku}"
+}
+
+test "summary contains widget" = {
+    assert_eq(summary(), "W-1 Widget (499c) | G-9 Gasket (129c)")
+}
+
+test "pair skus ok" = {
+    assert_eq(pair_skus(), "W-1+G-9")
+}

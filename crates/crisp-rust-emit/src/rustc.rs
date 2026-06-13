@@ -35,6 +35,7 @@ pub fn check_rust_source(source: &str) -> Result<(), RustcError> {
         .arg("--crate-type")
         .arg("lib")
         .arg(&lib_path)
+        .current_dir(dir.path())
         .output();
 
     match output {

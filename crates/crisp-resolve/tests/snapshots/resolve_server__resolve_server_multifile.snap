@@ -108,6 +108,13 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "assert_eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "assert_eq",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Config",
                     symbol: SymbolKey {
                         module: "config",
@@ -130,6 +137,7 @@ ResolvedCrate {
                 "print",
                 "some",
                 "none",
+                "assert_eq",
                 "Config",
             ],
         },
@@ -236,6 +244,13 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "assert_eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "assert_eq",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "greet",
                     symbol: SymbolKey {
                         module: "greet",
@@ -258,6 +273,7 @@ ResolvedCrate {
                 "print",
                 "some",
                 "none",
+                "assert_eq",
                 "greet",
             ],
         },
@@ -364,6 +380,13 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "assert_eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "assert_eq",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "main",
                     symbol: SymbolKey {
                         module: "main",
@@ -400,11 +423,12 @@ ResolvedCrate {
                 "print",
                 "some",
                 "none",
+                "assert_eq",
                 "main",
                 "Config",
                 "greet",
             ],
         },
     ],
-    symbol_count: 17,
+    symbol_count: 18,
 }

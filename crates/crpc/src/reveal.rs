@@ -1,5 +1,8 @@
 use clap::{Parser, Subcommand};
-use crisp_reveal::{reveal_errors, reveal_lifetimes, reveal_ownership, reveal_rust, reveal_types};
+use crisp_reveal::{
+    reveal_diff, reveal_errors, reveal_expand, reveal_lifetimes, reveal_map, reveal_ownership,
+    reveal_rust, reveal_seal, reveal_traits, reveal_types,
+};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -28,22 +31,28 @@ enum Commands {
         path: PathBuf,
     },
     Traits {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Rust {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Seal {
-        crate_name: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Expand {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Diff {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
     Map {
-        file: String,
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
 }
 
@@ -68,19 +77,30 @@ fn main() -> anyhow::Result<()> {
             println!("{}", reveal_errors(&path)?);
             Ok(())
         }
-        Commands::Rust { file } => {
-            let path = PathBuf::from(&file);
+        Commands::Traits { path } => {
+            println!("{}", reveal_traits(&path)?);
+            Ok(())
+        }
+        Commands::Rust { path } => {
             let root = crisp_resolve::find_crate_root(&path).unwrap_or(path);
             println!("{}", reveal_rust(&root)?);
             Ok(())
         }
-        Commands::Traits { .. }
-        | Commands::Seal { .. }
-        | Commands::Expand { .. }
-        | Commands::Diff { .. }
-        | Commands::Map { .. } => {
-            eprintln!("reveal: not yet implemented");
-            std::process::exit(1);
+        Commands::Seal { path } => {
+            println!("{}", reveal_seal(&path)?);
+            Ok(())
+        }
+        Commands::Expand { path } => {
+            println!("{}", reveal_expand(&path)?);
+            Ok(())
+        }
+        Commands::Diff { path } => {
+            println!("{}", reveal_diff(&path)?);
+            Ok(())
+        }
+        Commands::Map { path } => {
+            println!("{}", reveal_map(&path)?);
+            Ok(())
         }
     }
 }

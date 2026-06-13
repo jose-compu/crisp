@@ -12,6 +12,9 @@ crisp-ownership.workspace = true
 crisp-regions.workspace = true
 crisp-rust-emit.workspace = true
 crisp-errors.workspace = true
+crisp-cir.workspace = true
+crisp-manifest.workspace = true
+crisp-ast.workspace = true
 anyhow.workspace = true
 
 [dev-dependencies]

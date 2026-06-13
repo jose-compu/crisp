@@ -273,7 +273,7 @@ impl Resolver {
                 }
                 Item::Const(c) => self.check_expr(&scope, &c.value)?,
                 Item::Test(t) => self.check_block(&scope, &t.body)?,
-                Item::TestCompileFail(t) => self.check_block(&scope, &t.body)?,
+                Item::TestCompileFail(_) => {}
                 Item::Impl(i) => {
                     self.check_type(&scope, &i.ty)?;
                     for f in &i.items {

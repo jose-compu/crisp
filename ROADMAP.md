@@ -134,26 +134,26 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `crpc emit` + `crpc build` on `examples/hello`; runnable binary.
 
-### Milestone 0.8 — Tooling & package management *(current)*
+### Milestone 0.8 — Tooling & package management *(done — v0.8.0)*
 
-**crispc commands** (§18.3)
+**crpc commands** (§18.3)
 
-- [ ] `build`, `run`, `check`, `emit`, `test`
+- [x] `build`, `run`, `check`, `emit`, `test`
 
 **reveal** (§16)
 
-- [ ] `types`, `ownership`, `lifetimes`, `errors`, `traits`
-- [ ] `rust`, `expand`, `diff`, `map`, `seal`
+- [x] `types`, `ownership`, `lifetimes`, `errors`, `traits`
+- [x] `rust`, `expand`, `diff`, `map`, `seal`
 
 **Packages** (§18)
 
-- [ ] `crisp.toml` parser
-- [ ] Dependency resolution
-- [ ] Sealed-crate `crisp.lock` + signature drift detection (§12.5)
+- [x] `crisp.toml` parser (`crisp-manifest`)
+- [x] Dependency resolution (tokio + manifest deps → Cargo.toml)
+- [x] Sealed-crate `crisp.lock` + signature drift detection (§12.5)
 
-**Deliverable:** full spec §20 server example builds end-to-end.
+**Deliverable:** `examples/with_tests` runs `crpc test` (runtime + compile-fail); sealed API lockfile verified on build.
 
-### Milestone 0.9 — Standard library & advanced features
+### Milestone 0.9 — Standard library & advanced features *(current)*
 
 **Std** (§15)
 
@@ -276,6 +276,7 @@ Not committed to dates; tracked for direction only.
 | `crisp-cir` | CIR generation | §17.1 |
 | `crisp-rust-emit` | Rust emission | §17.1 |
 | `crisp-diagnostics` | Diagnostics | §17.2–17.4 |
+| `crisp-manifest` | `crisp.toml` / `crisp.lock` | §12.5, §18 |
 | `crisp-reveal` | reveal toolchain | §16 |
 | `crisp-lsp` | LSP | §16.3 |
 | `crpc` | CLI (`crpc`, `reveal`) | §18.3 |
@@ -299,4 +300,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.7.0 CIR + Rust emission shipped; milestone 0.8 in progress.*
+*Last updated: 2026-06-12 — v0.8.0 tooling + package management shipped; milestone 0.9 in progress.*

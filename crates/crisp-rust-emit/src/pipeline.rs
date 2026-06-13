@@ -2,11 +2,13 @@
 
 use crate::cargo::{CargoError, cargo_build, cargo_check, cargo_run};
 use crate::emit::emit_crate;
-use crate::project::{emit_dir, read_manifest, write_cargo_project};
+use crate::project::{emit_dir, write_cargo_project};
 use crate::resolve::resolve_rustc_fallbacks;
+use crate::seal::verify_sealed_api;
 use crate::source_map::EmitSourceMap;
 use anyhow::{Context, Result};
 use crisp_cir::{CirBuilder, CirCrate, CirError};
+use crisp_manifest::{read_manifest, resolve_dependencies};
 use std::path::Path;
 use thiserror::Error;
 
@@ -16,6 +18,8 @@ pub enum PipelineError {
     Cir(#[from] CirError),
     #[error("{0}")]
     Cargo(#[from] CargoError),
+    #[error("{0}")]
+    Seal(#[from] crate::seal::SealDriftError),
     #[error("{0}")]
     Other(#[from] anyhow::Error),
     #[error("[E0058] rustc/cargo not available")]
@@ -30,6 +34,7 @@ pub struct EmitOutput {
 }
 
 pub fn analyze_and_build_cir(crate_root: &Path) -> Result<CirCrate, PipelineError> {
+    verify_sealed_api(crate_root)?;
     let _ = resolve_rustc_fallbacks(crate_root);
     Ok(CirBuilder::build_crate(crate_root)?)
 }
@@ -37,8 +42,9 @@ pub fn analyze_and_build_cir(crate_root: &Path) -> Result<CirCrate, PipelineErro
 pub fn emit_to_target(crate_root: &Path) -> Result<EmitOutput, PipelineError> {
     let cir = analyze_and_build_cir(crate_root)?;
     let manifest = read_manifest(crate_root).context("read crisp.toml")?;
+    let deps = resolve_dependencies(&manifest);
     let emitted = emit_crate(&cir);
-    let out_dir = write_cargo_project(crate_root, &emitted, &manifest)
+    let out_dir = write_cargo_project(crate_root, &emitted, &manifest, &deps, None)
         .context("write target/rust")?;
     Ok(EmitOutput {
         cir,

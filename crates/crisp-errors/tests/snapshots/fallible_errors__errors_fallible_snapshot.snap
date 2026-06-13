@@ -3,9 +3,9 @@ source: crates/crisp-errors/tests/fallible_errors.rs
 expression: out
 ---
 main() -> ()
-parse_config(text: ?5) -> Config ! ParseError
-read_config(path: ?3) -> Config ! IoError | ParseError
-read_file(path: ?3) -> str ! IoError
+parse_config(text: ?6) -> Config ! ParseError
+read_config(path: ?4) -> Config ! IoError | ParseError
+read_file(path: ?4) -> str ! IoError
 
 enum CrispError {
     IoError(IoError),

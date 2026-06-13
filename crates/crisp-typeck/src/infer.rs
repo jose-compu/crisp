@@ -1,4 +1,4 @@
-use crate::env::{TypeEnv, instantiate, scheme};
+use crate::env::{TypeEnv, generalize, instantiate, scheme};
 use crate::types::{InferContext, InferredSig, Ty};
 use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
@@ -124,6 +124,13 @@ impl TypeChecker {
         ] {
             self.env.insert(name, scheme(ty));
         }
+        let p = self.ctx.fresh();
+        let assert_ty = Ty::Fn {
+            params: vec![p.clone(), p],
+            ret: Box::new(Ty::Unit),
+        };
+        let assert_scheme = generalize(&self.env, &mut self.ctx, &assert_ty);
+        self.env.insert("assert_eq", assert_scheme);
     }
 
     fn collect_types(&mut self, module: &str, file: &SourceFile) {
@@ -156,10 +163,31 @@ impl TypeChecker {
 
     fn check_module(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
         for item in &file.items {
-            if let Item::Function(f) = item {
-                self.check_function(module, f)?;
+            match item {
+                Item::Function(f) => self.check_function(module, f)?,
+                Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
+                Item::TestCompileFail(_) => {}
+                _ => {}
             }
         }
+        Ok(())
+    }
+
+    fn check_test_block(&mut self, module: &str, name: &str, body: &Block) -> Result<(), TypeError> {
+        let mut local = self.env.clone();
+        let body_ty = self.infer_block(&mut local, body)?;
+        unify(&mut self.ctx, &body_ty, &Ty::Unit)?;
+        let key = format!("{module}::test::{name}");
+        self.signatures.insert(
+            key,
+            InferredSig {
+                module: module.to_string(),
+                name: format!("test::{name}"),
+                params: vec![],
+                ret: Ty::Unit,
+                span: body.span,
+            },
+        );
         Ok(())
     }
 

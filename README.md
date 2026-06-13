@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.7.0** — CIR generation + Rust emission to `target/rust/`; `crpc emit` / `crpc build` / `crpc run`; `reveal rust`.
+**v0.8.0** — `crisp.toml` / `crisp.lock` (sealed API), `crpc test`, full `reveal` commands, manifest deps in emitted Cargo.toml.
 
 ## Quick start
 
@@ -16,7 +16,8 @@ cargo build --release -p crpc
 ./target/release/crpc emit examples/hello
 ./target/release/crpc build examples/hello
 ./target/release/crpc run examples/hello
-./target/release/reveal rust examples/hello
+./target/release/crpc test examples/with_tests
+./target/release/reveal seal examples/hello
 cargo test --verbose
 ```
 

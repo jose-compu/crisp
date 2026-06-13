@@ -8,7 +8,7 @@ pub fn prelude_symbols() -> Vec<Symbol> {
     let types = [
         "int", "uint", "float", "bool", "char", "str", "Never", "vec", "map", "set",
     ];
-    let fns = ["log", "print", "some", "none"];
+    let fns = ["log", "print", "some", "none", "assert_eq"];
 
     let mut out = Vec::new();
     for name in types {

@@ -10,6 +10,7 @@ crisp-ast.workspace = true
 crisp-parser.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+crisp-manifest.workspace = true
 
 [dev-dependencies]
 insta = "1"

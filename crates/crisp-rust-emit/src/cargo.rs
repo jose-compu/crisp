@@ -80,3 +80,22 @@ pub fn cargo_run(crate_root: &Path) -> Result<std::process::Output, CargoError> 
         Err(e) => Err(CargoError::Io(e)),
     }
 }
+
+pub fn cargo_test(crate_root: &Path) -> Result<(), CargoError> {
+    let out_dir = emit_dir(crate_root);
+    let output = Command::new("cargo")
+        .arg("test")
+        .arg("--quiet")
+        .current_dir(&out_dir)
+        .output();
+    match output {
+        Ok(out) if out.status.success() => Ok(()),
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
+            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
+            Err(CargoError::BuildFailed(format!("{stdout}\n{stderr}")))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(CargoError::NotFound),
+        Err(e) => Err(CargoError::Io(e)),
+    }
+}

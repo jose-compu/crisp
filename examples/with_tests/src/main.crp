@@ -1,0 +1,17 @@
+greet(name) = "hello " ++ name
+
+test "greet works" = {
+    assert_eq(greet("world"), "hello world")
+}
+
+test "literal eq" = {
+    assert_eq(2, 2)
+}
+
+test_compile_fail "unknown function" = {
+    definitely_not_a_builtin()
+}
+
+pub main() = {
+    print(greet("crisp"))
+}

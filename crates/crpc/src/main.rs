@@ -4,7 +4,7 @@ use crisp_resolve::{Resolver, find_crate_root};
 use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
 use crisp_regions::RegionPass;
-use crisp_rust_emit::{build_emitted, emit_to_target, resolve_rustc_fallbacks, run_emitted, PipelineError};
+use crisp_rust_emit::{build_emitted, emit_to_target, resolve_rustc_fallbacks, run_emitted, run_tests, PipelineError, TestHarnessError};
 use crisp_typeck::TypeChecker;
 use std::fs;
 use std::path::PathBuf;
@@ -123,8 +123,22 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Test { path } => {
-            eprintln!("crpc test: not yet implemented (path: {path})");
-            std::process::exit(1);
+            let root = find_crate_root(PathBuf::from(&path).as_path())
+                .unwrap_or_else(|| PathBuf::from(&path));
+            match run_tests(&root) {
+                Ok(report) => {
+                    eprintln!(
+                        "crpc test: ok ({} runtime, {} compile-fail)",
+                        report.runtime_passed, report.compile_fail_passed
+                    );
+                    Ok(())
+                }
+                Err(TestHarnessError::Other(e)) if e.to_string().contains("cargo not on PATH") => {
+                    eprintln!("crpc test: cargo not on PATH");
+                    std::process::exit(1);
+                }
+                Err(e) => Err(e.into()),
+            }
         }
         Commands::Emit { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())

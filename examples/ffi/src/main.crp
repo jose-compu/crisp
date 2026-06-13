@@ -1,0 +1,8 @@
+extern "C" {
+    abs(x: int) -> int
+}
+
+pub main() = {
+    r := unsafe { abs(7) }
+    print("ffi-result={r}")
+}

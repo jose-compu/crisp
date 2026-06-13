@@ -115,6 +115,97 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "new",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "new",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "push",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "push",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "len",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "len",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "read_to_string",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "read_to_string",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "stdin_line",
+                    symbol: SymbolKey {
+                        module: "std.io",
+                        name: "stdin_line",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sleep_ms",
+                    symbol: SymbolKey {
+                        module: "std.sync",
+                        name: "sleep_ms",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "new_int",
+                    symbol: SymbolKey {
+                        module: "std.atomic",
+                        name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Option",
+                    symbol: SymbolKey {
+                        module: "std.option",
+                        name: "Option",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Result",
+                    symbol: SymbolKey {
+                        module: "std.result",
+                        name: "Result",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "String",
+                    symbol: SymbolKey {
+                        module: "std.string",
+                        name: "String",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Vec",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "Vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashMap",
+                    symbol: SymbolKey {
+                        module: "std.map",
+                        name: "HashMap",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashSet",
+                    symbol: SymbolKey {
+                        module: "std.set",
+                        name: "HashSet",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Config",
                     symbol: SymbolKey {
                         module: "config",
@@ -138,6 +229,19 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "new",
+                "push",
+                "len",
+                "read_to_string",
+                "stdin_line",
+                "sleep_ms",
+                "new_int",
+                "Option",
+                "Result",
+                "String",
+                "Vec",
+                "HashMap",
+                "HashSet",
                 "Config",
             ],
         },
@@ -251,6 +355,97 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "new",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "new",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "push",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "push",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "len",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "len",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "read_to_string",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "read_to_string",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "stdin_line",
+                    symbol: SymbolKey {
+                        module: "std.io",
+                        name: "stdin_line",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sleep_ms",
+                    symbol: SymbolKey {
+                        module: "std.sync",
+                        name: "sleep_ms",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "new_int",
+                    symbol: SymbolKey {
+                        module: "std.atomic",
+                        name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Option",
+                    symbol: SymbolKey {
+                        module: "std.option",
+                        name: "Option",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Result",
+                    symbol: SymbolKey {
+                        module: "std.result",
+                        name: "Result",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "String",
+                    symbol: SymbolKey {
+                        module: "std.string",
+                        name: "String",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Vec",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "Vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashMap",
+                    symbol: SymbolKey {
+                        module: "std.map",
+                        name: "HashMap",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashSet",
+                    symbol: SymbolKey {
+                        module: "std.set",
+                        name: "HashSet",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "greet",
                     symbol: SymbolKey {
                         module: "greet",
@@ -274,6 +469,19 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "new",
+                "push",
+                "len",
+                "read_to_string",
+                "stdin_line",
+                "sleep_ms",
+                "new_int",
+                "Option",
+                "Result",
+                "String",
+                "Vec",
+                "HashMap",
+                "HashSet",
                 "greet",
             ],
         },
@@ -387,6 +595,97 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "new",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "new",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "push",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "push",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "len",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "len",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "read_to_string",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "read_to_string",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "stdin_line",
+                    symbol: SymbolKey {
+                        module: "std.io",
+                        name: "stdin_line",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sleep_ms",
+                    symbol: SymbolKey {
+                        module: "std.sync",
+                        name: "sleep_ms",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "new_int",
+                    symbol: SymbolKey {
+                        module: "std.atomic",
+                        name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Option",
+                    symbol: SymbolKey {
+                        module: "std.option",
+                        name: "Option",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Result",
+                    symbol: SymbolKey {
+                        module: "std.result",
+                        name: "Result",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "String",
+                    symbol: SymbolKey {
+                        module: "std.string",
+                        name: "String",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Vec",
+                    symbol: SymbolKey {
+                        module: "std.vec",
+                        name: "Vec",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashMap",
+                    symbol: SymbolKey {
+                        module: "std.map",
+                        name: "HashMap",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "HashSet",
+                    symbol: SymbolKey {
+                        module: "std.set",
+                        name: "HashSet",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "main",
                     symbol: SymbolKey {
                         module: "main",
@@ -424,11 +723,24 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "new",
+                "push",
+                "len",
+                "read_to_string",
+                "stdin_line",
+                "sleep_ms",
+                "new_int",
+                "Option",
+                "Result",
+                "String",
+                "Vec",
+                "HashMap",
+                "HashSet",
                 "main",
                 "Config",
                 "greet",
             ],
         },
     ],
-    symbol_count: 18,
+    symbol_count: 31,
 }

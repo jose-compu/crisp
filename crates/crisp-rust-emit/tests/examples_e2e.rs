@@ -26,6 +26,10 @@ const EXAMPLES: &[&str] = &[
     "math",
     "defaults",
     "sealed",
+    "match",
+    "async_hello",
+    "ffi",
+    "stdlib_smoke",
 ];
 
 #[test]
@@ -103,7 +107,7 @@ fn examples_with_tests_pass_crpc_test() {
 
 #[test]
 fn runnable_examples_build_and_run() {
-    for name in ["hello", "defaults", "sealed", "server"] {
+    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke"] {
         let root = example(name);
         eprintln!("build+run: {name}");
         match run_emitted(&root) {
@@ -145,8 +149,19 @@ fn maybe_build(name: &str) {
     }
 }
 
-/// Examples known to emit clean Rust today (fallible catch lowering is still WIP).
-const BUILDABLE: &[&str] = &["hello", "server", "math", "defaults", "sealed", "with_tests"];
+const BUILDABLE: &[&str] = &[
+    "hello",
+    "server",
+    "math",
+    "defaults",
+    "sealed",
+    "with_tests",
+    "fallible",
+    "match",
+    "async_hello",
+    "ffi",
+    "stdlib_smoke",
+];
 
 #[test]
 fn all_runnable_examples_build() {

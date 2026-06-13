@@ -155,7 +155,7 @@ fn is_copy_ty(ty: &Ty) -> bool {
 }
 
 fn is_clone_ty(ty: &Ty) -> bool {
-    is_copy_ty(ty) || ty.is_stringish()
+    is_copy_ty(ty) || ty.is_stringish() || matches!(ty, Ty::Var(_))
 }
 
 fn type_for_binding(

@@ -5,6 +5,7 @@ pub mod lockfile;
 pub mod module;
 pub mod prelude;
 pub mod resolve;
+pub mod stdlib;
 pub mod symbols;
 
 pub use error::ResolveError;

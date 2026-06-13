@@ -1,0 +1,9 @@
+[package]
+name = "async_hello"
+version = "0.1.0"
+edition = "2024"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "ambient"

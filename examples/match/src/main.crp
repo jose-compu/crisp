@@ -1,0 +1,4 @@
+pub main() = {
+    r := match 1 { x -> "matched" }
+    print(r)
+}

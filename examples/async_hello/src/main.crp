@@ -1,0 +1,4 @@
+pub main() = async {
+    sleep_ms(1)
+    print("async-ok")
+}

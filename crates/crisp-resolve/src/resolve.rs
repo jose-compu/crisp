@@ -1,6 +1,7 @@
 use crate::error::ResolveError;
 use crate::module::{ModuleGraph, load_module_graph};
 use crate::prelude::prelude_symbols;
+use crate::stdlib::stdlib_symbols;
 use crate::symbols::{Symbol, SymbolKey, collect_module_symbols};
 use crisp_ast::Span;
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
@@ -46,7 +47,7 @@ impl Resolver {
 
     fn new(graph: ModuleGraph) -> Result<Self, ResolveError> {
         let mut global = BTreeMap::new();
-        for sym in prelude_symbols() {
+        for sym in prelude_symbols().into_iter().chain(stdlib_symbols()) {
             global.insert(sym.key.clone(), sym);
         }
         for (module_path, node) in &graph.modules {
@@ -92,7 +93,7 @@ impl Resolver {
         let mut scope: HashMap<String, SymbolKey> = HashMap::new();
         let mut bindings = Vec::new();
 
-        for sym in prelude_symbols() {
+        for sym in prelude_symbols().into_iter().chain(stdlib_symbols()) {
             scope.insert(sym.key.name.clone(), sym.key.clone());
             bindings.push(ResolvedBinding {
                 local_name: sym.key.name.clone(),

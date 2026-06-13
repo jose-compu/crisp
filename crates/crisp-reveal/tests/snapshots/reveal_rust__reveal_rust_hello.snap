@@ -10,5 +10,5 @@ fn greet(name: &str) -> String {
 }
 pub fn main() {
     let msg = greet("crisp");
-    println!("{}", msg);
+    println!("{:?}", msg);
 }

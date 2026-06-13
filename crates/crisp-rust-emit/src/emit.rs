@@ -3,10 +3,11 @@
 use crate::source_map::EmitSourceMap;
 use crisp_cir::{
     CirBinOp, CirBlock, CirCatchArm, CirCrate, CirExpr, CirField, CirFunction, CirItem, CirModule,
-    CirParam, CirShapeTrait, CirStmt, CirStruct, CirTy, CirVariant, CirWithFn,
+    CirParam, CirPat, CirShapeTrait, CirStmt, CirStruct, CirTy, CirVariant, CirWithFn,
 };
 use crisp_errors::format_crisp_error_enum;
 use crisp_ownership::OwnershipMode;
+use crisp_resolve::stdlib::std_rust_path;
 use std::fmt::Write;
 
 pub struct EmitResult {
@@ -109,9 +110,34 @@ fn emit_module_items(
                 }
                 let _ = writeln!(out, "}}");
             }
+            CirItem::Extern(ext) => emit_extern_block(out, ext, map),
         }
     }
     let _ = cir;
+}
+
+fn emit_extern_block(
+    out: &mut String,
+    ext: &crisp_cir::CirExternBlock,
+    map: &mut EmitSourceMap,
+) {
+    map.record(out.len() as u32, ext.span);
+    let _ = writeln!(out, "extern \"{}\" {{", ext.abi);
+    for f in &ext.functions {
+        map.record(out.len() as u32, f.span);
+        let params: Vec<_> = f
+            .params
+            .iter()
+            .map(|p| format_extern_param(p))
+            .collect();
+        let ret = if matches!(f.ret, CirTy::Unit) {
+            String::new()
+        } else {
+            format!(" -> {}", format_extern_ty(&f.ret))
+        };
+        let _ = writeln!(out, "    fn {}({}){};", f.name, params.join(", "), ret);
+    }
+    let _ = writeln!(out, "}}");
 }
 
 fn emit_struct(out: &mut String, s: &CirStruct, map: &mut EmitSourceMap) {
@@ -216,22 +242,44 @@ fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
 fn emit_function(out: &mut String, f: &CirFunction, current_module: &str, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, f.span);
     let vis = if f.is_pub { "pub " } else { "" };
+    if f.is_main && f.is_async {
+        let _ = writeln!(out, "#[tokio::main]");
+    }
+    let async_kw = if f.is_async { "async " } else { "" };
     let sig = format_fn_sig(f);
-    let _ = write!(out, "{vis}fn {}{sig} ", f.name);
+    let _ = write!(out, "{vis}{async_kw}fn {}{sig} ", f.name);
     emit_block_body(out, &f.body, f.fallible, &f.ret, current_module, 0, map);
     let _ = writeln!(out);
 }
 
 fn format_fn_sig(f: &CirFunction) -> String {
     let params: Vec<_> = f.params.iter().map(format_param).collect();
+    if f.is_async {
+        return format!("({})", params.join(", "));
+    }
     let ret = format_ret(&f.ret, f.fallible);
     format!("({}){}", params.join(", "), ret)
+}
+
+fn format_extern_param(p: &CirParam) -> String {
+    format!("{}: {}", p.name, format_extern_ty(&p.ty))
+}
+
+fn format_extern_ty(ty: &CirTy) -> String {
+    match ty {
+        CirTy::Int | CirTy::UInt => "i32".into(),
+        CirTy::Float => "f32".into(),
+        CirTy::Bool => "bool".into(),
+        other => format_ty(other),
+    }
 }
 
 fn format_param(p: &CirParam) -> String {
     let lt = p.lifetime.as_ref().map(|l| format!("{l} ")).unwrap_or_default();
     let ty = match p.mode {
-        OwnershipMode::Borrow if p.ty.is_stringish() => format!("&{lt}str"),
+        OwnershipMode::Borrow if p.ty.is_stringish() || matches!(p.ty, CirTy::Str | CirTy::Var(_)) => {
+            format!("&{lt}str")
+        }
         OwnershipMode::Borrow => format!("&{lt}{}", format_ty(&p.ty)),
         OwnershipMode::MutBorrow => format!("&{lt}mut {}", format_ty(&p.ty)),
         OwnershipMode::Owned => format_ty(&p.ty),
@@ -268,7 +316,11 @@ fn emit_block_body(
     }
     if let Some(tail) = &block.tail {
         let pad = "    ".repeat(indent + 1);
-        if fn_fallible {
+        if matches!(tail.as_ref(), CirExpr::Throw { .. }) {
+            let _ = write!(out, "{pad}");
+            emit_throw_stmt(out, tail, current_module, map);
+            let _ = writeln!(out);
+        } else if fn_fallible {
             let _ = write!(out, "{pad}Ok(");
             emit_expr(out, tail, current_module, map);
             let _ = writeln!(out, ")");
@@ -299,7 +351,11 @@ fn emit_stmt(out: &mut String, stmt: &CirStmt, current_module: &str, indent: usi
         }
         CirStmt::Expr(e) => {
             let _ = write!(out, "{pad}");
-            emit_expr(out, e, current_module, map);
+            if matches!(e, CirExpr::Throw { .. }) {
+                emit_throw_stmt(out, e, current_module, map);
+            } else {
+                emit_expr(out, e, current_module, map);
+            }
             let _ = writeln!(out, ";");
         }
         CirStmt::Assign { target, value, span } => {
@@ -348,24 +404,23 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             module: callee_module,
             args,
             fallible,
+            propagate_error,
+            is_extern,
             span,
             ..
         } => {
             map.record(out.len() as u32, *span);
-            if callee_module != current_module {
-                let _ = write!(out, "{callee_module}::");
-            }
-            let _ = write!(out, "{callee}(");
-            for (i, arg) in args.iter().enumerate() {
-                if i > 0 {
-                    let _ = write!(out, ", ");
-                }
-                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
-            }
-            let _ = write!(out, ")");
-            if *fallible {
-                let _ = write!(out, "?");
-            }
+            emit_call_expr(
+                out,
+                callee,
+                callee_module,
+                args,
+                *fallible,
+                *propagate_error,
+                *is_extern,
+                current_module,
+                map,
+            );
         }
         CirExpr::StructLit {
             name,
@@ -465,14 +520,240 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             }
             emit_expr(out, expr, current_module, map);
         }
-        CirExpr::Print { arg, span } => {
+        CirExpr::Print { arg, debug, span } => {
             map.record(out.len() as u32, *span);
-            let _ = write!(out, "println!(\"{{}}\", ");
+            let fmt = if *debug { "{:?}" } else { "{}" };
+            let _ = write!(out, "println!(\"{fmt}\", ");
             emit_expr(out, arg, current_module, map);
             let _ = write!(out, ")");
         }
+        CirExpr::If {
+            cond,
+            then_branch,
+            else_branch,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "if ");
+            emit_expr(out, cond, current_module, map);
+            let _ = write!(out, " ");
+            emit_expr(out, then_branch, current_module, map);
+            if let Some(e) = else_branch {
+                let _ = write!(out, " else ");
+                emit_expr(out, e, current_module, map);
+            }
+        }
+        CirExpr::Match {
+            scrutinee,
+            arms,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "match ");
+            emit_expr(out, scrutinee, current_module, map);
+            let _ = write!(out, " {{");
+            for arm in arms {
+                emit_match_arm(out, arm, current_module, map);
+            }
+            let _ = write!(out, " }}");
+        }
+        CirExpr::Unsafe { body, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "unsafe ");
+            emit_expr_block(out, body, current_module, map);
+        }
+        CirExpr::Async { body, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "async ");
+            emit_expr(out, body, current_module, map);
+        }
+        CirExpr::Await { expr, span, .. } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, expr, current_module, map);
+            let _ = write!(out, ".await");
+        }
+        CirExpr::Spawn { expr, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "tokio::spawn(");
+            emit_expr(out, expr, current_module, map);
+            let _ = write!(out, ")");
+        }
         CirExpr::Block(b) => {
-            emit_block_body(out, b, false, &CirTy::Unit, current_module, 0, map);
+            emit_expr_block(out, &CirExpr::Block(b.clone()), current_module, map);
+        }
+    }
+}
+
+fn emit_expr_block(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    if let CirExpr::Block(block) = expr {
+        if let Some(tail) = &block.tail {
+            let _ = write!(out, "{{ ");
+            for stmt in &block.stmts {
+                emit_stmt(out, stmt, current_module, 1, map);
+            }
+            emit_expr(out, tail, current_module, map);
+            let _ = write!(out, " }}");
+            return;
+        }
+        if block.stmts.len() == 1 {
+            if let CirStmt::Expr(inner) = &block.stmts[0] {
+                let _ = write!(out, "{{ ");
+                emit_expr(out, inner, current_module, map);
+                let _ = write!(out, " }}");
+                return;
+            }
+        }
+        emit_block_body(out, block, false, &CirTy::Unit, current_module, 0, map);
+        return;
+    }
+    emit_expr(out, expr, current_module, map);
+}
+
+fn emit_call_expr(
+    out: &mut String,
+    callee: &str,
+    callee_module: &str,
+    args: &[crisp_cir::CirCallArg],
+    fallible: bool,
+    propagate_error: bool,
+    is_extern: bool,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    if is_extern {
+        let _ = write!(out, "{callee}(");
+        for (i, arg) in args.iter().enumerate() {
+            if i > 0 {
+                let _ = write!(out, ", ");
+            }
+            emit_expr(out, &arg.expr, current_module, map);
+            let _ = write!(out, " as i32");
+        }
+        let _ = write!(out, ") as i64");
+        return;
+    }
+    if let Some(path) = std_rust_path(callee_module, callee) {
+        match path {
+            "Vec::new" => {
+                let _ = write!(out, "Vec::<i64>::new()");
+            }
+            "Vec::push" if !args.is_empty() => {
+                emit_expr(out, &args[0].expr, current_module, map);
+                let _ = write!(out, ".push(");
+                for (i, arg) in args.iter().enumerate().skip(1) {
+                    if i > 1 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+                }
+                let _ = write!(out, ")");
+            }
+            "Vec::len" if !args.is_empty() => {
+                emit_expr(out, &args[0].expr, current_module, map);
+                let _ = write!(out, ".len()");
+            }
+            "tokio::time::sleep" if !args.is_empty() => {
+                let _ = write!(out, "tokio::time::sleep(tokio::time::Duration::from_millis(");
+                emit_expr(out, &args[0].expr, current_module, map);
+                let _ = write!(out, "))");
+            }
+            other => {
+                let _ = write!(out, "{other}(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+                }
+                let _ = write!(out, ")");
+                if fallible && propagate_error {
+                    let _ = write!(out, "?");
+                }
+                return;
+            }
+        }
+    } else {
+        if callee_module != current_module && !callee_module.starts_with("std.") {
+            let _ = write!(out, "{callee_module}::");
+        }
+        let _ = write!(out, "{callee}(");
+        for (i, arg) in args.iter().enumerate() {
+            if i > 0 {
+                let _ = write!(out, ", ");
+            }
+            emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+        }
+        let _ = write!(out, ")");
+    }
+    if fallible && propagate_error {
+        let _ = write!(out, "?");
+    }
+}
+
+fn emit_throw_stmt(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    if let CirExpr::Throw { payload, .. } = expr {
+        let _ = write!(out, "return Err(");
+        emit_throw(out, payload, map);
+        let _ = write!(out, ")");
+    } else {
+        emit_expr(out, expr, current_module, map);
+    }
+}
+
+fn emit_match_arm(
+    out: &mut String,
+    arm: &crisp_cir::CirMatchArm,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    map.record(out.len() as u32, arm.span);
+    let _ = write!(out, " ");
+    emit_pat(out, &arm.pat);
+    if let Some(g) = &arm.guard {
+        let _ = write!(out, " if ");
+        emit_expr(out, g, current_module, map);
+    }
+    let _ = write!(out, " => ");
+    emit_expr(out, &arm.body, current_module, map);
+    let _ = write!(out, ",");
+}
+
+fn emit_pat(out: &mut String, pat: &CirPat) {
+    match pat {
+        CirPat::Wildcard { .. } => {
+            let _ = write!(out, "_");
+        }
+        CirPat::Ident { name, .. } => {
+            let _ = write!(out, "{name}");
+        }
+        CirPat::Int { value, .. } => {
+            let _ = write!(out, "{value}");
+        }
+        CirPat::Struct { name, fields, .. } => {
+            let _ = write!(out, "{name} {{ ");
+            for (i, (fname, fp)) in fields.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                let _ = write!(out, "{fname}");
+                if !matches!(fp, CirPat::Wildcard { .. }) {
+                    let _ = write!(out, ": ");
+                    emit_pat(out, fp);
+                }
+            }
+            let _ = write!(out, " }}");
         }
     }
 }
@@ -489,6 +770,10 @@ fn emit_call_arg(
     map: &mut EmitSourceMap,
 ) {
     if matches!(mode, crisp_ownership::OwnershipMode::Borrow) {
+        if matches!(expr, CirExpr::Borrow { .. }) {
+            emit_expr(out, expr, current_module, map);
+            return;
+        }
         if let CirExpr::Str { value, span } = expr {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "\"{}\"", escape_str(value));
@@ -571,7 +856,12 @@ pub fn format_ty(ty: &CirTy) -> String {
         CirTy::Char => "char".into(),
         CirTy::Str => "String".into(),
         CirTy::Var(_) => "String".into(),
-        CirTy::Named { name, args } if args.is_empty() => name.clone(),
+        CirTy::Named { name, args } if args.is_empty() => match name.as_str() {
+            "vec" => "Vec<i64>".into(),
+            "map" => "std::collections::HashMap<String, i64>".into(),
+            "set" => "std::collections::HashSet<i64>".into(),
+            other => other.to_string(),
+        },
         CirTy::Named { name, args } => format!(
             "{name}<{}>",
             args.iter().map(format_ty).collect::<Vec<_>>().join(", ")

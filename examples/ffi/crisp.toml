@@ -1,0 +1,13 @@
+[package]
+name = "ffi_demo"
+version = "0.1.0"
+edition = "2024"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "ambient"
+
+[dependencies.libc]
+version = "0.2"
+rust = true

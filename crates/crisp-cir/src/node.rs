@@ -26,6 +26,7 @@ pub enum CirItem {
     Alias { name: String, is_pub: bool, ty: CirTy, span: Span },
     Function(CirFunction),
     Impl(CirImpl),
+    Extern(CirExternBlock),
 }
 
 #[derive(Debug, Clone)]
@@ -103,11 +104,27 @@ pub struct CirFunction {
     pub name: String,
     pub is_pub: bool,
     pub is_main: bool,
+    pub is_async: bool,
     pub params: Vec<CirParam>,
     pub ret: CirTy,
     pub fallible: bool,
     pub lifetimes: Option<LifetimeSig>,
     pub body: CirBlock,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub struct CirExternBlock {
+    pub abi: String,
+    pub functions: Vec<CirExternFn>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub struct CirExternFn {
+    pub name: String,
+    pub params: Vec<CirParam>,
+    pub ret: CirTy,
     pub span: Span,
 }
 
@@ -165,6 +182,8 @@ pub enum CirExpr {
         args: Vec<CirCallArg>,
         ty: CirTy,
         fallible: bool,
+        propagate_error: bool,
+        is_extern: bool,
         span: Span,
     },
     StructLit {
@@ -210,9 +229,60 @@ pub enum CirExpr {
     },
     Print {
         arg: Box<CirExpr>,
+        debug: bool,
+        span: Span,
+    },
+    If {
+        cond: Box<CirExpr>,
+        then_branch: Box<CirExpr>,
+        else_branch: Option<Box<CirExpr>>,
+        ty: CirTy,
+        span: Span,
+    },
+    Match {
+        scrutinee: Box<CirExpr>,
+        arms: Vec<CirMatchArm>,
+        ty: CirTy,
+        span: Span,
+    },
+    Unsafe {
+        body: Box<CirExpr>,
+        span: Span,
+    },
+    Async {
+        body: Box<CirExpr>,
+        span: Span,
+    },
+    Await {
+        expr: Box<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
+    Spawn {
+        expr: Box<CirExpr>,
         span: Span,
     },
     Block(CirBlock),
+}
+
+#[derive(Debug, Clone)]
+pub struct CirMatchArm {
+    pub pat: CirPat,
+    pub guard: Option<CirExpr>,
+    pub body: CirExpr,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub enum CirPat {
+    Wildcard { span: Span },
+    Ident { name: String, span: Span },
+    Int { value: i64, span: Span },
+    Struct {
+        name: String,
+        fields: Vec<(String, CirPat)>,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone)]

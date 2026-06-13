@@ -153,26 +153,28 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `examples/with_tests` runs `crpc test` (runtime + compile-fail); sealed API lockfile verified on build.
 
-### Milestone 0.9 — Standard library & advanced features *(current)*
+### Milestone 0.9 — Standard library & advanced features *(shipped in v0.9.0)*
 
 **Std** (§15)
 
-- [ ] Core: option, result, string, vec, map, set
-- [ ] IO: fs, io, net; http via manifest deps
-- [ ] Concurrency: async/tokio, sync, atomic
+- [x] Core: vec shims (`new` / `push` / `len`); option/result/string/map/set symbols
+- [x] IO: `std.fs.read_to_string` shim
+- [ ] IO: net; http via manifest deps
+- [x] Concurrency: async/tokio (`#[tokio::main]`, `sleep_ms`)
+- [ ] Concurrency: sync, atomic (symbols only)
 - [ ] Trait shims: Show, Eq, Ord, …
 
 **Language features**
 
-- [ ] Pattern matching (§10)
-- [ ] Concurrency: spawn, async/await (§11)
-- [ ] FFI `extern "C"` (§14)
-- [ ] `unsafe` blocks (delegated to emitted Rust)
-- [ ] `test` / `test_compile_fail` harness (§19)
+- [x] Pattern matching (§10) — CIR + emit; `examples/match`
+- [x] Concurrency: spawn, async/await (§11) — CIR + emit; `examples/async_hello`
+- [x] FFI `extern "C"` (§14) — `examples/ffi` (libc `abs` round-trip)
+- [x] `unsafe` blocks (delegated to emitted Rust)
+- [x] `test` / `test_compile_fail` harness (§19) — shipped in v0.8
 
-**Deliverable:** stdlib smoke tests; FFI round-trip example.
+**Deliverable:** `examples/stdlib_smoke` + `crates/crisp-rust-emit/tests/m09_features.rs`; FFI round-trip in `examples/ffi`.
 
-### Milestone 1.0 — Editor & hardening
+### Milestone 1.0 — Editor & hardening *(current)*
 
 **LSP** (§16.3)
 
@@ -300,4 +302,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.8.0 tooling + package management shipped; milestone 0.9 in progress.*
+*Last updated: 2026-06-12 — v0.9.0 stdlib shims + match/async/ffi/unsafe; milestone 1.0 in progress.*

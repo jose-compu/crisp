@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.8.0** — `crisp.toml` / `crisp.lock` (sealed API), `crpc test`, full `reveal` commands, manifest deps in emitted Cargo.toml.
+**v0.9.0** — stdlib shims (`vec`, `fs`, `sync`), `match` / `if`, `async`/`await` + tokio, `extern "C"` + `unsafe`, fallible `catch` emit fixed.
 
 ## Quick start
 
@@ -16,8 +16,8 @@ cargo build --release -p crpc
 ./target/release/crpc emit examples/hello
 ./target/release/crpc build examples/hello
 ./target/release/crpc run examples/hello
-./target/release/crpc test examples/math
-./target/release/crpc run examples/defaults
+./target/release/crpc run examples/ffi
+./target/release/crpc test examples/stdlib_smoke
 ./target/release/reveal rust examples/hello
 cargo test --verbose
 ```

@@ -4,7 +4,7 @@ use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
 use crisp_ast::ident::Ident;
-use crisp_ast::item::{FunctionDef, Item, SourceFile, TypeBody};
+use crisp_ast::item::{FunctionDef, Item, SourceFile, TypeBody, ExternBlock};
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
@@ -101,13 +101,6 @@ impl TypeChecker {
                 },
             ),
             (
-                "print",
-                Ty::Fn {
-                    params: vec![Ty::Str],
-                    ret: Box::new(Ty::Unit),
-                },
-            ),
-            (
                 "some",
                 Ty::Fn {
                     params: vec![self.ctx.fresh()],
@@ -131,6 +124,18 @@ impl TypeChecker {
         };
         let assert_scheme = generalize(&self.env, &mut self.ctx, &assert_ty);
         self.env.insert("assert_eq", assert_scheme);
+
+        let pp = self.ctx.fresh();
+        let print_ty = Ty::Fn {
+            params: vec![pp.clone()],
+            ret: Box::new(Ty::Unit),
+        };
+        let print_scheme = generalize(&self.env, &mut self.ctx, &print_ty);
+        self.env.insert("print", print_scheme);
+
+        for (name, ty) in stdlib_fn_types() {
+            self.env.insert(name, scheme(ty));
+        }
     }
 
     fn collect_types(&mut self, module: &str, file: &SourceFile) {
@@ -163,6 +168,11 @@ impl TypeChecker {
 
     fn check_module(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
         for item in &file.items {
+            if let Item::Extern(ext) = item {
+                self.check_extern(module, ext)?;
+            }
+        }
+        for item in &file.items {
             match item {
                 Item::Function(f) => self.check_function(module, f)?,
                 Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
@@ -170,6 +180,48 @@ impl TypeChecker {
                 _ => {}
             }
         }
+        Ok(())
+    }
+
+    fn check_extern(&mut self, module: &str, ext: &ExternBlock) -> Result<(), TypeError> {
+        for f in &ext.functions {
+            let mut param_tys = Vec::new();
+            for p in &f.params {
+                let ty = if let Some(ast_ty) = &p.ty {
+                    self.ast_type(ast_ty)?
+                } else {
+                    Ty::Int
+                };
+                param_tys.push(ty);
+            }
+            let ret = if let Some(ast_ty) = &f.ret_type {
+                self.ast_type(ast_ty)?
+            } else {
+                Ty::Unit
+            };
+            let fn_ty = Ty::Fn {
+                params: param_tys.clone(),
+                ret: Box::new(ret.clone()),
+            };
+            self.env.insert(f.name.name.clone(), scheme(fn_ty));
+            let key = format!("{}::{}", module, f.name.name);
+            self.signatures.insert(
+                key,
+                InferredSig {
+                    module: module.to_string(),
+                    name: f.name.name.clone(),
+                    params: f
+                        .params
+                        .iter()
+                        .enumerate()
+                        .map(|(i, p)| (p.name.name.clone(), param_tys[i].clone()))
+                        .collect(),
+                    ret,
+                    span: f.span,
+                },
+            );
+        }
+        let _ = ext;
         Ok(())
     }
 
@@ -391,6 +443,56 @@ impl TypeChecker {
                     }
                 }
             }
+            ExprKind::Catch { body, arms } => {
+                let _ = self.infer_expr(env, body)?;
+                let mut result = None;
+                for arm in arms {
+                    let body_ty = self.infer_expr(env, &arm.body)?;
+                    result = Some(match result {
+                        None => body_ty,
+                        Some(prev) => {
+                            unify(&mut self.ctx, &prev, &body_ty)?;
+                            prev
+                        }
+                    });
+                }
+                Ok(result.unwrap_or(Ty::Unit))
+            }
+            ExprKind::Async(inner) => {
+                let inner_ty = self.infer_expr(env, inner)?;
+                Ok(Ty::Named {
+                    name: "Future".into(),
+                    args: vec![self.ctx.apply(&inner_ty)],
+                })
+            }
+            ExprKind::Await(inner) => {
+                let t = self.infer_expr(env, inner)?;
+                match self.ctx.apply(&t) {
+                    Ty::Named { name, args } if name == "Future" && args.len() == 1 => {
+                        Ok(args[0].clone())
+                    }
+                    other => {
+                        let fresh = self.ctx.fresh();
+                        unify(
+                            &mut self.ctx,
+                            &other,
+                            &Ty::Named {
+                                name: "Future".into(),
+                                args: vec![fresh.clone()],
+                            },
+                        )?;
+                        Ok(self.ctx.apply(&fresh))
+                    }
+                }
+            }
+            ExprKind::Unsafe(inner) => self.infer_expr(env, inner),
+            ExprKind::Spawn(inner) => {
+                self.infer_expr(env, inner)?;
+                Ok(Ty::Named {
+                    name: "JoinHandle".into(),
+                    args: vec![],
+                })
+            }
             _ => Ok(self.ctx.fresh()),
         }
     }
@@ -602,4 +704,53 @@ impl TypeChecker {
             TypeKind::Constrained { inner, .. } => self.ast_type(inner),
         }
     }
+}
+
+fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
+    vec![
+        (
+            "new",
+            Ty::Fn {
+                params: vec![],
+                ret: Box::new(Ty::Named {
+                    name: "vec".into(),
+                    args: vec![],
+                }),
+            },
+        ),
+        (
+            "push",
+            Ty::Fn {
+                params: vec![Ty::Named {
+                    name: "vec".into(),
+                    args: vec![],
+                }, Ty::Int],
+                ret: Box::new(Ty::Unit),
+            },
+        ),
+        (
+            "len",
+            Ty::Fn {
+                params: vec![Ty::Named {
+                    name: "vec".into(),
+                    args: vec![],
+                }],
+                ret: Box::new(Ty::Int),
+            },
+        ),
+        (
+            "read_to_string",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "sleep_ms",
+            Ty::Fn {
+                params: vec![Ty::Int],
+                ret: Box::new(Ty::Unit),
+            },
+        ),
+    ]
 }

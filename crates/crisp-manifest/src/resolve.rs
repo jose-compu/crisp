@@ -11,7 +11,12 @@ pub fn resolve_dependencies(manifest: &CrateManifest) -> Vec<ResolvedDependency>
             name: "tokio".into(),
             version: "1".into(),
             rust: true,
-            features: vec!["rt".into(), "macros".into()],
+            features: vec![
+                "rt".into(),
+                "rt-multi-thread".into(),
+                "macros".into(),
+                "time".into(),
+            ],
         });
     }
 
@@ -65,7 +70,7 @@ serde_json = { rust = true, version = "1" }
         )
         .unwrap();
         let deps = resolve_dependencies(&m);
-        assert!(deps.iter().any(|d| d.name == "tokio" && d.rust));
+        assert!(deps.iter().any(|d| d.name == "tokio" && d.features.contains(&"time".into())));
         assert!(deps.iter().any(|d| d.name == "serde_json" && d.rust));
     }
 }

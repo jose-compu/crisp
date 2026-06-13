@@ -1,0 +1,8 @@
+---
+source: crates/crisp-typeck/tests/hello_types.rs
+expression: lines
+---
+[
+    "greet(name: &str) -> str",
+    "main() -> ()",
+]

@@ -6,6 +6,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-crisp-ast.workspace = true
-crisp-cir.workspace = true
-crisp-ownership.workspace = true
+crisp-resolve.workspace = true
+crisp-typeck.workspace = true
+anyhow.workspace = true

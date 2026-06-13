@@ -7,4 +7,8 @@ license.workspace = true
 
 [dependencies]
 crisp-ast.workspace = true
+crisp-resolve.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+insta = "1"

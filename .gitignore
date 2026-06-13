@@ -3,7 +3,7 @@
 **/target/
 Cargo.lock
 
-# Emitted Rust from crispc
+# Emitted Rust from crpc
 target/rust/
 
 # IDE

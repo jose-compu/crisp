@@ -1,5 +1,9 @@
 //! `reveal` commands — types, ownership, lifetimes, errors, traits, rust, seal (spec §16).
 
+mod types;
+
+pub use types::reveal_types;
+
 #[derive(Debug, Clone, Copy)]
 pub enum RevealMode {
     Types,
@@ -13,5 +17,3 @@ pub enum RevealMode {
     Diff,
     Map,
 }
-
-pub struct Revealer;

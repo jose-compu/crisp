@@ -1,12 +1,13 @@
 use clap::{Parser, Subcommand};
 use crisp_parser::Parser as CrispParser;
 use crisp_resolve::{Resolver, find_crate_root};
+use crisp_typeck::TypeChecker;
 use std::fs;
 use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
-    name = "crispc",
+    name = "crpc",
     version,
     about = "Crisp transpiler — .crp to Rust to native"
 )]
@@ -39,7 +40,7 @@ enum Commands {
         #[arg(default_value = ".")]
         path: String,
     },
-    /// Analyze + emit; typecheck emitted Rust via cargo check (no codegen)
+    /// Resolve + typecheck (fast)
     Check {
         #[arg(default_value = ".")]
         path: String,
@@ -69,27 +70,28 @@ fn main() -> anyhow::Result<()> {
             println!("{resolved:#?}");
             Ok(())
         }
-        Commands::Build { path } => {
-            eprintln!("crispc build: not yet implemented (path: {path})");
-            std::process::exit(1);
-        }
-        Commands::Run { path } => {
-            eprintln!("crispc run: not yet implemented (path: {path})");
-            std::process::exit(1);
-        }
-        Commands::Test { path } => {
-            eprintln!("crispc test: not yet implemented (path: {path})");
-            std::process::exit(1);
-        }
         Commands::Check { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())
                 .unwrap_or_else(|| PathBuf::from(&path));
             Resolver::resolve_crate(&root)?;
-            eprintln!("crispc check: name resolution ok ({})", root.display());
+            TypeChecker::check_crate(&root)?;
+            eprintln!("crpc check: ok ({})", root.display());
             Ok(())
         }
+        Commands::Build { path } => {
+            eprintln!("crpc build: not yet implemented (path: {path})");
+            std::process::exit(1);
+        }
+        Commands::Run { path } => {
+            eprintln!("crpc run: not yet implemented (path: {path})");
+            std::process::exit(1);
+        }
+        Commands::Test { path } => {
+            eprintln!("crpc test: not yet implemented (path: {path})");
+            std::process::exit(1);
+        }
         Commands::Emit { path } => {
-            eprintln!("crispc emit: not yet implemented (path: {path})");
+            eprintln!("crpc emit: not yet implemented (path: {path})");
             std::process::exit(1);
         }
     }

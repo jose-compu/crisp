@@ -7,7 +7,7 @@
 
 ## Vision
 
-Crisp is a transpiler front end: `.crp` → CIR → Rust → native binary via `rustc`. The compiler infers HM types, global ownership modes, lifetimes, and ambient errors; emits explicit Rust; and treats any `rustc` failure on generated code as a `crispc` bug.
+Crisp is a transpiler front end: `.crp` → CIR → Rust → native binary via `rustc`. The compiler infers HM types, global ownership modes, lifetimes, and ambient errors; emits explicit Rust; and treats any `rustc` failure on generated code as a `crpc` bug.
 
 Two deliverables define success:
 
@@ -71,20 +71,22 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** multi-file `examples/server` resolves without errors.
 
-### Milestone 0.4 — Type inference *(current)*
+### Milestone 0.4 — Type inference *(done — v0.4.0)*
 
 **Typeck** (§3)
 
-- [ ] Primitives, tuples, arrays, slices, `vec`, `map`, `?T`
-- [ ] Structs, enums, aliases; recursive enum `Box` planning
-- [ ] HM inference + constraint solving
-- [ ] Shapes → generated trait plan; traits → direct mapping
-- [ ] Generics, `where` clauses
-- [ ] Explicit annotations as hard constraints
+- [x] Primitives, tuples, arrays, slices, `vec`, `map`, `?T`
+- [x] Structs, enums, aliases; recursive enum `Box` planning (structs)
+- [x] HM inference + constraint solving
+- [x] Shapes → generated trait plan (stub); traits → direct mapping (stub)
+- [x] Generics, `where` clauses (partial)
+- [x] Explicit annotations as hard constraints
 
 **Deliverable:** `reveal types` on hello example; inference tests.
 
-### Milestone 0.5 — Ownership & regions
+**CLI rename:** transpiler binary is now **`crpc`** (was `crispc`).
+
+### Milestone 0.5 — Ownership & regions *(current)*
 
 **Ownership** (§7)
 
@@ -275,13 +277,13 @@ Not committed to dates; tracked for direction only.
 | `crisp-diagnostics` | Diagnostics | §17.2–17.4 |
 | `crisp-reveal` | reveal toolchain | §16 |
 | `crisp-lsp` | LSP | §16.3 |
-| `crispc` | CLI (`crispc`, `reveal`) | §18.3 |
+| `crpc` | CLI (`crpc`, `reveal`) | §18.3 |
 
 ---
 
 ## Versioning policy
 
-- **Compiler** (`crispc`): `0.x` until v1.0 spec conformance; then semver.
+- **Compiler** (`crpc`): `0.x` until v1.0 spec conformance; then semver.
 - **Language** (`edition` in `crisp.toml`): `2026` for v0.2.0 spec; breaking changes bump edition.
 - **Lockfile** (`crisp.lock`): regenerated on any `pub` API signature change (§12.5).
 
@@ -296,4 +298,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.3.0 name resolution shipped; milestone 0.4 in progress.*
+*Last updated: 2026-06-12 — v0.4.0 type inference shipped; `crpc` rename; milestone 0.5 in progress.*

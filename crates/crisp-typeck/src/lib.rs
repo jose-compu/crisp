@@ -1,3 +1,10 @@
-//! Type inference pass — runs before ownership (spec §0.6, §3.4).
+//! HM-style type inference and constraint solving (spec §3.4).
 
-pub struct TypeChecker;
+mod display;
+mod env;
+mod infer;
+mod types;
+mod unify;
+
+pub use display::{format_sig, format_ty};
+pub use infer::{TypeChecker, TypeError, TypedCrate};

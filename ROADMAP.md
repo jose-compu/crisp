@@ -114,27 +114,27 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `examples/fallible` + fallible probe emit through rustc.
 
-### Milestone 0.7 — CIR & Rust emission *(current)*
+### Milestone 0.7 — CIR & Rust emission *(done — v0.7.0)*
 
 **CIR** (§17.1)
 
-- [ ] Typed IR nodes with ownership + span map
-- [ ] Shape-trait + impl synthesis
-- [ ] Default-field builder synthesis (§3.3.1)
-- [ ] Box insertion at recursion points
-- [ ] Clone/borrow/move materialization
+- [x] Typed IR nodes with ownership + span map
+- [x] Shape-trait + impl synthesis
+- [x] Default-field builder synthesis (§3.3.1)
+- [x] Box insertion at recursion points
+- [x] Clone/borrow/move materialization
 
 **Rust emit** (§17.1, §17.3)
 
-- [ ] Pretty-print CIR → idiomatic Rust
-- [ ] Emit `target/rust/` Cargo project (§18)
-- [ ] Invoke `cargo build` / `cargo check`
-- [ ] Map `rustc` spans back to Crisp ICE diagnostics
+- [x] Pretty-print CIR → idiomatic Rust
+- [x] Emit `target/rust/` Cargo project (§18)
+- [x] Invoke `cargo build` / `cargo check`
+- [x] Map `rustc` spans back to Crisp ICE diagnostics
 - [x] §7.6 fallback rewrites (reborrow, clone, widen-mut) via probe emit
 
-**Deliverable:** `crispc emit` + `crispc build` on `examples/hello`; runnable binary.
+**Deliverable:** `crpc emit` + `crpc build` on `examples/hello`; runnable binary.
 
-### Milestone 0.8 — Tooling & package management
+### Milestone 0.8 — Tooling & package management *(current)*
 
 **crispc commands** (§18.3)
 
@@ -299,4 +299,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.4.0 type inference shipped; `crpc` rename; milestone 0.5 in progress.*
+*Last updated: 2026-06-12 — v0.7.0 CIR + Rust emission shipped; milestone 0.8 in progress.*

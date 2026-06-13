@@ -4,7 +4,7 @@ use crisp_resolve::{Resolver, find_crate_root};
 use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
 use crisp_regions::RegionPass;
-use crisp_rust_emit::resolve_rustc_fallbacks;
+use crisp_rust_emit::{build_emitted, emit_to_target, resolve_rustc_fallbacks, run_emitted, PipelineError};
 use crisp_typeck::TypeChecker;
 use std::fs;
 use std::path::PathBuf;
@@ -92,20 +92,46 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Commands::Build { path } => {
-            eprintln!("crpc build: not yet implemented (path: {path})");
-            std::process::exit(1);
+            let root = find_crate_root(PathBuf::from(&path).as_path())
+                .unwrap_or_else(|| PathBuf::from(&path));
+            match build_emitted(&root) {
+                Ok(out_dir) => {
+                    eprintln!("crpc build: ok ({})", out_dir.display());
+                    Ok(())
+                }
+                Err(PipelineError::ToolchainUnavailable) => {
+                    eprintln!("crpc build: emitted to target/rust/ (cargo not on PATH)");
+                    emit_to_target(&root)?;
+                    std::process::exit(1);
+                }
+                Err(e) => Err(e.into()),
+            }
         }
         Commands::Run { path } => {
-            eprintln!("crpc run: not yet implemented (path: {path})");
-            std::process::exit(1);
+            let root = find_crate_root(PathBuf::from(&path).as_path())
+                .unwrap_or_else(|| PathBuf::from(&path));
+            match run_emitted(&root) {
+                Ok(stdout) => {
+                    print!("{stdout}");
+                    Ok(())
+                }
+                Err(PipelineError::ToolchainUnavailable) => {
+                    eprintln!("crpc run: cargo not on PATH");
+                    std::process::exit(1);
+                }
+                Err(e) => Err(e.into()),
+            }
         }
         Commands::Test { path } => {
             eprintln!("crpc test: not yet implemented (path: {path})");
             std::process::exit(1);
         }
         Commands::Emit { path } => {
-            eprintln!("crpc emit: not yet implemented (path: {path})");
-            std::process::exit(1);
+            let root = find_crate_root(PathBuf::from(&path).as_path())
+                .unwrap_or_else(|| PathBuf::from(&path));
+            let out = emit_to_target(&root)?;
+            eprintln!("crpc emit: ok ({})", out.out_dir.display());
+            Ok(())
         }
     }
 }

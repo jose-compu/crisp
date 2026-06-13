@@ -7,15 +7,16 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.6.0** — Ambient error propagation + `CrispError` synthesis (milestone 0.6). `reveal errors`; `crpc check` runs full analysis through error pass.
+**v0.7.0** — CIR generation + Rust emission to `target/rust/`; `crpc emit` / `crpc build` / `crpc run`; `reveal rust`.
 
 ## Quick start
 
 ```bash
 cargo build --release -p crpc
-./target/release/crpc check examples/fallible
-./target/release/reveal errors examples/fallible
-./target/release/reveal ownership examples/hello
+./target/release/crpc emit examples/hello
+./target/release/crpc build examples/hello
+./target/release/crpc run examples/hello
+./target/release/reveal rust examples/hello
 cargo test --verbose
 ```
 

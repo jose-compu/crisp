@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crisp_reveal::{reveal_errors, reveal_lifetimes, reveal_ownership, reveal_types};
+use crisp_reveal::{reveal_errors, reveal_lifetimes, reveal_ownership, reveal_rust, reveal_types};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -68,8 +68,13 @@ fn main() -> anyhow::Result<()> {
             println!("{}", reveal_errors(&path)?);
             Ok(())
         }
+        Commands::Rust { file } => {
+            let path = PathBuf::from(&file);
+            let root = crisp_resolve::find_crate_root(&path).unwrap_or(path);
+            println!("{}", reveal_rust(&root)?);
+            Ok(())
+        }
         Commands::Traits { .. }
-        | Commands::Rust { .. }
         | Commands::Seal { .. }
         | Commands::Expand { .. }
         | Commands::Diff { .. }

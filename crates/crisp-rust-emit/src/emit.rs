@@ -537,12 +537,13 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             let _ = write!(out, "if ");
             emit_expr(out, cond, current_module, map);
-            let _ = write!(out, " ");
+            let _ = write!(out, " {{ ");
             emit_expr(out, then_branch, current_module, map);
             if let Some(e) = else_branch {
-                let _ = write!(out, " else ");
+                let _ = write!(out, " }} else {{ ");
                 emit_expr(out, e, current_module, map);
             }
+            let _ = write!(out, " }}");
         }
         CirExpr::Match {
             scrutinee,

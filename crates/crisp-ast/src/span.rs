@@ -9,6 +9,14 @@ impl Span {
         Self { start, end }
     }
 
+    pub fn contains(&self, offset: u32) -> bool {
+        self.start <= offset && offset < self.end
+    }
+
+    pub fn len(&self) -> u32 {
+        self.end.saturating_sub(self.start)
+    }
+
     pub fn merge(self, other: Span) -> Span {
         Span {
             start: self.start.min(other.start),

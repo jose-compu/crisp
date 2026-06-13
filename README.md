@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.9.0** — stdlib shims (`vec`, `fs`, `sync`), `match` / `if`, `async`/`await` + tokio, `extern "C"` + `unsafe`, fallible `catch` emit fixed.
+**v1.0.0** — LSP analysis API (hover, inlay hints, call overlays, code lenses), rustc-style diagnostics, fuzz/benchmark harness, conformance e2e suite. Examples: `patterns`, `kitchen_sink`, `ownership_demo`.
 
 ## Quick start
 
@@ -17,7 +17,8 @@ cargo build --release -p crpc
 ./target/release/crpc build examples/hello
 ./target/release/crpc run examples/hello
 ./target/release/crpc run examples/ffi
-./target/release/crpc test examples/stdlib_smoke
+./target/release/crpc run examples/kitchen_sink
+./target/release/crpc test examples/patterns
 ./target/release/reveal rust examples/hello
 cargo test --verbose
 ```

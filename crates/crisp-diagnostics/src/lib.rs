@@ -1,7 +1,14 @@
 //! Diagnostic reporting against Crisp source spans.
 
+mod format;
+
 use crisp_ast::Span;
 use thiserror::Error;
+
+pub use format::{
+    FormattedDiagnostic, format_diagnostic, format_ownership_contradiction, format_type_mismatch,
+    from_diagnostic,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {

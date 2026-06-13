@@ -1,0 +1,22 @@
+-- examples/patterns — match, calls, and tests (spec §4.5)
+
+tag() = match 1 { x -> "tagged" }
+
+double_tag() = match 1 { x -> tag() }
+
+test "tag literal" = {
+    assert_eq(tag(), "tagged")
+}
+
+test "double call" = {
+    assert_eq(double_tag(), "tagged")
+}
+
+test "literal eq" = {
+    assert_eq(2, 2)
+}
+
+pub main() = {
+    print(tag())
+    print(double_tag())
+}

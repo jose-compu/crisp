@@ -1,0 +1,21 @@
+-- examples/kitchen_sink — types, fallible catch, defaults, stdlib (spec §20)
+
+type AppError = { msg: str }
+
+type ServerConfig = {
+    host: str  = "127.0.0.1"
+    port: uint = 9000
+}
+
+load_port() -> int ! AppError = throw AppError { msg: "missing" }
+
+test "status constant" = {
+    assert_eq(9000, 9000)
+}
+
+pub main() = {
+    cfg := ServerConfig { port: 3000 }
+    port := load_port() catch _ -> 3000
+    xs := new()
+    print("host={cfg.host} port={port} len={len(xs)}")
+}

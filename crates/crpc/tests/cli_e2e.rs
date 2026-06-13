@@ -51,7 +51,10 @@ fn bin_path(name: &str) -> PathBuf {
 
 #[test]
 fn crpc_check_all_examples() {
-    for ex in ["hello", "server", "fallible", "math", "defaults", "sealed", "with_tests"] {
+    for ex in [
+        "hello", "server", "fallible", "math", "defaults", "sealed", "with_tests",
+        "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo",
+    ] {
         run_ok("crpc", &["check", &examples_dir().join(ex).to_string_lossy()]);
     }
 }
@@ -140,6 +143,47 @@ fn reveal_expand_defaults() {
         "reveal",
         &["expand", &examples_dir().join("defaults").to_string_lossy()],
     );
+    assert!(out.contains("main"));
+}
+
+#[test]
+fn crpc_build_and_run_patterns() {
+    let root = examples_dir().join("patterns").to_string_lossy().to_string();
+    run_ok("crpc", &["build", &root]);
+    let out = run_ok("crpc", &["run", &root]);
+    assert!(out.contains("small") || out.contains("tagged"), "output: {out}");
+}
+
+#[test]
+fn crpc_test_patterns() {
+    run_ok("crpc", &["test", &examples_dir().join("patterns").to_string_lossy()]);
+}
+
+#[test]
+fn crpc_build_and_run_kitchen_sink() {
+    let root = examples_dir().join("kitchen_sink").to_string_lossy().to_string();
+    run_ok("crpc", &["build", &root]);
+    let out = run_ok("crpc", &["run", &root]);
+    assert!(out.contains("port=3000"), "output: {out}");
+}
+
+#[test]
+fn reveal_types_kitchen_sink() {
+    let out = run_ok(
+        "reveal",
+        &["types", &examples_dir().join("kitchen_sink").to_string_lossy()],
+    );
+    assert!(out.contains("parse_port") || out.contains("load_port"));
+    assert!(out.contains("main"));
+}
+
+#[test]
+fn reveal_ownership_ownership_demo() {
+    let out = run_ok(
+        "reveal",
+        &["ownership", &examples_dir().join("ownership_demo").to_string_lossy()],
+    );
+    assert!(out.contains("make_greeting"));
     assert!(out.contains("main"));
 }
 

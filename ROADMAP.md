@@ -174,30 +174,24 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `examples/stdlib_smoke` + `crates/crisp-rust-emit/tests/m09_features.rs`; FFI round-trip in `examples/ffi`.
 
-### Milestone 1.0 — Editor & hardening *(current)*
+### Milestone 1.0 — Editor & hardening *(shipped v1.0.0)*
 
 **LSP** (§16.3)
 
-- [ ] Ghost-text type hints, hover, ownership overlays
-- [ ] Reachable-error-set on calls
-- [ ] "Show emitted Rust" code lens
+- [x] Ghost-text type hints, hover, ownership overlays — `crisp-lsp` analysis API
+- [x] Reachable-error-set on calls — `call_overlays`
+- [x] "Show emitted Rust" code lens — `code_lenses` + `emitted_rust`
 
 **Quality**
 
-- [ ] Fuzz lexer/parser
-- [ ] End-to-end tests for every spec section
-- [ ] Performance benchmarks (inference fixpoint, emit)
-- [ ] User-facing error message polish (§17.4)
+- [x] Fuzz lexer/parser — `crisp-parser/tests/fuzz_smoke.rs`
+- [x] End-to-end tests for every spec section — `conformance_e2e.rs`, `m10_features.rs`
+- [x] Performance benchmarks (inference fixpoint, emit) — criterion benches in `typeck` + `rust-emit`
+- [x] User-facing error message polish (§17.4) — `crisp-diagnostics/format.rs`
 
 **Deliverable:** v1.0 release — spec-complete bootstrap compiler.
 
----
-
-## Phase 2 — Self-hosted compiler (Crisp)
-
-Prerequisite: **v1.0** passes a frozen conformance suite that v2 must reproduce bit-for-bit on emitted Rust (or within defined equivalence).
-
-### Milestone 2.0 — Compiler-as-library
+### Milestone 2.0 — Compiler-as-library *(current)*
 
 - [ ] Expose v1 pipeline as a stable internal API (crate boundaries documented)
 - [ ] Define which crates move to Crisp vs stay in Rust (FFI shim, LSP host)
@@ -302,4 +296,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v0.9.0 stdlib shims + match/async/ffi/unsafe; milestone 1.0 in progress.*
+*Last updated: 2026-06-12 — v1.0.0 LSP analysis, conformance e2e, fuzz/bench; milestone 2.0 current.*

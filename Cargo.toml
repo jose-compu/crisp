@@ -19,7 +19,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.9.0"
+version = "1.0.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jose-compu/crisp"
@@ -39,6 +39,7 @@ crisp-cir = { path = "crates/crisp-cir" }
 crisp-rust-emit = { path = "crates/crisp-rust-emit" }
 crisp-diagnostics = { path = "crates/crisp-diagnostics" }
 crisp-reveal = { path = "crates/crisp-reveal" }
+crisp-lsp = { path = "crates/crisp-lsp" }
 crisp-manifest = { path = "crates/crisp-manifest" }
 
 # External

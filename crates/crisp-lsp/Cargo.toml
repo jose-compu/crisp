@@ -6,4 +6,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+crisp-ast.workspace = true
+crisp-parser.workspace = true
+crisp-resolve.workspace = true
+crisp-typeck.workspace = true
+crisp-ownership.workspace = true
+crisp-regions.workspace = true
+crisp-errors.workspace = true
 crisp-reveal.workspace = true
+crisp-rust-emit.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+insta = { version = "1", features = ["yaml"] }

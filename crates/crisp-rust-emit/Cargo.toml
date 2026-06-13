@@ -27,3 +27,12 @@ tempfile = "3"
 crisp-resolve.workspace = true
 crisp-typeck.workspace = true
 crisp-manifest.workspace = true
+crisp-lsp.workspace = true
+crisp-lexer.workspace = true
+crisp-parser.workspace = true
+crisp-diagnostics.workspace = true
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "emit_crate"
+harness = false

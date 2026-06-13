@@ -1,0 +1,27 @@
+-- examples/ownership_demo — bindings, moves, and call chains (spec §7)
+
+make_greeting(name) = "hello " ++ name
+
+consume(msg) = msg
+
+chain(a, b) = a ++ " " ++ b
+
+wrap(x) = {
+    inner := x
+    inner
+}
+
+test "chain strings" = {
+    assert_eq(chain("crisp", "lang"), "crisp lang")
+}
+
+test "wrap identity" = {
+    assert_eq(wrap("ok"), "ok")
+}
+
+pub main() = {
+    name := "crisp"
+    greeting := make_greeting(name)
+    echoed := consume(greeting)
+    log(chain(name, echoed))
+}

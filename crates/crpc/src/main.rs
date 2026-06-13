@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use crisp_parser::Parser as CrispParser;
 use crisp_resolve::{Resolver, find_crate_root};
+use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
 use crisp_regions::RegionPass;
 use crisp_rust_emit::resolve_rustc_fallbacks;
@@ -86,6 +87,7 @@ fn main() -> anyhow::Result<()> {
                 Err(e) => return Err(e.into()),
             }
             RegionPass::assign_crate(&root)?;
+            ErrorPass::analyze_crate(&root)?;
             eprintln!("crpc check: ok ({})", root.display());
             Ok(())
         }

@@ -53,7 +53,7 @@ fn emit_function(
     let _ = writeln!(out, "}}");
 }
 
-fn format_rust_param(
+pub(crate) fn format_rust_param(
     name: &str,
     ty: Option<&Ty>,
     mode: OwnershipMode,
@@ -82,7 +82,7 @@ fn format_rust_param(
     }
 }
 
-fn format_rust_ret(ty: &Ty) -> String {
+pub(crate) fn format_rust_ret(ty: &Ty) -> String {
     if matches!(ty, Ty::Unit) {
         String::new()
     } else {
@@ -90,7 +90,7 @@ fn format_rust_ret(ty: &Ty) -> String {
     }
 }
 
-fn format_rust_ty(ty: &Ty) -> String {
+pub(crate) fn format_rust_ty(ty: &Ty) -> String {
     match ty {
         Ty::Str => "String".into(),
         Ty::Int => "i64".into(),
@@ -103,7 +103,7 @@ fn format_rust_ty(ty: &Ty) -> String {
     }
 }
 
-fn emit_body(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
+pub(crate) fn emit_body(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
     match &expr.kind {
         ExprKind::Block(b) => emit_block(out, b, osig, indent),
         other => emit_expr_stmt(out, expr, osig, indent, other),

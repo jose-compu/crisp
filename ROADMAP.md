@@ -103,18 +103,18 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `reveal ownership` / `reveal lifetimes` on ownership test suite.
 
-### Milestone 0.6 — Error handling *(current)*
+### Milestone 0.6 — Error handling *(done — v0.6.0)*
 
 **Error pass** (§9)
 
-- [ ] Ambient fallibility → `Result<T, CrispError>`
-- [ ] Program-global `CrispError` enum synthesis
-- [ ] `catch`, `throw`, `!` error-set annotations (documentation only)
-- [ ] Reachable error-set analysis for `reveal errors`
+- [x] Ambient fallibility → `Result<T, CrispError>`
+- [x] Program-global `CrispError` enum synthesis
+- [x] `catch`, `throw`, `!` error-set annotations (documentation only)
+- [x] Reachable error-set analysis for `reveal errors`
 
-**Deliverable:** fallible I/O example compiles through to emitted Rust.
+**Deliverable:** `examples/fallible` + fallible probe emit through rustc.
 
-### Milestone 0.7 — CIR & Rust emission
+### Milestone 0.7 — CIR & Rust emission *(current)*
 
 **CIR** (§17.1)
 

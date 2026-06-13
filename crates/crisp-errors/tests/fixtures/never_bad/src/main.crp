@@ -1,0 +1,10 @@
+type IoError = { message: str }
+
+read_file(path) -> str ! IoError = throw IoError { message: "x" }
+
+bad() -> () !never = {
+    x := read_file("path")
+    print(x)
+}
+
+pub main() = bad()

@@ -12,6 +12,7 @@ crisp-ast.workspace = true
 crisp-resolve.workspace = true
 crisp-typeck.workspace = true
 crisp-ownership.workspace = true
+crisp-errors.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
 tempfile = "3"

@@ -1,0 +1,17 @@
+type IoError = { message: str }
+type ParseError = { line: int }
+type Config = { port: int }
+
+read_file(path) -> str ! IoError = throw IoError { message: "not found" }
+
+parse_config(text) -> Config ! ParseError = throw ParseError { line: 0 }
+
+read_config(path) = {
+    text := read_file(path)
+    parse_config(text)
+}
+
+pub main() = {
+    cfg := read_config("app.toml") catch _ -> Config { port: 3000 }
+    print(cfg)
+}

@@ -1,0 +1,6 @@
+type IoError = { message: str }
+type ParseError = { line: int }
+
+limited() -> str ! IoError = throw ParseError { line: 1 }
+
+pub main() = print(limited())

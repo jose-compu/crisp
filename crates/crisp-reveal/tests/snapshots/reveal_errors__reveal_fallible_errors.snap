@@ -1,0 +1,13 @@
+---
+source: crates/crisp-reveal/tests/reveal_errors.rs
+expression: out
+---
+main() -> ()
+parse_config(text: ?5) -> Config ! ParseError
+read_config(path: ?3) -> Config ! IoError | ParseError
+read_file(path: ?3) -> str ! IoError
+
+enum CrispError {
+    IoError(IoError),
+    ParseError(ParseError),
+}

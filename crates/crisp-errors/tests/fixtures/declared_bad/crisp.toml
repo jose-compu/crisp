@@ -1,0 +1,6 @@
+[package]
+name = "declared_bad"
+version = "0.1.0"
+
+[build]
+target = "rust"

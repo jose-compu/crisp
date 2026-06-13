@@ -665,7 +665,36 @@ impl Parser {
                 span,
             };
         }
+        left = self.parse_catch_suffix(left)?;
         Ok(left)
+    }
+
+    fn parse_catch_suffix(&mut self, expr: Expr) -> Result<Expr, ParseError> {
+        let mut arms = Vec::new();
+        while self.match_kw(Kw::Catch) {
+            let start = self.previous_start();
+            let pat = self.parse_pat()?;
+            self.expect(TokenKind::Arrow)?;
+            let body = self.parse_pipe()?;
+            let body_end = body.span.end;
+            arms.push(crisp_ast::expr::CatchArm {
+                pat,
+                body,
+                span: Span::new(start, body_end),
+            });
+        }
+        if arms.is_empty() {
+            return Ok(expr);
+        }
+        let expr_start = expr.span.start;
+        let end = arms.last().map(|a| a.span.end).unwrap_or(expr.span.end);
+        Ok(Expr {
+            kind: ExprKind::Catch {
+                body: Box::new(expr),
+                arms,
+            },
+            span: Span::new(expr_start, end),
+        })
     }
 
     fn parse_assign(&mut self) -> Result<Expr, ParseError> {

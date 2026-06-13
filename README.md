@@ -7,16 +7,15 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v0.5.0** — Global ownership inference + lifetime assignment (milestone 0.5). `reveal ownership` / `reveal lifetimes`; `crpc check` runs full analysis through regions.
+**v0.6.0** — Ambient error propagation + `CrispError` synthesis (milestone 0.6). `reveal errors`; `crpc check` runs full analysis through error pass.
 
 ## Quick start
 
 ```bash
 cargo build --release -p crpc
-./target/release/crpc check examples/server
-./target/release/reveal types examples/hello
+./target/release/crpc check examples/fallible
+./target/release/reveal errors examples/fallible
 ./target/release/reveal ownership examples/hello
-./target/release/reveal lifetimes examples/hello
 cargo test --verbose
 ```
 

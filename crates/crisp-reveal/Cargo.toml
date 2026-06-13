@@ -11,6 +11,7 @@ crisp-typeck.workspace = true
 crisp-ownership.workspace = true
 crisp-regions.workspace = true
 crisp-rust-emit.workspace = true
+crisp-errors.workspace = true
 anyhow.workspace = true
 
 [dev-dependencies]

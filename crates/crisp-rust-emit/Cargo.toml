@@ -24,3 +24,6 @@ tempfile = "3"
 [dev-dependencies]
 insta = { version = "1", features = ["yaml"] }
 tempfile = "3"
+crisp-resolve.workspace = true
+crisp-typeck.workspace = true
+crisp-manifest.workspace = true

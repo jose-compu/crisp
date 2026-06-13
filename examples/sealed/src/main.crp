@@ -1,0 +1,13 @@
+-- examples/sealed — pub API with crisp.lock (spec §12.5)
+
+pub version() = "1.0.0"
+
+pub greet(name) = "hello " ++ name
+
+test "version string" = {
+    assert_eq(version(), "1.0.0")
+}
+
+pub main() = {
+    print(greet("sealed"))
+}

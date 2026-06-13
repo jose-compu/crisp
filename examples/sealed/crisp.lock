@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "name": "tokio",
+      "version": "1",
+      "rust": true,
+      "features": [
+        "rt",
+        "macros"
+      ]
+    }
+  ],
+  "sealed_api": [
+    {
+      "name": "main::greet",
+      "rust_signature": "greet(name: &str) -> str"
+    },
+    {
+      "name": "main::main",
+      "rust_signature": "pub main() -> ()"
+    },
+    {
+      "name": "main::version",
+      "rust_signature": "version() -> str"
+    }
+  ]
+}

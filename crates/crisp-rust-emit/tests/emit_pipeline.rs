@@ -12,6 +12,14 @@ fn server_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/server")
 }
 
+fn math_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/math")
+}
+
+fn defaults_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/defaults")
+}
+
 #[test]
 fn cir_builds_hello_with_main_and_greet() {
     let cir = CirBuilder::build_crate(&hello_root()).expect("cir");
@@ -90,6 +98,34 @@ fn hello_run_prints_greeting() {
         }
         Err(e) => panic!("hello should run: {e}"),
     }
+}
+
+#[test]
+fn server_builds_with_cargo() {
+    let root = server_root();
+    match build_emitted(&root) {
+        Ok(_) => {}
+        Err(PipelineError::ToolchainUnavailable) => {
+            eprintln!("SKIP server_builds_with_cargo: cargo not on PATH");
+        }
+        Err(e) => panic!("server should build: {e}"),
+    }
+}
+
+#[test]
+fn math_emits_arith_module() {
+    let cir = CirBuilder::build_crate(&math_root()).expect("cir");
+    let out = emit_crate(&cir);
+    assert!(out.lib_rs.contains("mod arith"));
+    assert!(out.modules.iter().any(|(m, s)| m == "arith" && s.contains("fn product")));
+}
+
+#[test]
+fn defaults_emits_with_builder() {
+    let cir = CirBuilder::build_crate(&defaults_root()).expect("cir");
+    let out = emit_crate(&cir);
+    assert!(out.lib_rs.contains("ServerConfig::with"));
+    assert!(out.lib_rs.contains("127.0.0.1"));
 }
 
 #[test]

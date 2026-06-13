@@ -4,7 +4,7 @@ use crisp_resolve::{Resolver, find_crate_root};
 use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
 use crisp_regions::RegionPass;
-use crisp_rust_emit::{build_emitted, emit_to_target, resolve_rustc_fallbacks, run_emitted, run_tests, PipelineError, TestHarnessError};
+use crisp_rust_emit::{build_emitted, emit_to_target, resolve_rustc_fallbacks, run_emitted, run_tests, verify_sealed_api, PipelineError, TestHarnessError};
 use crisp_typeck::TypeChecker;
 use std::fs;
 use std::path::PathBuf;
@@ -88,6 +88,7 @@ fn main() -> anyhow::Result<()> {
             }
             RegionPass::assign_crate(&root)?;
             ErrorPass::analyze_crate(&root)?;
+            verify_sealed_api(&root)?;
             eprintln!("crpc check: ok ({})", root.display());
             Ok(())
         }

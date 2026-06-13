@@ -1,0 +1,8 @@
+-- examples/math — multi-file arithmetic
+
+use arith { double, sum }
+
+pub main() = {
+    log("sum(2,3)={sum(2, 3)}")
+    log("double(5)={double(5)}")
+}

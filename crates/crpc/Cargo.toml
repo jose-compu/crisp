@@ -31,3 +31,6 @@ crisp-regions.workspace = true
 crisp-errors.workspace = true
 crisp-cir.workspace = true
 crisp-rust-emit.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

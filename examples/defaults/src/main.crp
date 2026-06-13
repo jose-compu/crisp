@@ -1,0 +1,16 @@
+-- examples/defaults — struct default-field builder (spec §3.3.1)
+
+type ServerConfig = {
+    host: str  = "127.0.0.1"
+    port: uint = 9000
+    debug: bool = false
+}
+
+test "default port constant" = {
+    assert_eq(9000, 9000)
+}
+
+pub main() = {
+    cfg := ServerConfig { port: 3000 }
+    log("port={cfg.port}")
+}

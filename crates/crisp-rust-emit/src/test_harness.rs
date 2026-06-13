@@ -159,7 +159,11 @@ fn emit_expr(expr: &Expr) -> String {
                 ExprKind::Ident(id) => id.name.clone(),
                 _ => "unknown".into(),
             };
-            let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
+            let arg_strs: Vec<_> = if name == "assert_eq" {
+                args.iter().map(emit_expr).collect()
+            } else {
+                args.iter().map(emit_call_arg_for_test).collect()
+            };
             if name == "assert_eq" {
                 format!("assert_eq!({})", arg_strs.join(", "))
             } else {
@@ -179,7 +183,29 @@ fn emit_expr(expr: &Expr) -> String {
             emit_block(&mut inner, b, 0);
             format!("{{ {inner} }}")
         }
+        ExprKind::Field { base, field } => {
+            format!("{}.{}", emit_expr(base), field.name)
+        }
+        ExprKind::StructLit { name, fields } => {
+            if fields.is_empty() {
+                format!("{}::with()", name.name)
+            } else {
+                let parts: Vec<_> = fields
+                    .iter()
+                    .map(|f| format!("{}: {}", f.name.name, emit_expr(&f.value)))
+                    .collect();
+                format!("{}::with({})", name.name, parts.join(", "))
+            }
+        }
         _ => "()".into(),
+    }
+}
+
+fn emit_call_arg_for_test(expr: &Expr) -> String {
+    match &expr.kind {
+        ExprKind::Int(n) => format!("&{n}"),
+        ExprKind::Ident(id) => format!("&{}", id.name),
+        _ => emit_expr(expr),
     }
 }
 

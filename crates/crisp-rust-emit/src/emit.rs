@@ -494,6 +494,7 @@ fn emit_call_arg(
             let _ = write!(out, "\"{}\"", escape_str(value));
             return;
         }
+        let _ = write!(out, "&");
     }
     emit_expr(out, expr, current_module, map);
 }

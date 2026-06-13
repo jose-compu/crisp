@@ -1,0 +1,23 @@
+-- math arith module (checked before main — spec §12)
+
+pub double(n) = n + n
+
+pub sum(a, b) = a + b
+
+pub product(a, b) = a * b
+
+test "double works" = {
+    assert_eq(double(3), 6)
+}
+
+test "sum works" = {
+    assert_eq(sum(1, 2), 3)
+}
+
+test "product works" = {
+    assert_eq(product(4, 5), 20)
+}
+
+test_compile_fail "bad multiply types" = {
+    product("x", 1)
+}

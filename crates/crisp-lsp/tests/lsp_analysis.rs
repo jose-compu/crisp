@@ -89,6 +89,7 @@ fn analyze_all_examples() {
     for name in [
         "hello", "server", "fallible", "math", "match", "async_hello", "ffi", "stdlib_smoke",
         "patterns", "kitchen_sink", "ownership_demo", "inventory",
+        "vec_ops", "fallible_chain", "async_spawn", "workshop", "unsafe_math", "data_pipeline",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

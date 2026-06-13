@@ -1,0 +1,23 @@
+-- workshop/core.crp — match composition + tests (spec §10, §12)
+
+pub greet(name) = match 1 { x -> "hello " ++ name }
+
+pub cheer(name) = match 1 { x -> greet(name) ++ "!" }
+
+pub label() = match 1 { x -> "workshop" }
+
+test "greet hello" = {
+    assert_eq(greet("crisp"), "hello crisp")
+}
+
+test "cheer bang" = {
+    assert_eq(cheer("team"), "hello team!")
+}
+
+test "label constant" = {
+    assert_eq(label(), "workshop")
+}
+
+test_compile_fail "greet arity" = {
+    greet()
+}

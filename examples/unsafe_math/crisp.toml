@@ -1,0 +1,13 @@
+[package]
+name = "unsafe_math"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+
+[dependencies.libc]
+version = "0.2"
+rust = true

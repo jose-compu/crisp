@@ -1,0 +1,12 @@
+-- async_spawn — async main, spawn, sleep (spec §11)
+
+worker() = async {
+    sleep_ms(2)
+    print("worker-done")
+}
+
+pub main() = async {
+    spawn worker()
+    sleep_ms(5)
+    print("main-done")
+}

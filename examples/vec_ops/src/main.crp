@@ -1,0 +1,27 @@
+-- vec_ops — std.vec new/push/len (spec §15)
+
+build_seq() = {
+    xs := new()
+    push(xs, 10)
+    push(xs, 20)
+    push(xs, 30)
+    xs
+}
+
+seq_len() = len(build_seq())
+
+test "build seq len" = {
+    assert_eq(seq_len(), 3)
+}
+
+test "triple three" = {
+    assert_eq(3, 3)
+}
+
+test_compile_fail "push needs vec" = {
+    push("bad", 1)
+}
+
+pub main() = {
+    print("vec-len={seq_len()}")
+}

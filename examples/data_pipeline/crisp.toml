@@ -1,0 +1,9 @@
+[package]
+name = "data_pipeline"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"

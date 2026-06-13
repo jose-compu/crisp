@@ -104,7 +104,7 @@ fn spec_s17_1_emit_kitchen_sink() {
     let out = emit_to_target(&root).expect("emit");
     assert!(out.out_dir.join("src/main.rs").exists());
     let rust = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
-    assert!(rust.contains("fn main"));
+    assert!(rust.contains("pub fn main") || rust.contains("fn main"));
     assert!(rust.contains("Vec::<i64>::new()"));
 }
 
@@ -154,6 +154,12 @@ fn spec_s20_all_examples_typecheck() {
         "kitchen_sink",
         "ownership_demo",
         "inventory",
+        "vec_ops",
+        "fallible_chain",
+        "async_spawn",
+        "workshop",
+        "unsafe_math",
+        "data_pipeline",
     ] {
         eprintln!("§20 typecheck {name}");
         TypeChecker::check_crate(&example(name))

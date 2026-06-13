@@ -1,0 +1,11 @@
+-- workshop — multi-module match + strings (spec §20)
+
+use core { greet, cheer, label }
+
+pub version() = "workshop-1.0"
+
+pub main() = {
+    log("module={label()} v={version()}")
+    log(greet("crisp"))
+    log(cheer("builders"))
+}

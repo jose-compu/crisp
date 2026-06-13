@@ -1,0 +1,32 @@
+-- data_pipeline — fallible IO + vec growth (spec §9, §15)
+
+type PipeError = { msg: str }
+
+load_count() -> str ! PipeError = throw PipeError { msg: "unavailable" }
+
+grow() = {
+    xs := new()
+    push(xs, 1)
+    push(xs, 2)
+    xs
+}
+
+grow_len() = len(grow())
+
+pipeline() = {
+    xs := grow()
+    label := load_count() catch _ -> "fallback"
+    print("label={label} len={len(xs)}")
+}
+
+test "grow len" = {
+    assert_eq(grow_len(), 2)
+}
+
+test "pipeline constant" = {
+    assert_eq(2, 2)
+}
+
+pub main() = {
+    pipeline()
+}

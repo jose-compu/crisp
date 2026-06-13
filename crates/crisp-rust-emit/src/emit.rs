@@ -345,7 +345,8 @@ fn emit_stmt(out: &mut String, stmt: &CirStmt, current_module: &str, indent: usi
     match stmt {
         CirStmt::Let { name, value, span } => {
             map.record(out.len() as u32, *span);
-            let _ = write!(out, "{pad}let {name} = ");
+            let mut_kw = if is_vec_new_expr(value) { "mut " } else { "" };
+            let _ = write!(out, "{pad}let {mut_kw}{name} = ");
             emit_expr(out, value, current_module, map);
             let _ = writeln!(out, ";");
         }
@@ -617,6 +618,33 @@ fn emit_expr_block(
     emit_expr(out, expr, current_module, map);
 }
 
+fn is_vec_new_expr(expr: &CirExpr) -> bool {
+    matches!(
+        expr,
+        CirExpr::Call {
+            callee,
+            module,
+            ..
+        } if callee == "new" && module.starts_with("std.vec")
+    )
+}
+
+fn emit_vec_receiver(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    match expr {
+        CirExpr::Borrow { expr: inner, .. } => emit_vec_receiver(out, inner, current_module, map),
+        CirExpr::Ident { name, span, .. } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "{name}");
+        }
+        _ => emit_expr(out, expr, current_module, map),
+    }
+}
+
 fn emit_call_expr(
     out: &mut String,
     callee: &str,
@@ -645,20 +673,15 @@ fn emit_call_expr(
             "Vec::new" => {
                 let _ = write!(out, "Vec::<i64>::new()");
             }
-            "Vec::push" if !args.is_empty() => {
-                emit_expr(out, &args[0].expr, current_module, map);
+            "Vec::push" if args.len() >= 2 => {
+                emit_vec_receiver(out, &args[0].expr, current_module, map);
                 let _ = write!(out, ".push(");
-                for (i, arg) in args.iter().enumerate().skip(1) {
-                    if i > 1 {
-                        let _ = write!(out, ", ");
-                    }
-                    emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
-                }
+                emit_expr(out, &args[1].expr, current_module, map);
                 let _ = write!(out, ")");
             }
             "Vec::len" if !args.is_empty() => {
-                emit_expr(out, &args[0].expr, current_module, map);
-                let _ = write!(out, ".len()");
+                emit_vec_receiver(out, &args[0].expr, current_module, map);
+                let _ = write!(out, ".len() as i64");
             }
             "tokio::time::sleep" if !args.is_empty() => {
                 let _ = write!(out, "tokio::time::sleep(tokio::time::Duration::from_millis(");

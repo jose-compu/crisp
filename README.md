@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v1.0.0** — LSP analysis API (hover, inlay hints, call overlays, code lenses), rustc-style diagnostics, fuzz/benchmark harness, conformance e2e suite. Examples: `patterns`, `kitchen_sink`, `ownership_demo`.
+**v1.0.0** — LSP, diagnostics, conformance e2e. Complex examples: `inventory`, `workshop`, `vec_ops`, `fallible_chain`, `async_spawn`, `unsafe_math`, `data_pipeline`.
 
 ## Quick start
 
@@ -19,7 +19,8 @@ cargo build --release -p crpc
 ./target/release/crpc run examples/ffi
 ./target/release/crpc run examples/kitchen_sink
 ./target/release/crpc run examples/inventory
-./target/release/crpc test examples/inventory
+./target/release/crpc test examples/workshop
+./target/release/crpc run examples/vec_ops
 ./target/release/reveal rust examples/hello
 cargo test --verbose
 ```

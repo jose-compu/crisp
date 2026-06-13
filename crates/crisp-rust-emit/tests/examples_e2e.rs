@@ -34,6 +34,12 @@ const EXAMPLES: &[&str] = &[
     "kitchen_sink",
     "ownership_demo",
     "inventory",
+    "vec_ops",
+    "fallible_chain",
+    "async_spawn",
+    "workshop",
+    "unsafe_math",
+    "data_pipeline",
 ];
 
 #[test]
@@ -93,7 +99,7 @@ fn math_has_tests_in_arith_module() {
 
 #[test]
 fn examples_with_tests_pass_crpc_test() {
-    for name in ["with_tests", "math", "defaults", "sealed"] {
+    for name in ["with_tests", "math", "defaults", "sealed", "workshop", "vec_ops", "unsafe_math", "fallible_chain", "inventory"] {
         let root = example(name);
         eprintln!("crpc test: {name}");
         match run_tests(&root) {
@@ -111,7 +117,7 @@ fn examples_with_tests_pass_crpc_test() {
 
 #[test]
 fn runnable_examples_build_and_run() {
-    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory"] {
+    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory", "vec_ops", "fallible_chain", "async_spawn", "workshop", "unsafe_math", "data_pipeline"] {
         let root = example(name);
         eprintln!("build+run: {name}");
         match run_emitted(&root) {
@@ -169,6 +175,12 @@ const BUILDABLE: &[&str] = &[
     "kitchen_sink",
     "ownership_demo",
     "inventory",
+    "vec_ops",
+    "fallible_chain",
+    "async_spawn",
+    "workshop",
+    "unsafe_math",
+    "data_pipeline",
 ];
 
 #[test]

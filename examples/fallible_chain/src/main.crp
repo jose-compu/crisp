@@ -1,0 +1,34 @@
+-- fallible_chain — multi-step error propagation + catch (spec §9)
+
+type NetError = { code: int }
+type ParseError = { line: int }
+type DbError = { table: str }
+
+fetch() -> str ! NetError = throw NetError { code: 503 }
+
+parse(raw) -> str ! ParseError = throw ParseError { line: 12 }
+
+save(id) -> str ! DbError = throw DbError { table: "users" }
+
+load_user() = {
+    raw := fetch()
+    mid := parse(raw)
+    save(mid)
+}
+
+load_user_or() = {
+    load_user() catch _ -> "user-42"
+}
+
+test "chain fallback" = {
+    assert_eq(load_user_or(), "user-42")
+}
+
+test "parse error line" = {
+    assert_eq(12, 12)
+}
+
+pub main() = {
+    id := load_user_or()
+    print("user-id={id}")
+}

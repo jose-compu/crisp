@@ -1,0 +1,24 @@
+-- unsafe_math — extern C + nested unsafe (spec §14)
+
+extern "C" {
+    abs(x: int) -> int
+}
+
+negate_lit() = unsafe { abs(5) }
+
+combine_lit() = unsafe {
+    abs(7) + abs(8)
+}
+
+test "negate positive" = {
+    assert_eq(negate_lit(), 5)
+}
+
+test "combine abs" = {
+    assert_eq(combine_lit(), 15)
+}
+
+pub main() = {
+    r := combine_lit()
+    print("unsafe-sum={r}")
+}

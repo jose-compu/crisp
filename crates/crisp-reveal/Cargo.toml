@@ -10,6 +10,7 @@ crisp-resolve.workspace = true
 crisp-typeck.workspace = true
 crisp-ownership.workspace = true
 crisp-regions.workspace = true
+crisp-rust-emit.workspace = true
 anyhow.workspace = true
 
 [dev-dependencies]

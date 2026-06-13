@@ -30,6 +30,10 @@ pub fn format_owned_sig(sig: &OwnershipSignature, typed: Option<&InferredSig>) -
             line.push('\n');
             line.push_str(&ac.note);
         }
+        for fb in &sig.applied_fallbacks {
+            line.push('\n');
+            line.push_str(&fb.note);
+        }
         return line;
     }
     let params = sig
@@ -42,6 +46,10 @@ pub fn format_owned_sig(sig: &OwnershipSignature, typed: Option<&InferredSig>) -
     for ac in &sig.auto_clones {
         line.push('\n');
         line.push_str(&ac.note);
+    }
+    for fb in &sig.applied_fallbacks {
+        line.push('\n');
+        line.push_str(&fb.note);
     }
     line
 }

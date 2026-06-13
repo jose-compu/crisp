@@ -3,9 +3,33 @@ use crate::usage::Usage;
 use crisp_ast::Span;
 use std::collections::BTreeMap;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FallbackKind {
+    Reborrow,
+    CloneAtMove,
+    WidenMut,
+}
+
+impl FallbackKind {
+    pub fn label(self) -> &'static str {
+        match self {
+            FallbackKind::Reborrow => "reborrow",
+            FallbackKind::CloneAtMove => "clone",
+            FallbackKind::WidenMut => "widen-mut",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AutoClone {
     pub binding: String,
+    pub span: Span,
+    pub note: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct AppliedFallback {
+    pub kind: FallbackKind,
     pub span: Span,
     pub note: String,
 }
@@ -17,6 +41,7 @@ pub struct OwnershipSignature {
     pub params: Vec<(String, OwnershipMode)>,
     pub ret_mode: Option<OwnershipMode>,
     pub auto_clones: Vec<AutoClone>,
+    pub applied_fallbacks: Vec<AppliedFallback>,
     pub span: Span,
 }
 

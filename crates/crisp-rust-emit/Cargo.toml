@@ -8,4 +8,13 @@ license.workspace = true
 [dependencies]
 crisp-cir.workspace = true
 crisp-diagnostics.workspace = true
+crisp-ast.workspace = true
+crisp-resolve.workspace = true
+crisp-typeck.workspace = true
+crisp-ownership.workspace = true
 anyhow.workspace = true
+thiserror.workspace = true
+tempfile = "3"
+
+[dev-dependencies]
+insta = { version = "1", features = ["yaml"] }

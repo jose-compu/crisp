@@ -3,6 +3,7 @@ use crisp_parser::Parser as CrispParser;
 use crisp_resolve::{Resolver, find_crate_root};
 use crisp_ownership::OwnershipPass;
 use crisp_regions::RegionPass;
+use crisp_rust_emit::resolve_rustc_fallbacks;
 use crisp_typeck::TypeChecker;
 use std::fs;
 use std::path::PathBuf;
@@ -77,7 +78,13 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|| PathBuf::from(&path));
             Resolver::resolve_crate(&root)?;
             TypeChecker::check_crate(&root)?;
-            OwnershipPass::analyze_crate(&root)?;
+            match resolve_rustc_fallbacks(&root) {
+                Ok(_) => {}
+                Err(crisp_rust_emit::FallbackResolveError::RustcUnavailable) => {
+                    OwnershipPass::analyze_crate(&root)?;
+                }
+                Err(e) => return Err(e.into()),
+            }
             RegionPass::assign_crate(&root)?;
             eprintln!("crpc check: ok ({})", root.display());
             Ok(())

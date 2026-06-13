@@ -87,6 +87,7 @@ impl OwnershipPass {
                     params,
                     ret_mode: return_mode(def, typed.signatures.get(key)),
                     auto_clones,
+                    applied_fallbacks: vec![],
                     span: def.span,
                 },
             );

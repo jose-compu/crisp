@@ -94,7 +94,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [x] Lattice join (`&` ⊑ `&mut` ⊑ owned) + global call-graph fixpoint
 - [x] Clone insertion policy (reported via `reveal ownership`)
 - [x] Explicit `&` / `&mut` / `own` annotations
-- [ ] rustc disagreement fallbacks (§7.6) — deferred to emit (0.7)
+- [x] rustc disagreement fallbacks (§7.6) — probe emit + rustc retry loop
 
 **Regions** (§8)
 
@@ -130,6 +130,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [ ] Emit `target/rust/` Cargo project (§18)
 - [ ] Invoke `cargo build` / `cargo check`
 - [ ] Map `rustc` spans back to Crisp ICE diagnostics
+- [x] §7.6 fallback rewrites (reborrow, clone, widen-mut) via probe emit
 
 **Deliverable:** `crispc emit` + `crispc build` on `examples/hello`; runnable binary.
 

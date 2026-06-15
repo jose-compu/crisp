@@ -3,27 +3,35 @@
 use crisp_cir::CirBuilder;
 use crisp_lsp::CrispAnalysis;
 use crisp_rust_emit::{
-    build_emitted, collect_tests, emit_crate, run_emitted, run_tests, verify_sealed_api,
-    PipelineError,
+    PipelineError, build_emitted, collect_tests, emit_crate, run_emitted, run_tests,
+    verify_sealed_api,
 };
 use crisp_typeck::TypeChecker;
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
 }
 
 const MATRIX: &[(&str, &[&str])] = &[
     ("match", &["patterns", "workshop", "match"]),
     ("async_spawn", &["async_hello", "async_spawn"]),
     ("ffi_unsafe", &["ffi", "unsafe_math"]),
-    ("fallible", &["fallible", "fallible_chain", "inventory", "kitchen_sink"]),
+    (
+        "fallible",
+        &["fallible", "fallible_chain", "inventory", "kitchen_sink"],
+    ),
     ("stdlib_vec", &["stdlib_smoke", "vec_ops", "data_pipeline"]),
     ("multi_module", &["server", "math", "workshop", "inventory"]),
     ("defaults", &["defaults", "server", "kitchen_sink"]),
     ("sealed", &["sealed"]),
     ("ownership", &["ownership_demo"]),
-    ("tests_harness", &["with_tests", "math", "workshop", "vec_ops", "unsafe_math"]),
+    (
+        "tests_harness",
+        &["with_tests", "math", "workshop", "vec_ops", "unsafe_math"],
+    ),
 ];
 
 #[test]
@@ -74,7 +82,10 @@ fn complex_workshop_multimodule_tests() {
     assert!(tests.iter().any(|t| t.name.contains("greet")));
     match run_tests(&root) {
         Ok(r) => {
-            eprintln!("workshop runtime={} compile_fail={}", r.runtime_passed, r.compile_fail_passed);
+            eprintln!(
+                "workshop runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
             assert!(r.runtime_passed >= 3);
             assert!(r.compile_fail_passed >= 1);
         }
@@ -88,7 +99,11 @@ fn complex_inventory_lsp_and_fallible() {
     let root = example("inventory");
     let a = CrispAnalysis::analyze(&root).expect("analyze");
     let overlays = a.call_overlays(&root.join("src/main.crp")).unwrap();
-    assert!(overlays.iter().any(|o| o.callee == "try_reserve" || o.callee == "lookup_item"));
+    assert!(
+        overlays
+            .iter()
+            .any(|o| o.callee == "try_reserve" || o.callee == "lookup_item")
+    );
 }
 
 #[test]

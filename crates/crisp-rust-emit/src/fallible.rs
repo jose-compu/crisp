@@ -65,12 +65,7 @@ fn emit_type_defs(graph: &ModuleGraph, out: &mut String) {
                         if i > 0 {
                             let _ = write!(out, ", ");
                         }
-                        let _ = write!(
-                            out,
-                            "pub {}: {}",
-                            f.name.name,
-                            field_ty(&f.ty.kind)
-                        );
+                        let _ = write!(out, "pub {}: {}", f.name.name, field_ty(&f.ty.kind));
                     }
                     let _ = writeln!(out, "}}");
                 }
@@ -305,11 +300,7 @@ fn emit_fallible_block(
     }
 }
 
-fn callee_is_fallible(
-    func: &Expr,
-    fallible: &BTreeMap<String, bool>,
-    module: &str,
-) -> bool {
+fn callee_is_fallible(func: &Expr, fallible: &BTreeMap<String, bool>, module: &str) -> bool {
     if let ExprKind::Ident(id) = &func.kind {
         let key = format!("{module}::{}", id.name);
         return fallible.get(&key).copied().unwrap_or(false);
@@ -383,7 +374,15 @@ fn emit_simple_expr(out: &mut String, expr: &Expr, osig: &crisp_ownership::Owner
             let _ = write!(out, "}}");
         }
         ExprKind::Call { func, args } => {
-            emit_call(out, func, args, osig, &BTreeMap::new(), &BTreeMap::new(), "");
+            emit_call(
+                out,
+                func,
+                args,
+                osig,
+                &BTreeMap::new(),
+                &BTreeMap::new(),
+                "",
+            );
         }
         _ => {
             let _ = write!(out, "()");

@@ -1,11 +1,11 @@
 //! Hover signatures, types, ownership, reachable errors.
 
-use crate::walk::{locate_at_offset, Located};
+use crate::walk::{Located, locate_at_offset};
 use crisp_ast::item::SourceFile;
 use crisp_errors::{ErrorResult, format_error_sig};
-use crisp_ownership::{format_owned_sig, OwnershipResult};
-use crisp_regions::{format_lifetime_sig, RegionResult};
-use crisp_typeck::{format_sig, format_ty, TypedCrate};
+use crisp_ownership::{OwnershipResult, format_owned_sig};
+use crisp_regions::{RegionResult, format_lifetime_sig};
+use crisp_typeck::{TypedCrate, format_sig, format_ty};
 
 #[derive(Debug, Clone)]
 pub struct HoverInfo {
@@ -25,7 +25,9 @@ pub fn hover_at_offset(
 ) -> Option<HoverInfo> {
     let loc = locate_at_offset(file, offset)?;
     match loc {
-        Located::Call { callee, .. } => hover_call(module, callee, typed, ownership, regions, errors),
+        Located::Call { callee, .. } => {
+            hover_call(module, callee, typed, ownership, regions, errors)
+        }
         Located::Ident(id) => hover_ident(module, &id.name, typed, ownership, regions, errors),
         Located::Function(f) => hover_function(module, f, typed, ownership, regions, errors),
         Located::Expr(_) => None,
@@ -134,12 +136,5 @@ fn hover_function(
     regions: &RegionResult,
     errors: &ErrorResult,
 ) -> Option<HoverInfo> {
-    hover_call(
-        module,
-        &f.name,
-        typed,
-        ownership,
-        regions,
-        errors,
-    )
+    hover_call(module, &f.name, typed, ownership, regions, errors)
 }

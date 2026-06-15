@@ -1,9 +1,9 @@
 //! AST walk utilities for position-sensitive queries.
 
+use crisp_ast::Span;
 use crisp_ast::expr::{Expr, ExprKind, Stmt};
 use crisp_ast::ident::Ident;
 use crisp_ast::item::{FunctionDef, Item, SourceFile};
-use crisp_ast::Span;
 
 #[derive(Debug, Clone)]
 pub enum Located<'a> {
@@ -47,12 +47,7 @@ pub fn all_functions(file: &SourceFile) -> Vec<&FunctionDef> {
     out
 }
 
-fn consider<'a>(
-    best: &mut Option<(u32, Located<'a>)>,
-    offset: u32,
-    span: Span,
-    loc: Located<'a>,
-) {
+fn consider<'a>(best: &mut Option<(u32, Located<'a>)>, offset: u32, span: Span, loc: Located<'a>) {
     if !span.contains(offset) {
         return;
     }
@@ -118,15 +113,7 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
         ExprKind::Call { func, args } => {
             if let ExprKind::Ident(id) = &func.kind {
                 if id.span.contains(offset) {
-                    consider(
-                        best,
-                        offset,
-                        id.span,
-                        Located::Call {
-                            callee: id,
-                            args,
-                        },
-                    );
+                    consider(best, offset, id.span, Located::Call { callee: id, args });
                 }
             }
             walk_expr(func, offset, best);

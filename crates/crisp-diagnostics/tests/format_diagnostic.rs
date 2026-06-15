@@ -1,7 +1,7 @@
 //! Diagnostic formatting tests (spec §17.4).
 
-use crisp_diagnostics::{format_ownership_contradiction, format_type_mismatch, Severity};
 use crisp_ast::Span;
+use crisp_diagnostics::{Severity, format_ownership_contradiction, format_type_mismatch};
 
 #[test]
 fn formatted_error_has_caret_and_note() {

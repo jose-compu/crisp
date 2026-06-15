@@ -1,17 +1,17 @@
 //! Full-crate analysis cache for editor queries.
 
-use crate::hover::{hover_at_offset, HoverInfo};
-use crate::hints::inlay_hints_for_file;
 use crate::hints::InlayHint;
-use crate::lenses::code_lenses_for_file;
+use crate::hints::inlay_hints_for_file;
+use crate::hover::{HoverInfo, hover_at_offset};
 use crate::lenses::CodeLens;
-use crate::overlays::call_overlays_for_file;
+use crate::lenses::code_lenses_for_file;
 use crate::overlays::CallOverlay;
+use crate::overlays::call_overlays_for_file;
 use crisp_errors::ErrorResult;
 use crisp_ownership::OwnershipResult;
 use crisp_regions::RegionResult;
-use crisp_resolve::module::{load_module_graph, ModuleGraph};
-use crisp_resolve::{find_crate_root, Resolver};
+use crisp_resolve::module::{ModuleGraph, load_module_graph};
+use crisp_resolve::{Resolver, find_crate_root};
 use crisp_rust_emit::resolve_rustc_fallbacks;
 use crisp_typeck::{TypeChecker, TypedCrate};
 use std::path::{Path, PathBuf};
@@ -47,7 +47,8 @@ pub struct CrispAnalysis {
 
 impl CrispAnalysis {
     pub fn analyze(path: &Path) -> Result<Self, AnalysisError> {
-        let crate_root = find_crate_root(path).ok_or_else(|| AnalysisError::NoCrateRoot(path.to_path_buf()))?;
+        let crate_root =
+            find_crate_root(path).ok_or_else(|| AnalysisError::NoCrateRoot(path.to_path_buf()))?;
         Resolver::resolve_crate(&crate_root)?;
         let graph = load_module_graph(&crate_root)?;
         let typed = TypeChecker::check_crate(&crate_root)?;
@@ -76,11 +77,12 @@ impl CrispAnalysis {
     }
 
     pub fn module_for_file(&self, file: &Path) -> Result<&str, AnalysisError> {
-        let abs = file
-            .canonicalize()
-            .unwrap_or_else(|_| file.to_path_buf());
+        let abs = file.canonicalize().unwrap_or_else(|_| file.to_path_buf());
         for node in self.graph.modules.values() {
-            let node_abs = node.path.canonicalize().unwrap_or_else(|_| node.path.clone());
+            let node_abs = node
+                .path
+                .canonicalize()
+                .unwrap_or_else(|_| node.path.clone());
             if node_abs == abs {
                 return Ok(&node.module_path);
             }
@@ -90,12 +92,7 @@ impl CrispAnalysis {
 
     pub fn source_file(&self, file: &Path) -> Result<&crisp_ast::item::SourceFile, AnalysisError> {
         let module = self.module_for_file(file)?;
-        Ok(&self
-            .graph
-            .modules
-            .get(module)
-            .expect("module exists")
-            .ast)
+        Ok(&self.graph.modules.get(module).expect("module exists").ast)
     }
 
     pub fn hover(&self, file: &Path, offset: u32) -> Result<Option<HoverInfo>, AnalysisError> {
@@ -126,7 +123,12 @@ impl CrispAnalysis {
     pub fn call_overlays(&self, file: &Path) -> Result<Vec<CallOverlay>, AnalysisError> {
         let module = self.module_for_file(file)?;
         let ast = self.source_file(file)?;
-        Ok(call_overlays_for_file(ast, module, &self.errors, &self.typed))
+        Ok(call_overlays_for_file(
+            ast,
+            module,
+            &self.errors,
+            &self.typed,
+        ))
     }
 
     pub fn code_lenses(&self, file: &Path) -> Result<Vec<CodeLens>, AnalysisError> {

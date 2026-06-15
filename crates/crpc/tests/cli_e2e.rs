@@ -22,11 +22,7 @@ fn run_ok(bin: &str, args: &[&str]) -> String {
         .args(args)
         .output()
         .unwrap_or_else(|e| panic!("spawn {bin} {args:?}: {e}"));
-    eprintln!(
-        "$ {bin} {} (status={})",
-        args.join(" "),
-        output.status
-    );
+    eprintln!("$ {bin} {} (status={})", args.join(" "), output.status);
     if !output.stderr.is_empty() {
         eprintln!("stderr:\n{}", String::from_utf8_lossy(&output.stderr));
     }
@@ -52,17 +48,41 @@ fn bin_path(name: &str) -> PathBuf {
 #[test]
 fn crpc_check_all_examples() {
     for ex in [
-        "hello", "server", "fallible", "math", "defaults", "sealed", "with_tests",
-        "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory",
-        "vec_ops", "fallible_chain", "async_spawn", "workshop", "unsafe_math", "data_pipeline",
+        "hello",
+        "server",
+        "fallible",
+        "math",
+        "defaults",
+        "sealed",
+        "with_tests",
+        "match",
+        "async_hello",
+        "ffi",
+        "stdlib_smoke",
+        "patterns",
+        "kitchen_sink",
+        "ownership_demo",
+        "inventory",
+        "vec_ops",
+        "fallible_chain",
+        "async_spawn",
+        "workshop",
+        "unsafe_math",
+        "data_pipeline",
     ] {
-        run_ok("crpc", &["check", &examples_dir().join(ex).to_string_lossy()]);
+        run_ok(
+            "crpc",
+            &["check", &examples_dir().join(ex).to_string_lossy()],
+        );
     }
 }
 
 #[test]
 fn crpc_emit_hello() {
-    run_ok("crpc", &["emit", &examples_dir().join("hello").to_string_lossy()]);
+    run_ok(
+        "crpc",
+        &["emit", &examples_dir().join("hello").to_string_lossy()],
+    );
     assert!(examples_dir().join("hello/target/rust/Cargo.toml").exists());
 }
 
@@ -104,7 +124,10 @@ fn reveal_types_hello() {
 fn reveal_ownership_server() {
     let out = run_ok(
         "reveal",
-        &["ownership", &examples_dir().join("server").to_string_lossy()],
+        &[
+            "ownership",
+            &examples_dir().join("server").to_string_lossy(),
+        ],
     );
     assert!(out.contains("main"));
 }
@@ -149,20 +172,32 @@ fn reveal_expand_defaults() {
 
 #[test]
 fn crpc_build_and_run_patterns() {
-    let root = examples_dir().join("patterns").to_string_lossy().to_string();
+    let root = examples_dir()
+        .join("patterns")
+        .to_string_lossy()
+        .to_string();
     run_ok("crpc", &["build", &root]);
     let out = run_ok("crpc", &["run", &root]);
-    assert!(out.contains("small") || out.contains("tagged"), "output: {out}");
+    assert!(
+        out.contains("small") || out.contains("tagged"),
+        "output: {out}"
+    );
 }
 
 #[test]
 fn crpc_test_patterns() {
-    run_ok("crpc", &["test", &examples_dir().join("patterns").to_string_lossy()]);
+    run_ok(
+        "crpc",
+        &["test", &examples_dir().join("patterns").to_string_lossy()],
+    );
 }
 
 #[test]
 fn crpc_build_and_run_kitchen_sink() {
-    let root = examples_dir().join("kitchen_sink").to_string_lossy().to_string();
+    let root = examples_dir()
+        .join("kitchen_sink")
+        .to_string_lossy()
+        .to_string();
     run_ok("crpc", &["build", &root]);
     let out = run_ok("crpc", &["run", &root]);
     assert!(out.contains("port=3000"), "output: {out}");
@@ -172,7 +207,10 @@ fn crpc_build_and_run_kitchen_sink() {
 fn reveal_types_kitchen_sink() {
     let out = run_ok(
         "reveal",
-        &["types", &examples_dir().join("kitchen_sink").to_string_lossy()],
+        &[
+            "types",
+            &examples_dir().join("kitchen_sink").to_string_lossy(),
+        ],
     );
     assert!(out.contains("parse_port") || out.contains("load_port"));
     assert!(out.contains("main"));
@@ -182,7 +220,10 @@ fn reveal_types_kitchen_sink() {
 fn reveal_ownership_ownership_demo() {
     let out = run_ok(
         "reveal",
-        &["ownership", &examples_dir().join("ownership_demo").to_string_lossy()],
+        &[
+            "ownership",
+            &examples_dir().join("ownership_demo").to_string_lossy(),
+        ],
     );
     assert!(out.contains("make_greeting"));
     assert!(out.contains("main"));

@@ -2,11 +2,13 @@
 
 use crisp_cir::CirBuilder;
 use crisp_lsp::CrispAnalysis;
-use crisp_rust_emit::{emit_crate, run_emitted, run_tests, PipelineError};
+use crisp_rust_emit::{PipelineError, emit_crate, run_emitted, run_tests};
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
 }
 
 #[test]
@@ -70,7 +72,10 @@ fn m10_lsp_fallible_call_overlay() {
     let a = CrispAnalysis::analyze(&root).unwrap();
     let overlays = a.call_overlays(&root.join("src/main.crp")).unwrap();
     eprintln!("overlays: {overlays:?}");
-    let read = overlays.iter().find(|o| o.callee == "read_config").expect("read_config");
+    let read = overlays
+        .iter()
+        .find(|o| o.callee == "read_config")
+        .expect("read_config");
     assert!(read.fallible);
     assert!(!read.error_set.is_empty());
 }

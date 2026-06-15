@@ -89,7 +89,12 @@ fn emit_module_items(
         match item {
             CirItem::Struct(s) => emit_struct(out, s, map),
             CirItem::Enum(e) => emit_enum(out, e, map),
-            CirItem::Alias { name, is_pub, ty, span } => {
+            CirItem::Alias {
+                name,
+                is_pub,
+                ty,
+                span,
+            } => {
                 map.record(out.len() as u32, *span);
                 let vis = if *is_pub { "pub " } else { "" };
                 let _ = writeln!(out, "{vis}type {name} = {};", format_ty(ty));
@@ -116,20 +121,12 @@ fn emit_module_items(
     let _ = cir;
 }
 
-fn emit_extern_block(
-    out: &mut String,
-    ext: &crisp_cir::CirExternBlock,
-    map: &mut EmitSourceMap,
-) {
+fn emit_extern_block(out: &mut String, ext: &crisp_cir::CirExternBlock, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, ext.span);
     let _ = writeln!(out, "extern \"{}\" {{", ext.abi);
     for f in &ext.functions {
         map.record(out.len() as u32, f.span);
-        let params: Vec<_> = f
-            .params
-            .iter()
-            .map(|p| format_extern_param(p))
-            .collect();
+        let params: Vec<_> = f.params.iter().map(|p| format_extern_param(p)).collect();
         let ret = if matches!(f.ret, CirTy::Unit) {
             String::new()
         } else {
@@ -275,9 +272,15 @@ fn format_extern_ty(ty: &CirTy) -> String {
 }
 
 fn format_param(p: &CirParam) -> String {
-    let lt = p.lifetime.as_ref().map(|l| format!("{l} ")).unwrap_or_default();
+    let lt = p
+        .lifetime
+        .as_ref()
+        .map(|l| format!("{l} "))
+        .unwrap_or_default();
     let ty = match p.mode {
-        OwnershipMode::Borrow if p.ty.is_stringish() || matches!(p.ty, CirTy::Str | CirTy::Var(_)) => {
+        OwnershipMode::Borrow
+            if p.ty.is_stringish() || matches!(p.ty, CirTy::Str | CirTy::Var(_)) =>
+        {
             format!("&{lt}str")
         }
         OwnershipMode::Borrow => format!("&{lt}{}", format_ty(&p.ty)),
@@ -340,7 +343,13 @@ fn emit_block_body(
     let _ = write!(out, "}}");
 }
 
-fn emit_stmt(out: &mut String, stmt: &CirStmt, current_module: &str, indent: usize, map: &mut EmitSourceMap) {
+fn emit_stmt(
+    out: &mut String,
+    stmt: &CirStmt,
+    current_module: &str,
+    indent: usize,
+    map: &mut EmitSourceMap,
+) {
     let pad = "    ".repeat(indent);
     match stmt {
         CirStmt::Let { name, value, span } => {
@@ -359,7 +368,11 @@ fn emit_stmt(out: &mut String, stmt: &CirStmt, current_module: &str, indent: usi
             }
             let _ = writeln!(out, ";");
         }
-        CirStmt::Assign { target, value, span } => {
+        CirStmt::Assign {
+            target,
+            value,
+            span,
+        } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "{pad}{target} = ");
             emit_expr(out, value, current_module, map);
@@ -386,7 +399,13 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             let _ = write!(out, "{name}");
         }
-        CirExpr::BinOp { op, left, right, span, .. } => {
+        CirExpr::BinOp {
+            op,
+            left,
+            right,
+            span,
+            ..
+        } => {
             map.record(out.len() as u32, *span);
             if *op == CirBinOp::Concat {
                 let _ = write!(out, "format!(\"{{}}{{}}\", ");
@@ -471,7 +490,9 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             emit_expr(out, expr, current_module, map);
             let _ = write!(out, "?");
         }
-        CirExpr::Catch { expr, arms, span, .. } => {
+        CirExpr::Catch {
+            expr, arms, span, ..
+        } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "match ");
             emit_expr(out, expr, current_module, map);
@@ -481,7 +502,9 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             }
             let _ = write!(out, " }}");
         }
-        CirExpr::Field { base, field, span, .. } => {
+        CirExpr::Field {
+            base, field, span, ..
+        } => {
             map.record(out.len() as u32, *span);
             emit_expr(out, base, current_module, map);
             let _ = write!(out, ".{field}");
@@ -513,7 +536,11 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             emit_expr(out, expr, current_module, map);
             let _ = write!(out, ".clone()");
         }
-        CirExpr::Borrow { expr, mutable, span } => {
+        CirExpr::Borrow {
+            expr,
+            mutable,
+            span,
+        } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "&");
             if *mutable {
@@ -684,7 +711,10 @@ fn emit_call_expr(
                 let _ = write!(out, ".len() as i64");
             }
             "tokio::time::sleep" if !args.is_empty() => {
-                let _ = write!(out, "tokio::time::sleep(tokio::time::Duration::from_millis(");
+                let _ = write!(
+                    out,
+                    "tokio::time::sleep(tokio::time::Duration::from_millis("
+                );
                 emit_expr(out, &args[0].expr, current_module, map);
                 let _ = write!(out, "))");
             }
@@ -808,7 +838,12 @@ fn emit_call_arg(
     emit_expr(out, expr, current_module, map);
 }
 
-fn emit_catch_arm(out: &mut String, arm: &CirCatchArm, current_module: &str, map: &mut EmitSourceMap) {
+fn emit_catch_arm(
+    out: &mut String,
+    arm: &CirCatchArm,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
     map.record(out.len() as u32, arm.span);
     if arm.wildcard {
         let _ = write!(out, " Err(_) => ");

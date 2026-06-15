@@ -47,10 +47,7 @@ impl CrateManifest {
     }
 
     pub fn needs_tokio(&self) -> bool {
-        self.build
-            .runtime
-            .as_deref()
-            .is_some_and(|r| r == "tokio")
+        self.build.runtime.as_deref().is_some_and(|r| r == "tokio")
     }
 }
 
@@ -111,7 +108,10 @@ fn parse_build_section(table: &toml::Table) -> BuildSection {
             .and_then(|v| v.as_str())
             .unwrap_or("rust")
             .to_string(),
-        runtime: table.get("runtime").and_then(|v| v.as_str()).map(str::to_string),
+        runtime: table
+            .get("runtime")
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
         error_model: table
             .get("error_model")
             .and_then(|v| v.as_str())
@@ -140,10 +140,7 @@ fn parse_dependencies(table: &toml::Table) -> BTreeMap<String, DependencySpec> {
                             .collect()
                     })
                     .unwrap_or_default();
-                let rust = t
-                    .get("rust")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false);
+                let rust = t.get("rust").and_then(|v| v.as_bool()).unwrap_or(false);
                 DependencySpec::Detailed {
                     version,
                     features,

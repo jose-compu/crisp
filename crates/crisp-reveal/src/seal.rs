@@ -1,7 +1,7 @@
 use anyhow::Result;
 use crisp_manifest::read_lock;
-use crisp_rust_emit::{compute_sealed_api, format_sealed_api};
 use crisp_resolve::find_crate_root;
+use crisp_rust_emit::{compute_sealed_api, format_sealed_api};
 use std::path::Path;
 
 pub fn reveal_seal(crate_path: &Path) -> Result<String> {

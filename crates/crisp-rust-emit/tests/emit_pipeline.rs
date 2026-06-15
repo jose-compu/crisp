@@ -1,7 +1,7 @@
 //! End-to-end emit and build tests (spec §17.1).
 
 use crisp_cir::CirBuilder;
-use crisp_rust_emit::{emit_crate, build_emitted, emit_to_target, run_emitted, PipelineError};
+use crisp_rust_emit::{PipelineError, build_emitted, emit_crate, emit_to_target, run_emitted};
 use std::path::PathBuf;
 
 fn hello_root() -> PathBuf {
@@ -117,7 +117,11 @@ fn math_emits_arith_module() {
     let cir = CirBuilder::build_crate(&math_root()).expect("cir");
     let out = emit_crate(&cir);
     assert!(out.lib_rs.contains("mod arith"));
-    assert!(out.modules.iter().any(|(m, s)| m == "arith" && s.contains("fn product")));
+    assert!(
+        out.modules
+            .iter()
+            .any(|(m, s)| m == "arith" && s.contains("fn product"))
+    );
 }
 
 #[test]

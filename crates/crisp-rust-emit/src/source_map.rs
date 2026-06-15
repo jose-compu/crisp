@@ -16,11 +16,7 @@ impl EmitSourceMap {
         let mut offset = 0u32;
         for (i, l) in lines.iter().enumerate() {
             if (i as u32 + 1) == line {
-                return self
-                    .entries
-                    .range(..=offset)
-                    .next_back()
-                    .map(|(_, s)| *s);
+                return self.entries.range(..=offset).next_back().map(|(_, s)| *s);
             }
             offset += l.len() as u32 + 1;
         }

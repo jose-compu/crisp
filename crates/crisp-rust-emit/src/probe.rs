@@ -5,8 +5,8 @@ use crisp_ast::item::{FunctionDef, Item};
 use crisp_ast::pat::PatKind;
 use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipResult};
 use crisp_resolve::module::ModuleGraph;
-use crisp_typeck::{TypedCrate, format_ty};
 use crisp_typeck::Ty;
+use crisp_typeck::{TypedCrate, format_ty};
 use std::fmt::Write;
 
 pub fn emit_probe_crate(
@@ -103,14 +103,24 @@ pub(crate) fn format_rust_ty(ty: &Ty) -> String {
     }
 }
 
-pub(crate) fn emit_body(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
+pub(crate) fn emit_body(
+    out: &mut String,
+    expr: &Expr,
+    osig: &crisp_ownership::OwnershipSignature,
+    indent: usize,
+) {
     match &expr.kind {
         ExprKind::Block(b) => emit_block(out, b, osig, indent),
         other => emit_expr_stmt(out, expr, osig, indent, other),
     }
 }
 
-fn emit_block(out: &mut String, block: &Block, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
+fn emit_block(
+    out: &mut String,
+    block: &Block,
+    osig: &crisp_ownership::OwnershipSignature,
+    indent: usize,
+) {
     for stmt in &block.stmts {
         emit_stmt(out, stmt, osig, indent);
     }
@@ -119,7 +129,12 @@ fn emit_block(out: &mut String, block: &Block, osig: &crisp_ownership::Ownership
     }
 }
 
-fn emit_stmt(out: &mut String, stmt: &Stmt, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
+fn emit_stmt(
+    out: &mut String,
+    stmt: &Stmt,
+    osig: &crisp_ownership::OwnershipSignature,
+    indent: usize,
+) {
     let pad = "    ".repeat(indent);
     match stmt {
         Stmt::Expr(e) => {
@@ -167,7 +182,12 @@ fn should_clone_at_bind(
     false
 }
 
-fn emit_tail(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSignature, indent: usize) {
+fn emit_tail(
+    out: &mut String,
+    expr: &Expr,
+    osig: &crisp_ownership::OwnershipSignature,
+    indent: usize,
+) {
     let pad = "    ".repeat(indent);
     let _ = write!(out, "{pad}");
     emit_expr(out, expr, osig);

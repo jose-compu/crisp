@@ -3,7 +3,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum OwnershipError {
-    #[error("[E0050] ownership contradicts annotation on `{name}`: inferred `{inferred}`, annotated `{annotated}`")]
+    #[error(
+        "[E0050] ownership contradicts annotation on `{name}`: inferred `{inferred}`, annotated `{annotated}`"
+    )]
     ContradictsAnnotation {
         name: String,
         inferred: String,

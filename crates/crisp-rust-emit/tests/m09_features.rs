@@ -1,11 +1,13 @@
 //! Milestone 0.9 feature tests: match, async, ffi, stdlib, fallible.
 
 use crisp_cir::CirBuilder;
-use crisp_rust_emit::{build_emitted, emit_crate, run_emitted, PipelineError};
+use crisp_rust_emit::{PipelineError, build_emitted, emit_crate, run_emitted};
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
 }
 
 #[test]
@@ -36,10 +38,12 @@ fn m09_async_emits_tokio_main() {
         .modules
         .iter()
         .find(|m| m.path == "main")
-        .and_then(|m| m.items.iter().find_map(|i| match i {
-            crisp_cir::CirItem::Function(f) if f.is_main => Some(f),
-            _ => None,
-        }))
+        .and_then(|m| {
+            m.items.iter().find_map(|i| match i {
+                crisp_cir::CirItem::Function(f) if f.is_main => Some(f),
+                _ => None,
+            })
+        })
         .expect("main");
     assert!(main_fn.is_async);
     let out = emit_crate(&cir);
@@ -93,7 +97,9 @@ fn m09_all_new_examples_build() {
 fn m09_cir_has_extern_item_for_ffi() {
     let cir = CirBuilder::build_crate(&example("ffi")).expect("cir");
     let has_extern = cir.modules.iter().any(|m| {
-        m.items.iter().any(|i| matches!(i, crisp_cir::CirItem::Extern(_)))
+        m.items
+            .iter()
+            .any(|i| matches!(i, crisp_cir::CirItem::Extern(_)))
     });
     assert!(has_extern);
 }

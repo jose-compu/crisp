@@ -4,7 +4,7 @@ use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
 use crisp_ast::ident::Ident;
-use crisp_ast::item::{FunctionDef, Item, SourceFile, TypeBody, ExternBlock};
+use crisp_ast::item::{ExternBlock, FunctionDef, Item, SourceFile, TypeBody};
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
@@ -225,7 +225,12 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_test_block(&mut self, module: &str, name: &str, body: &Block) -> Result<(), TypeError> {
+    fn check_test_block(
+        &mut self,
+        module: &str,
+        name: &str,
+        body: &Block,
+    ) -> Result<(), TypeError> {
         let mut local = self.env.clone();
         let body_ty = self.infer_block(&mut local, body)?;
         unify(&mut self.ctx, &body_ty, &Ty::Unit)?;
@@ -721,10 +726,13 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
         (
             "push",
             Ty::Fn {
-                params: vec![Ty::Named {
-                    name: "vec".into(),
-                    args: vec![],
-                }, Ty::Int],
+                params: vec![
+                    Ty::Named {
+                        name: "vec".into(),
+                        args: vec![],
+                    },
+                    Ty::Int,
+                ],
                 ret: Box::new(Ty::Unit),
             },
         ),

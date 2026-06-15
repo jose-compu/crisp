@@ -10,11 +10,7 @@ pub fn format_lifetime_sig(sig: &LifetimeSig, typed: Option<&InferredSig>) -> St
                 .map(|(n, t)| format!("{n}: {}", format_ty(t)))
                 .collect::<Vec<_>>()
                 .join(", ");
-            return format!(
-                "{}({params}) -> {}  [elided]",
-                sig.name,
-                format_ty(&ts.ret)
-            );
+            return format!("{}({params}) -> {}  [elided]", sig.name, format_ty(&ts.ret));
         }
         return format!("{}()  [elided]", sig.name);
     }
@@ -49,10 +45,7 @@ pub fn format_lifetime_sig(sig: &LifetimeSig, typed: Option<&InferredSig>) -> St
     }
 }
 
-pub fn format_lifetimes_crate(
-    result: &RegionResult,
-    typed: &crisp_typeck::TypedCrate,
-) -> String {
+pub fn format_lifetimes_crate(result: &RegionResult, typed: &crisp_typeck::TypedCrate) -> String {
     let mut lines: Vec<String> = result
         .lifetimes
         .values()

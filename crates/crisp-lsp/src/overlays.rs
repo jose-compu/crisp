@@ -1,8 +1,8 @@
 //! Reachable CrispError set overlays on call sites.
 
 use crate::walk::all_calls;
-use crisp_ast::item::SourceFile;
 use crisp_ast::Span;
+use crisp_ast::item::SourceFile;
 use crisp_errors::{ErrorResult, format_error_sig};
 use crisp_typeck::TypedCrate;
 
@@ -29,12 +29,7 @@ pub fn call_overlays_for_file(
             .or_else(|| errors.signatures.get(&callee.name));
         if let Some(esig) = esig {
             if esig.fallible {
-                let error_set = esig
-                    .errors
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(" | ");
+                let error_set = esig.errors.iter().cloned().collect::<Vec<_>>().join(" | ");
                 out.push(CallOverlay {
                     span,
                     callee: callee.name.clone(),

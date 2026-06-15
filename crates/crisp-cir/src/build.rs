@@ -238,9 +238,7 @@ fn collect_fn_modules(graph: &ModuleGraph) -> BTreeMap<String, String> {
     map
 }
 
-fn collect_struct_field_names(
-    structs: &[(String, CirStruct)],
-) -> BTreeMap<String, Vec<String>> {
+fn collect_struct_field_names(structs: &[(String, CirStruct)]) -> BTreeMap<String, Vec<String>> {
     structs
         .iter()
         .map(|(_, s)| {
@@ -532,8 +530,16 @@ fn lower_block(
             Stmt::Bind { pat, value, .. } => {
                 if let PatKind::Ident(name) = &pat.kind {
                     let mut lowered = lower_expr(
-                        value, module, osig, typed, ownership, errors, locals,
-                        struct_fields, fn_modules, LowerCtx::default(extern_fns),
+                        value,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        LowerCtx::default(extern_fns),
                     );
                     if should_clone_at_bind(osig, &name.name, value) {
                         lowered = CirExpr::Clone {
@@ -552,16 +558,32 @@ fn lower_block(
             }
             Stmt::Expr(e) => {
                 stmts.push(CirStmt::Expr(lower_expr(
-                    e, module, osig, typed, ownership, errors, locals,
-                    struct_fields, fn_modules, LowerCtx::default(extern_fns),
+                    e,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    LowerCtx::default(extern_fns),
                 )));
             }
             Stmt::Assign { target, value, .. } => {
                 stmts.push(CirStmt::Assign {
                     target: target.name.clone(),
                     value: lower_expr(
-                        value, module, osig, typed, ownership, errors, locals,
-                        struct_fields, fn_modules, LowerCtx::default(extern_fns),
+                        value,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        LowerCtx::default(extern_fns),
                     ),
                     span: value.span,
                 });
@@ -570,8 +592,16 @@ fn lower_block(
     }
     let tail = block.tail.as_ref().map(|e| {
         lower_expr(
-            e, module, osig, typed, ownership, errors, locals,
-            struct_fields, fn_modules, LowerCtx::default(extern_fns),
+            e,
+            module,
+            osig,
+            typed,
+            ownership,
+            errors,
+            locals,
+            struct_fields,
+            fn_modules,
+            LowerCtx::default(extern_fns),
         )
     });
     let _ = fn_fallible;
@@ -594,7 +624,7 @@ fn lower_expr(
     fn_modules: &BTreeMap<String, String>,
     ctx: LowerCtx,
 ) -> CirExpr {
-    use crate::node::{CirFormatPart, CirExpr as E};
+    use crate::node::{CirExpr as E, CirFormatPart};
     match &expr.kind {
         ExprKind::Ident(id) => E::Ident {
             name: id.name.clone(),
@@ -615,8 +645,16 @@ fn lower_expr(
                         .map(|p| match p {
                             StringPart::Lit(l) => CirFormatPart::Lit(l.clone()),
                             StringPart::Expr(e) => CirFormatPart::Expr(lower_expr(
-                                e, module, osig, typed, ownership, errors, locals,
-                                struct_fields, fn_modules, ctx,
+                                e,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
                             )),
                         })
                         .collect(),
@@ -637,16 +675,46 @@ fn lower_expr(
         }
         ExprKind::Field { base, field } => E::Field {
             base: Box::new(lower_expr(
-                base, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                base,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             field: field.name.clone(),
             ty: CirTy::Error,
             span: expr.span,
         },
         ExprKind::Binary { op, left, right } => {
-            let l = lower_expr(left, module, osig, typed, ownership, errors, locals, struct_fields, fn_modules, ctx);
-            let r = lower_expr(right, module, osig, typed, ownership, errors, locals, struct_fields, fn_modules, ctx);
+            let l = lower_expr(
+                left,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            let r = lower_expr(
+                right,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
             let cir_op = match op {
                 BinaryOp::Concat => CirBinOp::Concat,
                 BinaryOp::Add => CirBinOp::Add,
@@ -670,8 +738,16 @@ fn lower_expr(
             if let ExprKind::Ident(id) = &func.kind {
                 if (id.name == "print" || id.name == "log") && args.len() == 1 {
                     let arg = lower_expr(
-                        &args[0], module, osig, typed, ownership, errors, locals,
-                        struct_fields, fn_modules, ctx,
+                        &args[0],
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        ctx,
                     );
                     let debug = print_arg_is_debug(&arg);
                     return E::Print {
@@ -701,8 +777,16 @@ fn lower_expr(
                     .enumerate()
                     .map(|(i, arg)| {
                         let mut lowered = lower_expr(
-                            arg, module, osig, typed, ownership, errors, locals,
-                            struct_fields, fn_modules, ctx,
+                            arg,
+                            module,
+                            osig,
+                            typed,
+                            ownership,
+                            errors,
+                            locals,
+                            struct_fields,
+                            fn_modules,
+                            ctx,
                         );
                         let mode = callee_osig
                             .and_then(|c| c.params.get(i).map(|(_, m)| *m))
@@ -749,8 +833,16 @@ fn lower_expr(
                         (
                             f.name.name.clone(),
                             lower_expr(
-                                &f.value, module, osig, typed, ownership, errors, locals,
-                                struct_fields, fn_modules, ctx,
+                                &f.value,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
                             ),
                         )
                     })
@@ -766,15 +858,31 @@ fn lower_expr(
         }
         ExprKind::Throw(inner) => E::Throw {
             payload: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             span: expr.span,
         },
         ExprKind::Try(inner) => E::Try {
             expr: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             span: expr.span,
         },
@@ -784,16 +892,32 @@ fn lower_expr(
                 extern_fns: ctx.extern_fns,
             };
             let lowered = lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, catch_ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                catch_ctx,
             );
             let catch_arms: Vec<CirCatchArm> = arms
                 .iter()
                 .map(|a| CirCatchArm {
                     wildcard: matches!(a.pat.kind, PatKind::Wildcard),
                     body: lower_expr(
-                        &a.body, module, osig, typed, ownership, errors, locals,
-                        struct_fields, fn_modules, LowerCtx::default(ctx.extern_fns),
+                        &a.body,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        LowerCtx::default(ctx.extern_fns),
                     ),
                     span: a.span,
                 })
@@ -811,17 +935,41 @@ fn lower_expr(
             else_branch,
         } => E::If {
             cond: Box::new(lower_expr(
-                cond, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                cond,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             then_branch: Box::new(lower_expr(
-                then_branch, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                then_branch,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             else_branch: else_branch.as_ref().map(|e| {
                 Box::new(lower_expr(
-                    e, module, osig, typed, ownership, errors, locals, struct_fields,
-                    fn_modules, ctx,
+                    e,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
                 ))
             }),
             ty: CirTy::Error,
@@ -829,8 +977,16 @@ fn lower_expr(
         },
         ExprKind::Match { scrutinee, arms } => E::Match {
             scrutinee: Box::new(lower_expr(
-                scrutinee, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                scrutinee,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             arms: arms
                 .iter()
@@ -838,13 +994,29 @@ fn lower_expr(
                     pat: lower_pat(&a.pat),
                     guard: a.guard.as_ref().map(|g| {
                         lower_expr(
-                            g, module, osig, typed, ownership, errors, locals, struct_fields,
-                            fn_modules, ctx,
+                            g,
+                            module,
+                            osig,
+                            typed,
+                            ownership,
+                            errors,
+                            locals,
+                            struct_fields,
+                            fn_modules,
+                            ctx,
                         )
                     }),
                     body: lower_expr(
-                        &a.body, module, osig, typed, ownership, errors, locals, struct_fields,
-                        fn_modules, ctx,
+                        &a.body,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        ctx,
                     ),
                     span: a.span,
                 })
@@ -854,30 +1026,62 @@ fn lower_expr(
         },
         ExprKind::Unsafe(inner) => E::Unsafe {
             body: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             span: expr.span,
         },
         ExprKind::Async(inner) => E::Async {
             body: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             span: expr.span,
         },
         ExprKind::Await(inner) => E::Await {
             expr: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             ty: CirTy::Error,
             span: expr.span,
         },
         ExprKind::Spawn(inner) => E::Spawn {
             expr: Box::new(lower_expr(
-                inner, module, osig, typed, ownership, errors, locals, struct_fields,
-                fn_modules, ctx,
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
             )),
             span: expr.span,
         },
@@ -970,7 +1174,11 @@ mod tests {
     fn build_server_has_config_with_fn() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/server");
         let cir = CirBuilder::build_crate(&root).expect("build");
-        let config = cir.modules.iter().find(|m| m.path == "config").expect("config");
+        let config = cir
+            .modules
+            .iter()
+            .find(|m| m.path == "config")
+            .expect("config");
         let st = config
             .items
             .iter()

@@ -8,12 +8,14 @@ use crisp_lexer::lex;
 use crisp_lsp::CrispAnalysis;
 use crisp_parser::Parser;
 use crisp_resolve::Resolver;
-use crisp_rust_emit::{emit_crate, emit_to_target, run_emitted, PipelineError};
+use crisp_rust_emit::{PipelineError, emit_crate, emit_to_target, run_emitted};
 use crisp_typeck::TypeChecker;
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
 }
 
 /// §2 — Lexer tokenization
@@ -162,8 +164,7 @@ fn spec_s20_all_examples_typecheck() {
         "data_pipeline",
     ] {
         eprintln!("§20 typecheck {name}");
-        TypeChecker::check_crate(&example(name))
-            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        TypeChecker::check_crate(&example(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
     }
 }
 

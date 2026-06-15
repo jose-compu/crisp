@@ -4,7 +4,9 @@ use crisp_lsp::CrispAnalysis;
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
 }
 
 fn main_crp(root: &PathBuf) -> PathBuf {
@@ -48,7 +50,11 @@ fn call_overlays_fallible_read_config() {
     let a = CrispAnalysis::analyze(&root).unwrap();
     let overlays = a.call_overlays(&file).unwrap();
     eprintln!("overlays: {overlays:?}");
-    assert!(overlays.iter().any(|o| o.callee == "read_config" && o.fallible));
+    assert!(
+        overlays
+            .iter()
+            .any(|o| o.callee == "read_config" && o.fallible)
+    );
 }
 
 #[test]
@@ -87,9 +93,24 @@ fn hover_server_config_field() {
 #[test]
 fn analyze_all_examples() {
     for name in [
-        "hello", "server", "fallible", "math", "match", "async_hello", "ffi", "stdlib_smoke",
-        "patterns", "kitchen_sink", "ownership_demo", "inventory",
-        "vec_ops", "fallible_chain", "async_spawn", "workshop", "unsafe_math", "data_pipeline",
+        "hello",
+        "server",
+        "fallible",
+        "math",
+        "match",
+        "async_hello",
+        "ffi",
+        "stdlib_smoke",
+        "patterns",
+        "kitchen_sink",
+        "ownership_demo",
+        "inventory",
+        "vec_ops",
+        "fallible_chain",
+        "async_spawn",
+        "workshop",
+        "unsafe_math",
+        "data_pipeline",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

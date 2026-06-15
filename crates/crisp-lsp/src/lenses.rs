@@ -1,8 +1,8 @@
 //! Code lenses — "Show emitted Rust" on functions.
 
 use crate::walk::all_functions;
-use crisp_ast::item::SourceFile;
 use crisp_ast::Span;
+use crisp_ast::item::SourceFile;
 use std::path::Path;
 
 #[derive(Debug, Clone)]

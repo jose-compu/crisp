@@ -90,10 +90,7 @@ pub fn synthesize_with_fn(name: &str, fields: &[CirField]) -> Option<CirWithFn> 
         return None;
     }
     let field_names: Vec<String> = fields.iter().map(|f| f.name.clone()).collect();
-    let defaults: Vec<Option<CirExpr>> = fields
-        .iter()
-        .map(|f| f.default.clone())
-        .collect();
+    let defaults: Vec<Option<CirExpr>> = fields.iter().map(|f| f.default.clone()).collect();
     Some(CirWithFn {
         fields: field_names,
         defaults,
@@ -148,10 +145,7 @@ fn type_refs_self(ty: &CirTy, self_name: &str) -> bool {
     }
 }
 
-pub fn synthesize_shape_trait(
-    shape: &ShapeDef,
-    structs: &[(String, CirStruct)],
-) -> CirShapeTrait {
+pub fn synthesize_shape_trait(shape: &ShapeDef, structs: &[(String, CirStruct)]) -> CirShapeTrait {
     let mut fields = Vec::new();
     let mut methods = Vec::new();
     for sf in &shape.fields {

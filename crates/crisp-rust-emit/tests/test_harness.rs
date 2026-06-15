@@ -1,11 +1,9 @@
 //! Integration tests for manifest + test harness (spec §18, §19).
 
-use crisp_manifest::{
-    parse_manifest_str, read_lock, resolve_dependencies,
-};
+use crisp_manifest::{parse_manifest_str, read_lock, resolve_dependencies};
 use crisp_rust_emit::{
-    collect_tests, compute_sealed_api, emit_test_module, run_tests, update_lock, verify_sealed_api,
-    PipelineError,
+    PipelineError, collect_tests, compute_sealed_api, emit_test_module, run_tests, update_lock,
+    verify_sealed_api,
 };
 use std::path::PathBuf;
 
@@ -19,10 +17,9 @@ fn hello_root() -> PathBuf {
 
 #[test]
 fn manifest_parse_and_resolve_deps() {
-    let m = parse_manifest_str(
-        &std::fs::read_to_string(with_tests_root().join("crisp.toml")).unwrap(),
-    )
-    .unwrap();
+    let m =
+        parse_manifest_str(&std::fs::read_to_string(with_tests_root().join("crisp.toml")).unwrap())
+            .unwrap();
     let deps = resolve_dependencies(&m);
     assert!(deps.iter().any(|d| d.name == "tokio"));
 }
@@ -66,8 +63,9 @@ fn run_with_tests_crate() {
         Err(e) if e.to_string().contains("cargo not on PATH") => {
             eprintln!("SKIP run_with_tests_crate: cargo not on PATH");
         }
-        Err(e) if e.to_string().contains("sealed signature drift")
-            || e.to_string().contains("missing from crisp.lock") =>
+        Err(e)
+            if e.to_string().contains("sealed signature drift")
+                || e.to_string().contains("missing from crisp.lock") =>
         {
             update_lock(&root).unwrap();
             run_tests(&root).expect("retry after lock update");

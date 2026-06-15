@@ -3,11 +3,7 @@
 use crate::source_map::EmitSourceMap;
 use crisp_ast::Span;
 
-pub fn map_rustc_failure(
-    stderr: &str,
-    source: &str,
-    map: &EmitSourceMap,
-) -> Option<Span> {
+pub fn map_rustc_failure(stderr: &str, source: &str, map: &EmitSourceMap) -> Option<Span> {
     let line = parse_rustc_line(stderr)?;
     map.lookup_line(line, source)
 }

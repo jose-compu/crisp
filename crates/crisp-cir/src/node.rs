@@ -23,7 +23,12 @@ pub struct CirModule {
 pub enum CirItem {
     Struct(CirStruct),
     Enum(CirEnum),
-    Alias { name: String, is_pub: bool, ty: CirTy, span: Span },
+    Alias {
+        name: String,
+        is_pub: bool,
+        ty: CirTy,
+        span: Span,
+    },
     Function(CirFunction),
     Impl(CirImpl),
     Extern(CirExternBlock),
@@ -161,9 +166,17 @@ pub enum CirStmt {
 
 #[derive(Debug, Clone)]
 pub enum CirExpr {
-    Unit { span: Span },
-    Int { value: i64, span: Span },
-    Str { value: String, span: Span },
+    Unit {
+        span: Span,
+    },
+    Int {
+        value: i64,
+        span: Span,
+    },
+    Str {
+        value: String,
+        span: Span,
+    },
     Ident {
         name: String,
         ty: CirTy,
@@ -275,9 +288,17 @@ pub struct CirMatchArm {
 
 #[derive(Debug, Clone)]
 pub enum CirPat {
-    Wildcard { span: Span },
-    Ident { name: String, span: Span },
-    Int { value: i64, span: Span },
+    Wildcard {
+        span: Span,
+    },
+    Ident {
+        name: String,
+        span: Span,
+    },
+    Int {
+        value: i64,
+        span: Span,
+    },
     Struct {
         name: String,
         fields: Vec<(String, CirPat)>,

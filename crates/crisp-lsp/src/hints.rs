@@ -3,7 +3,7 @@
 use crate::walk::all_bindings;
 use crisp_ast::item::SourceFile;
 use crisp_ownership::OwnershipResult;
-use crisp_typeck::{format_ty, TypedCrate};
+use crisp_typeck::{TypedCrate, format_ty};
 
 #[derive(Debug, Clone)]
 pub struct InlayHint {
@@ -30,7 +30,8 @@ pub fn inlay_hints_for_file(
             let key = format!("{module}::{}", f.name.name);
             if let Some(osig) = ownership.signatures.get(&key) {
                 for (i, (pname, mode)) in osig.params.iter().enumerate() {
-                    if let Some((_, pty)) = typed.signatures.get(&key).and_then(|s| s.params.get(i)) {
+                    if let Some((_, pty)) = typed.signatures.get(&key).and_then(|s| s.params.get(i))
+                    {
                         if let Some(param) = f.params.get(i) {
                             hints.push(InlayHint {
                                 position: param.name.span.end,
@@ -67,10 +68,7 @@ fn infer_binding_type(
         crisp_ast::expr::ExprKind::Call { func, .. } => {
             if let crisp_ast::expr::ExprKind::Ident(id) = &func.kind {
                 let key = format!("{module}::{}", id.name);
-                return typed
-                    .signatures
-                    .get(&key)
-                    .map(|s| s.ret.clone());
+                return typed.signatures.get(&key).map(|s| s.ret.clone());
             }
         }
         crisp_ast::expr::ExprKind::Int(_) => return Some(crisp_typeck::Ty::Int),

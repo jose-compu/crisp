@@ -28,12 +28,7 @@ pub fn format_error_sig(sig: &ErrorSig, typed: Option<&InferredSig>) -> String {
         })
         .unwrap_or_default();
 
-    let err_set = sig
-        .errors
-        .iter()
-        .cloned()
-        .collect::<Vec<_>>()
-        .join(" | ");
+    let err_set = sig.errors.iter().cloned().collect::<Vec<_>>().join(" | ");
 
     if params.is_empty() {
         format!("{}() -> {ret} ! {err_set}", sig.name)

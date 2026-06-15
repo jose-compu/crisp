@@ -54,7 +54,10 @@ pub fn format_owned_sig(sig: &OwnershipSignature, typed: Option<&InferredSig>) -
     line
 }
 
-pub fn format_ownership_crate(result: &OwnershipResult, typed: &crisp_typeck::TypedCrate) -> String {
+pub fn format_ownership_crate(
+    result: &OwnershipResult,
+    typed: &crisp_typeck::TypedCrate,
+) -> String {
     let mut lines: Vec<String> = result
         .signatures
         .values()

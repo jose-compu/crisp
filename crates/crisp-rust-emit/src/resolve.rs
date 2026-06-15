@@ -19,11 +19,10 @@ pub enum FallbackResolveError {
     Type(#[from] crisp_typeck::TypeError),
     #[error("[E0056] resolve error: {0}")]
     Resolve(#[from] crisp_resolve::ResolveError),
-    #[error("[E0057] could not produce borrow-checking Rust for `{name}`; please file a bug (rustc: {summary})")]
-    Exhausted {
-        name: String,
-        summary: String,
-    },
+    #[error(
+        "[E0057] could not produce borrow-checking Rust for `{name}`; please file a bug (rustc: {summary})"
+    )]
+    Exhausted { name: String, summary: String },
     #[error("[E0058] rustc not available; skipped fallback resolution")]
     RustcUnavailable,
 }
@@ -38,9 +37,7 @@ pub fn resolve_rustc_fallbacks(crate_root: &Path) -> Result<OwnershipResult, Fal
     match check_rust_source(&source) {
         Ok(()) => return Ok(ownership),
         Err(RustcError::NotFound) => return Err(FallbackResolveError::RustcUnavailable),
-        Err(RustcError::CheckFailed { summary, stderr })
-            if is_borrow_check_failure(&stderr) =>
-        {
+        Err(RustcError::CheckFailed { summary, stderr }) if is_borrow_check_failure(&stderr) => {
             try_fallbacks(&mut ownership, &graph, &typed, &summary)?
         }
         Err(RustcError::CheckFailed { .. }) => {
@@ -136,10 +133,12 @@ mod tests {
             "forward should need auto-clone for msg after move"
         );
         if !forward.applied_fallbacks.is_empty() {
-            assert!(forward
-                .applied_fallbacks
-                .iter()
-                .any(|f| f.kind == FallbackKind::CloneAtMove));
+            assert!(
+                forward
+                    .applied_fallbacks
+                    .iter()
+                    .any(|f| f.kind == FallbackKind::CloneAtMove)
+            );
         }
     }
 
@@ -147,9 +146,11 @@ mod tests {
     fn hello_needs_no_fallback() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/hello");
         let result = resolve_rustc_fallbacks(&root).expect("hello resolves");
-        assert!(result
-            .signatures
-            .values()
-            .all(|s| s.applied_fallbacks.is_empty()));
+        assert!(
+            result
+                .signatures
+                .values()
+                .all(|s| s.applied_fallbacks.is_empty())
+        );
     }
 }

@@ -1,6 +1,6 @@
 use crisp_ownership::OwnershipPass;
-use crisp_rust_emit::resolve_rustc_fallbacks;
 use crisp_resolve::find_crate_root;
+use crisp_rust_emit::resolve_rustc_fallbacks;
 use crisp_typeck::TypeChecker;
 use std::path::Path;
 

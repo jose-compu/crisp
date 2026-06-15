@@ -8,7 +8,10 @@ use std::path::PathBuf;
 fn write_sealed_lock() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/sealed");
     let lock = update_lock(&root).expect("update lock");
-    println!("wrote crisp.lock with {} sealed entries", lock.sealed_api.len());
+    println!(
+        "wrote crisp.lock with {} sealed entries",
+        lock.sealed_api.len()
+    );
     for s in &lock.sealed_api {
         println!("  {}: {}", s.name, s.rust_signature);
     }

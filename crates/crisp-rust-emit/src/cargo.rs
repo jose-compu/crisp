@@ -14,18 +14,28 @@ pub enum CargoError {
     NotFound,
     #[error("{0}")]
     BuildFailed(String),
-    #[error("internal compiler error: generated Rust failed to compile at crisp span {span:?} — crpc bug (rustc: {summary})")]
+    #[error(
+        "internal compiler error: generated Rust failed to compile at crisp span {span:?} — crpc bug (rustc: {summary})"
+    )]
     Ice {
         span: Option<crisp_ast::Span>,
         summary: String,
     },
 }
 
-pub fn cargo_check(crate_root: &Path, main_source: &str, source_map: &crate::source_map::EmitSourceMap) -> Result<(), CargoError> {
+pub fn cargo_check(
+    crate_root: &Path,
+    main_source: &str,
+    source_map: &crate::source_map::EmitSourceMap,
+) -> Result<(), CargoError> {
     run_cargo(crate_root, "check", main_source, source_map)
 }
 
-pub fn cargo_build(crate_root: &Path, main_source: &str, source_map: &crate::source_map::EmitSourceMap) -> Result<(), CargoError> {
+pub fn cargo_build(
+    crate_root: &Path,
+    main_source: &str,
+    source_map: &crate::source_map::EmitSourceMap,
+) -> Result<(), CargoError> {
     run_cargo(crate_root, "build", main_source, source_map)
 }
 

@@ -4,8 +4,8 @@ use crisp_cir::CirBuilder;
 use crisp_manifest::read_manifest;
 use crisp_resolve::Resolver;
 use crisp_rust_emit::{
-    build_emitted, collect_tests, emit_to_target, run_emitted, run_tests, verify_sealed_api,
-    PipelineError,
+    PipelineError, build_emitted, collect_tests, emit_to_target, run_emitted, run_tests,
+    verify_sealed_api,
 };
 use crisp_typeck::TypeChecker;
 use std::path::PathBuf;
@@ -99,12 +99,25 @@ fn math_has_tests_in_arith_module() {
 
 #[test]
 fn examples_with_tests_pass_crpc_test() {
-    for name in ["with_tests", "math", "defaults", "sealed", "workshop", "vec_ops", "unsafe_math", "fallible_chain", "inventory"] {
+    for name in [
+        "with_tests",
+        "math",
+        "defaults",
+        "sealed",
+        "workshop",
+        "vec_ops",
+        "unsafe_math",
+        "fallible_chain",
+        "inventory",
+    ] {
         let root = example(name);
         eprintln!("crpc test: {name}");
         match run_tests(&root) {
             Ok(r) => {
-                eprintln!("  runtime={} compile_fail={}", r.runtime_passed, r.compile_fail_passed);
+                eprintln!(
+                    "  runtime={} compile_fail={}",
+                    r.runtime_passed, r.compile_fail_passed
+                );
                 assert!(r.runtime_passed > 0 || r.compile_fail_passed > 0);
             }
             Err(e) if e.to_string().contains("cargo not on PATH") => {
@@ -117,13 +130,36 @@ fn examples_with_tests_pass_crpc_test() {
 
 #[test]
 fn runnable_examples_build_and_run() {
-    for name in ["hello", "defaults", "sealed", "server", "fallible", "match", "async_hello", "ffi", "stdlib_smoke", "patterns", "kitchen_sink", "ownership_demo", "inventory", "vec_ops", "fallible_chain", "async_spawn", "workshop", "unsafe_math", "data_pipeline"] {
+    for name in [
+        "hello",
+        "defaults",
+        "sealed",
+        "server",
+        "fallible",
+        "match",
+        "async_hello",
+        "ffi",
+        "stdlib_smoke",
+        "patterns",
+        "kitchen_sink",
+        "ownership_demo",
+        "inventory",
+        "vec_ops",
+        "fallible_chain",
+        "async_spawn",
+        "workshop",
+        "unsafe_math",
+        "data_pipeline",
+    ] {
         let root = example(name);
         eprintln!("build+run: {name}");
         match run_emitted(&root) {
             Ok(out) => {
                 eprintln!("  stdout: {out:?}");
-                assert!(!out.is_empty() || name == "fallible", "{name} produced no output");
+                assert!(
+                    !out.is_empty() || name == "fallible",
+                    "{name} produced no output"
+                );
             }
             Err(PipelineError::ToolchainUnavailable) => {
                 eprintln!("SKIP {name}: cargo not on PATH");

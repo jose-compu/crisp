@@ -64,11 +64,8 @@ pub fn apply_fallback(
         kind.label(),
         span.start
     );
-    sig.applied_fallbacks.push(AppliedFallback {
-        kind,
-        span,
-        note,
-    });
+    sig.applied_fallbacks
+        .push(AppliedFallback { kind, span, note });
     true
 }
 
@@ -109,13 +106,21 @@ mod tests {
             Span::new(5, 6),
             "msg"
         ));
-        assert_eq!(result.signatures["main::forward"].applied_fallbacks.len(), 1);
+        assert_eq!(
+            result.signatures["main::forward"].applied_fallbacks.len(),
+            1
+        );
     }
 
     #[test]
     fn clone_fallback_skipped_without_auto_clone() {
         let mut result = sample_result();
-        result.signatures.get_mut("main::forward").unwrap().auto_clones.clear();
+        result
+            .signatures
+            .get_mut("main::forward")
+            .unwrap()
+            .auto_clones
+            .clear();
         assert!(!apply_fallback(
             &mut result,
             "main::forward",
@@ -128,8 +133,7 @@ mod tests {
     #[test]
     fn reborrow_widens_owned_params() {
         let mut result = sample_result();
-        result.signatures.get_mut("main::forward").unwrap().params[0].1 =
-            OwnershipMode::Owned;
+        result.signatures.get_mut("main::forward").unwrap().params[0].1 = OwnershipMode::Owned;
         assert!(apply_fallback(
             &mut result,
             "main::forward",

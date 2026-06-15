@@ -1,5 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use crisp_typeck::TypeChecker;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::path::PathBuf;
 
 fn examples_dir() -> PathBuf {
@@ -24,5 +24,9 @@ fn bench_typecheck_kitchen_sink(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_typecheck_server, bench_typecheck_kitchen_sink);
+criterion_group!(
+    benches,
+    bench_typecheck_server,
+    bench_typecheck_kitchen_sink
+);
 criterion_main!(benches);

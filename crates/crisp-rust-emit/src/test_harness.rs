@@ -5,11 +5,11 @@ use crate::emit::emit_crate;
 use crate::pipeline::{PipelineError, analyze_and_build_cir};
 use crate::project::write_cargo_project;
 use crate::seal::verify_sealed_api;
-use crisp_manifest::{read_manifest, resolve_dependencies};
 use anyhow::{Context, Result};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{Item, TestDef};
 use crisp_ast::pat::PatKind;
+use crisp_manifest::{read_manifest, resolve_dependencies};
 use crisp_resolve::module::load_module_graph;
 use crisp_typeck::TypeChecker;
 use std::fmt::Write;
@@ -233,14 +233,8 @@ pub fn run_tests(crate_root: &Path) -> Result<TestRunReport, TestHarnessError> {
     let manifest = read_manifest(crate_root).context("read crisp.toml")?;
     let deps = resolve_dependencies(&manifest);
     let emitted = emit_crate(&cir);
-    write_cargo_project(
-        crate_root,
-        &emitted,
-        &manifest,
-        &deps,
-        Some(&emitted_tests),
-    )
-    .context("write target/rust with tests")?;
+    write_cargo_project(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
+        .context("write target/rust with tests")?;
 
     match cargo_test(crate_root) {
         Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(
@@ -294,10 +288,9 @@ edition = "2026"
     let src_dir = dir.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|e| TestHarnessError::Other(e.into()))?;
     let body = block_to_crisp(&test.body);
-    let main = format!(
-        "probe() = {{\n{body}\n}}\n\npub main() = probe()\n"
-    );
-    std::fs::write(src_dir.join("main.crp"), main).map_err(|e| TestHarnessError::Other(e.into()))?;
+    let main = format!("probe() = {{\n{body}\n}}\n\npub main() = probe()\n");
+    std::fs::write(src_dir.join("main.crp"), main)
+        .map_err(|e| TestHarnessError::Other(e.into()))?;
     Ok(())
 }
 

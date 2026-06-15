@@ -26,10 +26,7 @@ impl OwnershipPass {
 
         let mut param_modes: BTreeMap<String, Vec<OwnershipMode>> = BTreeMap::new();
         for (key, (_, def)) in &fn_defs {
-            param_modes.insert(
-                key.clone(),
-                vec![OwnershipMode::Borrow; def.params.len()],
-            );
+            param_modes.insert(key.clone(), vec![OwnershipMode::Borrow; def.params.len()]);
         }
 
         let max_iters = fn_defs.len().max(1) * 4 + 8;
@@ -37,13 +34,8 @@ impl OwnershipPass {
             let mut changed = false;
             for (key, (module, def)) in &fn_defs {
                 let callee_modes = &param_modes;
-                let (new_modes, auto_clones, errors) = analyze_function(
-                    module,
-                    def,
-                    callee_modes,
-                    &fn_defs,
-                    &typed,
-                )?;
+                let (new_modes, auto_clones, errors) =
+                    analyze_function(module, def, callee_modes, &fn_defs, &typed)?;
                 if let Some(err) = errors {
                     return Err(err);
                 }
@@ -63,13 +55,8 @@ impl OwnershipPass {
         let mut signatures = BTreeMap::new();
         for (key, (module, def)) in &fn_defs {
             let modes = param_modes.get(key).cloned().unwrap_or_default();
-            let (_, auto_clones, errors) = analyze_function(
-                module,
-                def,
-                &param_modes,
-                &fn_defs,
-                &typed,
-            )?;
+            let (_, auto_clones, errors) =
+                analyze_function(module, def, &param_modes, &fn_defs, &typed)?;
             if let Some(err) = errors {
                 return Err(err);
             }
@@ -139,12 +126,11 @@ fn resolve_callee_key(
     }
 }
 
-fn param_type<'a>(
-    key: &str,
-    idx: usize,
-    typed: &'a crisp_typeck::TypedCrate,
-) -> Option<&'a Ty> {
-    typed.signatures.get(key).and_then(|s| s.params.get(idx).map(|(_, t)| t))
+fn param_type<'a>(key: &str, idx: usize, typed: &'a crisp_typeck::TypedCrate) -> Option<&'a Ty> {
+    typed
+        .signatures
+        .get(key)
+        .and_then(|s| s.params.get(idx).map(|(_, t)| t))
 }
 
 fn is_copy_ty(ty: &Ty) -> bool {
@@ -263,11 +249,7 @@ impl<'a> Collector<'a> {
     fn record_use(&mut self, name: &str, usage: Usage, span: crisp_ast::Span) {
         let usage = if matches!(usage, Usage::Read) {
             if let Some(ty) = type_for_binding(name, self.fn_key, self.def, self.typed) {
-                if is_copy_ty(&ty) {
-                    Usage::Copy
-                } else {
-                    usage
-                }
+                if is_copy_ty(&ty) { Usage::Copy } else { usage }
             } else {
                 usage
             }
@@ -316,19 +298,15 @@ impl<'a> Collector<'a> {
                     self.locals.insert(name.name.clone());
                     if let ExprKind::Ident(src) = &value.kind {
                         if self.locals.contains(&src.name) {
-                            let usage = if type_for_binding(
-                                &src.name,
-                                self.fn_key,
-                                self.def,
-                                self.typed,
-                            )
-                            .map(|t| is_copy_ty(&t))
-                            .unwrap_or(false)
-                            {
-                                Usage::Copy
-                            } else {
-                                Usage::MoveOut
-                            };
+                            let usage =
+                                if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
+                                    .map(|t| is_copy_ty(&t))
+                                    .unwrap_or(false)
+                                {
+                                    Usage::Copy
+                                } else {
+                                    Usage::MoveOut
+                                };
                             self.record_use(&src.name, usage, value.span);
                         }
                     }
@@ -347,7 +325,11 @@ impl<'a> Collector<'a> {
                 self.record_use(&id.name, Usage::Read, expr.span);
             }
             ExprKind::Block(b) => self.walk_block(b),
-            ExprKind::If { cond, then_branch, else_branch } => {
+            ExprKind::If {
+                cond,
+                then_branch,
+                else_branch,
+            } => {
                 self.walk_expr(cond);
                 self.walk_expr(then_branch);
                 if let Some(e) = else_branch {
@@ -376,7 +358,11 @@ impl<'a> Collector<'a> {
                     }
                 }
             }
-            ExprKind::MethodCall { receiver, method, args } => {
+            ExprKind::MethodCall {
+                receiver,
+                method,
+                args,
+            } => {
                 if MUTATING_METHODS.contains(&method.name.as_str()) {
                     self.apply_mode_to_expr(receiver, OwnershipMode::MutBorrow);
                 } else {
@@ -401,19 +387,15 @@ impl<'a> Collector<'a> {
                     self.locals.insert(name.name.clone());
                     if let ExprKind::Ident(src) = &value.kind {
                         if self.locals.contains(&src.name) {
-                            let usage = if type_for_binding(
-                                &src.name,
-                                self.fn_key,
-                                self.def,
-                                self.typed,
-                            )
-                            .map(|t| is_copy_ty(&t))
-                            .unwrap_or(false)
-                            {
-                                Usage::Copy
-                            } else {
-                                Usage::MoveOut
-                            };
+                            let usage =
+                                if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
+                                    .map(|t| is_copy_ty(&t))
+                                    .unwrap_or(false)
+                                {
+                                    Usage::Copy
+                                } else {
+                                    Usage::MoveOut
+                                };
                             self.record_use(&src.name, usage, value.span);
                         }
                     }
@@ -422,14 +404,9 @@ impl<'a> Collector<'a> {
             ExprKind::Return(Some(v)) => {
                 if let ExprKind::Ident(id) = &v.kind {
                     if self.locals.contains(&id.name) {
-                        let usage = if type_for_binding(
-                            &id.name,
-                            self.fn_key,
-                            self.def,
-                            self.typed,
-                        )
-                        .map(|t| is_copy_ty(&t))
-                        .unwrap_or(false)
+                        let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
+                            .map(|t| is_copy_ty(&t))
+                            .unwrap_or(false)
                         {
                             Usage::Copy
                         } else {
@@ -474,14 +451,9 @@ impl<'a> Collector<'a> {
         let Some(expr) = tail else { return };
         if let ExprKind::Ident(id) = &expr.kind {
             if self.locals.contains(&id.name) {
-                let usage = if type_for_binding(
-                    &id.name,
-                    self.fn_key,
-                    self.def,
-                    self.typed,
-                )
-                .map(|t| is_copy_ty(&t))
-                .unwrap_or(false)
+                let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
+                    .map(|t| is_copy_ty(&t))
+                    .unwrap_or(false)
                 {
                     Usage::Copy
                 } else {
@@ -500,9 +472,7 @@ impl<'a> Collector<'a> {
                 if matches!(usage, Usage::MoveOut) {
                     saw_move = true;
                 } else if saw_move && matches!(usage, Usage::Read | Usage::Mutate) {
-                    if let Some(ty) =
-                        type_for_binding(name, self.fn_key, self.def, self.typed)
-                    {
+                    if let Some(ty) = type_for_binding(name, self.fn_key, self.def, self.typed) {
                         if is_clone_ty(&ty) && !is_copy_ty(&ty) {
                             out.push(AutoClone {
                                 binding: name.clone(),
@@ -571,32 +541,28 @@ mod tests {
 
     #[test]
     fn infer_hello_ownership() {
-        let result =
-            OwnershipPass::analyze_crate(&examples("hello")).expect("ownership hello");
+        let result = OwnershipPass::analyze_crate(&examples("hello")).expect("ownership hello");
         let greet = result.get("main", "greet").expect("greet sig");
         assert_eq!(greet.params[0].1, OwnershipMode::Borrow);
     }
 
     #[test]
     fn infer_move_out_return() {
-        let result =
-            OwnershipPass::analyze_crate(&fixture("consume")).expect("ownership consume");
+        let result = OwnershipPass::analyze_crate(&fixture("consume")).expect("ownership consume");
         let id = result.get("main", "identity").expect("identity");
         assert_eq!(id.params[0].1, OwnershipMode::Owned);
     }
 
     #[test]
     fn infer_mutate_param() {
-        let result =
-            OwnershipPass::analyze_crate(&fixture("mutate")).expect("ownership mutate");
+        let result = OwnershipPass::analyze_crate(&fixture("mutate")).expect("ownership mutate");
         let set = result.get("main", "set_value").expect("set_value");
         assert_eq!(set.params[0].1, OwnershipMode::MutBorrow);
     }
 
     #[test]
     fn explicit_borrow_ok() {
-        let result =
-            OwnershipPass::analyze_crate(&fixture("explicit_ok")).expect("explicit ok");
+        let result = OwnershipPass::analyze_crate(&fixture("explicit_ok")).expect("explicit ok");
         let f = result.get("main", "read_only").expect("read_only");
         assert_eq!(f.params[0].1, OwnershipMode::Borrow);
     }
@@ -610,8 +576,7 @@ mod tests {
 
     #[test]
     fn detect_auto_clone_after_move() {
-        let result =
-            OwnershipPass::analyze_crate(&fixture("auto_clone")).expect("auto clone");
+        let result = OwnershipPass::analyze_crate(&fixture("auto_clone")).expect("auto clone");
         let f = result.get("main", "forward").expect("forward");
         assert!(!f.auto_clones.is_empty());
     }

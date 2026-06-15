@@ -1,8 +1,6 @@
 use crate::error::ErrorPassError;
 use crate::result::{CrispErrorEnum, CrispErrorVariant, ErrorResult, ErrorSet, ErrorSig};
-use crate::set::{
-    absorbs_all, catch_handled_set, declared_set_from_fn, thrown_error_name,
-};
+use crate::set::{absorbs_all, catch_handled_set, declared_set_from_fn, thrown_error_name};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{FunctionDef, Item};
 use crisp_resolve::module::load_module_graph;
@@ -171,7 +169,11 @@ fn walk_expr(
 ) {
     match &expr.kind {
         ExprKind::Block(b) => walk_block(module, b, fn_defs, callee_sigs, out),
-        ExprKind::If { cond, then_branch, else_branch } => {
+        ExprKind::If {
+            cond,
+            then_branch,
+            else_branch,
+        } => {
             walk_expr(module, cond, fn_defs, callee_sigs, out);
             walk_expr(module, then_branch, fn_defs, callee_sigs, out);
             if let Some(e) = else_branch {

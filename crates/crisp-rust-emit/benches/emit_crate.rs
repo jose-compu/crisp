@@ -1,6 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use crisp_cir::CirBuilder;
 use crisp_rust_emit::emit_crate;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::path::PathBuf;
 
 fn examples_dir() -> PathBuf {

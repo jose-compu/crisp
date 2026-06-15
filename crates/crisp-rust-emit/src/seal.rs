@@ -1,10 +1,11 @@
 //! Compute and verify sealed `pub` API signatures (spec §12.5).
 
-use crisp_manifest::{
-    CrispLock, SealedSignature, read_lock, read_manifest, resolve_dependencies, write_lock, LOCK_VERSION,
-};
 use crisp_ast::item::{Item, TypeBody};
 use crisp_errors::{ErrorPass, ErrorSig};
+use crisp_manifest::{
+    CrispLock, LOCK_VERSION, SealedSignature, read_lock, read_manifest, resolve_dependencies,
+    write_lock,
+};
 use crisp_ownership::format_owned_sig;
 use crisp_ownership::{OwnershipPass, OwnershipSignature};
 use crisp_regions::RegionPass;
@@ -17,7 +18,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum SealDriftError {
-    #[error("[E0080] sealed signature drift for `{name}`\n  lockfile: {locked}\n  current:  {current}")]
+    #[error(
+        "[E0080] sealed signature drift for `{name}`\n  lockfile: {locked}\n  current:  {current}"
+    )]
     Drift {
         name: String,
         locked: String,
@@ -92,7 +95,12 @@ fn format_fn_sealed(
         }
     }
     if errors.fallible && !errors.errors.is_empty() {
-        let err_set = errors.errors.iter().cloned().collect::<Vec<_>>().join(" | ");
+        let err_set = errors
+            .errors
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(" | ");
         line = format!("{line} ! {err_set}");
     }
     if ownership.name == "main" {
@@ -113,10 +121,7 @@ fn format_type_sealed(items: &[Item], type_name: &str, typed: &TypedCrate) -> St
                         .iter()
                         .map(|f| format!("{}: {}", f.name.name, ast_type_name(&f.ty)))
                         .collect();
-                    format!(
-                        "pub struct {type_name} {{ {} }}",
-                        field_strs.join(", ")
-                    )
+                    format!("pub struct {type_name} {{ {} }}", field_strs.join(", "))
                 }
                 TypeBody::Enum(_) => format!("pub enum {type_name} {{ .. }}"),
                 TypeBody::Alias(ty) => format!("pub type {type_name} = {}", ast_type_name(ty)),

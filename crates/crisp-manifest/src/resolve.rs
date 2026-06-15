@@ -70,7 +70,10 @@ serde_json = { rust = true, version = "1" }
         )
         .unwrap();
         let deps = resolve_dependencies(&m);
-        assert!(deps.iter().any(|d| d.name == "tokio" && d.features.contains(&"time".into())));
+        assert!(
+            deps.iter()
+                .any(|d| d.name == "tokio" && d.features.contains(&"time".into()))
+        );
         assert!(deps.iter().any(|d| d.name == "serde_json" && d.rust));
     }
 }

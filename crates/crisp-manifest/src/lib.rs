@@ -4,6 +4,10 @@ mod lock;
 mod manifest;
 mod resolve;
 
-pub use lock::{CrispLock, LockError, ResolvedDependency, SealedSignature, read_lock, write_lock, LOCK_VERSION};
-pub use manifest::{BuildSection, CrateManifest, DependencySpec, ManifestError, read_manifest, parse_manifest_str};
+pub use lock::{
+    CrispLock, LOCK_VERSION, LockError, ResolvedDependency, SealedSignature, read_lock, write_lock,
+};
+pub use manifest::{
+    BuildSection, CrateManifest, DependencySpec, ManifestError, parse_manifest_str, read_manifest,
+};
 pub use resolve::resolve_dependencies;

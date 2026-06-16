@@ -1,7 +1,7 @@
 //! Write emitted Rust to `target/rust/` Cargo project (spec §18).
 
 use crate::emit::EmitResult;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use crisp_manifest::{CrateManifest, ResolvedDependency};
 use std::fs;
 use std::path::{Path, PathBuf};

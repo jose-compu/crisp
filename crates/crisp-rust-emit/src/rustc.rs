@@ -1,7 +1,5 @@
 //! Invoke rustc on probe crates (spec §7.6, §17.3).
 
-use std::io::Write;
-use std::path::Path;
 use std::process::Command;
 use tempfile::TempDir;
 use thiserror::Error;
@@ -52,12 +50,6 @@ pub fn check_rust_source(source: &str) -> Result<(), RustcError> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(RustcError::NotFound),
         Err(e) => Err(RustcError::Io(e)),
     }
-}
-
-pub fn write_probe_to(path: &Path, source: &str) -> Result<(), RustcError> {
-    let mut file = std::fs::File::create(path)?;
-    file.write_all(source.as_bytes())?;
-    Ok(())
 }
 
 #[cfg(test)]

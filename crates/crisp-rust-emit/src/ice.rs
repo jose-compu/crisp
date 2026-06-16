@@ -10,10 +10,10 @@ pub fn map_rustc_failure(stderr: &str, source: &str, map: &EmitSourceMap) -> Opt
 
 fn parse_rustc_line(stderr: &str) -> Option<u32> {
     for line in stderr.lines() {
-        if let Some(rest) = line.strip_prefix(" --> ") {
-            if let Some(loc) = rest.split(':').nth(1) {
-                return loc.parse().ok();
-            }
+        if let Some(rest) = line.strip_prefix(" --> ")
+            && let Some(loc) = rest.split(':').nth(1)
+        {
+            return loc.parse().ok();
         }
         if let Some(idx) = line.find(".rs:") {
             let after = &line[idx + 3..];

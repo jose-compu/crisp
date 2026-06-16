@@ -2,8 +2,8 @@
 
 use crate::source_map::EmitSourceMap;
 use crisp_cir::{
-    CirBinOp, CirBlock, CirCatchArm, CirCrate, CirExpr, CirField, CirFunction, CirItem, CirModule,
-    CirParam, CirPat, CirShapeTrait, CirStmt, CirStruct, CirTy, CirVariant, CirWithFn,
+    CirBinOp, CirBlock, CirCatchArm, CirCrate, CirExpr, CirFunction, CirItem, CirModule, CirParam,
+    CirPat, CirShapeTrait, CirStmt, CirStruct, CirTy, CirVariant, CirWithFn,
 };
 use crisp_errors::format_crisp_error_enum;
 use crisp_ownership::OwnershipMode;
@@ -37,10 +37,10 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     for m in &cir.modules {
         if m.path == "main" {
             for item in &m.items {
-                if let CirItem::Function(f) = item {
-                    if !f.is_main {
-                        emit_function(&mut main_rs, f, &m.path, &mut map);
-                    }
+                if let CirItem::Function(f) = item
+                    && !f.is_main
+                {
+                    emit_function(&mut main_rs, f, &m.path, &mut map);
                 }
             }
             if let Some(main_fn) = m.items.iter().find_map(|i| match i {
@@ -126,7 +126,7 @@ fn emit_extern_block(out: &mut String, ext: &crisp_cir::CirExternBlock, map: &mu
     let _ = writeln!(out, "extern \"{}\" {{", ext.abi);
     for f in &ext.functions {
         map.record(out.len() as u32, f.span);
-        let params: Vec<_> = f.params.iter().map(|p| format_extern_param(p)).collect();
+        let params: Vec<_> = f.params.iter().map(format_extern_param).collect();
         let ret = if matches!(f.ret, CirTy::Unit) {
             String::new()
         } else {
@@ -631,13 +631,13 @@ fn emit_expr_block(
             let _ = write!(out, " }}");
             return;
         }
-        if block.stmts.len() == 1 {
-            if let CirStmt::Expr(inner) = &block.stmts[0] {
-                let _ = write!(out, "{{ ");
-                emit_expr(out, inner, current_module, map);
-                let _ = write!(out, " }}");
-                return;
-            }
+        if block.stmts.len() == 1
+            && let CirStmt::Expr(inner) = &block.stmts[0]
+        {
+            let _ = write!(out, "{{ ");
+            emit_expr(out, inner, current_module, map);
+            let _ = write!(out, " }}");
+            return;
         }
         emit_block_body(out, block, false, &CirTy::Unit, current_module, 0, map);
         return;
@@ -672,6 +672,7 @@ fn emit_vec_receiver(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_call_expr(
     out: &mut String,
     callee: &str,

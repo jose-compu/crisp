@@ -6,9 +6,13 @@ use crisp_ast::ident::Ident;
 use crisp_ast::item::{FunctionDef, Item, SourceFile};
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum Located<'a> {
     Ident(&'a Ident),
-    Call { callee: &'a Ident, args: &'a [Expr] },
+    Call {
+        callee: &'a Ident,
+        _args: &'a [Expr],
+    },
     Function(&'a FunctionDef),
     Expr(&'a Expr),
 }
@@ -84,10 +88,10 @@ fn walk_stmt<'a>(stmt: &'a Stmt, offset: u32, best: &mut Option<(u32, Located<'a
     match stmt {
         Stmt::Expr(e) => walk_expr(e, offset, best),
         Stmt::Bind { pat, value, .. } => {
-            if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind {
-                if id.span.contains(offset) {
-                    consider(best, offset, id.span, Located::Ident(id));
-                }
+            if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind
+                && id.span.contains(offset)
+            {
+                consider(best, offset, id.span, Located::Ident(id));
             }
             walk_expr(value, offset, best);
         }
@@ -105,16 +109,22 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
         consider(best, offset, expr.span, Located::Expr(expr));
     }
     match &expr.kind {
-        ExprKind::Ident(id) => {
-            if id.span.contains(offset) {
-                consider(best, offset, id.span, Located::Ident(id));
-            }
+        ExprKind::Ident(id) if id.span.contains(offset) => {
+            consider(best, offset, id.span, Located::Ident(id));
         }
         ExprKind::Call { func, args } => {
-            if let ExprKind::Ident(id) = &func.kind {
-                if id.span.contains(offset) {
-                    consider(best, offset, id.span, Located::Call { callee: id, args });
-                }
+            if let ExprKind::Ident(id) = &func.kind
+                && id.span.contains(offset)
+            {
+                consider(
+                    best,
+                    offset,
+                    id.span,
+                    Located::Call {
+                        callee: id,
+                        _args: args,
+                    },
+                );
             }
             walk_expr(func, offset, best);
             for arg in args {
@@ -178,10 +188,10 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
         | ExprKind::Try(inner)
         | ExprKind::Throw(inner) => walk_expr(inner, offset, best),
         ExprKind::Bind { pat, value, .. } => {
-            if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind {
-                if id.span.contains(offset) {
-                    consider(best, offset, id.span, Located::Ident(id));
-                }
+            if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind
+                && id.span.contains(offset)
+            {
+                consider(best, offset, id.span, Located::Ident(id));
             }
             walk_expr(value, offset, best);
         }
@@ -196,10 +206,10 @@ fn collect_calls_item(item: &Item, out: &mut Vec<(Span, Ident, Vec<Expr>)>) {
 }
 
 fn collect_calls_expr(expr: &Expr, out: &mut Vec<(Span, Ident, Vec<Expr>)>) {
-    if let ExprKind::Call { func, args } = &expr.kind {
-        if let ExprKind::Ident(id) = &func.kind {
-            out.push((expr.span, id.clone(), args.clone()));
-        }
+    if let ExprKind::Call { func, args } = &expr.kind
+        && let ExprKind::Ident(id) = &func.kind
+    {
+        out.push((expr.span, id.clone(), args.clone()));
     }
     walk_expr_collect(expr, out);
 }
@@ -267,19 +277,16 @@ fn collect_bindings_item(item: &Item, out: &mut Vec<(Span, String, Expr)>) {
 }
 
 fn collect_bindings_expr(expr: &Expr, out: &mut Vec<(Span, String, Expr)>) {
-    match &expr.kind {
-        ExprKind::Block(b) => {
-            for stmt in &b.stmts {
-                if let Stmt::Bind { pat, value, .. } = stmt {
-                    if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind {
-                        out.push((id.span, id.name.clone(), value.clone()));
-                    }
-                }
-            }
-            if let Some(t) = &b.tail {
-                collect_bindings_expr(t, out);
+    if let ExprKind::Block(b) = &expr.kind {
+        for stmt in &b.stmts {
+            if let Stmt::Bind { pat, value, .. } = stmt
+                && let crisp_ast::pat::PatKind::Ident(id) = &pat.kind
+            {
+                out.push((id.span, id.name.clone(), value.clone()));
             }
         }
-        _ => {}
+        if let Some(t) = &b.tail {
+            collect_bindings_expr(t, out);
+        }
     }
 }

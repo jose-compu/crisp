@@ -5,7 +5,7 @@ use crate::source_map::SourceMap;
 use crate::synthesize::{lower_enum, lower_struct, synthesize_shape_trait};
 use crate::ty::CirTy;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart};
-use crisp_ast::item::{ExternBlock, FunctionDef, Item, SourceFile, TypeBody};
+use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_errors::{ErrorPass, ErrorResult};
 use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipPass, OwnershipResult};
@@ -56,12 +56,12 @@ impl CirBuilder {
         let mut all_structs: Vec<(String, CirStruct)> = Vec::new();
         for node in graph.modules.values() {
             for ast_item in &node.ast.items {
-                if let Item::TypeDef(td) = ast_item {
-                    if let TypeBody::Struct(_) = &td.body {
-                        let field_types = struct_types.get(&td.name.name);
-                        let st = lower_struct(td, field_types.unwrap_or(&BTreeMap::new()));
-                        all_structs.push((node.module_path.clone(), st));
-                    }
+                if let Item::TypeDef(td) = ast_item
+                    && let TypeBody::Struct(_) = &td.body
+                {
+                    let field_types = struct_types.get(&td.name.name);
+                    let st = lower_struct(td, field_types.unwrap_or(&BTreeMap::new()));
+                    all_structs.push((node.module_path.clone(), st));
                 }
             }
         }
@@ -353,10 +353,10 @@ fn lower_pat(pat: &Pat) -> CirPat {
 }
 
 fn print_arg_is_debug(expr: &CirExpr) -> bool {
-    match expr {
-        CirExpr::Str { .. } | CirExpr::Int { .. } | CirExpr::Format { .. } => false,
-        _ => true,
-    }
+    !matches!(
+        expr,
+        CirExpr::Str { .. } | CirExpr::Int { .. } | CirExpr::Format { .. }
+    )
 }
 
 fn collect_extern_fns(graph: &ModuleGraph) -> std::collections::BTreeSet<String> {
@@ -373,6 +373,7 @@ fn collect_extern_fns(graph: &ModuleGraph) -> std::collections::BTreeSet<String>
     set
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_function(
     def: &FunctionDef,
     osig: &crisp_ownership::OwnershipSignature,
@@ -459,6 +460,7 @@ fn lower_function(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_body(
     expr: &Expr,
     module: &str,
@@ -511,6 +513,7 @@ fn lower_body(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_block(
     block: &Block,
     module: &str,
@@ -612,6 +615,7 @@ fn lower_block(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_expr(
     expr: &Expr,
     module: &str,

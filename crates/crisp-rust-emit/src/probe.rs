@@ -213,7 +213,7 @@ fn emit_expr(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSig
 
 fn emit_expr_inner(
     out: &mut String,
-    expr: &Expr,
+    _expr: &Expr,
     osig: &crisp_ownership::OwnershipSignature,
     kind: &ExprKind,
 ) {
@@ -233,7 +233,11 @@ fn emit_expr_inner(
         ExprKind::Int(n) => {
             let _ = write!(out, "{n}");
         }
-        ExprKind::Binary { op, left, right } if matches!(op, crisp_ast::expr::BinaryOp::Concat) => {
+        ExprKind::Binary {
+            op: crisp_ast::expr::BinaryOp::Concat,
+            left,
+            right,
+        } => {
             let _ = write!(out, "format!(\"{{}}{{}}\", ");
             emit_expr(out, left, osig);
             let _ = write!(out, ", ");
@@ -241,13 +245,14 @@ fn emit_expr_inner(
             let _ = write!(out, ")");
         }
         ExprKind::Call { func, args } => {
-            if let ExprKind::Ident(id) = &func.kind {
-                if id.name == "print" && args.len() == 1 {
-                    let _ = write!(out, "println!(\"{{}}\", ");
-                    emit_expr(out, &args[0], osig);
-                    let _ = write!(out, ")");
-                    return;
-                }
+            if let ExprKind::Ident(id) = &func.kind
+                && id.name == "print"
+                && args.len() == 1
+            {
+                let _ = write!(out, "println!(\"{{}}\", ");
+                emit_expr(out, &args[0], osig);
+                let _ = write!(out, ")");
+                return;
             }
             emit_expr(out, func, osig);
             let _ = write!(out, "(");

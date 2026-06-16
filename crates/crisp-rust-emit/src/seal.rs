@@ -89,10 +89,11 @@ fn format_fn_sealed(
     if let Some(first) = line.lines().next() {
         line = first.to_string();
     }
-    if let Some(lt) = lifetime {
-        if !lt.elided && !lt.lifetime_params.is_empty() {
-            line = format!("<{}> {}", lt.lifetime_params.join(", "), line);
-        }
+    if let Some(lt) = lifetime
+        && !lt.elided
+        && !lt.lifetime_params.is_empty()
+    {
+        line = format!("<{}> {}", lt.lifetime_params.join(", "), line);
     }
     if errors.fallible && !errors.errors.is_empty() {
         let err_set = errors

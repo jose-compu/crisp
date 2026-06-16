@@ -29,7 +29,7 @@ fn lower_field(f: &FieldDef, inferred: Option<&Ty>) -> CirField {
     let ty = inferred
         .map(CirTy::from_ty)
         .unwrap_or_else(|| ast_type_to_cir(&f.ty));
-    let default = f.default.as_ref().map(|e| lower_default_expr(e));
+    let default = f.default.as_ref().map(lower_default_expr);
     CirField {
         name: f.name.name.clone(),
         ty,
@@ -84,7 +84,7 @@ fn ast_type_to_cir(ty: &Type) -> CirTy {
     }
 }
 
-pub fn synthesize_with_fn(name: &str, fields: &[CirField]) -> Option<CirWithFn> {
+pub fn synthesize_with_fn(_name: &str, fields: &[CirField]) -> Option<CirWithFn> {
     let has_defaults = fields.iter().any(|f| f.default.is_some());
     if !has_defaults {
         return None;
@@ -179,7 +179,7 @@ pub fn synthesize_shape_trait(shape: &ShapeDef, structs: &[(String, CirStruct)])
     let impls: Vec<CirShapeImpl> = structs
         .iter()
         .filter(|(_, s)| struct_matches_shape(s, &fields))
-        .map(|(module, s)| CirShapeImpl {
+        .map(|(_module, s)| CirShapeImpl {
             ty_name: s.name.clone(),
             span: s.span,
         })

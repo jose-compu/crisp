@@ -57,18 +57,18 @@ pub fn emit_fallible_probe_crate(
 fn emit_type_defs(graph: &ModuleGraph, out: &mut String) {
     for node in graph.modules.values() {
         for item in &node.ast.items {
-            if let Item::TypeDef(td) = item {
-                if let crisp_ast::item::TypeBody::Struct(fields) = &td.body {
-                    let _ = writeln!(out, "#[derive(Debug, Clone, Default)]");
-                    let _ = write!(out, "struct {} {{", td.name.name);
-                    for (i, f) in fields.iter().enumerate() {
-                        if i > 0 {
-                            let _ = write!(out, ", ");
-                        }
-                        let _ = write!(out, "pub {}: {}", f.name.name, field_ty(&f.ty.kind));
+            if let Item::TypeDef(td) = item
+                && let crisp_ast::item::TypeBody::Struct(fields) = &td.body
+            {
+                let _ = writeln!(out, "#[derive(Debug, Clone, Default)]");
+                let _ = write!(out, "struct {} {{", td.name.name);
+                for (i, f) in fields.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
                     }
-                    let _ = writeln!(out, "}}");
+                    let _ = write!(out, "pub {}: {}", f.name.name, field_ty(&f.ty.kind));
                 }
+                let _ = writeln!(out, "}}");
             }
         }
     }
@@ -124,6 +124,7 @@ fn fallible_rust_param(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_fallible_function(
     out: &mut String,
     def: &FunctionDef,
@@ -174,6 +175,7 @@ fn emit_fallible_function(
     let _ = writeln!(out, "}}");
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_fallible_expr(
     out: &mut String,
     expr: &Expr,
@@ -235,6 +237,7 @@ fn emit_fallible_expr(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_fallible_block(
     out: &mut String,
     block: &Block,
@@ -332,15 +335,14 @@ fn emit_call(
         if i > 0 {
             let _ = write!(out, ", ");
         }
-        if let (Some(callee), ExprKind::Ident(id)) = (callee_osig, &arg.kind) {
-            if callee
+        if let (Some(callee), ExprKind::Ident(id)) = (callee_osig, &arg.kind)
+            && callee
                 .params
                 .get(i)
                 .is_some_and(|(_, mode)| matches!(mode, crisp_ownership::OwnershipMode::Borrow))
-            {
-                let _ = write!(out, "&{}", id.name);
-                continue;
-            }
+        {
+            let _ = write!(out, "&{}", id.name);
+            continue;
         }
         emit_simple_expr(out, arg, osig);
     }

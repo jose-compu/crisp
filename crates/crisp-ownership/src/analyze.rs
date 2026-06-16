@@ -126,13 +126,6 @@ fn resolve_callee_key(
     }
 }
 
-fn param_type<'a>(key: &str, idx: usize, typed: &'a crisp_typeck::TypedCrate) -> Option<&'a Ty> {
-    typed
-        .signatures
-        .get(key)
-        .and_then(|s| s.params.get(idx).map(|(_, t)| t))
-}
-
 fn is_copy_ty(ty: &Ty) -> bool {
     matches!(
         ty,
@@ -158,10 +151,10 @@ fn type_for_binding(
         }
     }
     for p in &def.params {
-        if p.name.name == name {
-            if let Some(ref ty) = p.ty {
-                return Some(ast_type_to_ty(ty));
-            }
+        if p.name.name == name
+            && let Some(ref ty) = p.ty
+        {
+            return Some(ast_type_to_ty(ty));
         }
     }
     None
@@ -216,7 +209,6 @@ struct Collector<'a> {
     usages: BindingUsages,
     use_order: BTreeMap<String, Vec<(Usage, crisp_ast::Span)>>,
     locals: HashSet<String>,
-    error: Option<OwnershipError>,
 }
 
 impl<'a> Collector<'a> {
@@ -242,7 +234,6 @@ impl<'a> Collector<'a> {
             usages: BindingUsages::default(),
             use_order: BTreeMap::new(),
             locals,
-            error: None,
         }
     }
 
@@ -296,19 +287,19 @@ impl<'a> Collector<'a> {
                 self.walk_expr(value);
                 if let PatKind::Ident(name) = &pat.kind {
                     self.locals.insert(name.name.clone());
-                    if let ExprKind::Ident(src) = &value.kind {
-                        if self.locals.contains(&src.name) {
-                            let usage =
-                                if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
-                                    .map(|t| is_copy_ty(&t))
-                                    .unwrap_or(false)
-                                {
-                                    Usage::Copy
-                                } else {
-                                    Usage::MoveOut
-                                };
-                            self.record_use(&src.name, usage, value.span);
-                        }
+                    if let ExprKind::Ident(src) = &value.kind
+                        && self.locals.contains(&src.name)
+                    {
+                        let usage =
+                            if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
+                                .map(|t| is_copy_ty(&t))
+                                .unwrap_or(false)
+                            {
+                                Usage::Copy
+                            } else {
+                                Usage::MoveOut
+                            };
+                        self.record_use(&src.name, usage, value.span);
                     }
                 }
             }
@@ -385,35 +376,35 @@ impl<'a> Collector<'a> {
                 self.walk_expr(value);
                 if let PatKind::Ident(name) = &pat.kind {
                     self.locals.insert(name.name.clone());
-                    if let ExprKind::Ident(src) = &value.kind {
-                        if self.locals.contains(&src.name) {
-                            let usage =
-                                if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
-                                    .map(|t| is_copy_ty(&t))
-                                    .unwrap_or(false)
-                                {
-                                    Usage::Copy
-                                } else {
-                                    Usage::MoveOut
-                                };
-                            self.record_use(&src.name, usage, value.span);
-                        }
+                    if let ExprKind::Ident(src) = &value.kind
+                        && self.locals.contains(&src.name)
+                    {
+                        let usage =
+                            if type_for_binding(&src.name, self.fn_key, self.def, self.typed)
+                                .map(|t| is_copy_ty(&t))
+                                .unwrap_or(false)
+                            {
+                                Usage::Copy
+                            } else {
+                                Usage::MoveOut
+                            };
+                        self.record_use(&src.name, usage, value.span);
                     }
                 }
             }
             ExprKind::Return(Some(v)) => {
-                if let ExprKind::Ident(id) = &v.kind {
-                    if self.locals.contains(&id.name) {
-                        let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
-                            .map(|t| is_copy_ty(&t))
-                            .unwrap_or(false)
-                        {
-                            Usage::Copy
-                        } else {
-                            Usage::MoveOut
-                        };
-                        self.record_use(&id.name, usage, v.span);
-                    }
+                if let ExprKind::Ident(id) = &v.kind
+                    && self.locals.contains(&id.name)
+                {
+                    let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
+                        .map(|t| is_copy_ty(&t))
+                        .unwrap_or(false)
+                    {
+                        Usage::Copy
+                    } else {
+                        Usage::MoveOut
+                    };
+                    self.record_use(&id.name, usage, v.span);
                 }
                 self.walk_expr(v);
             }
@@ -449,18 +440,18 @@ impl<'a> Collector<'a> {
             }
         };
         let Some(expr) = tail else { return };
-        if let ExprKind::Ident(id) = &expr.kind {
-            if self.locals.contains(&id.name) {
-                let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
-                    .map(|t| is_copy_ty(&t))
-                    .unwrap_or(false)
-                {
-                    Usage::Copy
-                } else {
-                    Usage::MoveOut
-                };
-                self.record_use(&id.name, usage, expr.span);
-            }
+        if let ExprKind::Ident(id) = &expr.kind
+            && self.locals.contains(&id.name)
+        {
+            let usage = if type_for_binding(&id.name, self.fn_key, self.def, self.typed)
+                .map(|t| is_copy_ty(&t))
+                .unwrap_or(false)
+            {
+                Usage::Copy
+            } else {
+                Usage::MoveOut
+            };
+            self.record_use(&id.name, usage, expr.span);
         }
     }
 
@@ -471,16 +462,17 @@ impl<'a> Collector<'a> {
             for (usage, span) in events {
                 if matches!(usage, Usage::MoveOut) {
                     saw_move = true;
-                } else if saw_move && matches!(usage, Usage::Read | Usage::Mutate) {
-                    if let Some(ty) = type_for_binding(name, self.fn_key, self.def, self.typed) {
-                        if is_clone_ty(&ty) && !is_copy_ty(&ty) {
-                            out.push(AutoClone {
-                                binding: name.clone(),
-                                span: *span,
-                                note: format!("[auto-clone @ offset {}] {name}", span.start),
-                            });
-                        }
-                    }
+                } else if saw_move
+                    && matches!(usage, Usage::Read | Usage::Mutate)
+                    && let Some(ty) = type_for_binding(name, self.fn_key, self.def, self.typed)
+                    && is_clone_ty(&ty)
+                    && !is_copy_ty(&ty)
+                {
+                    out.push(AutoClone {
+                        binding: name.clone(),
+                        span: *span,
+                        note: format!("[auto-clone @ offset {}] {name}", span.start),
+                    });
                 }
             }
         }
@@ -488,6 +480,7 @@ impl<'a> Collector<'a> {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn analyze_function(
     module: &str,
     def: &FunctionDef,

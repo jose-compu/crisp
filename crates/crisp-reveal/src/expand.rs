@@ -30,10 +30,10 @@ fn emit_function_body_stub(f: &crisp_ast::item::FunctionDef) -> String {
         ExprKind::Block(b) => {
             let mut lines = vec![format!("{}(...) = {{", f.name.name)];
             for stmt in &b.stmts {
-                if let crisp_ast::expr::Stmt::Bind { pat, .. } = stmt {
-                    if let crisp_ast::pat::PatKind::Ident(id) = &pat.kind {
-                        lines.push(format!("    {} := <inferred>", id.name));
-                    }
+                if let crisp_ast::expr::Stmt::Bind { pat, .. } = stmt
+                    && let crisp_ast::pat::PatKind::Ident(id) = &pat.kind
+                {
+                    lines.push(format!("    {} := <inferred>", id.name));
                 }
             }
             lines.push("}".into());

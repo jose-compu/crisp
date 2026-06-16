@@ -1,7 +1,7 @@
 //! LSP analysis integration tests (spec §16.3).
 
 use crisp_lsp::CrispAnalysis;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn example(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -9,7 +9,7 @@ fn example(name: &str) -> PathBuf {
         .join(name)
 }
 
-fn main_crp(root: &PathBuf) -> PathBuf {
+fn main_crp(root: &Path) -> PathBuf {
     root.join("src/main.crp")
 }
 

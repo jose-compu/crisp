@@ -29,16 +29,15 @@ pub fn inlay_hints_for_file(
         if let crisp_ast::item::Item::Function(f) = item {
             let key = format!("{module}::{}", f.name.name);
             if let Some(osig) = ownership.signatures.get(&key) {
-                for (i, (pname, mode)) in osig.params.iter().enumerate() {
+                for (i, (_pname, mode)) in osig.params.iter().enumerate() {
                     if let Some((_, pty)) = typed.signatures.get(&key).and_then(|s| s.params.get(i))
+                        && let Some(param) = f.params.get(i)
                     {
-                        if let Some(param) = f.params.get(i) {
-                            hints.push(InlayHint {
-                                position: param.name.span.end,
-                                label: format!(": {} {}", format_ty(pty), mode.display()),
-                                kind: InlayHintKind::Ownership,
-                            });
-                        }
+                        hints.push(InlayHint {
+                            position: param.name.span.end,
+                            label: format!(": {} {}", format_ty(pty), mode.display()),
+                            kind: InlayHintKind::Ownership,
+                        });
                     }
                 }
             }

@@ -27,20 +27,20 @@ pub fn call_overlays_for_file(
             .signatures
             .get(&key)
             .or_else(|| errors.signatures.get(&callee.name));
-        if let Some(esig) = esig {
-            if esig.fallible {
-                let error_set = esig.errors.iter().cloned().collect::<Vec<_>>().join(" | ");
-                out.push(CallOverlay {
-                    span,
-                    callee: callee.name.clone(),
-                    error_set: if error_set.is_empty() {
-                        format_error_sig(esig, typed.signatures.get(&key))
-                    } else {
-                        error_set
-                    },
-                    fallible: true,
-                });
-            }
+        if let Some(esig) = esig
+            && esig.fallible
+        {
+            let error_set = esig.errors.iter().cloned().collect::<Vec<_>>().join(" | ");
+            out.push(CallOverlay {
+                span,
+                callee: callee.name.clone(),
+                error_set: if error_set.is_empty() {
+                    format_error_sig(esig, typed.signatures.get(&key))
+                } else {
+                    error_set
+                },
+                fallible: true,
+            });
         }
     }
     out

@@ -75,8 +75,4 @@ impl BindingUsages {
             .map(|u| OwnershipMode::from_usage(*u))
             .unwrap_or(OwnershipMode::Borrow)
     }
-
-    pub fn usages(&self) -> &BTreeMap<String, Usage> {
-        &self.usages
-    }
 }

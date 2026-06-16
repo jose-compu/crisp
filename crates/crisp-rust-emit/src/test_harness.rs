@@ -92,10 +92,11 @@ fn sanitize_test_name(name: &str) -> String {
     for ch in name.chars() {
         if ch.is_ascii_alphanumeric() {
             out.push(ch.to_ascii_lowercase());
-        } else if ch.is_whitespace() || ch == '-' || ch == '_' {
-            if !out.ends_with('_') && !out.is_empty() {
-                out.push('_');
-            }
+        } else if (ch.is_whitespace() || ch == '-' || ch == '_')
+            && !out.ends_with('_')
+            && !out.is_empty()
+        {
+            out.push('_');
         }
     }
     if out.is_empty() {

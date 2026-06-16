@@ -26,7 +26,7 @@ impl ErrorPass {
         }
 
         let mut sigs: BTreeMap<String, ErrorSet> = BTreeMap::new();
-        for (key, _) in &fn_defs {
+        for key in fn_defs.keys() {
             sigs.insert(key.clone(), ErrorSet::new());
         }
 
@@ -61,17 +61,17 @@ impl ErrorPass {
                 });
             }
 
-            if let Some(ref decl) = declared {
-                if !decl.is_empty() {
-                    for e in errors.iter() {
-                        if !decl.contains(e) {
-                            return Err(ErrorPassError::DeclaredMismatch {
-                                name: def.name.name.clone(),
-                                declared: format_error_set(decl),
-                                produced: e.clone(),
-                                span: def.error_type.as_ref().map(|t| t.span).unwrap_or(def.span),
-                            });
-                        }
+            if let Some(ref decl) = declared
+                && !decl.is_empty()
+            {
+                for e in errors.iter() {
+                    if !decl.contains(e) {
+                        return Err(ErrorPassError::DeclaredMismatch {
+                            name: def.name.name.clone(),
+                            declared: format_error_set(decl),
+                            produced: e.clone(),
+                            span: def.error_type.as_ref().map(|t| t.span).unwrap_or(def.span),
+                        });
                     }
                 }
             }

@@ -21,7 +21,6 @@ pub fn format_diagnostic(
     severity: Severity,
     notes: &[String],
 ) -> FormattedDiagnostic {
-    let (line, col) = line_col(source, span.start);
     let rendered = render(source, code, message, span, severity, notes);
     FormattedDiagnostic {
         code: code.to_string(),

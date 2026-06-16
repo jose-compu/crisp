@@ -1,0 +1,21 @@
+-- examples/abnormal_suite — spec §19 compile-fail abnormal cases
+
+add(a, b) = a + b
+
+test "sanity" = {
+    assert_eq(add(1, 2), 3)
+}
+
+test_compile_fail "int plus str" = {
+    add(1, "x")
+}
+
+test_compile_fail "unknown function" = {
+    no_such_fn(1)
+}
+
+test_compile_fail "wrong arity" = {
+    add(1, 2, 3)
+}
+
+pub main() = print("abnormal_suite ok")

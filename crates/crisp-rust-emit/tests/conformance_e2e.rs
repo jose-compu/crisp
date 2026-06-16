@@ -162,6 +162,7 @@ fn spec_s20_all_examples_typecheck() {
         "workshop",
         "unsafe_math",
         "data_pipeline",
+        "abnormal_suite",
     ] {
         eprintln!("§20 typecheck {name}");
         TypeChecker::check_crate(&example(name)).unwrap_or_else(|e| panic!("{name}: {e}"));

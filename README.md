@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v1.1.0** — Vec emit fixes (`push`/`len`/`mut`), complex examples (`inventory`, `workshop`, `vec_ops`, `fallible_chain`, `async_spawn`, `unsafe_math`, `data_pipeline`), CI clippy hardening.
+**v1.1.0** — Vec emit fixes, complex examples, `abnormal_suite` spec-v2 error-path tests.
 
 ## Quick start
 
@@ -20,7 +20,7 @@ cargo build --release -p crpc
 ./target/release/crpc run examples/kitchen_sink
 ./target/release/crpc run examples/inventory
 ./target/release/crpc test examples/workshop
-./target/release/crpc run examples/vec_ops
+./target/release/crpc test examples/abnormal_suite
 ./target/release/reveal rust examples/hello
 cargo test --verbose
 ```

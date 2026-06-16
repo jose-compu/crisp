@@ -111,6 +111,7 @@ fn analyze_all_examples() {
         "workshop",
         "unsafe_math",
         "data_pipeline",
+        "abnormal_suite",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

@@ -40,6 +40,7 @@ const EXAMPLES: &[&str] = &[
     "workshop",
     "unsafe_math",
     "data_pipeline",
+    "abnormal_suite",
 ];
 
 #[test]

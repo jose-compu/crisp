@@ -1,0 +1,3 @@
+bad() = 1 + "x"
+
+pub main() = print(bad())

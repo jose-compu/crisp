@@ -69,6 +69,7 @@ fn crpc_check_all_examples() {
         "workshop",
         "unsafe_math",
         "data_pipeline",
+        "abnormal_suite",
     ] {
         run_ok(
             "crpc",

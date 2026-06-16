@@ -52,6 +52,7 @@ fn crpc_check_all_examples() {
         "server",
         "fallible",
         "math",
+        "float_demo",
         "defaults",
         "sealed",
         "with_tests",

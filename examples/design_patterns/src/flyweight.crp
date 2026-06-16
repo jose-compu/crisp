@@ -1,0 +1,30 @@
+-- Flyweight — share intrinsic state across many instances (spec §3)
+
+pub type Glyph = {
+    ch: str
+    font: str
+    size: str
+}
+
+pub pool_mono_a() = Glyph {
+    ch: "A"
+    font: "mono"
+    size: "12"
+}
+
+pub pool_mono_a_shared() = pool_mono_a()
+
+pub render_glyph() = {
+    g := pool_mono_a_shared()
+    "{g.font}/{g.size}:{g.ch}"
+}
+
+pub flyweight_batch() = {
+    a := pool_mono_a()
+    b := pool_mono_a_shared()
+    "shared:{a.ch}={b.ch}"
+}
+
+test "flyweight shared glyph" = {
+    assert_eq(flyweight_batch(), "shared:A=A")
+}

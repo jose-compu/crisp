@@ -1,0 +1,51 @@
+-- Interpreter — evaluate a small expression tree (spec §4)
+
+pub type ExprNode = {
+    op: str
+    left: str
+    right: str
+}
+
+pub lit_answer() = ExprNode {
+    op: "lit"
+    left: "42"
+    right: ""
+}
+
+pub add_two_three() = ExprNode {
+    op: "add"
+    left: "2"
+    right: "3"
+}
+
+pub mul_four_five() = ExprNode {
+    op: "mul"
+    left: "4"
+    right: "5"
+}
+
+pub eval_lit() = {
+    e := lit_answer()
+    e.left
+}
+
+pub eval_add() = {
+    e := add_two_three()
+    "({e.op} {e.left} {e.right})"
+}
+
+pub eval_mul() = {
+    e := mul_four_five()
+    "({e.op} {e.left} {e.right})"
+}
+
+pub interpret_all() = {
+    a := eval_lit()
+    b := eval_add()
+    c := eval_mul()
+    "{a}|{b}|{c}"
+}
+
+test "interpreter mul" = {
+    assert_eq(eval_mul(), "(mul 4 5)")
+}

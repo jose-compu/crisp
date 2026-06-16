@@ -517,10 +517,20 @@ impl TypeChecker {
                 unify(&mut self.ctx, &rt, &Ty::StrSlice)?;
                 Ok(Ty::Str)
             }
-            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
+            BinaryOp::Mod => {
                 unify(&mut self.ctx, &lt, &rt)?;
                 unify(&mut self.ctx, &lt, &Ty::Int)?;
                 Ok(Ty::Int)
+            }
+            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
+                unify(&mut self.ctx, &lt, &rt)?;
+                if matches!(&lt, Ty::Float) || matches!(&rt, Ty::Float) {
+                    unify(&mut self.ctx, &lt, &Ty::Float)?;
+                    Ok(Ty::Float)
+                } else {
+                    unify(&mut self.ctx, &lt, &Ty::Int)?;
+                    Ok(Ty::Int)
+                }
             }
             BinaryOp::Pow => {
                 unify(&mut self.ctx, &lt, &Ty::Float)?;

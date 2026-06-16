@@ -1,0 +1,39 @@
+-- Visitor — double dispatch via per-type handlers (spec §4)
+
+pub type Visitable = {
+    kind: str
+    name: str
+    meta: str
+}
+
+pub node_file() = Visitable {
+    kind: "file"
+    name: "main.crp"
+    meta: "2kb"
+}
+
+pub node_dir() = Visitable {
+    kind: "dir"
+    name: "src"
+    meta: "3 children"
+}
+
+pub visit_file() = {
+    n := node_file()
+    "file:{n.name}({n.meta})"
+}
+
+pub visit_dir() = {
+    n := node_dir()
+    "dir:{n.name}[{n.meta}]"
+}
+
+pub accept_all() = {
+    a := visit_file()
+    b := visit_dir()
+    "{a}|{b}"
+}
+
+test "visitor accepts tree" = {
+    assert_eq(accept_all(), "file:main.crp(2kb)|dir:src[3 children]")
+}

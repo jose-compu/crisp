@@ -3,11 +3,12 @@
 A systems programming language that transpiles to Rust. Write compact source; `crpc` infers types, ownership, lifetimes, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
+**Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
 **Roadmap:** [ROADMAP.md](ROADMAP.md)
 
 ## Status
 
-**v1.1.0** — Vec emit fixes, complex examples, `design_patterns` (Strategy/Factory/State/Command/Adapter/Decorator/Observer/Facade).
+**v1.1.0** — Vec emit fixes, complex examples, `design_patterns` (18 GoF modules: Builder, Bridge, Chain, Composite, Flyweight, Interpreter, Memento, Mediator, Prototype, Proxy, Singleton, Visitor, plus Strategy/Command/State/Adapter/Decorator/Observer/Facade).
 
 ## Quick start
 

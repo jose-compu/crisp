@@ -1,0 +1,34 @@
+-- Memento — capture and restore object state (spec §4)
+
+pub type EditorSnap = {
+    content: str
+    version: str
+}
+
+pub snap_v1() = EditorSnap {
+    content: "hello"
+    version: "v1"
+}
+
+pub snap_v2() = EditorSnap {
+    content: "hello world"
+    version: "v2"
+}
+
+pub restore_v1() = snap_v1()
+
+pub undo_demo() = {
+    current := snap_v2()
+    saved := restore_v1()
+    "undo {current.version}->{saved.version}:{saved.content}"
+}
+
+pub history_stack() = {
+    a := snap_v1()
+    b := snap_v2()
+    "{a.version}>{b.version}"
+}
+
+test "memento undo" = {
+    assert_eq(undo_demo(), "undo v2->v1:hello")
+}

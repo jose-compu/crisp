@@ -8,6 +8,12 @@ pub run_charge() = "charged"
 
 pub run_refund() = "refunded"
 
+pub macro_batch() = {
+    a := run_charge()
+    b := run_refund()
+    "batch:{a},{b}"
+}
+
 test "charge command" = {
     assert_eq(run_charge(), "charged")
 }

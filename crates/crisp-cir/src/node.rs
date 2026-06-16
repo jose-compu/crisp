@@ -173,6 +173,10 @@ pub enum CirExpr {
         value: i64,
         span: Span,
     },
+    Float {
+        value: f64,
+        span: Span,
+    },
     Str {
         value: String,
         span: Span,
@@ -319,6 +323,7 @@ pub enum CirBinOp {
     Sub,
     Mul,
     Div,
+    Pow,
     Eq,
     Lt,
     Gt,

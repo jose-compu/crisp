@@ -1,0 +1,42 @@
+-- Mediator — central hub routes peer messages (spec §4)
+
+pub type ChatMsg = {
+    room: str
+    from: str
+    to: str
+    body: str
+}
+
+pub route_alice_bob() = ChatMsg {
+    room: "lobby"
+    from: "alice"
+    to: "bob"
+    body: "ping"
+}
+
+pub route_bob_alice() = ChatMsg {
+    room: "lobby"
+    from: "bob"
+    to: "alice"
+    body: "pong"
+}
+
+pub format_alice_bob() = {
+    m := route_alice_bob()
+    "[{m.room}] {m.from}->{m.to}: {m.body}"
+}
+
+pub format_bob_alice() = {
+    m := route_bob_alice()
+    "[{m.room}] {m.from}->{m.to}: {m.body}"
+}
+
+pub mediate_room() = {
+    a := format_alice_bob()
+    b := format_bob_alice()
+    "{a}|{b}"
+}
+
+test "mediator routes both ways" = {
+    assert_eq(mediate_room(), "[lobby] alice->bob: ping|[lobby] bob->alice: pong")
+}

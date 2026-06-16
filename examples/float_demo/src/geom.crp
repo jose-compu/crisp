@@ -1,0 +1,64 @@
+-- float_demo/geom.crp — Vec2 geometry with float fields (spec §3)
+
+pub type Vec2 = {
+    x: float
+    y: float
+}
+
+pub origin() = Vec2 {
+    x: 0.0
+    y: 0.0
+}
+
+pub unit_x() = Vec2 {
+    x: 1.0
+    y: 0.0
+}
+
+pub unit_y() = Vec2 {
+    x: 0.0
+    y: 1.0
+}
+
+pub add_vecs() = {
+    a := unit_x()
+    b := unit_y()
+    Vec2 {
+        x: a.x + b.x
+        y: a.y + b.y
+    }
+}
+
+pub sum_components() = {
+    v := add_vecs()
+    v.x + v.y
+}
+
+pub scale_half() = {
+    v := unit_x()
+    Vec2 {
+        x: v.x * 0.5
+        y: v.y * 0.5
+    }
+}
+
+pub circle_area(r: float) = 3.14159 * r * r
+
+pub circle_circumference(r: float) = 2.0 * 3.14159 * r
+
+pub format_vec2() = {
+    v := add_vecs()
+    "({v.x},{v.y})"
+}
+
+test "vec2 sum components" = {
+    assert_eq(sum_components(), 2.0)
+}
+
+test "circle area r2" = {
+    assert_eq(circle_area(2.0), 12.56636)
+}
+
+test "scale half x" = {
+    assert_eq(scale_half().x, 0.5)
+}

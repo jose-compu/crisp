@@ -1,0 +1,39 @@
+-- Proxy — lazy/cached access to an expensive resource (spec §3)
+
+pub type CacheEntry = {
+    key: str
+    value: str
+    status: str
+}
+
+pub cache_cold() = CacheEntry {
+    key: "user:1"
+    value: "fetched-from-db"
+    status: "miss"
+}
+
+pub cache_warm() = CacheEntry {
+    key: "user:1"
+    value: "fetched-from-db"
+    status: "hit"
+}
+
+pub proxy_cold() = {
+    e := cache_cold()
+    "{e.status}:{e.key}={e.value}"
+}
+
+pub proxy_warm() = {
+    e := cache_warm()
+    "{e.status}:{e.key}={e.value}"
+}
+
+pub proxy_demo() = {
+    a := proxy_cold()
+    b := proxy_warm()
+    "{a}>{b}"
+}
+
+test "proxy warms cache" = {
+    assert_eq(proxy_cold(), "miss:user:1=fetched-from-db")
+}

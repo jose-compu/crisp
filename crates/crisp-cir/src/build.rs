@@ -355,7 +355,7 @@ fn lower_pat(pat: &Pat) -> CirPat {
 fn print_arg_is_debug(expr: &CirExpr) -> bool {
     !matches!(
         expr,
-        CirExpr::Str { .. } | CirExpr::Int { .. } | CirExpr::Format { .. }
+        CirExpr::Str { .. } | CirExpr::Int { .. } | CirExpr::Float { .. } | CirExpr::Format { .. }
     )
 }
 
@@ -639,6 +639,10 @@ fn lower_expr(
             value: *n,
             span: expr.span,
         },
+        ExprKind::Float(f) => E::Float {
+            value: *f,
+            span: expr.span,
+        },
         ExprKind::Str(parts) => {
             let has_expr = parts.0.iter().any(|p| matches!(p, StringPart::Expr(_)));
             if has_expr {
@@ -725,6 +729,7 @@ fn lower_expr(
                 BinaryOp::Sub => CirBinOp::Sub,
                 BinaryOp::Mul => CirBinOp::Mul,
                 BinaryOp::Div => CirBinOp::Div,
+                BinaryOp::Pow => CirBinOp::Pow,
                 BinaryOp::Eq => CirBinOp::Eq,
                 BinaryOp::Lt => CirBinOp::Lt,
                 BinaryOp::Gt => CirBinOp::Gt,
@@ -1116,6 +1121,7 @@ fn infer_expr_ty(
         ExprKind::Ident(id) => locals.get(&id.name).cloned().unwrap_or(CirTy::Error),
         ExprKind::Str(_) => CirTy::Str,
         ExprKind::Int(_) => CirTy::Int,
+        ExprKind::Float(_) => CirTy::Float,
         ExprKind::Call { func, .. } => {
             if let ExprKind::Ident(id) = &func.kind {
                 let key = format!("{module}::{}", id.name);

@@ -1,0 +1,28 @@
+-- Chain of Responsibility — middleware pipeline (spec §4)
+
+pub link_auth_ok() = "auth:ok"
+
+pub link_auth_deny() = "auth:deny"
+
+pub link_rate_ok() = "rate:ok"
+
+pub link_rate_limit() = "rate:429"
+
+pub link_audit() = "audit:logged"
+
+pub chain_happy() = {
+    a := link_auth_ok()
+    b := link_rate_ok()
+    c := link_audit()
+    "{a}>{b}>{c}"
+}
+
+pub chain_denied() = {
+    a := link_auth_deny()
+    b := link_rate_limit()
+    "{a}|{b}"
+}
+
+test "chain happy path" = {
+    assert_eq(chain_happy(), "auth:ok>rate:ok>audit:logged")
+}

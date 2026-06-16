@@ -24,6 +24,7 @@ const EXAMPLES: &[&str] = &[
     "fallible",
     "with_tests",
     "math",
+    "float_demo",
     "defaults",
     "sealed",
     "match",
@@ -95,8 +96,8 @@ fn sealed_example_lock_verifies() {
 #[test]
 fn math_has_tests_in_arith_module() {
     let tests = collect_tests(&example("math")).unwrap();
-    assert_eq!(tests.len(), 4);
-    assert_eq!(tests.iter().filter(|t| !t.compile_fail).count(), 3);
+    assert_eq!(tests.len(), 8);
+    assert_eq!(tests.iter().filter(|t| !t.compile_fail).count(), 6);
 }
 
 #[test]
@@ -104,6 +105,7 @@ fn examples_with_tests_pass_crpc_test() {
     for name in [
         "with_tests",
         "math",
+        "float_demo",
         "defaults",
         "sealed",
         "workshop",
@@ -151,6 +153,7 @@ fn runnable_examples_build_and_run() {
         "async_spawn",
         "workshop",
         "unsafe_math",
+        "float_demo",
         "data_pipeline",
     ] {
         let root = example(name);
@@ -201,6 +204,7 @@ const BUILDABLE: &[&str] = &[
     "hello",
     "server",
     "math",
+    "float_demo",
     "defaults",
     "sealed",
     "with_tests",

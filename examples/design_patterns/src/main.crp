@@ -1,9 +1,21 @@
 -- design_patterns — classic GoF-style patterns in Crisp (spec §20)
 
+use accept { accept_all }
 use adapter { adapt_greeting, decorate_banner, decorate_star }
 use behavior { make_plan_pro, phase_cart, quote_pro, step_cart_to_paid, step_paid_to_packed }
+use bridge { bridge_demo }
+use builder { build_compare, build_label }
+use chain { chain_denied, chain_happy }
 use checkout { build_receipt_text, publish }
-use commands { cmd_charge_label, cmd_refund_label, run_charge, run_refund }
+use commands { cmd_charge_label, cmd_refund_label, macro_batch, run_charge, run_refund }
+use composite { walk_tree }
+use flyweight { flyweight_batch, render_glyph }
+use interpreter { interpret_all }
+use cache { proxy_demo }
+use clone { format_draft, prototype_pair }
+use config { config_label, singleton_same }
+use hub { mediate_room }
+use history { history_stack, undo_demo }
 
 pub demo_strategy() = {
     tier := make_plan_pro()
@@ -16,7 +28,8 @@ pub demo_command() = {
     b := run_refund()
     label_a := cmd_charge_label()
     label_b := cmd_refund_label()
-    "{a}+{b} {label_a}/{label_b}"
+    batch := macro_batch()
+    "{a}+{b} {label_a}/{label_b} {batch}"
 }
 
 pub demo_state() = {
@@ -37,12 +50,60 @@ pub demo_checkout() = {
     "{receipt} {ping}"
 }
 
+pub demo_bridge() = bridge_demo()
+
+pub demo_builder() = {
+    a := build_label()
+    b := build_compare()
+    "{a}::{b}"
+}
+
+pub demo_chain() = {
+    ok := chain_happy()
+    deny := chain_denied()
+    "{ok}|{deny}"
+}
+
+pub demo_composite() = walk_tree()
+
+pub demo_flyweight() = {
+    g := render_glyph()
+    b := flyweight_batch()
+    "{g}|{b}"
+}
+
+pub demo_interpreter() = interpret_all()
+
+pub demo_mediator() = mediate_room()
+
+pub demo_memento() = {
+    u := undo_demo()
+    h := history_stack()
+    "{u}::{h}"
+}
+
+pub demo_prototype() = {
+    d := format_draft()
+    p := prototype_pair()
+    "{d}::{p}"
+}
+
+pub demo_proxy() = proxy_demo()
+
+pub demo_singleton() = {
+    c := config_label()
+    s := singleton_same()
+    "{c}::{s}"
+}
+
+pub demo_visitor() = accept_all()
+
 test "strategy demo" = {
     assert_eq(demo_strategy(), "plan=pro quote=200")
 }
 
 test "command demo" = {
-    assert_eq(demo_command(), "charged+refunded charge/refund")
+    assert_eq(demo_command(), "charged+refunded charge/refund batch:charged,refunded")
 }
 
 test "state demo flow" = {
@@ -57,6 +118,54 @@ test "checkout facade" = {
     assert_eq(demo_checkout(), "sku=W-1 qty=1 total=200c status=valid event:checkout|event:submit")
 }
 
+test "bridge demo" = {
+    assert_eq(demo_bridge(), "<svg:circle/>|draw(canvas,rect)")
+}
+
+test "builder demo" = {
+    assert_eq(demo_builder(), "POST api.local/v1/orders body=sku-W-1::GET->POST")
+}
+
+test "chain demo" = {
+    assert_eq(demo_chain(), "auth:ok>rate:ok>audit:logged|auth:deny|rate:429")
+}
+
+test "composite demo" = {
+    assert_eq(demo_composite(), "file:README.md|dir:src[main.crp,lib.crp]")
+}
+
+test "flyweight demo" = {
+    assert_eq(demo_flyweight(), "mono/12:A|shared:A=A")
+}
+
+test "interpreter demo" = {
+    assert_eq(demo_interpreter(), "42|(add 2 3)|(mul 4 5)")
+}
+
+test "mediator demo" = {
+    assert_eq(demo_mediator(), "[lobby] alice->bob: ping|[lobby] bob->alice: pong")
+}
+
+test "memento demo" = {
+    assert_eq(demo_memento(), "undo v2->v1:hello::v1>v2")
+}
+
+test "prototype demo" = {
+    assert_eq(demo_prototype(), "W-1x2 (rush)::rush|bulk")
+}
+
+test "proxy integration" = {
+    assert_eq(demo_proxy(), "miss:user:1=fetched-from-db>hit:user:1=fetched-from-db")
+}
+
+test "singleton demo" = {
+    assert_eq(demo_singleton(), "prod/us-east:443::prod=prod")
+}
+
+test "visitor demo" = {
+    assert_eq(demo_visitor(), "file:main.crp(2kb)|dir:src[3 children]")
+}
+
 test_compile_fail "unknown quote" = {
     quote_missing()
 }
@@ -67,4 +176,16 @@ pub main() = {
     log(demo_state())
     log(demo_adapter_decorator())
     log(demo_checkout())
+    log(demo_bridge())
+    log(demo_builder())
+    log(demo_chain())
+    log(demo_composite())
+    log(demo_flyweight())
+    log(demo_interpreter())
+    log(demo_mediator())
+    log(demo_memento())
+    log(demo_prototype())
+    log(demo_proxy())
+    log(demo_singleton())
+    log(demo_visitor())
 }

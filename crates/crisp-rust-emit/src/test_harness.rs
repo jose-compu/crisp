@@ -143,6 +143,13 @@ fn pat_name(pat: &crisp_ast::pat::Pat) -> String {
 fn emit_expr(expr: &Expr) -> String {
     match &expr.kind {
         ExprKind::Int(n) => n.to_string(),
+        ExprKind::Float(f) => {
+            if f.fract() == 0.0 {
+                format!("{f}.0")
+            } else {
+                format!("{f}")
+            }
+        }
         ExprKind::Bool(b) => b.to_string(),
         ExprKind::Str(parts) => {
             let mut s = String::from("\"");
@@ -174,10 +181,18 @@ fn emit_expr(expr: &Expr) -> String {
         ExprKind::Binary { op, left, right } => {
             let op_str = match op {
                 crisp_ast::expr::BinaryOp::Add => "+",
+                crisp_ast::expr::BinaryOp::Sub => "-",
+                crisp_ast::expr::BinaryOp::Mul => "*",
+                crisp_ast::expr::BinaryOp::Div => "/",
+                crisp_ast::expr::BinaryOp::Pow => ".powf",
                 crisp_ast::expr::BinaryOp::Concat => "+",
                 _ => "+",
             };
-            format!("{} {} {}", emit_expr(left), op_str, emit_expr(right))
+            if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
+                format!("({}).powf({})", emit_expr(left), emit_expr(right))
+            } else {
+                format!("{} {} {}", emit_expr(left), op_str, emit_expr(right))
+            }
         }
         ExprKind::Block(b) => {
             let mut inner = String::new();
@@ -205,6 +220,13 @@ fn emit_expr(expr: &Expr) -> String {
 fn emit_call_arg_for_test(expr: &Expr) -> String {
     match &expr.kind {
         ExprKind::Int(n) => format!("&{n}"),
+        ExprKind::Float(f) => {
+            if f.fract() == 0.0 {
+                format!("&{f}.0")
+            } else {
+                format!("&{f}")
+            }
+        }
         ExprKind::Ident(id) => format!("&{}", id.name),
         _ => emit_expr(expr),
     }

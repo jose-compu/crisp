@@ -1,0 +1,34 @@
+-- Prototype — clone a template and tweak fields (spec §3)
+
+pub type OrderDraft = {
+    sku: str
+    qty: str
+    priority: str
+}
+
+pub proto_rush() = OrderDraft {
+    sku: "W-1"
+    qty: "2"
+    priority: "rush"
+}
+
+pub clone_bulk() = OrderDraft {
+    sku: "W-1"
+    qty: "50"
+    priority: "bulk"
+}
+
+pub format_draft() = {
+    d := proto_rush()
+    "{d.sku}x{d.qty} ({d.priority})"
+}
+
+pub prototype_pair() = {
+    a := proto_rush()
+    b := clone_bulk()
+    "{a.priority}|{b.priority}"
+}
+
+test "prototype rush draft" = {
+    assert_eq(format_draft(), "W-1x2 (rush)")
+}

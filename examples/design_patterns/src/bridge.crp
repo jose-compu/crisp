@@ -1,0 +1,36 @@
+-- Bridge — separate abstraction from implementation (spec §3)
+
+pub type DrawJob = {
+    backend: str
+    figure: str
+}
+
+pub job_svg_circle() = DrawJob {
+    backend: "svg"
+    figure: "circle"
+}
+
+pub job_canvas_rect() = DrawJob {
+    backend: "canvas"
+    figure: "rect"
+}
+
+pub render_svg() = {
+    j := job_svg_circle()
+    "<{j.backend}:{j.figure}/>"
+}
+
+pub render_canvas() = {
+    j := job_canvas_rect()
+    "draw({j.backend},{j.figure})"
+}
+
+pub bridge_demo() = {
+    a := render_svg()
+    b := render_canvas()
+    "{a}|{b}"
+}
+
+test "bridge svg" = {
+    assert_eq(render_svg(), "<svg:circle/>")
+}

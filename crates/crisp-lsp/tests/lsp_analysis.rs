@@ -113,6 +113,7 @@ fn analyze_all_examples() {
         "data_pipeline",
         "abnormal_suite",
         "design_patterns",
+        "float_demo",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

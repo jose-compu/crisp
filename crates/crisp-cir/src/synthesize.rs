@@ -57,6 +57,10 @@ fn lower_default_expr(expr: &crisp_ast::expr::Expr) -> CirExpr {
             value: *n,
             span: expr.span,
         },
+        ExprKind::Float(f) => CirExpr::Float {
+            value: *f,
+            span: expr.span,
+        },
         ExprKind::Bool(b) => CirExpr::Ident {
             name: if *b { "true" } else { "false" }.into(),
             ty: CirTy::Bool,

@@ -145,6 +145,7 @@ fn spec_s20_all_examples_typecheck() {
         "server",
         "fallible",
         "math",
+        "float_demo",
         "defaults",
         "sealed",
         "with_tests",

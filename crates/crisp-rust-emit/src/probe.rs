@@ -235,16 +235,36 @@ fn emit_expr_inner(
         ExprKind::Int(n) => {
             let _ = write!(out, "{n}");
         }
-        ExprKind::Binary {
-            op: crisp_ast::expr::BinaryOp::Concat,
-            left,
-            right,
-        } => {
-            let _ = write!(out, "format!(\"{{}}{{}}\", ");
+        ExprKind::Float(f) => {
+            let _ = write!(out, "{f}");
+        }
+        ExprKind::Binary { op, left, right } => {
+            if matches!(op, crisp_ast::expr::BinaryOp::Concat) {
+                let _ = write!(out, "format!(\"{{}}{{}}\", ");
+                emit_expr(out, left, osig);
+                let _ = write!(out, ", ");
+                emit_expr(out, right, osig);
+                let _ = write!(out, ")");
+                return;
+            }
+            if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
+                let _ = write!(out, "(");
+                emit_expr(out, left, osig);
+                let _ = write!(out, ").powf(");
+                emit_expr(out, right, osig);
+                let _ = write!(out, ")");
+                return;
+            }
             emit_expr(out, left, osig);
-            let _ = write!(out, ", ");
+            let op_s = match op {
+                crisp_ast::expr::BinaryOp::Add => "+",
+                crisp_ast::expr::BinaryOp::Sub => "-",
+                crisp_ast::expr::BinaryOp::Mul => "*",
+                crisp_ast::expr::BinaryOp::Div => "/",
+                _ => "+",
+            };
+            let _ = write!(out, " {op_s} ");
             emit_expr(out, right, osig);
-            let _ = write!(out, ")");
         }
         ExprKind::Call { func, args } => {
             if let ExprKind::Ident(id) = &func.kind

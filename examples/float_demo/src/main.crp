@@ -1,0 +1,46 @@
+-- float_demo — geometry, interpolation, and float literals (spec §3)
+
+use geom {
+    add_vecs, circle_area, circle_circumference, format_vec2, scale_half, sum_components
+}
+
+pub lerp_mid(a: float, b: float) = {
+    s := a + b
+    s / 2.0
+}
+
+pub demo_lerp() = {
+    mid := lerp_mid(0.0, 10.0)
+    "mid={mid}"
+}
+
+pub demo_circle() = {
+    area := circle_area(3.0)
+    circ := circle_circumference(3.0)
+    "area={area} circ={circ}"
+}
+
+pub demo_vec() = {
+    label := format_vec2()
+    sum := sum_components()
+    half := scale_half()
+    "vec={label} sum={sum} half_x={half.x}"
+}
+
+test "lerp midpoint" = {
+    assert_eq(lerp_mid(2.0, 8.0), 5.0)
+}
+
+test "circle integration" = {
+    assert_eq(demo_circle(), "area=28.274309999999996 circ=18.849539999999998")
+}
+
+test "vec integration" = {
+    assert_eq(demo_vec(), "vec=(1,1) sum=2 half_x=0.5")
+}
+
+pub main() = {
+    log(demo_lerp())
+    log(demo_circle())
+    log(demo_vec())
+}

@@ -1,0 +1,37 @@
+-- Builder — stepwise construction of a complex object (spec §3)
+
+pub type HttpRequest = {
+    method: str
+    host: str
+    path: str
+    body: str
+}
+
+pub step_get_root() = HttpRequest {
+    method: "GET"
+    host: "localhost"
+    path: "/"
+    body: ""
+}
+
+pub step_post_api() = HttpRequest {
+    method: "POST"
+    host: "api.local"
+    path: "/v1/orders"
+    body: "sku-W-1"
+}
+
+pub build_label() = {
+    r := step_post_api()
+    "{r.method} {r.host}{r.path} body={r.body}"
+}
+
+pub build_compare() = {
+    a := step_get_root()
+    b := step_post_api()
+    "{a.method}->{b.method}"
+}
+
+test "builder post label" = {
+    assert_eq(build_compare(), "GET->POST")
+}

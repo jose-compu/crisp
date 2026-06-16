@@ -1,0 +1,39 @@
+-- Composite — treat leaves and containers uniformly (spec §3)
+
+pub type TreeNode = {
+    kind: str
+    name: str
+    children: str
+}
+
+pub leaf_readme() = TreeNode {
+    kind: "file"
+    name: "README.md"
+    children: ""
+}
+
+pub dir_src() = TreeNode {
+    kind: "dir"
+    name: "src"
+    children: "main.crp,lib.crp"
+}
+
+pub render_leaf() = {
+    n := leaf_readme()
+    "{n.kind}:{n.name}"
+}
+
+pub render_dir() = {
+    n := dir_src()
+    "{n.kind}:{n.name}[{n.children}]"
+}
+
+pub walk_tree() = {
+    a := render_leaf()
+    b := render_dir()
+    "{a}|{b}"
+}
+
+test "composite walk" = {
+    assert_eq(walk_tree(), "file:README.md|dir:src[main.crp,lib.crp]")
+}

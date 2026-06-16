@@ -1,0 +1,30 @@
+-- Singleton — one shared configuration instance (spec §3)
+
+pub type AppConfig = {
+    env: str
+    region: str
+    port: str
+}
+
+pub instance_prod() = AppConfig {
+    env: "prod"
+    region: "us-east"
+    port: "443"
+}
+
+pub instance_shared() = instance_prod()
+
+pub config_label() = {
+    c := instance_shared()
+    "{c.env}/{c.region}:{c.port}"
+}
+
+pub singleton_same() = {
+    a := instance_prod()
+    b := instance_shared()
+    "{a.env}={b.env}"
+}
+
+test "singleton shared env" = {
+    assert_eq(singleton_same(), "prod=prod")
+}

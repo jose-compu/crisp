@@ -1,8 +1,13 @@
 -- examples/math — multi-file arithmetic
 
 use arith { double, sum }
+use floats { add, avg2, mul, square }
 
 pub main() = {
     log("sum(2,3)={sum(2, 3)}")
     log("double(5)={double(5)}")
+    log("add(1.5,2.5)={add(1.5, 2.5)}")
+    log("avg2(1.0,3.0)={avg2(1.0, 3.0)}")
+    log("square(4.0)={square(4.0)}")
+    log("mul(0.5,8.0)={mul(0.5, 8.0)}")
 }

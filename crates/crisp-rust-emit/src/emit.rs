@@ -391,6 +391,14 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             let _ = write!(out, "{value}");
         }
+        CirExpr::Float { value, span } => {
+            map.record(out.len() as u32, *span);
+            if value.fract() == 0.0 {
+                let _ = write!(out, "{value}.0");
+            } else {
+                let _ = write!(out, "{value}");
+            }
+        }
         CirExpr::Str { value, span } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "\"{}\".to_string()", escape_str(value));
@@ -411,6 +419,12 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 let _ = write!(out, "format!(\"{{}}{{}}\", ");
                 emit_expr(out, left, current_module, map);
                 let _ = write!(out, ", ");
+                emit_expr(out, right, current_module, map);
+                let _ = write!(out, ")");
+            } else if *op == CirBinOp::Pow {
+                let _ = write!(out, "(");
+                emit_expr(out, left, current_module, map);
+                let _ = write!(out, ").powf(");
                 emit_expr(out, right, current_module, map);
                 let _ = write!(out, ")");
             } else {
@@ -834,6 +848,15 @@ fn emit_call_arg(
             let _ = write!(out, "\"{}\"", escape_str(value));
             return;
         }
+        if let CirExpr::Float { value, span } = expr {
+            map.record(out.len() as u32, *span);
+            if value.fract() == 0.0 {
+                let _ = write!(out, "&{value}.0");
+            } else {
+                let _ = write!(out, "&{value}");
+            }
+            return;
+        }
         let _ = write!(out, "&");
     }
     emit_expr(out, expr, current_module, map);
@@ -886,6 +909,13 @@ fn emit_expr_inline_to(out: &mut String, expr: &CirExpr) {
         CirExpr::Int { value, .. } => {
             let _ = write!(out, "{value}");
         }
+        CirExpr::Float { value, .. } => {
+            if value.fract() == 0.0 {
+                let _ = write!(out, "{value}.0");
+            } else {
+                let _ = write!(out, "{value}");
+            }
+        }
         _ => {
             let _ = write!(out, "Default::default()");
         }
@@ -901,6 +931,7 @@ fn binop_rust(op: CirBinOp) -> &'static str {
         CirBinOp::Eq => "==",
         CirBinOp::Lt => "<",
         CirBinOp::Gt => ">",
+        CirBinOp::Pow => ".powf",
         CirBinOp::Concat => "+",
     }
 }

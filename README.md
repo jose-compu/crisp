@@ -7,7 +7,7 @@ A systems programming language that transpiles to Rust. Write compact source; `c
 
 ## Status
 
-**v1.0.0** — LSP, diagnostics, conformance e2e. Complex examples: `inventory`, `workshop`, `vec_ops`, `fallible_chain`, `async_spawn`, `unsafe_math`, `data_pipeline`.
+**v1.1.0** — Vec emit fixes (`push`/`len`/`mut`), complex examples (`inventory`, `workshop`, `vec_ops`, `fallible_chain`, `async_spawn`, `unsafe_math`, `data_pipeline`), CI clippy hardening.
 
 ## Quick start
 

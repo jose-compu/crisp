@@ -191,6 +191,16 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** v1.0 release — spec-complete bootstrap compiler.
 
+### Milestone 1.1 — Emit fixes & complex examples *(shipped v1.1.0)*
+
+- [x] Fix `Vec::push` / `Vec::len` / `let mut` lowering in `crisp-rust-emit`
+- [x] Multi-module examples: `inventory`, `workshop`
+- [x] Feature-matrix examples: `vec_ops`, `fallible_chain`, `async_spawn`, `unsafe_math`, `data_pipeline`
+- [x] `m11_complex_features` e2e suite; expanded conformance/cli/lsp tests
+- [x] CI: `cargo fmt --check`, `clippy -D warnings` clean
+
+**Deliverable:** v1.1 — correct vec lowering and broad complex-feature coverage.
+
 ### Milestone 2.0 — Compiler-as-library *(current)*
 
 - [ ] Expose v1 pipeline as a stable internal API (crate boundaries documented)
@@ -296,4 +306,4 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-*Last updated: 2026-06-12 — v1.0.0 LSP analysis, conformance e2e, fuzz/bench; milestone 2.0 current.*
+*Last updated: 2026-06-12 — v1.1.0 vec emit fixes, complex examples, clippy CI; milestone 2.0 current.*

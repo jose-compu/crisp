@@ -1,0 +1,27 @@
+-- Strategy + Factory + State (spec §3, §4.5)
+
+pub plan_pro_tier() = "pro"
+
+pub plan_team_tier() = "team"
+
+pub make_plan_pro() = plan_pro_tier()
+
+pub make_plan_team() = plan_team_tier()
+
+pub quote_pro() = "200"
+
+pub quote_team() = "300"
+
+pub phase_cart() = "in-cart"
+
+pub phase_paid() = "payment-cleared"
+
+pub phase_packed() = "warehouse"
+
+pub step_cart_to_paid() = phase_paid()
+
+pub step_paid_to_packed() = phase_packed()
+
+test "state steps" = {
+    assert_eq(step_cart_to_paid(), "payment-cleared")
+}

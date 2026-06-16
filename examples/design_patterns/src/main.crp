@@ -1,0 +1,70 @@
+-- design_patterns — classic GoF-style patterns in Crisp (spec §20)
+
+use adapter { adapt_greeting, decorate_banner, decorate_star }
+use behavior { make_plan_pro, phase_cart, quote_pro, step_cart_to_paid, step_paid_to_packed }
+use checkout { build_receipt_text, publish }
+use commands { cmd_charge_label, cmd_refund_label, run_charge, run_refund }
+
+pub demo_strategy() = {
+    tier := make_plan_pro()
+    cents := quote_pro()
+    "plan={tier} quote={cents}"
+}
+
+pub demo_command() = {
+    a := run_charge()
+    b := run_refund()
+    label_a := cmd_charge_label()
+    label_b := cmd_refund_label()
+    "{a}+{b} {label_a}/{label_b}"
+}
+
+pub demo_state() = {
+    s0 := phase_cart()
+    s1 := step_cart_to_paid()
+    s2 := step_paid_to_packed()
+    "{s0}>{s1}>{s2}"
+}
+
+pub demo_adapter_decorator() = {
+    base := adapt_greeting("team")
+    decorate_star(decorate_banner(base))
+}
+
+pub demo_checkout() = {
+    receipt := build_receipt_text()
+    ping := publish("checkout", "submit")
+    "{receipt} {ping}"
+}
+
+test "strategy demo" = {
+    assert_eq(demo_strategy(), "plan=pro quote=200")
+}
+
+test "command demo" = {
+    assert_eq(demo_command(), "charged+refunded charge/refund")
+}
+
+test "state demo flow" = {
+    assert_eq(demo_state(), "in-cart>payment-cleared>warehouse")
+}
+
+test "adapter decorator demo" = {
+    assert_eq(demo_adapter_decorator(), "* [ hello team ] *")
+}
+
+test "checkout facade" = {
+    assert_eq(demo_checkout(), "sku=W-1 qty=1 total=200c status=valid event:checkout|event:submit")
+}
+
+test_compile_fail "unknown quote" = {
+    quote_missing()
+}
+
+pub main() = {
+    log(demo_strategy())
+    log(demo_command())
+    log(demo_state())
+    log(demo_adapter_decorator())
+    log(demo_checkout())
+}

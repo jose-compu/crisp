@@ -199,6 +199,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [x] `m11_complex_features` e2e suite; expanded conformance/cli/lsp tests
 - [x] CI: `cargo fmt --check`, `clippy -D warnings` clean
 - [x] Spec v0.2 abnormal-path suite: `spec_abnormal_v2.rs`, `examples/abnormal_suite`
+- [x] GoF-style patterns example: `examples/design_patterns` (multi-module)
 
 **Deliverable:** v1.1 — correct vec lowering and broad complex-feature coverage.
 

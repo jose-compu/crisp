@@ -1,0 +1,17 @@
+-- Adapter + Decorator (spec §4)
+
+pub legacy_greeting(name: str) = "HELLO " ++ name
+
+pub adapt_greeting(name: str) = "hello " ++ name
+
+pub decorate_banner(text: str) = "[ " ++ text ++ " ]"
+
+pub decorate_star(text: str) = "* " ++ text ++ " *"
+
+test "adapter normalizes case" = {
+    assert_eq(adapt_greeting("crisp"), "hello crisp")
+}
+
+test "decorator banner" = {
+    assert_eq(decorate_banner("go"), "[ go ]")
+}

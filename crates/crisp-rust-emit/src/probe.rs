@@ -99,6 +99,8 @@ pub(crate) fn format_rust_ty(ty: &Ty) -> String {
         Ty::Bool => "bool".into(),
         Ty::Char => "char".into(),
         Ty::Unit => "()".into(),
+        Ty::Var(_) => "_".into(),
+        Ty::StrSlice => "str".into(),
         other => format_ty(other),
     }
 }

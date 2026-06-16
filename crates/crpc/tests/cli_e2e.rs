@@ -70,6 +70,7 @@ fn crpc_check_all_examples() {
         "unsafe_math",
         "data_pipeline",
         "abnormal_suite",
+        "design_patterns",
     ] {
         run_ok(
             "crpc",

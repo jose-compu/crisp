@@ -1,0 +1,17 @@
+-- Command pattern — encapsulated actions (spec §4)
+
+pub cmd_charge_label() = "charge"
+
+pub cmd_refund_label() = "refund"
+
+pub run_charge() = "charged"
+
+pub run_refund() = "refunded"
+
+test "charge command" = {
+    assert_eq(run_charge(), "charged")
+}
+
+test "refund command" = {
+    assert_eq(run_refund(), "refunded")
+}

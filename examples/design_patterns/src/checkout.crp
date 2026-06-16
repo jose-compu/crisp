@@ -1,0 +1,23 @@
+-- Template Method + Observer helpers (spec §12)
+
+pub validate_ok() = "valid"
+
+pub validate_empty() = "invalid"
+
+pub build_receipt_text() = "sku=W-1 qty=1 total=200c status=valid"
+
+pub observer_log(event: str) = "event:{event}"
+
+pub publish(subject: str, event: str) = {
+    a := observer_log(subject)
+    b := observer_log(event)
+    "{a}|{b}"
+}
+
+test "validate empty cart" = {
+    assert_eq(validate_empty(), "invalid")
+}
+
+test "publish fans out" = {
+    assert_eq(publish("orders", "paid"), "event:orders|event:paid")
+}

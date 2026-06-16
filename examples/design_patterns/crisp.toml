@@ -1,0 +1,4 @@
+[package]
+name = "design_patterns"
+version = "0.1.0"
+edition = "2026"

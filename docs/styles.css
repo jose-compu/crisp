@@ -192,11 +192,12 @@ a:hover { color: var(--accent-soft); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent-soft) !important; }
 
 .hero-brand {
-  width: 56px;
+  width: min(168px, 42vw);
   height: auto;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #f2f2f0;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
 }
 
 /* code window */

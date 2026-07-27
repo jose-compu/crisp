@@ -95,17 +95,47 @@ Next releases: **v1.1.1** (docs/CI), **v1.2.0** (language DX). See [ROADMAP.md](
 
 ## Quick start
 
+Build the toolchain:
+
 ```bash
 cargo build --release -p crpc
 export PATH="$PWD/target/release:$PATH"
 # or: cargo install --path crates/crpc --locked
+```
 
-./target/release/crpc emit examples/hello
-./target/release/crpc build examples/hello
-./target/release/crpc run examples/hello
-./target/release/crpc test examples/design_patterns
-./target/release/crpc test examples/float_demo
-cargo test --verbose
+### Hello world
+
+[`examples/hello/src/main.crp`](examples/hello/src/main.crp):
+
+```crisp
+-- examples/hello — minimal Crisp program (spec §5)
+
+greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("crisp")
+    print(msg)
+}
+```
+
+Run it:
+
+```bash
+crpc run examples/hello
+```
+
+Expected output:
+
+```
+"hello crisp"
+```
+
+Other commands on the same project:
+
+```bash
+crpc check examples/hello    # resolve + typecheck
+crpc emit examples/hello     # write Rust under examples/hello/target/rust/
+crpc build examples/hello    # emit + cargo build
 ```
 
 See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and fallible functions. Install details: [docs/RELEASE.md](docs/RELEASE.md).

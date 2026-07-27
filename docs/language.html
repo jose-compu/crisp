@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Language — Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">Crisp</a>
+    <nav>
+      <a href="getting-started.html">Getting started</a>
+      <a href="language.html">Language</a>
+      <a href="cli.html">CLI</a>
+      <a href="limitations.html">Limitations</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Language overview</h1>
+    <p><strong>Explicit on demand, implicit by default.</strong> Types, ownership, and errors are inferred; annotate when needed. Semantics are defined by lowering to Rust.</p>
+    <ul>
+      <li>Structs, defaults, sealed <code>crisp.lock</code></li>
+      <li>Ambient errors: <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
+      <li>Modules: one file = one module; <code>use m { f }</code></li>
+      <li>Tests: <code>test</code> / <code>test_compile_fail</code></li>
+    </ul>
+    <p>Formal document: <a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">spec v0.2.0-draft</a>. Deltas: <a href="https://github.com/jose-compu/crisp/blob/main/docs/SPEC_IMPL_DELTA.md">SPEC_IMPL_DELTA.md</a>.</p>
+  </main>
+</body>
+</html>

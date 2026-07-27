@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLI — Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">Crisp</a>
+    <nav>
+      <a href="getting-started.html">Getting started</a>
+      <a href="language.html">Language</a>
+      <a href="cli.html">CLI</a>
+      <a href="limitations.html">Limitations</a>
+    </nav>
+  </header>
+  <main>
+    <h1>CLI reference</h1>
+    <table>
+      <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>crpc check</code></td><td>Resolve, typecheck, ownership probe</td></tr>
+        <tr><td><code>crpc emit</code></td><td>Write Rust under <code>target/rust/</code></td></tr>
+        <tr><td><code>crpc build</code></td><td>Emit + cargo build</td></tr>
+        <tr><td><code>crpc run</code></td><td>Build and run</td></tr>
+        <tr><td><code>crpc test</code></td><td>Runtime + compile-fail tests</td></tr>
+        <tr><td><code>reveal rust</code></td><td>Show emitted / inferred Rust</td></tr>
+      </tbody>
+    </table>
+    <p>Error codes: <a href="https://github.com/jose-compu/crisp/blob/main/docs/ERROR_CATALOG.md">ERROR_CATALOG.md</a>.</p>
+  </main>
+</body>
+</html>

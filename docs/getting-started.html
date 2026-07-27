@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Getting started — Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">Crisp</a>
+    <nav>
+      <a href="getting-started.html">Getting started</a>
+      <a href="language.html">Language</a>
+      <a href="cli.html">CLI</a>
+      <a href="limitations.html">Limitations</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Getting started</h1>
+    <p>Full guide: <a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a> on GitHub.</p>
+    <h2>Install from source</h2>
+    <pre class="pipe">git clone https://github.com/jose-compu/crisp.git
+cd crisp
+cargo build --release -p crpc
+export PATH="$PWD/target/release:$PATH"
+# or: cargo install --path crates/crpc --locked</pre>
+    <h2>Run hello</h2>
+    <pre class="pipe">crpc run examples/hello
+crpc test examples/math
+crpc check examples/design_patterns</pre>
+    <p>Requires Rust 1.85+ with <code>cargo</code> and <code>rustc</code> on <code>PATH</code>.</p>
+  </main>
+</body>
+</html>

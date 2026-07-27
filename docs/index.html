@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crisp — systems language → Rust</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">Crisp</a>
+    <nav>
+      <a href="getting-started.html">Getting started</a>
+      <a href="language.html">Language</a>
+      <a href="cli.html">CLI</a>
+      <a href="limitations.html">Limitations</a>
+      <a href="https://github.com/jose-compu/crisp">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Bootstrap compiler · v1.1</p>
+      <h1>Crisp</h1>
+      <p class="lede">A systems language that transpiles to Rust. Explicit on demand, implicit by default — <code>rustc</code> remains the soundness boundary.</p>
+      <p class="cta">
+        <a class="btn" href="getting-started.html">Get started</a>
+        <a class="btn ghost" href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Read the draft spec</a>
+      </p>
+    </section>
+    <section>
+      <h2>Pipeline</h2>
+      <pre class="pipe">.crp → resolve → typeck → ownership → CIR → Rust → rustc → native</pre>
+      <p>See the <a href="https://github.com/jose-compu/crisp/blob/main/README.md">README</a> for architecture and philosophy.</p>
+    </section>
+  </main>
+  <footer>
+    <p>Dual-licensed MIT OR Apache-2.0 · Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

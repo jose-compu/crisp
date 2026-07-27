@@ -29,6 +29,16 @@
       </p>
     </section>
     <section>
+      <h2>Hello world</h2>
+      <pre class="pipe">greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("crisp")
+    print(msg)
+}</pre>
+      <p>Run: <code>crpc run examples/hello</code> → <code>"hello crisp"</code>. Full steps on <a href="getting-started.html">Getting started</a>.</p>
+    </section>
+    <section>
       <h2>Pipeline</h2>
       <pre class="pipe">.crp → resolve → typeck → ownership → CIR → Rust → rustc → native</pre>
       <p>See the <a href="https://github.com/jose-compu/crisp/blob/main/README.md">README</a> for architecture and philosophy.</p>

@@ -25,8 +25,24 @@ cd crisp
 cargo build --release -p crpc
 export PATH="$PWD/target/release:$PATH"
 # or: cargo install --path crates/crpc --locked</pre>
-    <h2>Run hello</h2>
-    <pre class="pipe">crpc run examples/hello
+    <h2>Hello world</h2>
+    <p>Minimal program at <code>examples/hello/src/main.crp</code>:</p>
+    <pre class="pipe">-- examples/hello — minimal Crisp program (spec §5)
+
+greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("crisp")
+    print(msg)
+}</pre>
+    <p>Run it (from the repo root, with <code>crpc</code> on <code>PATH</code>):</p>
+    <pre class="pipe">crpc run examples/hello</pre>
+    <p>Expected output:</p>
+    <pre class="pipe">"hello crisp"</pre>
+    <p>Useful companions:</p>
+    <pre class="pipe">crpc check examples/hello
+crpc emit examples/hello
+crpc build examples/hello
 crpc test examples/math
 crpc check examples/design_patterns</pre>
     <p>Requires Rust 1.85+ with <code>cargo</code> and <code>rustc</code> on <code>PATH</code>.</p>

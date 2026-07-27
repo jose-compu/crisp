@@ -6,14 +6,21 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 
 ## Prerequisites
 
-- [Rust](https://rustup.rs/) (stable) with `cargo` and `rustc` on `PATH`
+- [Rust](https://rustup.rs/) **1.85+** (see workspace `rust-version`) with `cargo` and `rustc` on `PATH`
 - Clone this repository
 
-## 1. Build the toolchain
+## 1. Build / install the toolchain
 
 ```bash
 cargo build --release -p crpc
 export PATH="$PWD/target/release:$PATH"   # optional, for this shell
+```
+
+Or install into your Cargo bin directory:
+
+```bash
+cargo install --path crates/crpc --locked
+# ensure ~/.cargo/bin is on PATH
 ```
 
 Verify:
@@ -21,6 +28,8 @@ Verify:
 ```bash
 crpc --version
 ```
+
+Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site lives on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch under `docs/`.
 
 ## 2. Run the hello example
 

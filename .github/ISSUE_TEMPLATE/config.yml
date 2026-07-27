@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Spec (draft)
+    url: https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md
+    about: Formal language design document
+  - name: Known limitations
+    url: https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md
+    about: Documented gaps before filing a bug

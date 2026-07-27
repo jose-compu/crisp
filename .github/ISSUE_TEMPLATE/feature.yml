@@ -1,0 +1,31 @@
+name: Feature request
+description: New language or toolchain capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Spec section (if any)
+      placeholder: "e.g. §5.4 Methods"
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Suggested release train
+      options:
+        - v1.1.1 (docs/CI)
+        - v1.2.0 (language DX)
+        - v1.3.0 (tooling/stdlib)
+        - v2.0.0 (self-hosting)
+        - unsure

@@ -1,0 +1,26 @@
+name: Known limitation
+description: Document or track an intentional/temporary gap
+labels: ["known-limitation"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Limitation summary
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround (if any)
+  - type: input
+    id: issue
+    attributes:
+      label: Related fix issue (if filed)
+      placeholder: "#12"
+  - type: checkboxes
+    id: docs
+    attributes:
+      label: Docs
+      options:
+        - label: Should be listed in docs/KNOWN_LIMITATIONS.md
+          required: false

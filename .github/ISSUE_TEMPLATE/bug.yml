@@ -1,0 +1,36 @@
+name: Bug report
+description: Incorrect behavior in crpc / reveal / emit
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Check [KNOWN_LIMITATIONS](https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md) first.
+  - type: input
+    id: version
+    attributes:
+      label: Crisp / crpc version
+      placeholder: "crpc --version → 1.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal .crp repro
+      description: Smallest crate or snippet that shows the bug
+      render: crisp
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      description: e.g. crpc check ., crpc test examples/foo
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true

@@ -113,6 +113,7 @@ fn examples_with_tests_pass_crpc_test() {
         "unsafe_math",
         "fallible_chain",
         "inventory",
+        "design_patterns",
     ] {
         let root = example(name);
         eprintln!("crpc test: {name}");
@@ -155,6 +156,7 @@ fn runnable_examples_build_and_run() {
         "unsafe_math",
         "float_demo",
         "data_pipeline",
+        "design_patterns",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -223,6 +225,7 @@ const BUILDABLE: &[&str] = &[
     "workshop",
     "unsafe_math",
     "data_pipeline",
+    "design_patterns",
 ];
 
 #[test]

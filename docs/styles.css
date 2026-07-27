@@ -145,26 +145,37 @@ a:hover { color: var(--accent-soft); }
 }
 
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--accent);
   color: var(--accent-soft);
   border-radius: 999px;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.85rem;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
+  line-height: 1.2;
+  width: fit-content;
+  max-width: 100%;
 }
-
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
 .hero-copy h1 {
   font-size: clamp(2.6rem, 6vw, 3.8rem);
   margin: 0 0 1rem;
   letter-spacing: -0.035em;
   line-height: 1.08;
+  width: 100%;
 }
 .hero-points {
   margin: 0 0 1.5rem;
   padding-left: 1.15rem;
   color: var(--muted);
+  width: 100%;
 }
 .hero-points li { margin: 0.35rem 0; }
 .hero-points li::marker { color: var(--accent); }
@@ -192,11 +203,12 @@ a:hover { color: var(--accent-soft); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent-soft) !important; }
 
 .hero-brand {
+  display: block;
   width: min(168px, 42vw);
   height: auto;
   border-radius: 12px;
   background: #f2f2f0;
-  margin-bottom: 1.25rem;
+  margin: 0 0 1rem;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
 }
 

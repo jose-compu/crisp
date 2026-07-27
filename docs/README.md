@@ -15,3 +15,7 @@ Static site for GitHub Pages (branch `docs`, folder `/docs`).
 | `language.html`, `cli.html`, `limitations.html` | Doc detail pages |
 
 Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). Structure inspired by [elixir-lang.org](https://elixir-lang.org/).
+
+## Syntax highlighting
+
+Prism.js with a custom **Crisp** grammar (`js/prism-crisp.js`) plus bash for shell snippets. Theme: `css/prism-crisp.css`. Auto-detection in `js/site-highlight.js`.

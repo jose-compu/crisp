@@ -1,0 +1,98 @@
+/* Prism theme tuned to Crisp docs (slate + blue). Based on Tomorrow Night feel. */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #e7ecf1;
+  background: none;
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  line-height: 1.55;
+  tab-size: 2;
+  hyphens: none;
+}
+
+pre[class*="language-"],
+pre.pipe:has(> code[class*="language-"]),
+.code-window pre {
+  margin: 0;
+  overflow: auto;
+}
+
+pre[class*="language-"] > code,
+pre.pipe > code,
+.code-window pre > code {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: transparent;
+}
+
+.token.comment { color: #6b7c8f; font-style: italic; }
+.token.prolog,
+.token.doctype,
+.token.cdata { color: #6b7c8f; }
+
+.token.punctuation { color: #9aa7b5; }
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.constant,
+.token.symbol,
+.token.deleted { color: #7eb8f0; }
+
+.token.number { color: #c9a46c; }
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted { color: #8fd4a0; }
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string { color: #9aa7b5; }
+
+.token.atrule,
+.token.attr-value,
+.token.keyword { color: #3d9cf0; font-weight: 500; }
+
+.token.function,
+.token.class-name { color: #d4b483; }
+
+.token.regex,
+.token.important,
+.token.variable { color: #e0a070; }
+
+.token.important,
+.token.bold { font-weight: 700; }
+.token.italic { font-style: italic; }
+
+.token.interpolation { color: #e7ecf1; }
+.token.interpolation .token.punctuation { color: #3d9cf0; }
+
+.band-light pre.pipe > code[class*="language-"],
+.band-light code[class*="language-"] {
+  color: #15202b;
+}
+.band-light .token.comment { color: #7a8b9c; }
+.band-light .token.punctuation { color: #5a6b7c; }
+.band-light .token.keyword { color: #1f6fb8; }
+.band-light .token.boolean,
+.band-light .token.constant { color: #1f6fb8; }
+.band-light .token.string,
+.band-light .token.char,
+.band-light .token.builtin { color: #2f7d4a; }
+.band-light .token.number { color: #9a6b2f; }
+.band-light .token.function,
+.band-light .token.class-name { color: #8a6a35; }
+.band-light .token.operator { color: #5a6b7c; }
+.band-light .token.interpolation .token.punctuation { color: #1f6fb8; }
+
+/* shell / bash on dark panels */
+.token.shell-symbol { color: #3d9cf0; }

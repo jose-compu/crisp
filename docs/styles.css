@@ -231,12 +231,16 @@ a:hover { color: var(--accent-soft); }
 .code-window pre,
 .pipe {
   margin: 0;
-  padding: 1rem 1.1rem;
+  padding: 0;
   overflow-x: auto;
   font-family: var(--mono);
   font-size: 0.88rem;
   line-height: 1.55;
   white-space: pre;
+}
+.code-window pre:not(:has(> code)),
+.pipe:not(:has(> code)) {
+  padding: 1rem 1.1rem;
 }
 .pipe {
   background: var(--card);

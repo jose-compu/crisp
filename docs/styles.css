@@ -24,7 +24,31 @@ a { color: var(--accent); }
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #243040;
 }
-.brand { font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--fg); }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-decoration: none;
+  color: var(--fg);
+}
+.brand-mark {
+  display: block;
+  width: 28px;
+  height: auto;
+  border-radius: 4px;
+  background: #f2f2f0;
+}
+.hero-logo {
+  display: block;
+  width: min(160px, 36vw);
+  height: auto;
+  margin: 0 0 1.25rem;
+  border-radius: 10px;
+  background: #f2f2f0;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
 nav a { margin-left: 1rem; text-decoration: none; color: var(--muted); }
 nav a:hover { color: var(--fg); }
 main { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }

@@ -32,13 +32,13 @@ export PATH="$PWD/target/release:$PATH"
 greet(name) = "hello " ++ name
 
 pub main() = {
-    msg := greet("crisp")
+    msg := greet("world")
     print(msg)
 }</pre>
     <p>Run it (from the repo root, with <code>crpc</code> on <code>PATH</code>):</p>
     <pre class="pipe">crpc run examples/hello</pre>
     <p>Expected output:</p>
-    <pre class="pipe">"hello crisp"</pre>
+    <pre class="pipe">"hello world"</pre>
     <p>Useful companions:</p>
     <pre class="pipe">crpc check examples/hello
 crpc emit examples/hello

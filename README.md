@@ -1,5 +1,9 @@
 # Crisp
 
+<p align="center">
+  <img src="assets/crisp-logo.jpg" alt="Crisp logo" width="180" />
+</p>
+
 A systems programming language that transpiles to Rust. You write compact `.crp` source; `crpc` infers types, ownership, lifetimes, and error propagation, emits explicit Rust, and `rustc` is the soundness boundary.
 
 **This is a Rust-hosted bootstrap compiler (v1.1.x).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).

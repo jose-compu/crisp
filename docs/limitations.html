@@ -7,24 +7,72 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
   <header class="site-header">
-    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />Crisp</a>
-    <nav>
-      <a href="getting-started.html">Getting started</a>
-      <a href="language.html">Language</a>
-      <a href="cli.html">CLI</a>
-      <a href="limitations.html">Limitations</a>
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a class="active" href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
     </nav>
   </header>
-  <main>
-    <h1>Known limitations</h1>
-    <p>Canonical list: <a href="https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md">docs/KNOWN_LIMITATIONS.md</a>.</p>
-    <ul>
-      <li>Bootstrap only — not self-hosted yet</li>
-      <li>Flat module alphabetical order before <code>main</code></li>
-      <li>Field access on params unreliable; use locals</li>
-      <li>Enums / traits / shapes incomplete vs draft spec</li>
-    </ul>
-  </main>
+
+  <section class="band-dark page-hero">
+    <div class="wrap">
+      <h1>Known limitations</h1>
+      <p class="lede">Honest gaps in the bootstrap compiler versus the draft spec. Full list lives on the main branch.</p>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap content">
+      <ul>
+        <li>Not self-hosted — Rust-hosted <code>crpc</code> only</li>
+        <li>Enums / match reliability incomplete</li>
+        <li>Field access on function parameters limited</li>
+        <li>Module load order is alphabetical in flat <code>src/</code></li>
+        <li><code>use rust::crate</code> imports not implemented yet (Cargo deps can be listed; calling Rust APIs from Crisp is tracked separately)</li>
+        <li>Shapes / some stdlib areas incomplete</li>
+      </ul>
+      <p>
+        <a href="https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md →</a>
+        ·
+        <a href="https://github.com/jose-compu/crisp/blob/main/docs/SPEC_IMPL_DELTA.md">SPEC_IMPL_DELTA.md →</a>
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
 </body>
 </html>

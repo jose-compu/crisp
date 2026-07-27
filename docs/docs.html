@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documentation — Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a class="active" href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
+    </nav>
+  </header>
+
+  <section class="band-dark page-hero">
+    <div class="wrap hero-split">
+      <div>
+        <h1>Documentation</h1>
+        <p class="lede">Language overview, CLI, known limitations, and links into the draft specification on GitHub. Prefer the tutorial if you are new.</p>
+      </div>
+      <aside class="hero-aside">
+        <h3>Also useful</h3>
+        <ul>
+          <li><a href="tutorial.html">Beginner tutorial</a></li>
+          <li><a href="learning.html">Learning hub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/README.md">README</a></li>
+        </ul>
+      </aside>
+    </div>
+    <div class="wrap" style="padding-top:0">
+      <div class="version-box">
+        <h2>Latest version</h2>
+        <div class="ver">✓ v1.1.x (bootstrap)</div>
+        <p class="muted">Requires Rust 1.85+. Spec remains <strong>v0.2.0-draft</strong> — treat “spec-complete” claims cautiously.</p>
+        <div class="doc-links">
+          <a href="language.html">Language summary<span>Syntax surface and lowering overview</span></a>
+          <a href="cli.html">CLI reference<span>crpc check, emit, build, run, test</span></a>
+          <a href="limitations.html">Known limitations<span>Honest gaps vs the draft spec</span></a>
+          <a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec<span>CrispLang SPECS 0.2.0 on GitHub</span></a>
+          <a href="https://github.com/jose-compu/crisp/blob/main/docs/ERROR_CATALOG.md">Error catalog<span>Diagnostic codes</span></a>
+          <a href="https://github.com/jose-compu/crisp/blob/main/docs/SPEC_IMPL_DELTA.md">Spec ↔ impl delta<span>Where implementation trails the draft</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap content">
+      <h2>Architecture in one line</h2>
+      <pre class="pipe">.crp → resolve → typeck → ownership → CIR → Rust → rustc → native</pre>
+      <p>See the <a href="https://github.com/jose-compu/crisp/blob/main/README.md">README</a> for philosophy, sealed crates, and repository layout.</p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

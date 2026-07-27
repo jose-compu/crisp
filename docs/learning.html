@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learning Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a class="active" href="learning.html">Learning</a>
+      <a href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
+    </nav>
+  </header>
+
+  <section class="band-dark page-hero">
+    <div class="wrap hero-split">
+      <div>
+        <h1>Learning</h1>
+        <p class="lede">Several paths into Crisp: a short tutorial for beginners, the quickstart for project layout, and the draft spec when you need precise semantics.</p>
+      </div>
+      <aside class="hero-aside">
+        <h3>Official resources</h3>
+        <ul>
+          <li><a href="tutorial.html">Beginner tutorial</a></li>
+          <li><a href="install.html">Install guide</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft language spec</a></li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap">
+      <div class="tabs" role="tablist">
+        <a class="active" href="#paths">Paths</a>
+        <a href="#examples">Examples</a>
+        <a href="#limits">Honest limits</a>
+      </div>
+
+      <div id="paths" class="content">
+        <h2>Start here</h2>
+        <div class="use-grid" style="margin-top:1.25rem">
+          <a class="use-card" href="tutorial.html">
+            <h3>Tutorial</h3>
+            <p>Functions, bindings, strings, structs, modules, tests, and fallible functions — aimed at beginners.</p>
+            <span class="tag">Start →</span>
+          </a>
+          <a class="use-card" href="install.html">
+            <h3>Install</h3>
+            <p>Build <code>crpc</code>, run <code>examples/hello</code>, then create your own project.</p>
+            <span class="tag">Install →</span>
+          </a>
+          <a class="use-card" href="use-cases.html">
+            <h3>Use cases</h3>
+            <p>Popular Rust domains where Crisp’s compact surface and inference help you move faster.</p>
+            <span class="tag">Explore →</span>
+          </a>
+        </div>
+      </div>
+
+      <div id="examples" class="content" style="margin-top:2.5rem">
+        <h2>Repository examples</h2>
+        <p class="muted">Clone the repo and try these with <code>crpc run</code> / <code>crpc test</code>.</p>
+        <ul>
+          <li><code>examples/hello</code> — minimal program</li>
+          <li><code>examples/math</code>, <code>examples/float_demo</code> — numbers and modules</li>
+          <li><code>examples/fallible</code> — ambient errors with <code>!</code>, <code>throw</code>, <code>catch</code></li>
+          <li><code>examples/async_hello</code> — async / Tokio</li>
+          <li><code>examples/ffi</code> — <code>extern "C"</code></li>
+          <li><code>examples/design_patterns</code> — multi-module patterns</li>
+        </ul>
+      </div>
+
+      <div id="limits" class="content" style="margin-top:2.5rem">
+        <h2>Honest limits</h2>
+        <p>This is a Rust-hosted bootstrap compiler — not self-hosted yet. Enums/match, field access on parameters, and <code>use rust::</code> crate imports still have gaps. See <a href="limitations.html">limitations</a> and the draft spec delta on GitHub.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

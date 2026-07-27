@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Use cases — Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a href="docs.html">Docs</a>
+      <a class="active" href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
+    </nav>
+  </header>
+
+  <section class="band-dark page-hero">
+    <div class="wrap">
+      <h1>Use cases</h1>
+      <p class="lede">No production case studies yet. These are popular Rust domains where Crisp’s compact syntax and global inference are meant to make the same jobs easier to write and read — while still emitting Rust that <code>rustc</code> checks.</p>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap">
+      <div class="tabs">
+        <a class="active" href="#domains">Domains</a>
+        <a href="#examples">Repo examples</a>
+      </div>
+
+      <div id="domains" class="use-grid">
+        <article class="use-card" id="cli">
+          <h3>CLI tools</h3>
+          <p>Parse args, format output, exit codes — without spelling every type and borrow up front. Emit stays a normal Rust binary.</p>
+          <span class="tag">examples/hello · inventory</span>
+        </article>
+        <article class="use-card" id="services">
+          <h3>Config &amp; services</h3>
+          <p>Structs with defaults, modules, and sealed APIs for small services that would otherwise drown in boilerplate.</p>
+          <span class="tag">examples/defaults · server · sealed</span>
+        </article>
+        <article class="use-card" id="async">
+          <h3>Async workers</h3>
+          <p>Tokio-backed <code>async</code> / <code>await</code> with Crisp’s lighter surface for spawn and sleep-style workflows.</p>
+          <span class="tag">examples/async_hello · async_spawn</span>
+        </article>
+        <article class="use-card" id="ffi">
+          <h3>FFI bridges</h3>
+          <p>Call C with <code>extern "C"</code> and <code>unsafe</code> when you need native libraries. Rust-crate imports (<code>use rust::</code>) are planned.</p>
+          <span class="tag">examples/ffi</span>
+        </article>
+        <article class="use-card" id="pipelines">
+          <h3>Data pipelines</h3>
+          <p>Vec operations, fallible IO, and chained transforms with ambient <code>!</code> error sets instead of noisy <code>Result</code> at every step.</p>
+          <span class="tag">examples/vec_ops · data_pipeline · fallible</span>
+        </article>
+        <article class="use-card" id="patterns">
+          <h3>Multi-module design</h3>
+          <p>Organize GoF-style patterns across files with Crisp modules — good practice for larger programs before sealed publish.</p>
+          <span class="tag">examples/design_patterns · workshop</span>
+        </article>
+      </div>
+
+      <div id="examples" class="content" style="margin-top:2.75rem">
+        <h2>Try one</h2>
+        <pre class="pipe">crpc run examples/hello
+crpc test examples/math
+crpc check examples/design_patterns</pre>
+        <p><a href="tutorial.html">Tutorial →</a> · <a href="install.html">Install →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

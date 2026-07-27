@@ -7,45 +7,137 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
   <header class="site-header">
-    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />Crisp</a>
-    <nav>
-      <a href="getting-started.html">Getting started</a>
-      <a href="language.html">Language</a>
-      <a href="cli.html">CLI</a>
-      <a href="limitations.html">Limitations</a>
-      <a href="https://github.com/jose-compu/crisp">GitHub</a>
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a class="active" href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
     </nav>
   </header>
-  <main>
-    <section class="hero">
-      <img class="hero-logo" src="crisp-logo.jpg" alt="Crisp" width="160" height="176" />
-      <p class="eyebrow">Bootstrap compiler · v1.1</p>
-      <h1>Crisp</h1>
-      <p class="lede">A systems language that transpiles to Rust. Explicit on demand, implicit by default — <code>rustc</code> remains the soundness boundary.</p>
-      <p class="cta">
-        <a class="btn" href="getting-started.html">Get started</a>
-        <a class="btn ghost" href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Read the draft spec</a>
-      </p>
-    </section>
-    <section>
-      <h2>Hello world</h2>
-      <pre class="pipe">greet(name) = "hello " ++ name
+
+  <section class="band-dark">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <img class="hero-brand" src="crisp-logo.jpg" alt="Crisp" width="56" height="62" />
+        <span class="badge">Crisp v1.1 released</span>
+        <h1>Explicit on demand, implicit by default</h1>
+        <ul class="hero-points">
+          <li>Compact <code>.crp</code> source; <code>crpc</code> infers types, ownership, and errors</li>
+          <li>Lowers to ordinary Rust — <code>rustc</code> stays the soundness boundary</li>
+          <li>Whole-program inference inside sealed crates</li>
+          <li>Built for systems work with a Rust-hosted bootstrap compiler</li>
+        </ul>
+        <p class="cta">
+          <a class="btn" href="install.html">Install now →</a>
+          <a class="btn ghost" href="tutorial.html">Start the tutorial →</a>
+        </p>
+      </div>
+      <div class="code-panel">
+        <div class="caption"><span>Hello world</span><span>examples/hello</span></div>
+        <div class="code-window">
+          <div class="code-chrome"><span></span><span></span><span></span></div>
+          <pre>greet(name) = "hello " ++ name
 
 pub main() = {
     msg := greet("world")
     print(msg)
 }</pre>
-      <p>Run: <code>crpc run examples/hello</code> → <code>"hello world"</code>. Full steps on <a href="getting-started.html">Getting started</a>.</p>
-    </section>
-    <section>
-      <h2>Pipeline</h2>
+        </div>
+        <div class="code-output">
+          <span class="label">Output</span>
+          "hello world"
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap">
+      <h2 class="section-title">Why Crisp?</h2>
+      <p class="section-lede">Write less ceremony than Rust when inference is enough; annotate when APIs need precision. Emit stays auditable Rust.</p>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>Inference first</h3>
+          <p>Types, borrows, lifetimes, and error sets are inferred globally when the source stays silent. Annotations become hard constraints when you add them.</p>
+        </article>
+        <article class="feature">
+          <h3>Rust as the back end</h3>
+          <p>Crisp is a front end that produces Rust. Memory safety and data races remain <code>rustc</code>’s job — not a parallel soundness story.</p>
+        </article>
+        <article class="feature">
+          <h3>Reveal what was inferred</h3>
+          <p><code>reveal</code> reconstructs signatures, ownership modes, lifetime overlays, and the error slice a function can produce.</p>
+        </article>
+        <article class="feature">
+          <h3>Sealed crates</h3>
+          <p>Publish a frozen <code>pub</code> API in <code>crisp.lock</code>. Downstream code analyzes against the lockfile, not re-inferred internals.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band-dark">
+    <div class="wrap">
+      <h2 class="section-title">Use Crisp for</h2>
+      <p class="section-lede">Popular Rust domains — with less surface noise when Crisp’s inference fits the problem.</p>
+      <div class="pill-row">
+        <a class="pill active" href="use-cases.html#cli">CLI tools</a>
+        <a class="pill" href="use-cases.html#services">Services</a>
+        <a class="pill" href="use-cases.html#async">Async workers</a>
+        <a class="pill" href="use-cases.html#ffi">FFI bridges</a>
+        <a class="pill" href="use-cases.html#pipelines">Data pipelines</a>
+      </div>
+      <p class="cta" style="justify-content:center;margin-top:1.75rem">
+        <a class="btn ghost" href="use-cases.html">Browse use cases →</a>
+        <a class="btn" href="learning.html">Learning paths →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap">
+      <h2 class="section-title">Pipeline</h2>
+      <p class="section-lede">Source → CIR → Rust → native. The emitted crate is an ordinary Cargo project under <code>target/rust/</code>.</p>
       <pre class="pipe">.crp → resolve → typeck → ownership → CIR → Rust → rustc → native</pre>
-      <p>See the <a href="https://github.com/jose-compu/crisp/blob/main/README.md">README</a> for architecture and philosophy.</p>
-    </section>
-  </main>
-  <footer>
-    <p>Dual-licensed MIT OR Apache-2.0 · Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+      <p class="cta" style="justify-content:center;margin-top:1.5rem">
+        <a class="btn" href="install.html">Install and run hello →</a>
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
   </footer>
 </body>
 </html>

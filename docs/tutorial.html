@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tutorial — Crisp for beginners</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a class="active" href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
+    </nav>
+  </header>
+
+  <section class="band-dark page-hero">
+    <div class="wrap hero-split">
+      <div>
+        <h1>Tutorial</h1>
+        <p class="lede">A beginner tour of Crisp language features. Install <code>crpc</code> first, then try each snippet in a project or against the repo examples.</p>
+      </div>
+      <aside class="callout">
+        <strong>Before you start</strong>
+        Follow <a href="install.html">Install</a> until <code>crpc run examples/hello</code> prints <code>"hello world"</code>.
+      </aside>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap layout-docs">
+      <div class="content">
+        <article class="tutorial-step" id="hello">
+          <div class="step-label">Step 01</div>
+          <h2>Hello world</h2>
+          <p>Functions use <code>=</code>. Locals use <code>:=</code>. <code>pub main</code> is the entry point.</p>
+          <pre class="pipe">greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("world")
+    print(msg)
+}</pre>
+          <p>Run: <code>crpc run examples/hello</code></p>
+        </article>
+
+        <article class="tutorial-step" id="bindings">
+          <div class="step-label">Step 02</div>
+          <h2>Functions and bindings</h2>
+          <pre class="pipe">double(n) = n + n
+
+pub main() = {
+    x := double(5)
+    log("x={x}")
+}</pre>
+          <ul>
+            <li><code>pub</code> exports an item from the module</li>
+            <li><code>print</code> / <code>log</code> write to stdout (via Rust <code>println!</code>)</li>
+            <li>Types are inferred unless you annotate</li>
+          </ul>
+        </article>
+
+        <article class="tutorial-step" id="strings">
+          <div class="step-label">Step 03</div>
+          <h2>Strings and comments</h2>
+          <pre class="pipe">-- single-line comment
+{- block comment -}
+
+greet(name: str) = "hello " ++ name
+
+pub main() = {
+    who := "world"
+    log("greet={greet(who)}")
+}</pre>
+          <p>Concatenate with <code>++</code>. Interpolate with <code>"{expr}"</code>.</p>
+        </article>
+
+        <article class="tutorial-step" id="types">
+          <div class="step-label">Step 04</div>
+          <h2>Types when you need them</h2>
+          <p>Annotate parameters or fields when inference is ambiguous.</p>
+          <pre class="pipe">port(host: str, n: int) = n</pre>
+          <p>Primitives include <code>int</code>, <code>uint</code>, <code>float</code>, <code>bool</code>, <code>char</code>, <code>str</code>.</p>
+        </article>
+
+        <article class="tutorial-step" id="structs">
+          <div class="step-label">Step 05</div>
+          <h2>Structs and defaults</h2>
+          <pre class="pipe">type ServerConfig = {
+    host: str  = "127.0.0.1"
+    port: uint = 9000
+    debug: bool = false
+}
+
+pub main() = {
+    cfg := ServerConfig { port: 3000 }
+    log("port={cfg.port}")
+}</pre>
+          <p>Omitted fields use defaults. Field access works on <strong>local</strong> bindings (not directly on function parameters today — see limitations).</p>
+        </article>
+
+        <article class="tutorial-step" id="modules">
+          <div class="step-label">Step 06</div>
+          <h2>Modules</h2>
+          <p>One file per module under <code>src/</code>. Import with <code>use</code>.</p>
+          <pre class="pipe">-- src/arith.crp
+pub sum(a, b) = a + b
+
+-- src/main.crp
+use arith { sum }
+
+pub main() = {
+    log("sum={sum(2, 3)}")
+}</pre>
+          <p>In a flat <code>src/</code> tree, modules imported by <code>main</code> must sort <strong>before</strong> <code>main</code> alphabetically.</p>
+        </article>
+
+        <article class="tutorial-step" id="tests">
+          <div class="step-label">Step 07</div>
+          <h2>Tests</h2>
+          <pre class="pipe">test "greet works" = {
+    assert_eq(greet("world"), "hello world")
+}
+
+test_compile_fail "unknown name" = {
+    definitely_not_a_builtin()
+}</pre>
+          <pre class="pipe">crpc test .</pre>
+        </article>
+
+        <article class="tutorial-step" id="errors">
+          <div class="step-label">Step 08</div>
+          <h2>Fallible functions</h2>
+          <p>Ambient errors use <code>!</code>, <code>throw</code>, and <code>catch</code> — lowered to <code>Result&lt;T, CrispError&gt;</code>.</p>
+          <pre class="pipe">parse_port(s) ! = {
+    if s == "" then throw "empty"
+    -- …
+}
+
+pub main() = {
+    p := parse_port("8080") catch { e => 0 }
+    log("port={p}")
+}</pre>
+          <p>See <code>examples/fallible</code> for fuller patterns.</p>
+        </article>
+
+        <article class="tutorial-step" id="next">
+          <div class="step-label">Next</div>
+          <h2>Where to go</h2>
+          <ul>
+            <li><a href="use-cases.html">Use cases</a> — Rust domains Crisp targets</li>
+            <li><a href="docs.html">Docs</a> — CLI, limitations, draft spec</li>
+            <li><a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a> — project layout end to end</li>
+          </ul>
+        </article>
+      </div>
+
+      <nav class="side-toc" aria-label="Tutorial steps">
+        <ol>
+          <li><a class="active" href="#hello"><span class="num">01</span> Hello</a></li>
+          <li><a href="#bindings"><span class="num">02</span> Bindings</a></li>
+          <li><a href="#strings"><span class="num">03</span> Strings</a></li>
+          <li><a href="#types"><span class="num">04</span> Types</a></li>
+          <li><a href="#structs"><span class="num">05</span> Structs</a></li>
+          <li><a href="#modules"><span class="num">06</span> Modules</a></li>
+          <li><a href="#tests"><span class="num">07</span> Tests</a></li>
+          <li><a href="#errors"><span class="num">08</span> Errors</a></li>
+          <li><a href="#next"><span class="num">09</span> Next</a></li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

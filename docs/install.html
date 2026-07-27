@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Install Crisp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a class="active" href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="tutorial.html">Get started</a>
+    </nav>
+  </header>
+
+  <section class="band-dark page-hero">
+    <div class="wrap hero-split">
+      <div>
+        <h1>Install Crisp</h1>
+        <p class="lede">Build <code>crpc</code> from source with a recent Rust toolchain. Crisp emits Cargo projects, so <code>cargo</code> and <code>rustc</code> must be on your <code>PATH</code>.</p>
+      </div>
+      <aside class="callout">
+        <strong>Requirements</strong>
+        Rust <strong>1.85+</strong> (see workspace <code>rust-version</code>) via
+        <a href="https://rustup.rs/">rustup</a>. Git clone of
+        <a href="https://github.com/jose-compu/crisp">jose-compu/crisp</a>.
+      </aside>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap layout-docs">
+      <div class="content">
+        <h2 id="from-source">Install from source</h2>
+        <pre class="pipe">git clone https://github.com/jose-compu/crisp.git
+cd crisp
+cargo build --release -p crpc
+export PATH="$PWD/target/release:$PATH"</pre>
+        <p>Or install into your Cargo bin directory:</p>
+        <pre class="pipe">cargo install --path crates/crpc --locked
+# ensure ~/.cargo/bin is on PATH</pre>
+        <p>Verify:</p>
+        <pre class="pipe">crpc --version</pre>
+
+        <h2 id="hello">Run hello world</h2>
+        <p>From the repository root:</p>
+        <pre class="pipe">crpc run examples/hello</pre>
+        <p>Expected output:</p>
+        <pre class="pipe">"hello world"</pre>
+        <p>Useful companions:</p>
+        <pre class="pipe">crpc check examples/hello
+crpc emit examples/hello
+crpc build examples/hello</pre>
+
+        <h2 id="next">Next steps</h2>
+        <ul>
+          <li><a href="tutorial.html">Beginner tutorial</a> — language features with short examples</li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a> — full project layout guide</li>
+          <li><a href="docs.html">Documentation hub</a> — spec, limitations, CLI</li>
+        </ul>
+      </div>
+      <nav class="side-toc" aria-label="On this page">
+        <ol>
+          <li><a class="active" href="#from-source"><span class="num">01</span> From source</a></li>
+          <li><a href="#hello"><span class="num">02</span> Hello world</a></li>
+          <li><a href="#next"><span class="num">03</span> Next steps</a></li>
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
+</body>
+</html>

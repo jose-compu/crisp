@@ -7,25 +7,72 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
   <header class="site-header">
-    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />Crisp</a>
-    <nav>
-      <a href="getting-started.html">Getting started</a>
-      <a href="language.html">Language</a>
-      <a href="cli.html">CLI</a>
-      <a href="limitations.html">Limitations</a>
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a class="active" href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
     </nav>
   </header>
-  <main>
-    <h1>Language overview</h1>
-    <p><strong>Explicit on demand, implicit by default.</strong> Types, ownership, and errors are inferred; annotate when needed. Semantics are defined by lowering to Rust.</p>
-    <ul>
-      <li>Structs, defaults, sealed <code>crisp.lock</code></li>
-      <li>Ambient errors: <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
-      <li>Modules: one file = one module; <code>use m { f }</code></li>
-      <li>Tests: <code>test</code> / <code>test_compile_fail</code></li>
-    </ul>
-    <p>Formal document: <a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">spec v0.2.0-draft</a>. Deltas: <a href="https://github.com/jose-compu/crisp/blob/main/docs/SPEC_IMPL_DELTA.md">SPEC_IMPL_DELTA.md</a>.</p>
-  </main>
+
+  <section class="band-dark page-hero">
+    <div class="wrap">
+      <h1>Language</h1>
+      <p class="lede">Compact surface that lowers to Rust. Prefer the <a href="tutorial.html">tutorial</a> for a guided tour.</p>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap content">
+      <h2>At a glance</h2>
+      <ul>
+        <li><strong>Functions</strong> — <code>name(args) = expr</code> or block</li>
+        <li><strong>Bindings</strong> — <code>x := value</code></li>
+        <li><strong>Types</strong> — inferred; annotate when needed (<code>int</code>, <code>str</code>, <code>float</code>, …)</li>
+        <li><strong>Structs</strong> — <code>type T = { … }</code> with field defaults</li>
+        <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
+        <li><strong>Modules</strong> — one file = one module; <code>use m { f }</code></li>
+        <li><strong>Tests</strong> — <code>test</code>, <code>test_compile_fail</code></li>
+        <li><strong>Async / FFI</strong> — <code>async</code>, <code>await</code>, <code>extern "C"</code></li>
+      </ul>
+      <p>Comments: <code>--</code> and nested <code>{- -}</code>. Interpolation: <code>"hello {name}"</code>. Exponentiation: <code>**</code>.</p>
+      <p><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec on GitHub →</a></p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
 </body>
 </html>

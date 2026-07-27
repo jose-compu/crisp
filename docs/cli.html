@@ -7,29 +7,66 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="announce">
+    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
+  </div>
   <header class="site-header">
-    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />Crisp</a>
-    <nav>
-      <a href="getting-started.html">Getting started</a>
-      <a href="language.html">Language</a>
-      <a href="cli.html">CLI</a>
-      <a href="limitations.html">Limitations</a>
+    <a class="brand" href="index.html"><img src="crisp-logo.jpg" alt="" class="brand-mark" width="28" height="31" />crisp</a>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="install.html">Install</a>
+      <a href="learning.html">Learning</a>
+      <a class="active" href="docs.html">Docs</a>
+      <a href="use-cases.html">Use cases</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a class="nav-cta" href="install.html">Get started</a>
     </nav>
   </header>
-  <main>
-    <h1>CLI reference</h1>
-    <table>
-      <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
-      <tbody>
-        <tr><td><code>crpc check</code></td><td>Resolve, typecheck, ownership probe</td></tr>
-        <tr><td><code>crpc emit</code></td><td>Write Rust under <code>target/rust/</code></td></tr>
-        <tr><td><code>crpc build</code></td><td>Emit + cargo build</td></tr>
-        <tr><td><code>crpc run</code></td><td>Build and run</td></tr>
-        <tr><td><code>crpc test</code></td><td>Runtime + compile-fail tests</td></tr>
-        <tr><td><code>reveal rust</code></td><td>Show emitted / inferred Rust</td></tr>
-      </tbody>
-    </table>
-    <p>Error codes: <a href="https://github.com/jose-compu/crisp/blob/main/docs/ERROR_CATALOG.md">ERROR_CATALOG.md</a>.</p>
-  </main>
+
+  <section class="band-dark page-hero">
+    <div class="wrap">
+      <h1>CLI</h1>
+      <p class="lede"><code>crpc</code> drives analyze → emit → Cargo. Pass a project directory (with <code>crisp.toml</code>).</p>
+    </div>
+  </section>
+
+  <section class="band-light">
+    <div class="wrap content">
+      <pre class="pipe">crpc check  &lt;path&gt;   # resolve + typecheck (fast)
+crpc emit   &lt;path&gt;   # write Rust under &lt;path&gt;/target/rust/
+crpc build  &lt;path&gt;   # emit + cargo build
+crpc run    &lt;path&gt;   # build + run
+crpc test   &lt;path&gt;   # run Crisp tests via emitted Rust</pre>
+      <p>Also: <code>reveal</code> for inferred signatures and ownership overlays (see the repo).</p>
+      <p><a href="install.html">Install crpc →</a></p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h4>Crisp</h4>
+        <p>Systems language that transpiles to Rust. Dual-licensed MIT OR Apache-2.0.</p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="install.html">Install</a></li>
+          <li><a href="learning.html">Learning</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="https://github.com/jose-compu/crisp">GitHub</a></li>
+          <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+  </footer>
 </body>
 </html>

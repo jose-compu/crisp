@@ -1,7 +1,7 @@
 # Crisp
 
 <p align="center">
-  <img src="assets/crisp-logo.jpg" alt="Crisp logo" width="180" />
+  <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
 </p>
 
 A systems programming language that transpiles to Rust. You write compact `.crp` source; `crpc` infers types, ownership, lifetimes, and error propagation, emits explicit Rust, and `rustc` is the soundness boundary.

@@ -1,4 +1,4 @@
-# Crisp
+# The Crisp Programming Language
 
 <p align="center">
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />

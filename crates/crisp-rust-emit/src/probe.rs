@@ -419,13 +419,14 @@ fn emit_expr_inner(
                 let _ = write!(out, ")");
                 return;
             }
-            if let ExprKind::Ident(id) = &func.kind {
-                if (id.name == "print" || id.name == "log") && args.len() == 1 {
-                    let _ = write!(out, "{}(", id.name);
-                    emit_expr(out, &args[0], osig);
-                    let _ = write!(out, ")");
-                    return;
-                }
+            if let ExprKind::Ident(id) = &func.kind
+                && (id.name == "print" || id.name == "log")
+                && args.len() == 1
+            {
+                let _ = write!(out, "{}(", id.name);
+                emit_expr(out, &args[0], osig);
+                let _ = write!(out, ")");
+                return;
             }
             emit_expr(out, func, osig);
             let _ = write!(out, "(");

@@ -40,7 +40,7 @@ crpc run examples/hello
 Expected output:
 
 ```
-"hello crisp"
+"hello world"
 ```
 
 Other useful commands:
@@ -83,7 +83,7 @@ error_model = "enum"
 greet(name) = "hello " ++ name
 
 pub main() = {
-    msg := greet("crisp")
+    msg := greet("world")
     print(msg)
 }
 ```

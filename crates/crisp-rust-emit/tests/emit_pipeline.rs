@@ -91,7 +91,7 @@ fn hello_run_prints_greeting() {
     let root = hello_root();
     match run_emitted(&root) {
         Ok(stdout) => {
-            assert!(stdout.contains("hello crisp"), "stdout: {stdout}");
+            assert!(stdout.contains("hello world"), "stdout: {stdout}");
         }
         Err(PipelineError::ToolchainUnavailable) => {
             eprintln!("SKIP hello_run_prints_greeting: cargo not on PATH");

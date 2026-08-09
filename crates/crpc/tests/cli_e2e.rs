@@ -94,7 +94,7 @@ fn crpc_build_and_run_hello() {
     let hello = examples_dir().join("hello").to_string_lossy().to_string();
     run_ok("crpc", &["build", &hello]);
     let out = run_ok("crpc", &["run", &hello]);
-    assert!(out.contains("hello crisp"), "output: {out}");
+    assert!(out.contains("hello world"), "output: {out}");
 }
 
 #[test]

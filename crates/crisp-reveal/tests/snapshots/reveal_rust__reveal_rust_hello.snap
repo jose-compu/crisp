@@ -9,6 +9,6 @@ fn greet(name: &str) -> String {
     format!("{}{}", "hello ".to_string(), name)
 }
 pub fn main() {
-    let msg = greet("crisp");
+    let msg = greet("world");
     println!("{:?}", msg);
 }

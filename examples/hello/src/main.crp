@@ -3,6 +3,6 @@
 greet(name) = "hello " ++ name
 
 pub main() = {
-    msg := greet("crisp")
+    msg := greet("world")
     print(msg)
 }

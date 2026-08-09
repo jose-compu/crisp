@@ -113,7 +113,7 @@ export PATH="$PWD/target/release:$PATH"
 greet(name) = "hello " ++ name
 
 pub main() = {
-    msg := greet("crisp")
+    msg := greet("world")
     print(msg)
 }
 ```
@@ -127,7 +127,7 @@ crpc run examples/hello
 Expected output:
 
 ```
-"hello crisp"
+"hello world"
 ```
 
 Other commands on the same project:

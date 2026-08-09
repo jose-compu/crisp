@@ -1,0 +1,10 @@
+---
+source: crates/crisp-diagnostics/tests/format_diagnostic.rs
+expression: diag.rendered
+---
+ERROR [E0039]: shapes are not yet supported (`HasPosition`)
+  --> src/main.crp:1:7
+   |
+  1 | shape HasPosition = {
+   |       ^^^^^^^^^^^
+   = help: remove the `shape` definition or bound

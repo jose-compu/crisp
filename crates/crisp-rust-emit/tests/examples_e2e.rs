@@ -44,6 +44,7 @@ const EXAMPLES: &[&str] = &[
     "data_pipeline",
     "abnormal_suite",
     "design_patterns",
+    "nested_math",
 ];
 
 #[test]
@@ -160,6 +161,7 @@ fn runnable_examples_build_and_run() {
         "float_demo",
         "data_pipeline",
         "design_patterns",
+        "nested_math",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -230,6 +232,7 @@ const BUILDABLE: &[&str] = &[
     "unsafe_math",
     "data_pipeline",
     "design_patterns",
+    "nested_math",
 ];
 
 #[test]

@@ -1,0 +1,4 @@
+[package]
+name = "shape_as_type"
+version = "0.1.0"
+edition = "2026"

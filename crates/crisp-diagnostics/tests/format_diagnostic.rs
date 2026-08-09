@@ -1,8 +1,9 @@
-//! Diagnostic formatting tests (spec §17.4).
+//! Diagnostic formatting tests (spec §17.4 / #22).
 
 use crisp_ast::Span;
 use crisp_diagnostics::{
-    Severity, format_ownership_contradiction, format_type_mismatch, format_unresolved_name,
+    Severity, format_diagnostic_at, format_ownership_contradiction, format_type_mismatch,
+    format_unresolved_name,
 };
 
 #[test]
@@ -29,7 +30,6 @@ fn type_mismatch_diagnostic() {
 #[test]
 fn unresolved_name_snapshot_with_snippet_and_help() {
     let src = "pub main() = {\n    log(missing_fn())\n}\n";
-    // highlight `missing_fn` on line 2
     let start = src.find("missing_fn").expect("needle") as u32;
     let span = Span::new(start, start + "missing_fn".len() as u32);
     let diag = format_unresolved_name(
@@ -40,4 +40,51 @@ fn unresolved_name_snapshot_with_snippet_and_help() {
         Some("`missing_fn` is defined in module `util`; add `use util { missing_fn }`"),
     );
     insta::assert_snapshot!(diag.rendered);
+}
+
+#[test]
+fn unresolved_name_default_help_when_no_hint() {
+    let src = "log(x)\n";
+    let span = Span::new(4, 5);
+    let diag = format_unresolved_name("src/main.crp", src, "x", span, None);
+    assert!(diag.rendered.contains("= help:"));
+    assert!(diag.rendered.contains("use"));
+    assert!(diag.rendered.contains("--> src/main.crp:"));
+}
+
+#[test]
+fn shape_unsupported_snippet_snapshot() {
+    let src = "shape HasPosition = {\n    x: float\n}\n";
+    let start = src.find("HasPosition").expect("needle") as u32;
+    let span = Span::new(start, start + "HasPosition".len() as u32);
+    let diag = format_diagnostic_at(
+        "src/main.crp",
+        src,
+        "E0039",
+        "shapes are not yet supported (`HasPosition`)",
+        span,
+        Severity::Error,
+        &["help: remove the `shape` definition or bound".into()],
+    );
+    insta::assert_snapshot!(diag.rendered);
+}
+
+#[test]
+fn ambiguous_field_snippet_includes_annotation_help() {
+    let src = "sku_of(item) = item.sku\n";
+    let start = src.find("sku").expect("needle") as u32;
+    let span = Span::new(start, start + 3);
+    let diag = format_diagnostic_at(
+        "src/catalog.crp",
+        src,
+        "E0043",
+        "ambiguous field `sku` on unresolved type; annotate the parameter (candidates: Item, StockLine)",
+        span,
+        Severity::Error,
+        &["help: write `param: StructName` on the function parameter".into()],
+    );
+    assert!(diag.rendered.contains("ERROR [E0043]"));
+    assert!(diag.rendered.contains("--> src/catalog.crp:"));
+    assert!(diag.rendered.contains("= help:"));
+    assert!(diag.rendered.contains("^"));
 }

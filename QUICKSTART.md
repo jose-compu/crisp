@@ -158,7 +158,7 @@ pub main() = {
 }
 ```
 
-Omitted fields use defaults. Access fields on **local** bindings (`cfg.port`), not directly on function parameters.
+Omitted fields use defaults. Field access works on locals and on parameters when the struct is unique for that field (`cfg.port`); if several structs share the field name, annotate the parameter.
 
 See `examples/defaults`, `examples/inventory`.
 

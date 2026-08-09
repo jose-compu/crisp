@@ -1,0 +1,18 @@
+type Item = {
+    sku: str
+    name: str
+}
+
+-- inferred param: only Item has `.sku` among registered structs here
+sku_of(item) = item.sku
+
+annotated(item: Item) = item.name
+
+pub main() = {
+    i := Item {
+        sku: "W-1"
+        name: "Widget"
+    }
+    print(sku_of(i))
+    print(annotated(i))
+}

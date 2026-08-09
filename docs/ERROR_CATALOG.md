@@ -9,9 +9,10 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0036 | resolve | Name is private — export with `pub` or import from the defining module |
 | E0037 | resolve | Symbol not exported from module |
 | E0038 | resolve | Ambiguous import — qualify or narrow `use` |
-| E0040 | typeck | Unknown type — annotate params/fields or fix struct name; see field-on-param limitation |
+| E0040 | typeck | Unknown type — annotate params/fields or fix struct name |
 | E0041 | typeck | Unknown name |
 | E0042 | typeck | Resolve error wrapped into typeck |
+| E0043 | typeck | Ambiguous field on unresolved param type — annotate the parameter (`x: Item`) |
 | E0050 | ownership | Ownership contradicts explicit annotation — adjust `own`/`&`/`&mut` or usage |
 | E0051 | ownership | Ownership analysis failed |
 | E0052 | ownership | Resolve error during ownership |

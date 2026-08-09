@@ -1,0 +1,16 @@
+type Item = {
+    sku: str
+    name: str
+}
+
+type StockLine = {
+    sku: str
+    qty: int = 0
+}
+
+-- both Item and StockLine have `.sku` → must annotate
+sku_of(x) = x.sku
+
+pub main() = {
+    print("unused")
+}

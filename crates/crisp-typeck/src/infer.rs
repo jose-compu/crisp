@@ -22,6 +22,14 @@ pub enum TypeError {
     UnknownName { name: String, span: Span },
     #[error("[E0042] resolve error: {0}")]
     Resolve(#[from] crisp_resolve::ResolveError),
+    #[error(
+        "[E0043] ambiguous field `{field}` on unresolved type; annotate the parameter (candidates: {candidates})"
+    )]
+    AmbiguousField {
+        field: String,
+        candidates: String,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -640,13 +648,49 @@ impl TypeChecker {
 
     fn field_type(&mut self, base: &Ty, field: &str, span: Span) -> Result<Ty, TypeError> {
         let base = self.ctx.apply(base);
-        if let Ty::Named { name, .. } = base
-            && let Some(fields) = self.structs.get(&name)
+        if let Ty::Named { name, .. } = &base
+            && let Some(fields) = self.structs.get(name)
         {
             return fields.get(field).cloned().ok_or(TypeError::UnknownType {
                 name: field.to_string(),
                 span,
             });
+        }
+        // Unannotated params stay as type vars. If exactly one known struct has
+        // this field, constrain the var to that struct (issue #12).
+        if let Ty::Var(v) = base {
+            let mut candidates: Vec<(&String, &Ty)> = self
+                .structs
+                .iter()
+                .filter_map(|(name, fields)| fields.get(field).map(|ty| (name, ty)))
+                .collect();
+            candidates.sort_by(|a, b| a.0.cmp(b.0));
+            match candidates.as_slice() {
+                [(name, field_ty)] => {
+                    unify(
+                        &mut self.ctx,
+                        &Ty::Var(v),
+                        &Ty::Named {
+                            name: (*name).clone(),
+                            args: vec![],
+                        },
+                    )?;
+                    return Ok((*field_ty).clone());
+                }
+                [] => {}
+                many => {
+                    let names = many
+                        .iter()
+                        .map(|(n, _)| n.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    return Err(TypeError::AmbiguousField {
+                        field: field.to_string(),
+                        candidates: names,
+                        span,
+                    });
+                }
+            }
         }
         Err(TypeError::UnknownType {
             name: field.to_string(),

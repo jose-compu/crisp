@@ -681,23 +681,34 @@ fn lower_expr(
                 }
             }
         }
-        ExprKind::Field { base, field } => E::Field {
-            base: Box::new(lower_expr(
-                base,
-                module,
-                osig,
-                typed,
-                ownership,
-                errors,
-                locals,
-                struct_fields,
-                fn_modules,
-                ctx,
-            )),
-            field: field.name.clone(),
-            ty: CirTy::Error,
-            span: expr.span,
-        },
+        ExprKind::Field { base, field } => {
+            let lowered = E::Field {
+                base: Box::new(lower_expr(
+                    base,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                field: field.name.clone(),
+                ty: CirTy::Error,
+                span: expr.span,
+            };
+            // Borrowed params (`&T`) cannot move fields out; clone (issue #12).
+            if field_access_needs_clone(osig, base) {
+                E::Clone {
+                    expr: Box::new(lowered),
+                    span: expr.span,
+                }
+            } else {
+                lowered
+            }
+        }
         ExprKind::Binary { op, left, right } => {
             let l = lower_expr(
                 left,
@@ -1136,6 +1147,18 @@ fn infer_expr_ty(
         }
         _ => CirTy::Error,
     }
+}
+
+fn field_access_needs_clone(
+    osig: &crisp_ownership::OwnershipSignature,
+    base: &Expr,
+) -> bool {
+    let ExprKind::Ident(id) = &base.kind else {
+        return false;
+    };
+    osig.params.iter().any(|(name, mode)| {
+        name == &id.name && matches!(mode, OwnershipMode::Borrow | OwnershipMode::MutBorrow)
+    })
 }
 
 fn should_clone_at_bind(

@@ -163,6 +163,18 @@ fn emit_expr(expr: &Expr) -> String {
         }
         ExprKind::Ident(id) => id.name.clone(),
         ExprKind::Call { func, args } => {
+            // Enum ctor: Color.Custom(r, g, b)
+            if let ExprKind::Field { base, field } = &func.kind
+                && let ExprKind::Ident(ty) = &base.kind
+                && ty
+                    .name
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase())
+            {
+                let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
+                return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
+            }
             let name = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),
                 _ => "unknown".into(),
@@ -200,7 +212,18 @@ fn emit_expr(expr: &Expr) -> String {
             format!("{{ {inner} }}")
         }
         ExprKind::Field { base, field } => {
-            format!("{}.{}", emit_expr(base), field.name)
+            // Unit enum variant: Color.Red
+            if let ExprKind::Ident(ty) = &base.kind
+                && ty
+                    .name
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase())
+            {
+                format!("{}::{}", ty.name, field.name)
+            } else {
+                format!("{}.{}", emit_expr(base), field.name)
+            }
         }
         ExprKind::StructLit { name, fields } => {
             if fields.is_empty() {
@@ -228,6 +251,20 @@ fn emit_call_arg_for_test(expr: &Expr) -> String {
             }
         }
         ExprKind::Ident(id) => format!("&{}", id.name),
+        // Enum values are owned; pass by reference for &T params.
+        ExprKind::Field { base, .. } if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())) =>
+        {
+            format!("&{}", emit_expr(expr))
+        }
+        ExprKind::Call { func, .. }
+            if matches!(
+                &func.kind,
+                ExprKind::Field { base, .. }
+                    if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase()))
+            ) =>
+        {
+            format!("&{}", emit_expr(expr))
+        }
         _ => emit_expr(expr),
     }
 }

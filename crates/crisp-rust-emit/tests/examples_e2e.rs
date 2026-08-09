@@ -28,6 +28,7 @@ const EXAMPLES: &[&str] = &[
     "defaults",
     "sealed",
     "match",
+    "enums",
     "async_hello",
     "ffi",
     "stdlib_smoke",
@@ -113,6 +114,7 @@ fn examples_with_tests_pass_crpc_test() {
         "unsafe_math",
         "fallible_chain",
         "inventory",
+        "enums",
         "design_patterns",
     ] {
         let root = example(name);
@@ -142,6 +144,7 @@ fn runnable_examples_build_and_run() {
         "server",
         "fallible",
         "match",
+        "enums",
         "async_hello",
         "ffi",
         "stdlib_smoke",
@@ -212,6 +215,7 @@ const BUILDABLE: &[&str] = &[
     "with_tests",
     "fallible",
     "match",
+    "enums",
     "async_hello",
     "ffi",
     "stdlib_smoke",

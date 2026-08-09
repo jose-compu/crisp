@@ -14,6 +14,9 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Publication readiness docs: CONTRIBUTING, SECURITY, known limitations, error catalog, spec/impl delta, release process.
 - Dual-license files (`LICENSE-MIT`, `LICENSE-APACHE`).
 - Web documentation site on branch `docs` (folder `docs/`; see #39).
+- Struct field access on function parameters when the field uniquely identifies a struct (`E0043` when ambiguous) (#12).
+- Enum unit/tuple variants + qualified `match` patterns (`Color.Red`, `Color.Custom(...)`); example `examples/enums` (#11, #34).
+- `bool` literals in CIR/emit.
 
 ## [1.1.0] — 2026-06
 

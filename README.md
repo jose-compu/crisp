@@ -144,7 +144,7 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 
 | Example | Topics | Notes |
 |---------|--------|--------|
-| `hello`, `math`, `float_demo` | Basics, integers, floats, multi-module tests | `crpc test` |
+| `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crpc test` |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |
 | `vec_ops`, `data_pipeline` | `vec` stdlib, fallible IO | |

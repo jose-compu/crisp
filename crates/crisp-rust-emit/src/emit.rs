@@ -391,6 +391,10 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             let _ = write!(out, "{value}");
         }
+        CirExpr::Bool { value, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "{value}");
+        }
         CirExpr::Float { value, span } => {
             map.record(out.len() as u32, *span);
             if value.fract() == 0.0 {
@@ -522,6 +526,26 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             emit_expr(out, base, current_module, map);
             let _ = write!(out, ".{field}");
+        }
+        CirExpr::EnumVariant {
+            ty_name,
+            variant,
+            args,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "{ty_name}::{variant}");
+            if !args.is_empty() {
+                let _ = write!(out, "(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_expr(out, arg, current_module, map);
+                }
+                let _ = write!(out, ")");
+            }
         }
         CirExpr::Format { parts, span } => {
             map.record(out.len() as u32, *span);
@@ -824,6 +848,24 @@ fn emit_pat(out: &mut String, pat: &CirPat) {
             }
             let _ = write!(out, " }}");
         }
+        CirPat::Enum {
+            ty_name,
+            variant,
+            args,
+            ..
+        } => {
+            let _ = write!(out, "{ty_name}::{variant}");
+            if !args.is_empty() {
+                let _ = write!(out, "(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_pat(out, arg);
+                }
+                let _ = write!(out, ")");
+            }
+        }
     }
 }
 
@@ -907,6 +949,9 @@ fn emit_expr_inline_to(out: &mut String, expr: &CirExpr) {
             let _ = write!(out, "\"{value}\".into()");
         }
         CirExpr::Int { value, .. } => {
+            let _ = write!(out, "{value}");
+        }
+        CirExpr::Bool { value, .. } => {
             let _ = write!(out, "{value}");
         }
         CirExpr::Float { value, .. } => {

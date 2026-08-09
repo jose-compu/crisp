@@ -1180,7 +1180,7 @@ impl Parser {
     }
 
     fn parse_match_expr(&mut self, start: u32) -> Result<Expr, ParseError> {
-        let scrutinee = self.parse_expr()?;
+        let scrutinee = self.parse_match_scrutinee()?;
         self.expect(TokenKind::LBrace)?;
         let mut arms = Vec::new();
         while !self.check(TokenKind::RBrace) {
@@ -1194,6 +1194,21 @@ impl Parser {
             },
             span: Span::new(start, self.previous_end()),
         })
+    }
+
+    /// Scrutinee parsing that does not treat `name {` as a struct literal.
+    /// `match color { … }` would otherwise consume `color { … }` as `StructLit`.
+    fn parse_match_scrutinee(&mut self) -> Result<Expr, ParseError> {
+        if matches!(self.peek_kind(), TokenKind::Ident(_))
+            && matches!(self.peek_kind_at(1), TokenKind::LBrace)
+        {
+            let id = self.expect_ident()?;
+            return Ok(Expr {
+                kind: ExprKind::Ident(id.clone()),
+                span: id.span,
+            });
+        }
+        self.parse_expr()
     }
 
     fn parse_match_arm(&mut self) -> Result<MatchArm, ParseError> {
@@ -1410,6 +1425,32 @@ impl Parser {
             });
         }
         let name = self.expect_ident()?;
+        // Qualified enum pattern: Color.Red / Color.Custom(r, g, b)
+        if self.match_token(TokenKind::Dot) {
+            let variant = self.expect_ident()?;
+            let args = if self.match_token(TokenKind::LParen) {
+                let mut args = Vec::new();
+                while !self.check(TokenKind::RParen) {
+                    args.push(self.parse_pat()?);
+                    if !self.match_token(TokenKind::Comma) {
+                        break;
+                    }
+                }
+                self.expect(TokenKind::RParen)?;
+                args
+            } else {
+                vec![]
+            };
+            return Ok(Pat {
+                kind: PatKind::Enum {
+                    name,
+                    variant,
+                    args,
+                },
+                span: Span::new(start, self.previous_end()),
+            });
+        }
+        // Unqualified ctor pattern: Custom(r, g, b) — variant name equals type slot
         if self.match_token(TokenKind::LParen) {
             let mut args = Vec::new();
             while !self.check(TokenKind::RParen) {

@@ -27,7 +27,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
-| Enums + variant match | §3.3.2, §6.2, §10 | Partial; typeck registration / corpus incomplete |
+| Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Traits / inherent `impl` | §3.6, §5.4 | Parse/AST; typeck/CIR incomplete for bodies |
 | Shapes | §3.5 | Keyword + partial CIR synthesis; typeck incomplete |
 | Channels | §11.4 | Not implemented |

@@ -1,0 +1,41 @@
+-- examples/enums — Color enum + match (spec §3.3.2, §6.2, §10)
+
+type Color =
+    | Red
+    | Green
+    | Blue
+    | Custom(int, int, int)
+
+describe(color) = match color {
+    Color.Red -> "red"
+    Color.Green -> "green"
+    Color.Blue -> "blue"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}
+
+is_primary(color) = match color {
+    Color.Red -> true
+    Color.Green -> true
+    Color.Blue -> true
+    _ -> false
+}
+
+pub main() = {
+    print(describe(Color.Red))
+    print(describe(Color.Custom(1, 2, 3)))
+    print(is_primary(Color.Blue))
+    print(is_primary(Color.Custom(9, 9, 9)))
+}
+
+test "describe red" = {
+    assert_eq(describe(Color.Red), "red")
+}
+
+test "describe custom" = {
+    assert_eq(describe(Color.Custom(10, 20, 30)), "rgb(10,20,30)")
+}
+
+test "primary colors" = {
+    assert_eq(is_primary(Color.Green), true)
+    assert_eq(is_primary(Color.Custom(0, 0, 0)), false)
+}

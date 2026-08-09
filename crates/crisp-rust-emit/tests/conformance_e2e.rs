@@ -161,6 +161,7 @@ fn spec_s20_all_examples_typecheck() {
         "sealed",
         "with_tests",
         "match",
+        "enums",
         "async_hello",
         "ffi",
         "stdlib_smoke",

@@ -35,6 +35,7 @@ fn parse_all_examples() {
         "defaults",
         "sealed",
         "match",
+        "enums",
         "async_hello",
         "ffi",
         "stdlib_smoke",

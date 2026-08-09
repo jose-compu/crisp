@@ -181,6 +181,10 @@ pub enum CirExpr {
         value: String,
         span: Span,
     },
+    Bool {
+        value: bool,
+        span: Span,
+    },
     Ident {
         name: String,
         ty: CirTy,
@@ -237,6 +241,14 @@ pub enum CirExpr {
     Field {
         base: Box<CirExpr>,
         field: String,
+        ty: CirTy,
+        span: Span,
+    },
+    /// Enum variant construction: `Color::Red` / `Color::Custom(r, g, b)`.
+    EnumVariant {
+        ty_name: String,
+        variant: String,
+        args: Vec<CirExpr>,
         ty: CirTy,
         span: Span,
     },
@@ -306,6 +318,12 @@ pub enum CirPat {
     Struct {
         name: String,
         fields: Vec<(String, CirPat)>,
+        span: Span,
+    },
+    Enum {
+        ty_name: String,
+        variant: String,
+        args: Vec<CirPat>,
         span: Span,
     },
 }

@@ -33,24 +33,31 @@ pub gasket_stock() = StockLine {
     qty: 3
 }
 
+-- Field access on annotated params (#12). Shared field names (`sku`) need a type.
+item_sku(item: Item) = item.sku
+item_name(item: Item) = item.name
+item_price(item: Item) = item.price_cents
+stock_sku(line: StockLine) = line.sku
+stock_qty(line: StockLine) = line.qty
+
 pub format_widget() = {
     i := seed_widget()
-    "{i.sku} {i.name} ({i.price_cents}c)"
+    "{item_sku(i)} {item_name(i)} ({item_price(i)}c)"
 }
 
 pub format_gasket() = {
     i := seed_gasket()
-    "{i.sku} {i.name} ({i.price_cents}c)"
+    "{item_sku(i)} {item_name(i)} ({item_price(i)}c)"
 }
 
 pub format_widget_stock() = {
     s := widget_stock()
-    "stock {s.sku}={s.qty}"
+    "stock {stock_sku(s)}={stock_qty(s)}"
 }
 
 pub format_gasket_stock() = {
     s := gasket_stock()
-    "stock {s.sku}={s.qty}"
+    "stock {stock_sku(s)}={stock_qty(s)}"
 }
 
 test "widget seed price" = {

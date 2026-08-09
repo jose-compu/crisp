@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-08-09
+
 ### Added
 
 - Publication readiness docs: CONTRIBUTING, SECURITY, known limitations, error catalog, spec/impl delta, release process.
@@ -17,6 +19,16 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Struct field access on function parameters when the field uniquely identifies a struct (`E0043` when ambiguous) (#12).
 - Enum unit/tuple variants + qualified `match` patterns (`Color.Red`, `Color.Custom(...)`); example `examples/enums` (#11, #34).
 - `bool` literals in CIR/emit.
+- Module stub pre-pass so mutual `use` across files resolves reliably (#13).
+- Nested module paths (`math.vector`) emit a real Rust `mod` tree; example `examples/nested_math` (#35).
+- Diagnostic UX: source snippets, caret, notes/help; unresolved-name module hints; match/`->` parse help (#22).
+- CIR/Rust emit insta pins for `hello` and `math` (#25).
+- Test harness: `test_` prefix for emitted tests; float assert epsilon (#17).
+
+### Changed
+
+- Shapes: parse remains, resolve rejects with **E0039** (unsupported) for defs, bounds, and named shape types (#21).
+- Ownership probe emit hardened so `inventory` and related examples pass `crpc check` (#14).
 
 ## [1.1.0] — 2026-06
 
@@ -64,7 +76,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/jose-compu/crisp/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jose-compu/crisp/releases/tag/v1.0.0
 [0.9.0]: https://github.com/jose-compu/crisp/releases/tag/v0.9.0

@@ -4,7 +4,7 @@
 
 | Artifact | Policy |
 |----------|--------|
-| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.1.0` today) |
+| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.2.0` today) |
 | Language `edition` in `crisp.toml` | `2026` for spec v0.2; breaking language changes bump edition |
 | `crisp.lock` | Regenerate when `pub` API signatures change |
 

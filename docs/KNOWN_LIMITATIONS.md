@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.1)
+# Known limitations (Crisp v1.2)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Tracked under publication epic [#1](https://github.com/jose-compu/crisp/issues/1). Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md).
 

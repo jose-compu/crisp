@@ -6,7 +6,7 @@
 
 A systems programming language that transpiles to Rust. You write compact `.crp` source; `crpc` infers types, ownership, lifetimes, and error propagation, emits explicit Rust, and `rustc` is the soundness boundary.
 
-**This is a Rust-hosted bootstrap compiler (v1.1.x).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+**This is a Rust-hosted bootstrap compiler (v1.2.x).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
@@ -89,9 +89,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.1.0** — Vec emit fixes; expanded examples (`design_patterns`, `float_demo`, `abnormal_suite`); float literal/`**` emit; probe borrow-check fixes; LSP analysis API; spec v0.2 abnormal-path tests.
+**v1.2.0** — Nested module emit; shapes → `E0039`; diagnostics snippets/hints; CIR/emit pins for hello/math; module stub resolve; probe emit hardening; enums/field access from the v1.2 language track.
 
-Next releases: **v1.1.1** (docs/CI), **v1.2.0** (language DX). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
+Next: **v1.3.0** (LSP/reveal/stdlib). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
 
 ## Quick start
 

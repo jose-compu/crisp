@@ -312,7 +312,7 @@ Not committed to dates; tracked for direction only.
 
 Tracking epic: [jose-compu/crisp#1](https://github.com/jose-compu/crisp/issues/1) (labels: `epic:publication`, `P0` / `P1` / `P2`).
 
-Current compiler: **v1.1.0**. Planned GitHub milestones:
+Current compiler: **v1.2.0**. Planned GitHub milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|

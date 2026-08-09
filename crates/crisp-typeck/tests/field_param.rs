@@ -35,7 +35,9 @@ fn ambiguous_field_on_param_asks_for_annotation() {
     let msg = err.to_string();
     assert!(msg.contains("E0043"), "{msg}");
     match &err {
-        TypeError::AmbiguousField { field, candidates, .. } => {
+        TypeError::AmbiguousField {
+            field, candidates, ..
+        } => {
             assert_eq!(field, "sku");
             assert!(candidates.contains("Item"), "{candidates}");
             assert!(candidates.contains("StockLine"), "{candidates}");

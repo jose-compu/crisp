@@ -348,6 +348,16 @@ fn lower_pat(pat: &Pat) -> CirPat {
                 .collect(),
             span: pat.span,
         },
+        PatKind::Enum {
+            name,
+            variant,
+            args,
+        } => P::Enum {
+            ty_name: name.name.clone(),
+            variant: variant.name.clone(),
+            args: args.iter().map(lower_pat).collect(),
+            span: pat.span,
+        },
         _ => P::Wildcard { span: pat.span },
     }
 }
@@ -639,6 +649,10 @@ fn lower_expr(
             value: *n,
             span: expr.span,
         },
+        ExprKind::Bool(b) => E::Bool {
+            value: *b,
+            span: expr.span,
+        },
         ExprKind::Float(f) => E::Float {
             value: *f,
             span: expr.span,
@@ -682,6 +696,22 @@ fn lower_expr(
             }
         }
         ExprKind::Field { base, field } => {
+            // Unit enum variant: Color.Red
+            if let ExprKind::Ident(id) = &base.kind
+                && looks_like_type_name(&id.name)
+                && !locals.contains_key(&id.name)
+            {
+                return E::EnumVariant {
+                    ty_name: id.name.clone(),
+                    variant: field.name.clone(),
+                    args: vec![],
+                    ty: CirTy::Named {
+                        name: id.name.clone(),
+                        args: vec![],
+                    },
+                    span: expr.span,
+                };
+            }
             let lowered = E::Field {
                 base: Box::new(lower_expr(
                     base,
@@ -755,6 +785,40 @@ fn lower_expr(
             }
         }
         ExprKind::Call { func, args } => {
+            // Tuple enum variant: Color.Custom(r, g, b)
+            if let ExprKind::Field { base, field } = &func.kind
+                && let ExprKind::Ident(id) = &base.kind
+                && looks_like_type_name(&id.name)
+                && !locals.contains_key(&id.name)
+            {
+                let call_args: Vec<CirExpr> = args
+                    .iter()
+                    .map(|arg| {
+                        lower_expr(
+                            arg,
+                            module,
+                            osig,
+                            typed,
+                            ownership,
+                            errors,
+                            locals,
+                            struct_fields,
+                            fn_modules,
+                            ctx,
+                        )
+                    })
+                    .collect();
+                return E::EnumVariant {
+                    ty_name: id.name.clone(),
+                    variant: field.name.clone(),
+                    args: call_args,
+                    ty: CirTy::Named {
+                        name: id.name.clone(),
+                        args: vec![],
+                    },
+                    span: expr.span,
+                };
+            }
             if let ExprKind::Ident(id) = &func.kind {
                 if (id.name == "print" || id.name == "log") && args.len() == 1 {
                     let arg = lower_expr(
@@ -995,8 +1059,8 @@ fn lower_expr(
             ty: CirTy::Error,
             span: expr.span,
         },
-        ExprKind::Match { scrutinee, arms } => E::Match {
-            scrutinee: Box::new(lower_expr(
+        ExprKind::Match { scrutinee, arms } => {
+            let mut lowered_scrut = lower_expr(
                 scrutinee,
                 module,
                 osig,
@@ -1007,14 +1071,40 @@ fn lower_expr(
                 struct_fields,
                 fn_modules,
                 ctx,
-            )),
-            arms: arms
-                .iter()
-                .map(|a| CirMatchArm {
-                    pat: lower_pat(&a.pat),
-                    guard: a.guard.as_ref().map(|g| {
-                        lower_expr(
-                            g,
+            );
+            // Match by value; clone when the scrutinee is a borrowed param.
+            if let ExprKind::Ident(id) = &scrutinee.kind
+                && osig.params.iter().any(|(n, m)| {
+                    n == &id.name && matches!(m, OwnershipMode::Borrow | OwnershipMode::MutBorrow)
+                })
+            {
+                lowered_scrut = E::Clone {
+                    expr: Box::new(lowered_scrut),
+                    span: scrutinee.span,
+                };
+            }
+            E::Match {
+                scrutinee: Box::new(lowered_scrut),
+                arms: arms
+                    .iter()
+                    .map(|a| CirMatchArm {
+                        pat: lower_pat(&a.pat),
+                        guard: a.guard.as_ref().map(|g| {
+                            lower_expr(
+                                g,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
+                            )
+                        }),
+                        body: lower_expr(
+                            &a.body,
                             module,
                             osig,
                             typed,
@@ -1024,26 +1114,14 @@ fn lower_expr(
                             struct_fields,
                             fn_modules,
                             ctx,
-                        )
-                    }),
-                    body: lower_expr(
-                        &a.body,
-                        module,
-                        osig,
-                        typed,
-                        ownership,
-                        errors,
-                        locals,
-                        struct_fields,
-                        fn_modules,
-                        ctx,
-                    ),
-                    span: a.span,
-                })
-                .collect(),
-            ty: CirTy::Error,
-            span: expr.span,
-        },
+                        ),
+                        span: a.span,
+                    })
+                    .collect(),
+                ty: CirTy::Error,
+                span: expr.span,
+            }
+        }
         ExprKind::Unsafe(inner) => E::Unsafe {
             body: Box::new(lower_expr(
                 inner,
@@ -1149,10 +1227,11 @@ fn infer_expr_ty(
     }
 }
 
-fn field_access_needs_clone(
-    osig: &crisp_ownership::OwnershipSignature,
-    base: &Expr,
-) -> bool {
+fn looks_like_type_name(name: &str) -> bool {
+    name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+}
+
+fn field_access_needs_clone(osig: &crisp_ownership::OwnershipSignature, base: &Expr) -> bool {
     let ExprKind::Ident(id) = &base.kind else {
         return false;
     };

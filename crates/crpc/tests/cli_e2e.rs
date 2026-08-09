@@ -57,6 +57,7 @@ fn crpc_check_all_examples() {
         "sealed",
         "with_tests",
         "match",
+        "enums",
         "async_hello",
         "ffi",
         "stdlib_smoke",

@@ -41,6 +41,8 @@ pub struct TypeChecker {
     ctx: InferContext,
     env: TypeEnv,
     structs: BTreeMap<String, BTreeMap<String, Ty>>,
+    /// Enum name → variant name → payload field types.
+    enums: BTreeMap<String, BTreeMap<String, Vec<Ty>>>,
     signatures: BTreeMap<String, InferredSig>,
 }
 
@@ -67,6 +69,7 @@ impl TypeChecker {
             ctx: InferContext::new(),
             env: TypeEnv::new(),
             structs: BTreeMap::new(),
+            enums: BTreeMap::new(),
             signatures: BTreeMap::new(),
         }
     }
@@ -157,6 +160,25 @@ impl TypeChecker {
                         }
                     }
                     self.structs.insert(td.name.name.clone(), field_map);
+                    self.env.insert(
+                        td.name.name.clone(),
+                        scheme(Ty::Named {
+                            name: td.name.name.clone(),
+                            args: vec![],
+                        }),
+                    );
+                } else if let TypeBody::Enum(variants) = &td.body {
+                    let mut variant_map = BTreeMap::new();
+                    for v in variants {
+                        let mut fields = Vec::new();
+                        for t in &v.fields {
+                            if let Ok(ty) = self.ast_type(t) {
+                                fields.push(self.ctx.apply(&ty));
+                            }
+                        }
+                        variant_map.insert(v.name.name.clone(), fields);
+                    }
+                    self.enums.insert(td.name.name.clone(), variant_map);
                     self.env.insert(
                         td.name.name.clone(),
                         scheme(Ty::Named {
@@ -403,6 +425,28 @@ impl TypeChecker {
                 Ok(self.ctx.apply(&ret))
             }
             ExprKind::Field { base, field } => {
+                // Enum variants: Color.Red (unit) / Color.Custom (ctor fn type)
+                if let ExprKind::Ident(id) = &base.kind
+                    && let Some(variants) = self.enums.get(&id.name)
+                {
+                    return match variants.get(&field.name) {
+                        Some(payload) if payload.is_empty() => Ok(Ty::Named {
+                            name: id.name.clone(),
+                            args: vec![],
+                        }),
+                        Some(payload) => Ok(Ty::Fn {
+                            params: payload.clone(),
+                            ret: Box::new(Ty::Named {
+                                name: id.name.clone(),
+                                args: vec![],
+                            }),
+                        }),
+                        None => Err(TypeError::UnknownName {
+                            name: format!("{}.{}", id.name, field.name),
+                            span: field.span,
+                        }),
+                    };
+                }
                 let base_ty = self.infer_expr(env, base)?;
                 self.field_type(&base_ty, &field.name, field.span)
             }
@@ -609,6 +653,40 @@ impl TypeChecker {
                     }
                     Ok(())
                 }
+            }
+            PatKind::Enum {
+                name,
+                variant,
+                args,
+            } => {
+                let enum_ty = Ty::Named {
+                    name: name.name.clone(),
+                    args: vec![],
+                };
+                unify(&mut self.ctx, ty, &enum_ty)?;
+                let Some(variants) = self.enums.get(&name.name) else {
+                    return Err(TypeError::UnknownType {
+                        name: name.name.clone(),
+                        span: name.span,
+                    });
+                };
+                let Some(payload) = variants.get(&variant.name) else {
+                    return Err(TypeError::UnknownName {
+                        name: format!("{}.{}", name.name, variant.name),
+                        span: variant.span,
+                    });
+                };
+                if args.len() != payload.len() {
+                    return Err(TypeError::Unify(UnifyError::Mismatch {
+                        expected: format!("{} payload fields", payload.len()),
+                        found: format!("{} pattern args", args.len()),
+                    }));
+                }
+                let payload = payload.clone();
+                for (arg, field_ty) in args.iter().zip(payload) {
+                    self.infer_pat(env, arg, &field_ty)?;
+                }
+                Ok(())
             }
             _ => Ok(()),
         }

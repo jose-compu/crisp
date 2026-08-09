@@ -6,8 +6,8 @@ use crisp_ast::Span;
 use thiserror::Error;
 
 pub use format::{
-    FormattedDiagnostic, format_diagnostic, format_ownership_contradiction, format_type_mismatch,
-    from_diagnostic,
+    FormattedDiagnostic, format_diagnostic, format_diagnostic_at, format_ownership_contradiction,
+    format_type_mismatch, format_unresolved_name, from_diagnostic,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -23,6 +23,7 @@ pub struct Diagnostic {
     pub message: String,
     pub span: Span,
     pub severity: Severity,
+    pub notes: Vec<String>,
 }
 
 #[derive(Debug, Error)]

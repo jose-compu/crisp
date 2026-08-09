@@ -1,0 +1,8 @@
+---
+source: crates/crisp-rust-emit/tests/emit_pipeline.rs
+expression: cir_outline(&cir)
+---
+package hello
+module main
+  fn greet(name)
+  fn main()

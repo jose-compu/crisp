@@ -1,0 +1,18 @@
+-- Nested module: src/math/vector.crp → math.vector (#35)
+
+pub type Vec2 = {
+    x: float
+    y: float
+}
+
+pub origin() = Vec2 {
+    x: 0.0
+    y: 0.0
+}
+
+pub add(a: Vec2, b: Vec2) = Vec2 {
+    x: a.x + b.x
+    y: a.y + b.y
+}
+
+pub sum_xy(v: Vec2) = v.x + v.y

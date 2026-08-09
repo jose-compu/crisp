@@ -31,7 +31,13 @@ pub fn write_cargo_project(
     fs::write(src.join("main.rs"), &main_rs)?;
 
     for (mod_name, content) in &emitted.modules {
-        fs::write(src.join(format!("{mod_name}.rs")), content)?;
+        // Dotted Crisp paths (`math.vector`) → nested Rust files (`math/vector.rs`).
+        let rel = mod_name.replace('.', "/");
+        let path = src.join(format!("{rel}.rs"));
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(path, content)?;
     }
 
     Ok(out_dir)

@@ -1,0 +1,11 @@
+use math.vector { Vec2, origin, add, sum_xy }
+
+pub main() = {
+    a := origin()
+    b := Vec2 {
+        x: 1.0
+        y: 2.0
+    }
+    c := add(a, b)
+    log("sum={sum_xy(c)}")
+}

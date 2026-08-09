@@ -1,0 +1,8 @@
+shape HasPosition = {
+    x: float
+    y: float
+}
+
+pub main() = {
+    log("unused")
+}

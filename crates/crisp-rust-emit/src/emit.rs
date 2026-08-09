@@ -34,16 +34,49 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     let mut main_rs = String::new();
     emit_prelude(&mut main_rs, cir);
 
-    // Declare all non-main modules first so Rust sees them before main items (#13).
+    // Leaf bodies keyed by dotted module path (`math.vector`).
+    let mut leaf_bodies: std::collections::BTreeMap<String, String> =
+        std::collections::BTreeMap::new();
     for m in &cir.modules {
         if m.path == "main" {
             continue;
         }
         let mut mod_src = String::new();
         emit_module_items(&mut mod_src, m, cir, &mut map, false);
-        modules.push((m.path.clone(), mod_src));
-        let _ = writeln!(main_rs, "mod {};", m.path);
-        let _ = writeln!(main_rs, "pub use {}::*;", m.path);
+        leaf_bodies.insert(m.path.clone(), mod_src);
+    }
+
+    // Build the full path tree (including intermediate parents) for nested emit (#35).
+    let mut tree_paths: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for path in leaf_bodies.keys() {
+        let mut prefix = String::new();
+        for seg in path.split('.') {
+            if !prefix.is_empty() {
+                prefix.push('.');
+            }
+            prefix.push_str(seg);
+            tree_paths.insert(prefix.clone());
+        }
+    }
+
+    for path in &tree_paths {
+        let children = direct_child_segments(&tree_paths, path);
+        let mut src = String::new();
+        for child in &children {
+            let _ = writeln!(src, "pub mod {child};");
+            let _ = writeln!(src, "pub use {child}::*;");
+        }
+        if let Some(body) = leaf_bodies.get(path) {
+            src.push_str(body);
+        }
+        modules.push((path.clone(), src));
+    }
+
+    // Crate root: declare only top-level modules (not `math.vector`).
+    let top_level = direct_child_segments(&tree_paths, "");
+    for top in &top_level {
+        let _ = writeln!(main_rs, "mod {top};");
+        let _ = writeln!(main_rs, "pub use {top}::*;");
     }
 
     for m in &cir.modules {
@@ -70,6 +103,41 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
         modules,
         source_map: map,
     }
+}
+
+/// Direct child path segments under `parent` (empty parent = crate-root children).
+fn direct_child_segments(
+    tree_paths: &std::collections::BTreeSet<String>,
+    parent: &str,
+) -> Vec<String> {
+    let mut children = Vec::new();
+    for path in tree_paths {
+        let child = if parent.is_empty() {
+            let mut parts = path.split('.');
+            let first = parts.next().unwrap_or("");
+            if parts.next().is_none() {
+                Some(first.to_string())
+            } else {
+                None
+            }
+        } else {
+            path.strip_prefix(parent)
+                .and_then(|rest| rest.strip_prefix('.'))
+                .and_then(|rest| {
+                    if rest.contains('.') {
+                        None
+                    } else {
+                        Some(rest.to_string())
+                    }
+                })
+        };
+        if let Some(c) = child {
+            children.push(c);
+        }
+    }
+    children.sort();
+    children.dedup();
+    children
 }
 
 fn emit_prelude(out: &mut String, cir: &CirCrate) {
@@ -781,7 +849,9 @@ fn emit_call_expr(
         }
     } else {
         if callee_module != current_module && !callee_module.starts_with("std.") {
-            let _ = write!(out, "{callee_module}::");
+            // Crisp `math.vector` → Rust `math::vector` (#35).
+            let rust_path = callee_module.replace('.', "::");
+            let _ = write!(out, "{rust_path}::");
         }
         let _ = write!(out, "{callee}(");
         for (i, arg) in args.iter().enumerate() {

@@ -5,10 +5,11 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | Code | Area | Meaning / recovery |
 |------|------|-------------------|
 | E0034 | resolve | Duplicate definition in a module — rename or remove one item |
-| E0035 | resolve | Unresolved name — check spelling, `use`, and [module order](KNOWN_LIMITATIONS.md) |
+| E0035 | resolve | Unresolved name — check spelling/`use`; help names the defining module when known |
 | E0036 | resolve | Name is private — export with `pub` or import from the defining module |
 | E0037 | resolve | Symbol not exported from module |
 | E0038 | resolve | Ambiguous import — qualify or narrow `use` |
+| E0039 | resolve | Shapes not yet supported — remove `shape` defs/bounds ([#21](https://github.com/jose-compu/crisp/issues/21)) |
 | E0040 | typeck | Unknown type — annotate params/fields or fix struct name |
 | E0041 | typeck | Unknown name |
 | E0042 | typeck | Resolve error wrapped into typeck |

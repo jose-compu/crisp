@@ -29,10 +29,10 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Traits / inherent `impl` | §3.6, §5.4 | Parse/AST; typeck/CIR incomplete for bodies |
-| Shapes | §3.5 | Keyword + partial CIR synthesis; typeck incomplete |
+| Shapes | §3.5 | Parse + keyword only; resolve emits `E0039` (unsupported) until full §3.5 lands |
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord, net/http | §15 | Not implemented |
-| Nested modules | §12 | Resolve walks dirs; emit nesting incomplete |
+| Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs` (`examples/nested_math`) |
 
 ## Ownership probe (§7.6)
 

@@ -2,7 +2,7 @@ use crate::error::ResolveError;
 use crate::module::{ModuleGraph, load_module_graph};
 use crate::prelude::prelude_symbols;
 use crate::stdlib::stdlib_symbols;
-use crate::symbols::{Symbol, SymbolKey, collect_module_symbols};
+use crate::symbols::{Symbol, SymbolKey, SymbolKind, collect_module_symbols};
 use crisp_ast::Span;
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::ident::Ident;
@@ -297,7 +297,13 @@ impl Resolver {
                         self.check_expr(&local, &f.body)?;
                     }
                 }
-                Item::Use(_) | Item::TraitDef(_) | Item::ShapeDef(_) | Item::Extern(_) => {}
+                Item::ShapeDef(s) => {
+                    return Err(ResolveError::ShapesUnsupported {
+                        name: s.name.name.clone(),
+                        span: s.name.span,
+                    });
+                }
+                Item::Use(_) | Item::TraitDef(_) | Item::Extern(_) => {}
             }
         }
         let _ = current;
@@ -337,7 +343,10 @@ impl Resolver {
         ty: &Type,
     ) -> Result<(), ResolveError> {
         match &ty.kind {
-            TypeKind::Named(id) => self.check_name(scope, &id.name, id.span),
+            TypeKind::Named(id) => {
+                self.check_name(scope, &id.name, id.span)?;
+                self.reject_shape_type(scope, &id.name, id.span)
+            }
             TypeKind::Option(inner) | TypeKind::Slice(inner) | TypeKind::Ref { inner, .. } => {
                 self.check_type(scope, inner)
             }
@@ -357,7 +366,13 @@ impl Resolver {
             TypeKind::Constrained { inner, bounds } => {
                 for b in bounds {
                     match b {
-                        TypeBound::Shape(id) | TypeBound::Trait(id) => {
+                        TypeBound::Shape(id) => {
+                            return Err(ResolveError::ShapesUnsupported {
+                                name: id.name.clone(),
+                                span: id.span,
+                            });
+                        }
+                        TypeBound::Trait(id) => {
                             self.check_name(scope, &id.name, id.span)?;
                         }
                     }
@@ -599,9 +614,57 @@ impl Resolver {
         if name == "Self" || name.starts_with('_') {
             return Ok(());
         }
+        let hint = self.unresolved_hint(scope, name);
+        let message = match &hint {
+            Some(h) => format!("[E0035] unresolved name `{name}`\nhelp: {h}"),
+            None => format!("[E0035] unresolved name `{name}`"),
+        };
         Err(ResolveError::UnresolvedName {
             name: name.to_string(),
             span,
+            message,
+            hint,
         })
+    }
+
+    fn unresolved_hint(&self, scope: &HashMap<String, SymbolKey>, name: &str) -> Option<String> {
+        let _ = scope;
+        let mut modules: Vec<&str> = self
+            .global
+            .values()
+            .filter(|s| s.key.name == name && !s.from_prelude)
+            .map(|s| s.key.module.as_str())
+            .collect();
+        modules.sort_unstable();
+        modules.dedup();
+        if modules.is_empty() {
+            return None;
+        }
+        let module = modules[0];
+        Some(format!(
+            "`{name}` is defined in module `{module}`; add `use {module} {{ {name} }}` \
+(sibling modules are not visible by filename order alone)"
+        ))
+    }
+
+    fn reject_shape_type(
+        &self,
+        scope: &HashMap<String, SymbolKey>,
+        name: &str,
+        span: Span,
+    ) -> Result<(), ResolveError> {
+        let Some(key) = scope.get(name) else {
+            return Ok(());
+        };
+        let Some(sym) = self.global.get(key) else {
+            return Ok(());
+        };
+        if sym.kind == SymbolKind::Shape {
+            return Err(ResolveError::ShapesUnsupported {
+                name: name.to_string(),
+                span,
+            });
+        }
+        Ok(())
     }
 }

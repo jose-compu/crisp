@@ -1,0 +1,17 @@
+---
+source: crates/crisp-rust-emit/tests/emit_pipeline.rs
+expression: cir_outline(&cir)
+---
+package math
+module arith
+  fn double(n)
+  fn sum(a, b)
+  fn product(a, b)
+module floats
+  fn add(a, b)
+  fn mul(a, b)
+  fn div(a, b)
+  fn square(x)
+  fn avg2(a, b)
+module main
+  fn main()

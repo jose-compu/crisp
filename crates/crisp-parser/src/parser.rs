@@ -20,16 +20,31 @@ use thiserror::Error;
 pub enum ParseError {
     #[error("lex error: {0}")]
     Lex(#[from] crisp_lexer::LexError),
-    #[error("unexpected token {found:?} at byte {pos}, expected {expected}")]
+    #[error("{}", format_unexpected(.expected, .found, .pos, .help))]
     Unexpected {
         expected: &'static str,
         found: TokenKind,
         pos: u32,
+        help: Option<&'static str>,
     },
     #[error("unexpected end of file, expected {expected}")]
     UnexpectedEof { expected: &'static str },
     #[error("invalid pattern at byte {pos}")]
     InvalidPat { pos: u32 },
+}
+
+fn format_unexpected(
+    expected: &&'static str,
+    found: &TokenKind,
+    pos: &u32,
+    help: &Option<&'static str>,
+) -> String {
+    let mut msg = format!("unexpected token {found:?} at byte {pos}, expected {expected}");
+    if let Some(h) = help {
+        msg.push_str("\nhelp: ");
+        msg.push_str(h);
+    }
+    msg
 }
 
 pub struct Parser {
@@ -1219,7 +1234,17 @@ impl Parser {
         } else {
             None
         };
-        self.expect(TokenKind::Arrow)?;
+        if !self.match_token(TokenKind::Arrow) {
+            return Err(ParseError::Unexpected {
+                expected: "`->`",
+                found: self.peek_kind(),
+                pos: self.current_start(),
+                help: Some(
+                    "if the match scrutinee is a struct literal, wrap it in parentheses: \
+match (Name { field: value }) { ... }",
+                ),
+            });
+        }
         let body = self.parse_expr()?;
         let end = body.span.end;
         Ok(MatchArm {
@@ -1346,6 +1371,7 @@ impl Parser {
                 expected: "`:=` or `mut:`=",
                 found: self.peek_kind(),
                 pos: self.current_start(),
+                help: None,
             });
         };
         let value = self.parse_expr()?;
@@ -1598,6 +1624,7 @@ impl Parser {
                 expected: "identifier",
                 found: other,
                 pos: t.start,
+                help: None,
             }),
         }
     }
@@ -1614,6 +1641,7 @@ impl Parser {
                 expected: "string literal",
                 found: other,
                 pos: t.start,
+                help: None,
             }),
         }
     }
@@ -1720,6 +1748,7 @@ impl Parser {
             expected,
             found,
             pos: self.current_start(),
+            help: None,
         }
     }
 }

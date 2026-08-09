@@ -38,6 +38,18 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --verbose
 ```
 
+### Updating emit / CIR snapshots (#25)
+
+Pinned outputs for `examples/hello` and `examples/math` live under
+`crates/crisp-rust-emit/tests/snapshots/` (`emit_hello_main`, `emit_math_bundle`,
+`cir_outline_*`). After intentional emit or CIR changes:
+
+```bash
+INSTA_UPDATE=1 cargo test -p crisp-rust-emit --test emit_pipeline
+```
+
+Review the `.snap` diffs before committing.
+
 Exercise examples:
 
 ```bash

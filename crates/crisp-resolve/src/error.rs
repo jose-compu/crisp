@@ -21,8 +21,14 @@ pub enum ResolveError {
         module: String,
         span: Span,
     },
-    #[error("[E0035] unresolved name `{name}`")]
-    UnresolvedName { name: String, span: Span },
+    #[error("{message}")]
+    UnresolvedName {
+        name: String,
+        span: Span,
+        /// Full user-facing message including `[E0035]` and optional help.
+        message: String,
+        hint: Option<String>,
+    },
     #[error("[E0036] `{name}` is private in module `{module}`")]
     PrivateImport {
         name: String,
@@ -37,4 +43,8 @@ pub enum ResolveError {
     },
     #[error("[E0038] ambiguous import: `{name}` defined in multiple modules")]
     AmbiguousImport { name: String, span: Span },
+    #[error(
+        "[E0039] shapes are not yet supported (`{name}`); remove the `shape` definition or bound (tracked: #21)"
+    )]
+    ShapesUnsupported { name: String, span: Span },
 }

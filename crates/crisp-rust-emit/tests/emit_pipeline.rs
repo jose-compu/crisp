@@ -1,7 +1,14 @@
 //! End-to-end emit and build tests (spec §17.1).
+//!
+//! #25 pins CIR outlines and Rust emit for `examples/hello` and `examples/math`.
+//! Update after intentional emit changes:
+//! `INSTA_UPDATE=1 cargo test -p crisp-rust-emit --test emit_pipeline`
 
-use crisp_cir::CirBuilder;
-use crisp_rust_emit::{PipelineError, build_emitted, emit_crate, emit_to_target, run_emitted};
+use crisp_cir::{CirBuilder, CirCrate, CirItem};
+use crisp_rust_emit::{
+    EmitResult, PipelineError, build_emitted, emit_crate, emit_to_target, run_emitted,
+};
+use std::fmt::Write;
 use std::path::PathBuf;
 
 fn hello_root() -> PathBuf {
@@ -122,6 +129,75 @@ fn math_emits_arith_module() {
             .iter()
             .any(|(m, s)| m == "arith" && s.contains("fn product"))
     );
+    insta::assert_snapshot!("emit_math_bundle", emit_bundle(&out));
+}
+
+#[test]
+fn cir_outline_hello_snapshot() {
+    let cir = CirBuilder::build_crate(&hello_root()).expect("cir");
+    insta::assert_snapshot!("cir_outline_hello", cir_outline(&cir));
+}
+
+#[test]
+fn cir_outline_math_snapshot() {
+    let cir = CirBuilder::build_crate(&math_root()).expect("cir");
+    insta::assert_snapshot!("cir_outline_math", cir_outline(&cir));
+}
+
+/// Stable, span-free CIR outline for conformance pinning (#25).
+fn cir_outline(cir: &CirCrate) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "package {}", cir.package_name);
+    let mut modules = cir.modules.clone();
+    modules.sort_by(|a, b| a.path.cmp(&b.path));
+    for m in modules {
+        let _ = writeln!(out, "module {}", m.path);
+        for item in &m.items {
+            match item {
+                CirItem::Struct(s) => {
+                    let fields: Vec<_> = s.fields.iter().map(|f| f.name.as_str()).collect();
+                    let _ = writeln!(out, "  struct {} {{{}}}", s.name, fields.join(", "));
+                }
+                CirItem::Enum(e) => {
+                    let vars: Vec<_> = e.variants.iter().map(|v| v.name.as_str()).collect();
+                    let _ = writeln!(out, "  enum {} {{{}}}", e.name, vars.join(", "));
+                }
+                CirItem::Alias { name, .. } => {
+                    let _ = writeln!(out, "  alias {name}");
+                }
+                CirItem::Function(f) => {
+                    let params: Vec<_> = f.params.iter().map(|p| p.name.as_str()).collect();
+                    let _ = writeln!(out, "  fn {}({})", f.name, params.join(", "));
+                }
+                CirItem::Impl(i) => {
+                    let _ = writeln!(out, "  impl {}", i.trait_name.as_deref().unwrap_or("_"));
+                }
+                CirItem::Extern(ext) => {
+                    let _ = writeln!(out, "  extern ({})", ext.functions.len());
+                }
+            }
+        }
+    }
+    out
+}
+
+fn emit_bundle(out: &EmitResult) -> String {
+    let mut buf = String::new();
+    let _ = writeln!(buf, "// === main / lib.rs ===");
+    buf.push_str(&out.lib_rs);
+    if !buf.ends_with('\n') {
+        buf.push('\n');
+    }
+    let mut mods = out.modules.clone();
+    mods.sort_by(|a, b| a.0.cmp(&b.0));
+    for (name, src) in mods {
+        let _ = writeln!(buf, "// === mod {name} ===");
+        buf.push_str(&src);
+        if !buf.ends_with('\n') {
+            buf.push('\n');
+        }
+    }
+    buf
 }
 
 #[test]

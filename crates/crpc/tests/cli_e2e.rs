@@ -73,12 +73,62 @@ fn crpc_check_all_examples() {
         "data_pipeline",
         "abnormal_suite",
         "design_patterns",
+        "nested_math",
     ] {
         run_ok(
             "crpc",
             &["check", &examples_dir().join(ex).to_string_lossy()],
         );
     }
+}
+
+#[test]
+fn crpc_run_nested_math() {
+    let out = run_ok(
+        "crpc",
+        &["run", &examples_dir().join("nested_math").to_string_lossy()],
+    );
+    assert!(out.contains("sum=3"), "output: {out}");
+}
+
+#[test]
+fn crpc_check_missing_use_prints_snippet_and_help() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../crisp-resolve/tests/fixtures/missing_use");
+    let output = Command::new(bin_path("crpc"))
+        .args(["check", &fixture.to_string_lossy()])
+        .output()
+        .expect("spawn crpc");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    eprintln!("stderr:\n{stderr}");
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("ERROR [E0035]") || stderr.contains("[E0035]"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("helper"), "{stderr}");
+    assert!(
+        stderr.contains("help:") || stderr.contains("use util"),
+        "{stderr}"
+    );
+}
+
+#[test]
+fn crpc_check_shape_def_prints_e0039() {
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../crisp-resolve/tests/fixtures/shape_def");
+    let output = Command::new(bin_path("crpc"))
+        .args(["check", &fixture.to_string_lossy()])
+        .output()
+        .expect("spawn crpc");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    eprintln!("stderr:\n{stderr}");
+    assert!(!output.status.success());
+    assert!(stderr.contains("E0039"), "{stderr}");
+    assert!(
+        stderr.contains("shape") || stderr.contains("HasPosition"),
+        "{stderr}"
+    );
 }
 
 #[test]

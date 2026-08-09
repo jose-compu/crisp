@@ -1,0 +1,5 @@
+use geo.math.vector { unit_x, unit_y }
+
+pub main() = {
+    log("x={unit_x()} y={unit_y()}")
+}

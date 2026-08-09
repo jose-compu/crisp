@@ -186,7 +186,7 @@ pub main() = {
 }
 ```
 
-Modules in a flat `src/` directory may import each other in any filename order. Nested layouts (`math/vector.crp`) are still limited — see known limitations.
+Modules in a flat `src/` directory may import each other in any filename order. Nested layouts work too (`src/math/vector.crp` → `use math.vector { … }`; see `examples/nested_math`).
 
 See `examples/math`, `examples/design_patterns`, `examples/enums`.
 
@@ -257,6 +257,7 @@ reveal rust examples/hello
 |---------|--------|
 | `hello` | Minimal program |
 | `math` | Integer + float arithmetic, multi-module tests |
+| `nested_math` | Nested `src/math/vector.crp` module tree |
 | `float_demo` | `Vec2` geometry, `lerp`, circle metrics, `**` pow |
 | `defaults` | Struct default fields |
 | `fallible` | Error propagation + `catch` |

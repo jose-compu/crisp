@@ -1,0 +1,11 @@
+-- Function checked before the shape def item; name is already in scope as Shape (#21).
+distance(a: HasPosition) = 0.0
+
+shape HasPosition = {
+    x: float
+    y: float
+}
+
+pub main() = {
+    log("unused")
+}

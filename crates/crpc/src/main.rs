@@ -1,16 +1,18 @@
 use clap::{Parser, Subcommand};
+use crisp_diagnostics::{Severity, format_diagnostic_at, format_unresolved_name};
 use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
 use crisp_parser::Parser as CrispParser;
 use crisp_regions::RegionPass;
-use crisp_resolve::{Resolver, find_crate_root};
+use crisp_resolve::module::load_module_graph;
+use crisp_resolve::{ResolveError, Resolver, find_crate_root};
 use crisp_rust_emit::{
     PipelineError, TestHarnessError, build_emitted, emit_to_target, resolve_rustc_fallbacks,
     run_emitted, run_tests, verify_sealed_api,
 };
-use crisp_typeck::TypeChecker;
+use crisp_typeck::{TypeChecker, TypeError};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(
@@ -80,8 +82,14 @@ fn main() -> anyhow::Result<()> {
         Commands::Check { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())
                 .unwrap_or_else(|| PathBuf::from(&path));
-            Resolver::resolve_crate(&root)?;
-            TypeChecker::check_crate(&root)?;
+            if let Err(e) = Resolver::resolve_crate(&root) {
+                print_resolve_diagnostic(&root, &e);
+                return Err(e.into());
+            }
+            if let Err(e) = TypeChecker::check_crate(&root) {
+                print_type_diagnostic(&root, &e);
+                return Err(e.into());
+            }
             match resolve_rustc_fallbacks(&root) {
                 Ok(_) => {}
                 Err(crisp_rust_emit::FallbackResolveError::RustcUnavailable) => {
@@ -152,4 +160,118 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
     }
+}
+
+fn print_resolve_diagnostic(root: &Path, err: &ResolveError) {
+    match err {
+        ResolveError::UnresolvedName {
+            name, span, hint, ..
+        } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered =
+                    format_unresolved_name(&file, &source, name, *span, hint.as_deref()).rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        ResolveError::ShapesUnsupported { name, span } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0039",
+                    &format!("shapes are not yet supported (`{name}`)"),
+                    *span,
+                    Severity::Error,
+                    &["help: remove the `shape` definition or bound".into()],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        _ => {}
+    }
+    eprintln!("{err}");
+}
+
+fn print_type_diagnostic(root: &Path, err: &TypeError) {
+    match err {
+        TypeError::UnknownName { name, span } | TypeError::UnknownType { name, span } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let code = if matches!(err, TypeError::UnknownType { .. }) {
+                    "E0040"
+                } else {
+                    "E0041"
+                };
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    code,
+                    &err.to_string().replacen(&format!("[{code}] "), "", 1),
+                    *span,
+                    Severity::Error,
+                    &[],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                let _ = name;
+                return;
+            }
+        }
+        TypeError::AmbiguousField {
+            field,
+            candidates,
+            span,
+        } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0043",
+                    &format!(
+                        "ambiguous field `{field}` on unresolved type; annotate the parameter (candidates: {candidates})"
+                    ),
+                    *span,
+                    Severity::Error,
+                    &["help: write `param: StructName` on the function parameter".into()],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        TypeError::Resolve(inner) => {
+            print_resolve_diagnostic(root, inner);
+            return;
+        }
+        _ => {}
+    }
+    eprintln!("{err}");
+}
+
+/// Best-effort: find a module source whose length covers `span.end`.
+fn source_for_span(root: &Path, span: crisp_ast::Span) -> Option<(String, String)> {
+    let graph = load_module_graph(root).ok()?;
+    let mut best: Option<(String, String)> = None;
+    for node in graph.modules.values() {
+        let Ok(source) = fs::read_to_string(&node.path) else {
+            continue;
+        };
+        if (source.len() as u32) < span.end {
+            continue;
+        }
+        let rel = node
+            .path
+            .strip_prefix(root)
+            .unwrap_or(node.path.as_path())
+            .display()
+            .to_string();
+        best = Some((rel, source));
+        // Prefer main when multiple match.
+        if node.module_path == "main" {
+            break;
+        }
+    }
+    best
 }

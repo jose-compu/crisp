@@ -21,7 +21,19 @@ pub fn format_diagnostic(
     severity: Severity,
     notes: &[String],
 ) -> FormattedDiagnostic {
-    let rendered = render(source, code, message, span, severity, notes);
+    format_diagnostic_at("source", source, code, message, span, severity, notes)
+}
+
+pub fn format_diagnostic_at(
+    file: &str,
+    source: &str,
+    code: &str,
+    message: &str,
+    span: Span,
+    severity: Severity,
+    notes: &[String],
+) -> FormattedDiagnostic {
+    let rendered = render(file, source, code, message, span, severity, notes);
     FormattedDiagnostic {
         code: code.to_string(),
         message: message.to_string(),
@@ -39,7 +51,34 @@ pub fn from_diagnostic(source: &str, diag: &Diagnostic) -> FormattedDiagnostic {
         &diag.message,
         diag.span,
         diag.severity,
-        &[],
+        &diag.notes,
+    )
+}
+
+/// Format an unresolved-name diagnostic with optional import / module hint.
+pub fn format_unresolved_name(
+    file: &str,
+    source: &str,
+    name: &str,
+    span: Span,
+    hint: Option<&str>,
+) -> FormattedDiagnostic {
+    let mut notes = Vec::new();
+    if let Some(h) = hint {
+        notes.push(format!("help: {h}"));
+    } else {
+        notes.push(
+            "help: check spelling, `use` imports, and that the defining module is imported".into(),
+        );
+    }
+    format_diagnostic_at(
+        file,
+        source,
+        "E0035",
+        &format!("unresolved name `{name}`"),
+        span,
+        Severity::Error,
+        &notes,
     )
 }
 
@@ -61,6 +100,7 @@ fn line_col(source: &str, offset: u32) -> (usize, usize) {
 }
 
 fn render(
+    file: &str,
     source: &str,
     code: &str,
     message: &str,
@@ -74,7 +114,7 @@ fn render(
         Severity::Warning => "WARNING",
         Severity::Note => "NOTE",
     };
-    let mut out = format!("{sev} [{code}]: {message}\n  --> source:{line}:{col}\n");
+    let mut out = format!("{sev} [{code}]: {message}\n  --> {file}:{line}:{col}\n");
     let lines: Vec<&str> = source.lines().collect();
     if line > 0 && line <= lines.len() {
         let src_line = lines[line - 1];
@@ -90,7 +130,13 @@ fn render(
         out.push('\n');
     }
     for note in notes {
-        out.push_str(&format!("   = note: {note}\n"));
+        if let Some(rest) = note.strip_prefix("help:") {
+            out.push_str(&format!("   = help:{rest}\n"));
+        } else if let Some(rest) = note.strip_prefix("note:") {
+            out.push_str(&format!("   = note:{rest}\n"));
+        } else {
+            out.push_str(&format!("   = note: {note}\n"));
+        }
     }
     out
 }

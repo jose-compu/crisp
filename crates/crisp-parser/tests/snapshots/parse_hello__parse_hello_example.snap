@@ -1,5 +1,6 @@
 ---
 source: crates/crisp-parser/tests/parse_hello.rs
+assertion_line: 15
 expression: file
 ---
 SourceFile {
@@ -138,7 +139,7 @@ SourceFile {
                                                         StringParts(
                                                             [
                                                                 Lit(
-                                                                    "crisp",
+                                                                    "world",
                                                                 ),
                                                             ],
                                                         ),

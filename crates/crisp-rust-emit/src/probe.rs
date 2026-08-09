@@ -67,12 +67,7 @@ fn emit_type_def(out: &mut String, td: &crisp_ast::item::TypeDef) {
             let _ = writeln!(out, "}}");
         }
         TypeBody::Alias(ty) => {
-            let _ = writeln!(
-                out,
-                "type {} = {};",
-                td.name.name,
-                ast_type_rust(ty)
-            );
+            let _ = writeln!(out, "type {} = {};", td.name.name, ast_type_rust(ty));
         }
     }
 }
@@ -179,14 +174,17 @@ pub(crate) fn format_rust_ty(ty: &Ty) -> String {
         Ty::Var(_) => "_".into(),
         Ty::StrSlice => "str".into(),
         Ty::Named { name, args } if args.is_empty() => match name.as_str() {
-            "vec" => "Vec<_>" .into(),
+            "vec" => "Vec<_>".into(),
             "map" => "std::collections::HashMap<_, _>".into(),
             "set" => "std::collections::HashSet<_>".into(),
             other => other.to_string(),
         },
         Ty::Named { name, args } => format!(
             "{name}<{}>",
-            args.iter().map(format_rust_ty).collect::<Vec<_>>().join(", ")
+            args.iter()
+                .map(format_rust_ty)
+                .collect::<Vec<_>>()
+                .join(", ")
         ),
         Ty::Option(inner) => format!("Option<{}>", format_rust_ty(inner)),
         Ty::Ref { mutable, inner } => {
@@ -405,7 +403,11 @@ fn emit_expr_inner(
             // Enum ctor Color.Custom(...)
             if let ExprKind::Field { base, field } = &func.kind
                 && let ExprKind::Ident(ty) = &base.kind
-                && ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+                && ty
+                    .name
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase())
             {
                 let _ = write!(out, "{}::{}(", ty.name, field.name);
                 for (i, arg) in args.iter().enumerate() {
@@ -437,7 +439,11 @@ fn emit_expr_inner(
         }
         ExprKind::Field { base, field } => {
             if let ExprKind::Ident(ty) = &base.kind
-                && ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+                && ty
+                    .name
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase())
             {
                 let _ = write!(out, "{}::{}", ty.name, field.name);
                 return;

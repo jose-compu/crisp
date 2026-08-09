@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/fmt-before-git.sh",
+        "matcher": "git\\s+(push|commit)\\b",
+        "failClosed": true
+      }
+    ]
+  }
+}

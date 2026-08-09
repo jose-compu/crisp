@@ -186,9 +186,9 @@ pub main() = {
 }
 ```
 
-**Module order:** in a flat `src/` directory, modules imported by `main` must sort **before** `main` alphabetically (`arith.crp` before `main.crp`). Name modules accordingly (`hub.crp`, not `mediator.crp`, if `main` imports it).
+Modules in a flat `src/` directory may import each other in any filename order. Nested layouts (`math/vector.crp`) are still limited — see known limitations.
 
-See `examples/math`, `examples/design_patterns`.
+See `examples/math`, `examples/design_patterns`, `examples/enums`.
 
 ## 7. Tests
 

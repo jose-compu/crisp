@@ -1,0 +1,5 @@
+use zutil { helper }
+
+pub main() = {
+    print(helper() + 1)
+}

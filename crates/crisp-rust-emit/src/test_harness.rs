@@ -99,10 +99,14 @@ fn sanitize_test_name(name: &str) -> String {
             out.push('_');
         }
     }
+    // Prefix so generated `fn` names cannot shadow `use super::*` items
+    // (e.g. test "proxy demo" vs `pub fn proxy_demo`).
     if out.is_empty() {
-        "unnamed_test".into()
-    } else {
+        "test_unnamed".into()
+    } else if out.starts_with("test_") {
         out
+    } else {
+        format!("test_{out}")
     }
 }
 
@@ -179,16 +183,12 @@ fn emit_expr(expr: &Expr) -> String {
                 ExprKind::Ident(id) => id.name.clone(),
                 _ => "unknown".into(),
             };
-            let arg_strs: Vec<_> = if name == "assert_eq" {
-                args.iter().map(emit_expr).collect()
-            } else {
-                args.iter().map(emit_call_arg_for_test).collect()
-            };
             if name == "assert_eq" {
-                format!("assert_eq!({})", arg_strs.join(", "))
-            } else {
-                format!("{}({})", name, arg_strs.join(", "))
+                let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
+                return emit_assert_eq(args, &arg_strs);
             }
+            let arg_strs: Vec<_> = args.iter().map(emit_call_arg_for_test).collect();
+            format!("{}({})", name, arg_strs.join(", "))
         }
         ExprKind::Binary { op, left, right } => {
             let op_str = match op {
@@ -240,8 +240,38 @@ fn emit_expr(expr: &Expr) -> String {
     }
 }
 
+fn emit_assert_eq(args: &[Expr], emitted: &[String]) -> String {
+    // Float equality: small absolute epsilon when a float literal is involved.
+    if emitted.len() >= 2 && args.iter().any(contains_float_literal) {
+        format!("assert!(({} - {}).abs() < 1e-9)", emitted[0], emitted[1])
+    } else {
+        format!("assert_eq!({})", emitted.join(", "))
+    }
+}
+
+fn contains_float_literal(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Float(_) => true,
+        ExprKind::Call { args, .. } => args.iter().any(contains_float_literal),
+        ExprKind::Binary { left, right, .. } => {
+            contains_float_literal(left) || contains_float_literal(right)
+        }
+        ExprKind::Field { base, .. } => contains_float_literal(base),
+        ExprKind::Block(b) => {
+            b.tail.as_ref().is_some_and(|t| contains_float_literal(t))
+                || b.stmts.iter().any(|s| match s {
+                    Stmt::Expr(e) | Stmt::Bind { value: e, .. } | Stmt::Assign { value: e, .. } => {
+                        contains_float_literal(e)
+                    }
+                })
+        }
+        _ => false,
+    }
+}
+
 fn emit_call_arg_for_test(expr: &Expr) -> String {
     match &expr.kind {
+        // Primitive params are emitted as `&T` in CIR/Rust; take references.
         ExprKind::Int(n) => format!("&{n}"),
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
@@ -250,6 +280,7 @@ fn emit_call_arg_for_test(expr: &Expr) -> String {
                 format!("&{f}")
             }
         }
+        ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(expr),
         ExprKind::Ident(id) => format!("&{}", id.name),
         // Enum values are owned; pass by reference for &T params.
         ExprKind::Field { base, .. } if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())) =>
@@ -416,8 +447,10 @@ mod tests {
 
     #[test]
     fn sanitize_names() {
-        assert_eq!(sanitize_test_name("greet works"), "greet_works");
-        assert_eq!(sanitize_test_name("A-B"), "a_b");
+        assert_eq!(sanitize_test_name("greet works"), "test_greet_works");
+        assert_eq!(sanitize_test_name("A-B"), "test_a_b");
+        assert_eq!(sanitize_test_name("proxy demo"), "test_proxy_demo");
+        assert_eq!(sanitize_test_name("test_already"), "test_already");
     }
 
     #[test]
@@ -455,6 +488,44 @@ mod tests {
         }];
         let out = emit_test_module(&tests);
         assert!(out.contains("assert_eq!"));
-        assert!(out.contains("fn addition"));
+        assert!(out.contains("fn test_addition"));
+    }
+
+    #[test]
+    fn emit_float_assert_uses_epsilon() {
+        let tests = vec![CollectedTest {
+            module: "main".into(),
+            name: "float add".into(),
+            compile_fail: false,
+            body: Block {
+                stmts: vec![Stmt::Expr(Expr {
+                    kind: ExprKind::Call {
+                        func: Box::new(Expr {
+                            kind: ExprKind::Ident(crisp_ast::ident::Ident {
+                                name: "assert_eq".into(),
+                                span: Default::default(),
+                            }),
+                            span: Default::default(),
+                        }),
+                        args: vec![
+                            Expr {
+                                kind: ExprKind::Float(1.5),
+                                span: Default::default(),
+                            },
+                            Expr {
+                                kind: ExprKind::Float(1.5),
+                                span: Default::default(),
+                            },
+                        ],
+                    },
+                    span: Default::default(),
+                })],
+                tail: None,
+                span: Default::default(),
+            },
+        }];
+        let out = emit_test_module(&tests);
+        assert!(out.contains(".abs() < 1e-9"));
+        assert!(out.contains("fn test_float_add"));
     }
 }

@@ -36,7 +36,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Ownership probe (§7.6)
 
-Probe emit is intentionally **partial**. Non-borrow rustc failures on the probe are not treated as §7.6 disagreements (`resolve.rs`). Remaining probe gaps: [#14](https://github.com/jose-compu/crisp/issues/14).
+Probe emit covers floats, `format!` interpolation, and type defs for common cases. Non-borrow rustc failures on the probe are still not treated as §7.6 disagreements (`resolve.rs`). Residual gaps: [#14](https://github.com/jose-compu/crisp/issues/14).
 
 ## Tests that document deltas
 

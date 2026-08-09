@@ -228,7 +228,7 @@ fn emit_fallible_expr(
             let _ = writeln!(out, ")");
         }
         _ => {
-            crate::probe::emit_body(out, expr, osig, indent);
+            crate::probe::emit_body(out, expr, osig, None, indent);
             if is_tail && fn_fallible {
                 let pad = "    ".repeat(indent);
                 let _ = writeln!(out, "{pad}Ok(())");

@@ -3,22 +3,33 @@
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{FunctionDef, Item, TypeBody};
 use crisp_ast::pat::PatKind;
-use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipResult};
+use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipResult, OwnershipSignature};
 use crisp_resolve::module::ModuleGraph;
 use crisp_typeck::Ty;
 use crisp_typeck::TypedCrate;
 use std::fmt::Write;
+
+/// Concrete stand-in for unresolved probe types (never emit `_` in signatures).
+const UNKNOWN: &str = "__ProbeUnknown";
 
 pub fn emit_probe_crate(
     graph: &ModuleGraph,
     typed: &TypedCrate,
     ownership: &OwnershipResult,
 ) -> String {
-    let mut out = String::from("#![allow(dead_code, unused_variables, unused_imports)]\n");
+    let mut out =
+        String::from("#![allow(dead_code, unused_variables, unused_imports, unreachable_code)]\n");
+    let _ = writeln!(out, "#[derive(Clone, Default)]");
+    let _ = writeln!(out, "struct {UNKNOWN};");
+    let _ = writeln!(out, "impl std::fmt::Display for {UNKNOWN} {{");
+    let _ = writeln!(
+        out,
+        "    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{ write!(f, \"?\") }}"
+    );
+    let _ = writeln!(out, "}}");
     let _ = writeln!(out, "fn log<T: std::fmt::Display>(_: T) {{}}");
     let _ = writeln!(out, "fn print<T: std::fmt::Debug>(v: T) {{ let _ = v; }}");
 
-    // Emit type definitions first so probe functions can name them.
     for node in graph.modules.values() {
         for item in &node.ast.items {
             if let Item::TypeDef(td) = item {
@@ -34,7 +45,7 @@ pub fn emit_probe_crate(
                 let osig = ownership.signatures.get(&key);
                 let tsig = typed.signatures.get(&key);
                 if let (Some(o), Some(t)) = (osig, tsig) {
-                    emit_function(&mut out, f, o, t);
+                    emit_function(&mut out, f, o, t, ownership);
                 }
             }
         }
@@ -98,15 +109,16 @@ fn ast_type_rust(ty: &crisp_ast::ty::Type) -> String {
                 format!("&{}", ast_type_rust(inner))
             }
         }
-        _ => "_".into(),
+        _ => UNKNOWN.into(),
     }
 }
 
 fn emit_function(
     out: &mut String,
     def: &FunctionDef,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
     tsig: &crisp_typeck::InferredSig,
+    ownership: &OwnershipResult,
 ) {
     let _ = writeln!(out);
     let params = osig
@@ -121,7 +133,7 @@ fn emit_function(
         .join(", ");
     let ret = format_rust_ret(&tsig.ret);
     let _ = writeln!(out, "pub fn {}({params}){ret} {{", def.name.name);
-    emit_body(out, &def.body, osig, 1);
+    emit_body(out, &def.body, osig, Some(ownership), 1);
     let _ = writeln!(out, "}}");
 }
 
@@ -129,7 +141,7 @@ pub(crate) fn format_rust_param(
     name: &str,
     ty: Option<&Ty>,
     mode: OwnershipMode,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
 ) -> String {
     let clone_applied = osig
         .applied_fallbacks
@@ -143,11 +155,10 @@ pub(crate) fn format_rust_param(
         return format!("{name}: String");
     }
 
-    let inner = ty.map(format_rust_ty).unwrap_or_else(|| "_".into());
+    let treat_as_str = ty.is_none_or(|t| t.is_stringish() || matches!(t, Ty::Var(_)));
+    let inner = ty.map(format_rust_ty).unwrap_or_else(|| UNKNOWN.into());
     match mode {
-        OwnershipMode::Borrow if ty.is_some_and(|t| t.is_stringish()) => {
-            format!("{name}: &str")
-        }
+        OwnershipMode::Borrow if treat_as_str => format!("{name}: &str"),
         OwnershipMode::Borrow => format!("{name}: &{inner}"),
         OwnershipMode::MutBorrow => format!("{name}: &mut {inner}"),
         OwnershipMode::Owned => format!("{name}: {inner}"),
@@ -171,12 +182,12 @@ pub(crate) fn format_rust_ty(ty: &Ty) -> String {
         Ty::Bool => "bool".into(),
         Ty::Char => "char".into(),
         Ty::Unit | Ty::Never => "()".into(),
-        Ty::Var(_) => "_".into(),
+        Ty::Var(_) => UNKNOWN.into(),
         Ty::StrSlice => "str".into(),
         Ty::Named { name, args } if args.is_empty() => match name.as_str() {
-            "vec" => "Vec<_>".into(),
-            "map" => "std::collections::HashMap<_, _>".into(),
-            "set" => "std::collections::HashSet<_>".into(),
+            "vec" => format!("Vec<{UNKNOWN}>"),
+            "map" => format!("std::collections::HashMap<{UNKNOWN}, {UNKNOWN}>"),
+            "set" => format!("std::collections::HashSet<{UNKNOWN}>"),
             other => other.to_string(),
         },
         Ty::Named { name, args } => format!(
@@ -198,47 +209,50 @@ pub(crate) fn format_rust_ty(ty: &Ty) -> String {
             "({})",
             ts.iter().map(format_rust_ty).collect::<Vec<_>>().join(", ")
         ),
-        Ty::Fn { .. } | Ty::Array { .. } | Ty::Slice(_) | Ty::Error => "_".into(),
+        Ty::Fn { .. } | Ty::Array { .. } | Ty::Slice(_) | Ty::Error => UNKNOWN.into(),
     }
 }
 
 pub(crate) fn emit_body(
     out: &mut String,
     expr: &Expr,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     indent: usize,
 ) {
     match &expr.kind {
-        ExprKind::Block(b) => emit_block(out, b, osig, indent),
-        other => emit_expr_stmt(out, expr, osig, indent, other),
+        ExprKind::Block(b) => emit_block(out, b, osig, ownership, indent),
+        other => emit_expr_stmt(out, expr, osig, ownership, indent, other),
     }
 }
 
 fn emit_block(
     out: &mut String,
     block: &Block,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     indent: usize,
 ) {
     for stmt in &block.stmts {
-        emit_stmt(out, stmt, osig, indent);
+        emit_stmt(out, stmt, osig, ownership, indent);
     }
     if let Some(tail) = &block.tail {
-        emit_tail(out, tail, osig, indent);
+        emit_tail(out, tail, osig, ownership, indent);
     }
 }
 
 fn emit_stmt(
     out: &mut String,
     stmt: &Stmt,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     indent: usize,
 ) {
     let pad = "    ".repeat(indent);
     match stmt {
         Stmt::Expr(e) => {
             let _ = write!(out, "{pad}");
-            emit_expr(out, e, osig);
+            emit_expr(out, e, osig, ownership);
             let _ = writeln!(out, ";");
         }
         Stmt::Bind { pat, value, .. } => {
@@ -246,27 +260,23 @@ fn emit_stmt(
                 let clone = should_clone_at_bind(osig, &name.name, value);
                 let _ = write!(out, "{pad}let {} = ", name.name);
                 if clone {
-                    emit_expr(out, value, osig);
+                    emit_expr(out, value, osig, ownership);
                     let _ = write!(out, ".clone()");
                 } else {
-                    emit_expr(out, value, osig);
+                    emit_expr(out, value, osig, ownership);
                 }
                 let _ = writeln!(out, ";");
             }
         }
         Stmt::Assign { target, value } => {
             let _ = write!(out, "{pad}{} = ", target.name);
-            emit_expr(out, value, osig);
+            emit_expr(out, value, osig, ownership);
             let _ = writeln!(out, ";");
         }
     }
 }
 
-fn should_clone_at_bind(
-    osig: &crisp_ownership::OwnershipSignature,
-    binding: &str,
-    value: &Expr,
-) -> bool {
+fn should_clone_at_bind(osig: &OwnershipSignature, binding: &str, value: &Expr) -> bool {
     if !osig
         .applied_fallbacks
         .iter()
@@ -284,36 +294,56 @@ fn should_clone_at_bind(
 fn emit_tail(
     out: &mut String,
     expr: &Expr,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     indent: usize,
 ) {
     let pad = "    ".repeat(indent);
     let _ = write!(out, "{pad}");
-    emit_expr(out, expr, osig);
+    emit_expr(out, expr, osig, ownership);
     let _ = writeln!(out);
 }
 
 fn emit_expr_stmt(
     out: &mut String,
     expr: &Expr,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     indent: usize,
     kind: &ExprKind,
 ) {
     let pad = "    ".repeat(indent);
     let _ = write!(out, "{pad}");
-    emit_expr_inner(out, expr, osig, kind);
+    emit_expr_inner(out, expr, osig, ownership, kind);
     let _ = writeln!(out);
 }
 
-fn emit_expr(out: &mut String, expr: &Expr, osig: &crisp_ownership::OwnershipSignature) {
-    emit_expr_inner(out, expr, osig, &expr.kind);
+fn emit_expr(
+    out: &mut String,
+    expr: &Expr,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
+) {
+    emit_expr_inner(out, expr, osig, ownership, &expr.kind);
+}
+
+fn lookup_callee_modes<'a>(
+    ownership: Option<&'a OwnershipResult>,
+    name: &str,
+) -> Option<&'a [(String, OwnershipMode)]> {
+    let ownership = ownership?;
+    ownership
+        .signatures
+        .values()
+        .find(|s| s.name == name)
+        .map(|s| s.params.as_slice())
 }
 
 fn emit_expr_inner(
     out: &mut String,
     _expr: &Expr,
-    osig: &crisp_ownership::OwnershipSignature,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
     kind: &ExprKind,
 ) {
     match kind {
@@ -345,7 +375,7 @@ fn emit_expr_inner(
                 let _ = write!(out, "\"");
                 for e in args {
                     let _ = write!(out, ", ");
-                    emit_expr(out, e, osig);
+                    emit_expr(out, e, osig, ownership);
                 }
                 let _ = write!(out, ")");
             } else {
@@ -371,21 +401,21 @@ fn emit_expr_inner(
         ExprKind::Binary { op, left, right } => {
             if matches!(op, crisp_ast::expr::BinaryOp::Concat) {
                 let _ = write!(out, "format!(\"{{}}{{}}\", ");
-                emit_expr(out, left, osig);
+                emit_expr(out, left, osig, ownership);
                 let _ = write!(out, ", ");
-                emit_expr(out, right, osig);
+                emit_expr(out, right, osig, ownership);
                 let _ = write!(out, ")");
                 return;
             }
             if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
                 let _ = write!(out, "(");
-                emit_expr(out, left, osig);
+                emit_expr(out, left, osig, ownership);
                 let _ = write!(out, ").powf(");
-                emit_expr(out, right, osig);
+                emit_expr(out, right, osig, ownership);
                 let _ = write!(out, ")");
                 return;
             }
-            emit_expr(out, left, osig);
+            emit_expr(out, left, osig, ownership);
             let op_s = match op {
                 crisp_ast::expr::BinaryOp::Add => "+",
                 crisp_ast::expr::BinaryOp::Sub => "-",
@@ -397,10 +427,9 @@ fn emit_expr_inner(
                 _ => "+",
             };
             let _ = write!(out, " {op_s} ");
-            emit_expr(out, right, osig);
+            emit_expr(out, right, osig, ownership);
         }
         ExprKind::Call { func, args } => {
-            // Enum ctor Color.Custom(...)
             if let ExprKind::Field { base, field } = &func.kind
                 && let ExprKind::Ident(ty) = &base.kind
                 && ty
@@ -414,7 +443,7 @@ fn emit_expr_inner(
                     if i > 0 {
                         let _ = write!(out, ", ");
                     }
-                    emit_expr(out, arg, osig);
+                    emit_expr(out, arg, osig, ownership);
                 }
                 let _ = write!(out, ")");
                 return;
@@ -424,17 +453,34 @@ fn emit_expr_inner(
                 && args.len() == 1
             {
                 let _ = write!(out, "{}(", id.name);
-                emit_expr(out, &args[0], osig);
+                emit_expr(out, &args[0], osig, ownership);
                 let _ = write!(out, ")");
                 return;
             }
-            emit_expr(out, func, osig);
+
+            let modes = match &func.kind {
+                ExprKind::Ident(id) => lookup_callee_modes(ownership, &id.name),
+                _ => None,
+            };
+
+            emit_expr(out, func, osig, ownership);
             let _ = write!(out, "(");
             for (i, arg) in args.iter().enumerate() {
                 if i > 0 {
                     let _ = write!(out, ", ");
                 }
-                emit_expr(out, arg, osig);
+                let mode = modes.and_then(|m| m.get(i)).map(|(_, m)| *m);
+                match mode {
+                    Some(OwnershipMode::Borrow) => {
+                        let _ = write!(out, "&");
+                        emit_expr(out, arg, osig, ownership);
+                    }
+                    Some(OwnershipMode::MutBorrow) => {
+                        let _ = write!(out, "&mut ");
+                        emit_expr(out, arg, osig, ownership);
+                    }
+                    _ => emit_expr(out, arg, osig, ownership),
+                }
             }
             let _ = write!(out, ")");
         }
@@ -449,8 +495,9 @@ fn emit_expr_inner(
                 let _ = write!(out, "{}::{}", ty.name, field.name);
                 return;
             }
-            emit_expr(out, base, osig);
-            let _ = write!(out, ".{}", field.name);
+            // Avoid E0507 moving String fields out of `&Struct`.
+            emit_expr(out, base, osig, ownership);
+            let _ = write!(out, ".{}.clone()", field.name);
         }
         ExprKind::StructLit { name, fields } => {
             let _ = write!(out, "{} {{ ", name.name);
@@ -459,13 +506,13 @@ fn emit_expr_inner(
                     let _ = write!(out, ", ");
                 }
                 let _ = write!(out, "{}: ", f.name.name);
-                emit_expr(out, &f.value, osig);
+                emit_expr(out, &f.value, osig, ownership);
             }
             let _ = write!(out, " }}");
         }
         ExprKind::Block(b) => {
             let _ = writeln!(out, "{{");
-            emit_block(out, b, osig, 1);
+            emit_block(out, b, osig, ownership, 1);
             let _ = write!(out, "}}");
         }
         ExprKind::If {
@@ -474,18 +521,33 @@ fn emit_expr_inner(
             else_branch,
         } => {
             let _ = write!(out, "if ");
-            emit_expr(out, cond, osig);
+            emit_expr(out, cond, osig, ownership);
             let _ = write!(out, " {{ ");
-            emit_expr(out, then_branch, osig);
+            emit_expr(out, then_branch, osig, ownership);
             let _ = write!(out, " }}");
             if let Some(e) = else_branch {
                 let _ = write!(out, " else {{ ");
-                emit_expr(out, e, osig);
+                emit_expr(out, e, osig, ownership);
                 let _ = write!(out, " }}");
             }
         }
+        // Keep both sides in the probe so arg ownership is still checked.
+        ExprKind::Catch { body, arms } => {
+            let _ = write!(out, "if false {{ ");
+            emit_expr(out, body, osig, ownership);
+            let _ = write!(out, " }} else {{ ");
+            if let Some(arm) = arms.first() {
+                emit_expr(out, &arm.body, osig, ownership);
+            } else {
+                let _ = write!(out, "unimplemented!()");
+            }
+            let _ = write!(out, " }}");
+        }
+        ExprKind::Throw(_) => {
+            let _ = write!(out, "unimplemented!()");
+        }
         _ => {
-            let _ = write!(out, "()");
+            let _ = write!(out, "unimplemented!()");
         }
     }
 }
@@ -496,4 +558,31 @@ fn escape_str(s: &str) -> String {
 
 fn escape_format_lit(s: &str) -> String {
     escape_str(s).replace('{', "{{").replace('}', "}}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rustc::check_rust_source;
+    use crisp_ownership::OwnershipPass;
+    use crisp_resolve::module::load_module_graph;
+    use crisp_typeck::TypeChecker;
+    use std::path::PathBuf;
+
+    #[test]
+    fn inventory_probe_compiles() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/inventory");
+        let graph = load_module_graph(&root).expect("graph");
+        let typed = TypeChecker::check_crate(&root).expect("typeck");
+        let ownership = OwnershipPass::analyze_crate(&root).expect("ownership");
+        let src = emit_probe_crate(&graph, &typed, &ownership);
+        assert!(
+            !src.contains("&_") && !src.contains(": _") && !src.contains("-> _"),
+            "probe must not use `_` placeholders in signatures"
+        );
+        if let Err(crate::rustc::RustcError::NotFound) = check_rust_source(&src) {
+            return;
+        }
+        check_rust_source(&src).unwrap_or_else(|e| panic!("inventory probe rustc failed: {e}"));
+    }
 }

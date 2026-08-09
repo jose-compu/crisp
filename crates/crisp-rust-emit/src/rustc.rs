@@ -15,13 +15,15 @@ pub enum RustcError {
 }
 
 pub fn is_borrow_check_failure(stderr: &str) -> bool {
-    stderr.contains("E0382")
-        || stderr.contains("E0502")
-        || stderr.contains("E0505")
-        || stderr.contains("E0597")
-        || stderr.contains("cannot borrow")
-        || stderr.contains("borrow of")
-        || stderr.contains("borrowed value")
+    // Prefer rustc error codes; avoid matching help text that mentions "borrow".
+    stderr.contains("error[E0382]")
+        || stderr.contains("error[E0502]")
+        || stderr.contains("error[E0505]")
+        || stderr.contains("error[E0507]")
+        || stderr.contains("error[E0597]")
+        || stderr
+            .lines()
+            .any(|l| l.contains("error[") && l.to_ascii_lowercase().contains("borrow"))
 }
 
 pub fn check_rust_source(source: &str) -> Result<(), RustcError> {

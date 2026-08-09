@@ -9,8 +9,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Modules
 
-- In a flat `src/` directory, modules imported by `main` must sort **alphabetically before** `main.crp` or names may not resolve. Prefer names like `hub.crp` over `mediator.crp` when `main` imports them. Fix tracked in [#13](https://github.com/jose-compu/crisp/issues/13).
-- Nested `math/vector.crp` layouts are specified (§12) but emit of nested Rust `mod` trees is incomplete ([#35](https://github.com/jose-compu/crisp/issues/35)).
+- Flat `src/*.crp` modules may import each other regardless of filename order (function stubs are registered before body checking; [#13](https://github.com/jose-compu/crisp/issues/13)). Nested `math/vector.crp` emit is still incomplete ([#35](https://github.com/jose-compu/crisp/issues/35)).
 
 ## Types and expressions
 
@@ -22,8 +21,8 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Tooling
 
-- **`crpc check`** runs ownership probe emit + rustc. Probe emission is still partial (interpolation, some exprs); false `E0057` is possible ([#14](https://github.com/jose-compu/crisp/issues/14)).
-- **`test "name"`** sanitizes to a Rust `fn` that can **shadow** a same-named `pub fn` in tests (e.g. avoid `test "proxy demo"` if `proxy_demo` exists). See [#17](https://github.com/jose-compu/crisp/issues/17).
+- **`crpc check`** runs ownership probe emit + rustc (floats, `format!` interpolation, type defs). Remaining gaps may still yield non-borrow probe failures that are ignored rather than `E0057` ([#14](https://github.com/jose-compu/crisp/issues/14)).
+- **`test "name"`** becomes `fn test_<sanitized>` so it does not shadow crate items. Float `assert_eq` uses a small epsilon. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
 - **`crisp-lsp`** exposes an analysis API; a full stdio LSP server is not shipped yet ([#18](https://github.com/jose-compu/crisp/issues/18)).
 
 ## Stdlib

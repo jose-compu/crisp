@@ -56,6 +56,11 @@ impl TypeChecker {
         for node in graph.modules.values() {
             checker.collect_types(&node.module_path, &node.ast);
         }
+        // Stub every function into the env before checking bodies so modules that
+        // sort after `main` (and same-module forward refs) are visible (#13).
+        for node in graph.modules.values() {
+            checker.collect_fn_stubs(&node.module_path, &node.ast)?;
+        }
         for node in graph.modules.values() {
             checker.check_module(&node.module_path, &node.ast)?;
         }
@@ -196,17 +201,48 @@ impl TypeChecker {
         let _ = module;
     }
 
-    fn check_module(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
+    fn collect_fn_stubs(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
         for item in &file.items {
-            if let Item::Extern(ext) = item {
-                self.check_extern(module, ext)?;
+            match item {
+                Item::Extern(ext) => {
+                    // Externs are fully known; register immediately as stubs.
+                    self.check_extern(module, ext)?;
+                }
+                Item::Function(f) => {
+                    let mut params = Vec::new();
+                    for p in &f.params {
+                        let ty = if let Some(ast_ty) = &p.ty {
+                            self.ast_type(ast_ty)?
+                        } else {
+                            self.ctx.fresh()
+                        };
+                        params.push(ty);
+                    }
+                    let ret = if let Some(t) = &f.ret_type {
+                        self.ast_type(t)?
+                    } else {
+                        self.ctx.fresh()
+                    };
+                    self.env.insert(
+                        f.name.name.clone(),
+                        scheme(Ty::Fn {
+                            params,
+                            ret: Box::new(ret),
+                        }),
+                    );
+                }
+                _ => {}
             }
         }
+        Ok(())
+    }
+
+    fn check_module(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
         for item in &file.items {
             match item {
                 Item::Function(f) => self.check_function(module, f)?,
                 Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
-                Item::TestCompileFail(_) => {}
+                Item::TestCompileFail(_) | Item::Extern(_) => {}
                 _ => {}
             }
         }
@@ -279,14 +315,29 @@ impl TypeChecker {
     }
 
     fn check_function(&mut self, module: &str, f: &FunctionDef) -> Result<(), TypeError> {
+        // Reuse stub param/ret vars so call-site unifications from earlier modules stick.
+        let stub = self
+            .env
+            .get(&f.name.name)
+            .map(|s| instantiate(&mut self.ctx, s))
+            .map(|t| self.ctx.apply(&t));
+        let (stub_params, stub_ret) = match stub {
+            Some(Ty::Fn { params, ret }) => (params, Some(*ret)),
+            _ => (Vec::new(), None),
+        };
+
         let mut local = self.env.clone();
         let mut param_vars = Vec::new();
-        for p in &f.params {
-            let ty = if let Some(ast_ty) = &p.ty {
-                self.ast_type(ast_ty)?
-            } else {
-                self.ctx.fresh()
-            };
+        for (i, p) in f.params.iter().enumerate() {
+            let mut ty = stub_params
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| self.ctx.fresh());
+            if let Some(ast_ty) = &p.ty {
+                let ann = self.ast_type(ast_ty)?;
+                unify(&mut self.ctx, &ty, &ann)?;
+                ty = self.ctx.apply(&ann);
+            }
             param_vars.push((p.name.name.clone(), ty.clone()));
             local.insert(p.name.name.clone(), scheme(ty));
         }
@@ -298,7 +349,13 @@ impl TypeChecker {
             .collect();
         let ret = if let Some(ann) = ret_ann {
             unify(&mut self.ctx, &body_ty, &ann)?;
+            if let Some(stub_r) = &stub_ret {
+                unify(&mut self.ctx, &body_ty, stub_r)?;
+            }
             self.ctx.apply(&ann)
+        } else if let Some(stub_r) = &stub_ret {
+            unify(&mut self.ctx, &body_ty, stub_r)?;
+            self.ctx.apply(&body_ty)
         } else {
             self.ctx.apply(&body_ty)
         };

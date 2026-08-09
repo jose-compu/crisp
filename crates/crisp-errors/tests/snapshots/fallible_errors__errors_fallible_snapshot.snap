@@ -3,7 +3,7 @@ source: crates/crisp-errors/tests/fallible_errors.rs
 expression: out
 ---
 main() -> ()
-parse_config(text: ?7) -> Config ! ParseError
+parse_config(text: ?6) -> Config ! ParseError
 read_config(path: ?5) -> Config ! IoError | ParseError
 read_file(path: ?5) -> str ! IoError
 

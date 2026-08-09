@@ -12,11 +12,14 @@ Thank you for contributing. Crisp is a **Rust-hosted bootstrap** compiler that t
 ```bash
 git clone https://github.com/jose-compu/crisp.git
 cd crisp
+./scripts/install-git-hooks.sh   # pre-commit / pre-push: cargo fmt --check
 cargo build --release -p crpc
 # binaries: target/release/crpc and target/release/reveal
 export PATH="$PWD/target/release:$PATH"
 crpc --version
 ```
+
+Git hooks live in [`.githooks/`](.githooks/) (`core.hooksPath`). They mirror CI: `cargo fmt --all -- --check`.
 
 Alternatively:
 

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Fail the push if rustfmt would change files (matches CI).
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "pre-push: cargo not on PATH; skip rustfmt check" >&2
+  exit 0
+fi
+
+echo "pre-push: cargo fmt --all -- --check"
+if ! cargo fmt --all -- --check; then
+  echo "pre-push: rustfmt check failed. Run: cargo fmt --all && git commit --amend --no-edit" >&2
+  echo "pre-push: (or make a new commit with the formatting fix)" >&2
+  exit 1
+fi

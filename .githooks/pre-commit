@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Fail the commit if rustfmt would change files (matches CI).
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "pre-commit: cargo not on PATH; skip rustfmt check" >&2
+  exit 0
+fi
+
+echo "pre-commit: cargo fmt --all -- --check"
+if ! cargo fmt --all -- --check; then
+  echo "pre-commit: rustfmt check failed. Run: cargo fmt --all" >&2
+  exit 1
+fi

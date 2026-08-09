@@ -34,27 +34,34 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     let mut main_rs = String::new();
     emit_prelude(&mut main_rs, cir);
 
+    // Declare all non-main modules first so Rust sees them before main items (#13).
     for m in &cir.modules {
         if m.path == "main" {
-            for item in &m.items {
-                if let CirItem::Function(f) = item
-                    && !f.is_main
-                {
-                    emit_function(&mut main_rs, f, &m.path, &mut map);
-                }
+            continue;
+        }
+        let mut mod_src = String::new();
+        emit_module_items(&mut mod_src, m, cir, &mut map, false);
+        modules.push((m.path.clone(), mod_src));
+        let _ = writeln!(main_rs, "mod {};", m.path);
+        let _ = writeln!(main_rs, "pub use {}::*;", m.path);
+    }
+
+    for m in &cir.modules {
+        if m.path != "main" {
+            continue;
+        }
+        for item in &m.items {
+            if let CirItem::Function(f) = item
+                && !f.is_main
+            {
+                emit_function(&mut main_rs, f, &m.path, &mut map);
             }
-            if let Some(main_fn) = m.items.iter().find_map(|i| match i {
-                CirItem::Function(f) if f.is_main => Some(f),
-                _ => None,
-            }) {
-                emit_function(&mut main_rs, main_fn, &m.path, &mut map);
-            }
-        } else {
-            let mut mod_src = String::new();
-            emit_module_items(&mut mod_src, m, cir, &mut map, false);
-            modules.push((m.path.clone(), mod_src));
-            let _ = writeln!(main_rs, "mod {};", m.path);
-            let _ = writeln!(main_rs, "pub use {}::*;", m.path);
+        }
+        if let Some(main_fn) = m.items.iter().find_map(|i| match i {
+            CirItem::Function(f) if f.is_main => Some(f),
+            _ => None,
+        }) {
+            emit_function(&mut main_rs, main_fn, &m.path, &mut map);
         }
     }
 

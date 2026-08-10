@@ -6,7 +6,7 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 
 ## Prerequisites
 
-- [Rust](https://rustup.rs/) **1.85+** (see workspace `rust-version`) with `cargo` and `rustc` on `PATH`
+- [Rust](https://rustup.rs/) **1.85+** (MSRV; see workspace `rust-version` and `rust-toolchain.toml`) with `cargo` and `rustc` on `PATH`
 - Clone this repository
 
 ## 1. Build / install the toolchain
@@ -16,7 +16,7 @@ cargo build --release -p crpc
 export PATH="$PWD/target/release:$PATH"   # optional, for this shell
 ```
 
-Or install into your Cargo bin directory:
+Or install into your Cargo bin directory (ships both `crpc` and `reveal`):
 
 ```bash
 cargo install --path crates/crpc --locked
@@ -27,6 +27,7 @@ Verify:
 
 ```bash
 crpc --version
+reveal --version
 ```
 
 Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site lives on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch under `docs/`.
@@ -243,15 +244,50 @@ See `examples/fallible`, `examples/fallible_chain`.
 
 `<path>` defaults to `.` (searches upward for `crisp.toml`).
 
-## 10. Inspect what the compiler inferred
+## 10. Inspect what the compiler inferred (`reveal`, spec §16)
+
+`reveal` is a second binary from the `crpc` package. It reconstructs precision that surface syntax omits.
 
 ```bash
-reveal rust examples/hello
+reveal types examples/hello
+reveal ownership examples/server
+reveal rust examples/math
+reveal --help
 ```
 
-`reveal` shows the Rust signatures and analysis `crpc` computed (ownership, errors, etc.).
+| Command | Role | Fidelity today |
+|---------|------|----------------|
+| `reveal types <path>` | Inferred signatures | Solid |
+| `reveal ownership <path>` | Borrow / move / copy (+ §7.6 fallbacks) | Solid |
+| `reveal lifetimes <path>` | Region / lifetime params | Solid |
+| `reveal errors <path>` | Reachable `CrispError` sets | Solid |
+| `reveal rust <path>` | Emitted Rust entry | Solid (crate-level) |
+| `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
+| `reveal traits <path>` | Shape / trait summary | Limited (see #20 / #21) |
+| `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
+| `reveal diff <path>` | Crisp vs Rust | Name-level summary, not full side-by-side |
+| `reveal map <path>` | Alloc / drop notes | Coarse CIR notes, not span-accurate |
 
-## 11. Example projects
+`<path>` is a crate root (directory with `crisp.toml`) or a path inside one. Details and gaps: [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [SPEC_IMPL_DELTA.md](docs/SPEC_IMPL_DELTA.md).
+
+## 11. Editor analysis API (`crisp-lsp`)
+
+There is **no stdio LSP server** yet. The `crisp-lsp` crate exposes `CrispAnalysis` for hosts that want to wire their own protocol:
+
+- `CrispAnalysis::analyze(path)` — full-crate pipeline
+- `hover` / `inlay_hints` / `call_overlays` / `code_lenses` / `emitted_rust`
+
+```rust
+use crisp_lsp::CrispAnalysis;
+use std::path::Path;
+
+let analysis = CrispAnalysis::analyze(Path::new("examples/hello"))?;
+let hints = analysis.inlay_hints(Path::new("examples/hello/src/main.crp"))?;
+```
+
+Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’s task runner.
+
+## 12. Example projects
 
 | Example | Topics |
 |---------|--------|
@@ -278,7 +314,7 @@ crpc run examples/<name>
 crpc test examples/<name>
 ```
 
-## 12. Project layout reference
+## 13. Project layout reference
 
 ```
 crates/          Compiler workspace (`crpc`, emit, typeck, …)

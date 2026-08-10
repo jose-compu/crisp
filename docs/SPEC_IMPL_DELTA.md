@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crpc 1.1.x)
+# Spec vs implementation delta (v0.2.0-draft ↔ crpc 1.2.x)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,7 +23,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (1.1.x) |
+| Feature | Spec | Impl (1.2.x) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
@@ -33,6 +33,24 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord, net/http | §15 | Not implemented |
 | Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs` (`examples/nested_math`) |
+
+## Tooling: `reveal` (§16) and LSP (§16.3)
+
+| Spec command | Implementation |
+|--------------|----------------|
+| `reveal types` | Implemented (`reveal_types`) |
+| `reveal ownership` | Implemented (+ rustc fallbacks) |
+| `reveal lifetimes` | Implemented |
+| `reveal errors` | Implemented |
+| `reveal traits` | Partial — CIR shape traits only |
+| `reveal rust` | Implemented (crate entry via emit pipeline) |
+| `reveal seal` | Implemented |
+| `reveal expand` | Partial — signature + shallow body stubs |
+| `reveal diff` | Partial — fn-name summary, not side-by-side |
+| `reveal map` | Partial — coarse CIR notes |
+| §16.3 LSP host | Analysis API in `crisp-lsp` (`CrispAnalysis`); **no** stdio server |
+
+CLI: `crates/crpc/src/reveal.rs` (binary from `-p crpc`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
 
 ## Ownership probe (§7.6)
 

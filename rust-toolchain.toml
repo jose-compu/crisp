@@ -1,0 +1,5 @@
+# Local default. MSRV is 1.85 (see [workspace.package] rust-version in Cargo.toml);
+# CI also runs an explicit MSRV job on 1.85.0 — see .github/workflows/ci.yml.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]

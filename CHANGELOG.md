@@ -9,6 +9,17 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- CI: Ubuntu + macOS matrix; dedicated MSRV **1.85** job; `rust-toolchain.toml` (stable + rustfmt/clippy) (#23).
+- `reveal` CLI: richer `--help` / subcommand docs and clearer path errors (#19).
+- QUICKSTART: full `reveal` command table (§16 fidelity notes) and `crisp-lsp` analysis-API usage (#18, #19).
+
+### Changed
+
+- Document `crisp-lsp` as analysis-API-only until a stdio host ships (#18).
+- CONTRIBUTING: install `reveal` via `-p crpc` only (library `crisp-reveal` is not installable as a binary).
+
 ## [1.2.0] — 2026-08-09
 
 ### Added

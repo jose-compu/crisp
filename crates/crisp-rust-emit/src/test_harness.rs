@@ -167,17 +167,25 @@ fn emit_expr(expr: &Expr) -> String {
         }
         ExprKind::Ident(id) => id.name.clone(),
         ExprKind::Call { func, args } => {
-            // Enum ctor: Color.Custom(r, g, b)
-            if let ExprKind::Field { base, field } = &func.kind
-                && let ExprKind::Ident(ty) = &base.kind
-                && ty
-                    .name
-                    .chars()
-                    .next()
-                    .is_some_and(|c| c.is_ascii_uppercase())
-            {
+            // Associated fn / enum ctor / instance method: Field under Call.
+            if let ExprKind::Field { base, field } = &func.kind {
                 let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
-                return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
+                if let ExprKind::Ident(ty) = &base.kind
+                    && ty
+                        .name
+                        .chars()
+                        .next()
+                        .is_some_and(|c| c.is_ascii_uppercase())
+                {
+                    return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
+                }
+                // Instance: recv.method(args) — including chained AssocCall receivers.
+                return format!(
+                    "{}.{}({})",
+                    emit_expr(base),
+                    field.name,
+                    arg_strs.join(", ")
+                );
             }
             let name = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),

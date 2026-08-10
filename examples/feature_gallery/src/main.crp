@@ -1,0 +1,26 @@
+-- examples/feature_gallery — v1.2 nested mods + enums + v1.3 inherent methods
+-- Spec: §3.3.2 enums, §5.4 methods, §12 nested modules.
+
+use geo.point { Point }
+
+type Color =
+    | Red
+    | Green
+    | Custom(int, int, int)
+
+pub describe(c: Color) = match c {
+    Color.Red -> "red"
+    Color.Green -> "green"
+    Color.Custom(r, g, b) -> "rgb"
+}
+
+test "enum + methods" = {
+    assert_eq(describe(Color.Red), "red")
+    assert_eq(Point.new(3.0, 4.0).length(), 5.0)
+}
+
+pub main() = {
+    c := describe(Color.Custom(1, 2, 3))
+    p := Point.new(3.0, 4.0)
+    log("color={c} len={p.length()}")
+}

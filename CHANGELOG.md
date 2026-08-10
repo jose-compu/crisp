@@ -14,11 +14,15 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - CI: Ubuntu + macOS matrix; dedicated MSRV **1.85** job; `rust-toolchain.toml` (stable + rustfmt/clippy) (#23).
 - `reveal` CLI: richer `--help` / subcommand docs and clearer path errors (#19).
 - QUICKSTART: full `reveal` command table (§16 fidelity notes) and `crisp-lsp` analysis-API usage (#18, #19).
+- Inherent `impl Type` methods end-to-end: typeck, ownership/errors/regions, CIR `AssocCall`/`MethodCall`, emit (`&self`) (#20).
+- Examples: `vec2_methods` (nested + methods), `point_impl`, `feature_gallery` (nested + enums + methods).
 
 ### Changed
 
 - Document `crisp-lsp` as analysis-API-only until a stdio host ships (#18).
 - CONTRIBUTING: install `reveal` via `-p crpc` only (library `crisp-reveal` is not installable as a binary).
+- Multi-module emit writes main-module structs/enums/impls (not only functions).
+- Test harness emits instance/associated method calls (no more `unknown()`).
 
 ## [1.2.0] — 2026-08-09
 

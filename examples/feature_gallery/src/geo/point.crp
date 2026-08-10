@@ -1,0 +1,14 @@
+-- Nested geo.point module: inherent methods (#20) under nested path (#35)
+
+pub type Point = {
+    x: float
+    y: float
+}
+
+impl Point = {
+    pub new(x: float, y: float) = Point {
+        x: x
+        y: y
+    }
+    pub length(self) = (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+}

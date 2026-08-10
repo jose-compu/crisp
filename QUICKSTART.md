@@ -189,7 +189,7 @@ pub main() = {
 
 Modules in a flat `src/` directory may import each other in any filename order. Nested layouts work too (`src/math/vector.crp` → `use math.vector { … }`; see `examples/nested_math`).
 
-See `examples/math`, `examples/design_patterns`, `examples/enums`.
+See `examples/math`, `examples/design_patterns`, `examples/enums`, `examples/vec2_methods` (inherent methods + nested mods).
 
 ## 7. Tests
 
@@ -294,6 +294,9 @@ Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’
 | `hello` | Minimal program |
 | `math` | Integer + float arithmetic, multi-module tests |
 | `nested_math` | Nested `src/math/vector.crp` module tree |
+| `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
+| `point_impl` | Flat inherent `impl Point` methods |
+| `feature_gallery` | Nested mods + enums + inherent methods together |
 | `float_demo` | `Vec2` geometry, `lerp`, circle metrics, `**` pow |
 | `defaults` | Struct default fields |
 | `fallible` | Error propagation + `catch` |

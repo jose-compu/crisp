@@ -30,9 +30,22 @@ impl RegionPass {
         let mut fn_defs: BTreeMap<String, (String, FunctionDef)> = BTreeMap::new();
         for node in graph.modules.values() {
             for item in &node.ast.items {
-                if let Item::Function(f) = item {
-                    let key = format!("{}::{}", node.module_path, f.name.name);
-                    fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                match item {
+                    Item::Function(f) => {
+                        let key = format!("{}::{}", node.module_path, f.name.name);
+                        fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                    }
+                    Item::Impl(ib) if ib.trait_name.is_none() => {
+                        let ty_name = match &ib.ty.kind {
+                            crisp_ast::ty::TypeKind::Named(id) => id.name.clone(),
+                            _ => continue,
+                        };
+                        for f in &ib.items {
+                            let key = format!("{}::{ty_name}::{}", node.module_path, f.name.name);
+                            fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                        }
+                    }
+                    _ => {}
                 }
             }
         }

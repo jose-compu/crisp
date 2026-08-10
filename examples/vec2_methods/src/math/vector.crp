@@ -1,0 +1,21 @@
+-- Nested module + inherent impl (spec §3.6 / §5.4; nested paths #35)
+-- Demonstrates associated `new` and instance methods with `self`.
+
+pub type Vec2 = {
+    x: float
+    y: float
+}
+
+impl Vec2 = {
+    pub new(x: float, y: float) = Vec2 {
+        x: x
+        y: y
+    }
+    pub magnitude(self) = (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+    pub scale(self, f: float) = Vec2 {
+        x: self.x * f
+        y: self.y * f
+    }
+}
+
+pub origin() = Vec2.new(0.0, 0.0)

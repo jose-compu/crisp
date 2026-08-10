@@ -35,7 +35,7 @@ impl OwnershipPass {
             for (key, (module, def)) in &fn_defs {
                 let callee_modes = &param_modes;
                 let (new_modes, auto_clones, errors) =
-                    analyze_function(module, def, callee_modes, &fn_defs, &typed)?;
+                    analyze_function(key, module, def, callee_modes, &fn_defs, &typed)?;
                 if let Some(err) = errors {
                     return Err(err);
                 }
@@ -56,7 +56,7 @@ impl OwnershipPass {
         for (key, (module, def)) in &fn_defs {
             let modes = param_modes.get(key).cloned().unwrap_or_default();
             let (_, auto_clones, errors) =
-                analyze_function(module, def, &param_modes, &fn_defs, &typed)?;
+                analyze_function(key, module, def, &param_modes, &fn_defs, &typed)?;
             if let Some(err) = errors {
                 return Err(err);
             }
@@ -90,9 +90,22 @@ fn collect_functions(
     out: &mut BTreeMap<String, (String, FunctionDef)>,
 ) {
     for item in &file.items {
-        if let Item::Function(f) = item {
-            let key = format!("{module}::{}", f.name.name);
-            out.insert(key, (module.to_string(), f.clone()));
+        match item {
+            Item::Function(f) => {
+                let key = format!("{module}::{}", f.name.name);
+                out.insert(key, (module.to_string(), f.clone()));
+            }
+            Item::Impl(ib) if ib.trait_name.is_none() => {
+                let ty_name = match &ib.ty.kind {
+                    crisp_ast::ty::TypeKind::Named(id) => id.name.clone(),
+                    _ => continue,
+                };
+                for f in &ib.items {
+                    let key = format!("{module}::{ty_name}::{}", f.name.name);
+                    out.insert(key, (module.to_string(), f.clone()));
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -119,6 +132,44 @@ fn resolve_callee_key(
                 if m != module && def.is_pub && def.name.name == id.name {
                     return Some(key.clone());
                 }
+            }
+            None
+        }
+        // Associated / instance methods parse as Field under Call.
+        ExprKind::Field { base, field } => {
+            if let ExprKind::Ident(id) = &base.kind {
+                let local = format!("{module}::{}::{}", id.name, field.name);
+                if fn_defs.contains_key(&local) {
+                    return Some(local);
+                }
+                let suffix = format!("::{}::{}", id.name, field.name);
+                for key in fn_defs.keys() {
+                    if key.ends_with(&suffix) {
+                        return Some(key.clone());
+                    }
+                }
+            }
+            // Instance: `recv.method` — match any inherent method with this name.
+            let suffix = format!("::{}", field.name);
+            let mut hits: Vec<&String> = fn_defs
+                .keys()
+                .filter(|k| {
+                    k.ends_with(&suffix)
+                        && k.matches("::").count() >= 2
+                        && fn_defs
+                            .get(*k)
+                            .map(|(_, d)| {
+                                d.params
+                                    .first()
+                                    .map(|p| p.name.name == "self")
+                                    .unwrap_or(false)
+                            })
+                            .unwrap_or(false)
+                })
+                .collect();
+            hits.sort();
+            if hits.len() == 1 {
+                return Some(hits[0].clone());
             }
             None
         }
@@ -338,9 +389,31 @@ impl<'a> Collector<'a> {
             ExprKind::Call { func, args } => {
                 if let Some(callee) = resolve_callee_key(self.module, func, self.fn_defs) {
                     let modes = self.callee_modes.get(&callee).cloned().unwrap_or_default();
-                    for (i, arg) in args.iter().enumerate() {
-                        let mode = modes.get(i).copied().unwrap_or(OwnershipMode::Borrow);
-                        self.apply_mode_to_expr(arg, mode);
+                    let has_self = self
+                        .fn_defs
+                        .get(&callee)
+                        .map(|(_, d)| {
+                            d.params
+                                .first()
+                                .map(|p| p.name.name == "self")
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false);
+                    if has_self {
+                        // `recv.method(args)` — modes[0] applies to the Field base.
+                        if let ExprKind::Field { base, .. } = &func.kind {
+                            let mode = modes.first().copied().unwrap_or(OwnershipMode::Borrow);
+                            self.apply_mode_to_expr(base, mode);
+                        }
+                        for (i, arg) in args.iter().enumerate() {
+                            let mode = modes.get(i + 1).copied().unwrap_or(OwnershipMode::Borrow);
+                            self.apply_mode_to_expr(arg, mode);
+                        }
+                    } else {
+                        for (i, arg) in args.iter().enumerate() {
+                            let mode = modes.get(i).copied().unwrap_or(OwnershipMode::Borrow);
+                            self.apply_mode_to_expr(arg, mode);
+                        }
                     }
                 } else {
                     self.walk_expr(func);
@@ -482,21 +555,30 @@ impl<'a> Collector<'a> {
 
 #[allow(clippy::type_complexity)]
 fn analyze_function(
+    key: &str,
     module: &str,
     def: &FunctionDef,
     callee_modes: &BTreeMap<String, Vec<OwnershipMode>>,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     typed: &crisp_typeck::TypedCrate,
 ) -> Result<(Vec<OwnershipMode>, Vec<AutoClone>, Option<OwnershipError>), OwnershipError> {
-    let key = fn_key(module, &def.name.name);
-    let mut collector = Collector::new(module, &key, def, callee_modes, fn_defs, typed);
+    let mut collector = Collector::new(module, key, def, callee_modes, fn_defs, typed);
     collector.walk_expr(&def.body);
     collector.record_implicit_return(&def.body);
     let auto_clones = collector.detect_auto_clones();
+    let typed_sig = typed.signatures.get(key);
 
     let mut modes = Vec::new();
     for p in &def.params {
-        let inferred = collector.usages.mode_for(&p.name.name);
+        let mut inferred = collector.usages.mode_for(&p.name.name);
+        // Copy scalars stay by-value (Owned); avoids `&f64` in struct fields / associated fns.
+        if p.name.name != "self"
+            && let Some(sig) = typed_sig
+            && let Some((_, ty)) = sig.params.iter().find(|(n, _)| n == &p.name.name)
+            && is_copy_ty(ty)
+        {
+            inferred = OwnershipMode::Owned;
+        }
         if let Some(ann) = OwnershipMode::from_explicit(p.ownership) {
             if inferred > ann {
                 return Ok((

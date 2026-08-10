@@ -45,6 +45,9 @@ const EXAMPLES: &[&str] = &[
     "abnormal_suite",
     "design_patterns",
     "nested_math",
+    "vec2_methods",
+    "point_impl",
+    "feature_gallery",
 ];
 
 #[test]
@@ -117,6 +120,9 @@ fn examples_with_tests_pass_crpc_test() {
         "inventory",
         "enums",
         "design_patterns",
+        "vec2_methods",
+        "point_impl",
+        "feature_gallery",
     ] {
         let root = example(name);
         eprintln!("crpc test: {name}");
@@ -162,6 +168,9 @@ fn runnable_examples_build_and_run() {
         "data_pipeline",
         "design_patterns",
         "nested_math",
+        "vec2_methods",
+        "point_impl",
+        "feature_gallery",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -233,6 +242,9 @@ const BUILDABLE: &[&str] = &[
     "data_pipeline",
     "design_patterns",
     "nested_math",
+    "vec2_methods",
+    "point_impl",
+    "feature_gallery",
 ];
 
 #[test]

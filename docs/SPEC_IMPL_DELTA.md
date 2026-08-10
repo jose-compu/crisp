@@ -28,7 +28,8 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
-| Traits / inherent `impl` | §3.6, §5.4 | Parse/AST; typeck/CIR incomplete for bodies |
+| Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
+| Traits / `impl Trait for` | §3.6 | Parse/AST; typeck/CIR incomplete for trait bodies |
 | Shapes | §3.5 | Parse + keyword only; resolve emits `E0039` (unsupported) until full §3.5 lands |
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord, net/http | §15 | Not implemented |

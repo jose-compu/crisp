@@ -4,7 +4,7 @@ use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
 use crisp_ast::ident::Ident;
-use crisp_ast::item::{ExternBlock, FunctionDef, Item, SourceFile, TypeBody};
+use crisp_ast::item::{ExternBlock, FunctionDef, ImplBlock, Item, SourceFile, TypeBody};
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
@@ -35,6 +35,8 @@ pub enum TypeError {
 #[derive(Debug, Clone)]
 pub struct TypedCrate {
     pub signatures: BTreeMap<String, InferredSig>,
+    /// `TypeName` → `method` → signature key (`module::Type::method`).
+    pub inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 pub struct TypeChecker {
@@ -44,6 +46,8 @@ pub struct TypeChecker {
     /// Enum name → variant name → payload field types.
     enums: BTreeMap<String, BTreeMap<String, Vec<Ty>>>,
     signatures: BTreeMap<String, InferredSig>,
+    /// `TypeName` → `method` → signature key.
+    inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 impl TypeChecker {
@@ -66,6 +70,7 @@ impl TypeChecker {
         }
         Ok(TypedCrate {
             signatures: checker.signatures,
+            inherent_methods: checker.inherent_methods,
         })
     }
 
@@ -76,6 +81,7 @@ impl TypeChecker {
             structs: BTreeMap::new(),
             enums: BTreeMap::new(),
             signatures: BTreeMap::new(),
+            inherent_methods: BTreeMap::new(),
         }
     }
 
@@ -231,8 +237,68 @@ impl TypeChecker {
                         }),
                     );
                 }
+                Item::Impl(ib) if ib.trait_name.is_none() => {
+                    self.collect_impl_stubs(module, ib)?;
+                }
                 _ => {}
             }
+        }
+        Ok(())
+    }
+
+    fn collect_impl_stubs(&mut self, module: &str, ib: &ImplBlock) -> Result<(), TypeError> {
+        let ty_name = match &ib.ty.kind {
+            TypeKind::Named(id) => id.name.clone(),
+            _ => {
+                return Err(TypeError::UnknownType {
+                    name: "impl".into(),
+                    span: ib.span,
+                });
+            }
+        };
+        let self_ty = Ty::Named {
+            name: ty_name.clone(),
+            args: vec![],
+        };
+        for f in &ib.items {
+            let mut params = Vec::new();
+            for p in &f.params {
+                let ty = if p.name.name == "self" && p.ty.is_none() {
+                    self_ty.clone()
+                } else if let Some(ast_ty) = &p.ty {
+                    self.ast_type(ast_ty)?
+                } else {
+                    self.ctx.fresh()
+                };
+                params.push(ty);
+            }
+            let ret = if let Some(t) = &f.ret_type {
+                self.ast_type(t)?
+            } else {
+                self.ctx.fresh()
+            };
+            let key = format!("{module}::{ty_name}::{}", f.name.name);
+            self.inherent_methods
+                .entry(ty_name.clone())
+                .or_default()
+                .insert(f.name.name.clone(), key.clone());
+            // Placeholder signature so later passes can see the key early.
+            self.signatures.insert(
+                key,
+                InferredSig {
+                    module: module.to_string(),
+                    name: f.name.name.clone(),
+                    impl_ty: Some(ty_name.clone()),
+                    params: f
+                        .params
+                        .iter()
+                        .zip(params.iter())
+                        .map(|(p, t)| (p.name.name.clone(), t.clone()))
+                        .collect(),
+                    ret,
+                    span: f.span,
+                },
+            );
         }
         Ok(())
     }
@@ -241,11 +307,102 @@ impl TypeChecker {
         for item in &file.items {
             match item {
                 Item::Function(f) => self.check_function(module, f)?,
+                Item::Impl(ib) if ib.trait_name.is_none() => self.check_impl(module, ib)?,
                 Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
                 Item::TestCompileFail(_) | Item::Extern(_) => {}
                 _ => {}
             }
         }
+        Ok(())
+    }
+
+    fn check_impl(&mut self, module: &str, ib: &ImplBlock) -> Result<(), TypeError> {
+        let ty_name = match &ib.ty.kind {
+            TypeKind::Named(id) => id.name.clone(),
+            _ => {
+                return Err(TypeError::UnknownType {
+                    name: "impl".into(),
+                    span: ib.span,
+                });
+            }
+        };
+        for f in &ib.items {
+            self.check_impl_method(module, &ty_name, f)?;
+        }
+        Ok(())
+    }
+
+    fn check_impl_method(
+        &mut self,
+        module: &str,
+        ty_name: &str,
+        f: &FunctionDef,
+    ) -> Result<(), TypeError> {
+        let key = format!("{module}::{ty_name}::{}", f.name.name);
+        let stub = self.signatures.get(&key).cloned();
+        let (stub_params, stub_ret) = match stub {
+            Some(s) => (
+                s.params.iter().map(|(_, t)| t.clone()).collect::<Vec<_>>(),
+                Some(s.ret),
+            ),
+            None => (Vec::new(), None),
+        };
+        let self_ty = Ty::Named {
+            name: ty_name.to_string(),
+            args: vec![],
+        };
+
+        let mut local = self.env.clone();
+        let mut param_vars = Vec::new();
+        for (i, p) in f.params.iter().enumerate() {
+            let mut ty = stub_params
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| self.ctx.fresh());
+            if p.name.name == "self" && p.ty.is_none() {
+                unify(&mut self.ctx, &ty, &self_ty)?;
+                ty = self.ctx.apply(&self_ty);
+            } else if let Some(ast_ty) = &p.ty {
+                let ann = self.ast_type(ast_ty)?;
+                unify(&mut self.ctx, &ty, &ann)?;
+                ty = self.ctx.apply(&ann);
+            }
+            param_vars.push((p.name.name.clone(), ty.clone()));
+            local.insert(p.name.name.clone(), scheme(ty));
+        }
+        let ret_ann = f.ret_type.as_ref().map(|t| self.ast_type(t)).transpose()?;
+        let body_ty = self.infer_expr(&mut local, &f.body)?;
+        let param_types: Vec<(String, Ty)> = param_vars
+            .iter()
+            .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
+            .collect();
+        let ret = if let Some(ann) = ret_ann {
+            unify(&mut self.ctx, &body_ty, &ann)?;
+            if let Some(stub_r) = &stub_ret {
+                unify(&mut self.ctx, &body_ty, stub_r)?;
+            }
+            self.ctx.apply(&ann)
+        } else if let Some(stub_r) = &stub_ret {
+            unify(&mut self.ctx, &body_ty, stub_r)?;
+            self.ctx.apply(&body_ty)
+        } else {
+            self.ctx.apply(&body_ty)
+        };
+        self.signatures.insert(
+            key.clone(),
+            InferredSig {
+                module: module.to_string(),
+                name: f.name.name.clone(),
+                impl_ty: Some(ty_name.to_string()),
+                params: param_types,
+                ret,
+                span: f.span,
+            },
+        );
+        self.inherent_methods
+            .entry(ty_name.to_string())
+            .or_default()
+            .insert(f.name.name.clone(), key);
         Ok(())
     }
 
@@ -276,6 +433,7 @@ impl TypeChecker {
                 InferredSig {
                     module: module.to_string(),
                     name: f.name.name.clone(),
+                    impl_ty: None,
                     params: f
                         .params
                         .iter()
@@ -306,6 +464,7 @@ impl TypeChecker {
             InferredSig {
                 module: module.to_string(),
                 name: format!("test::{name}"),
+                impl_ty: None,
                 params: vec![],
                 ret: Ty::Unit,
                 span: body.span,
@@ -366,6 +525,7 @@ impl TypeChecker {
             InferredSig {
                 module: module.to_string(),
                 name: f.name.name.clone(),
+                impl_ty: None,
                 params: param_types,
                 ret: ret.clone(),
                 span: f.span,
@@ -445,6 +605,12 @@ impl TypeChecker {
                 })
             }
             ExprKind::Call { func, args } => {
+                // Inherent methods parse as Call(Field(...), args) — not MethodCall.
+                if let ExprKind::Field { base, field } = &func.kind
+                    && let Some(ret) = self.try_infer_method_call(env, base, field, args)?
+                {
+                    return Ok(ret);
+                }
                 let ft = self.infer_expr(env, func)?;
                 let ft = self.ctx.apply(&ft);
                 let (params, ret) = match ft {
@@ -503,6 +669,24 @@ impl TypeChecker {
                             span: field.span,
                         }),
                     };
+                }
+                // Associated inherent method as a value: `Vec2.new` → fn type (no self).
+                if let ExprKind::Ident(id) = &base.kind
+                    && self.structs.contains_key(&id.name)
+                    && let Some(sig) = self.method_sig(&id.name, &field.name)
+                {
+                    let has_self = sig
+                        .params
+                        .first()
+                        .map(|(n, _)| n == "self")
+                        .unwrap_or(false);
+                    if !has_self {
+                        let params: Vec<Ty> = sig.params.iter().map(|(_, t)| t.clone()).collect();
+                        return Ok(Ty::Fn {
+                            params,
+                            ret: Box::new(sig.ret.clone()),
+                        });
+                    }
                 }
                 let base_ty = self.infer_expr(env, base)?;
                 self.field_type(&base_ty, &field.name, field.span)
@@ -779,6 +963,117 @@ impl TypeChecker {
             unify(&mut self.ctx, &got, &expected)?;
         }
         Ok(())
+    }
+
+    fn method_sig(&self, ty_name: &str, method: &str) -> Option<&InferredSig> {
+        let key = self.inherent_methods.get(ty_name)?.get(method)?;
+        self.signatures.get(key)
+    }
+
+    /// Resolve `Type.assoc(args)` / `recv.method(args)` for inherent impls (§5.4).
+    /// Returns `Ok(None)` when this is not an inherent-method call (caller falls through).
+    fn try_infer_method_call(
+        &mut self,
+        env: &mut TypeEnv,
+        base: &Expr,
+        field: &Ident,
+        args: &[Expr],
+    ) -> Result<Option<Ty>, TypeError> {
+        // Associated: `Vec2.new(x, y)` — base is a known struct type name, not an enum.
+        if let ExprKind::Ident(id) = &base.kind
+            && self.structs.contains_key(&id.name)
+            && !self.enums.contains_key(&id.name)
+            && let Some(sig) = self.method_sig(&id.name, &field.name).cloned()
+        {
+            let has_self = sig
+                .params
+                .first()
+                .map(|(n, _)| n == "self")
+                .unwrap_or(false);
+            if has_self {
+                return Err(TypeError::Unify(UnifyError::Mismatch {
+                    expected: format!("instance method `{}.{}(self, …)`", id.name, field.name),
+                    found: "associated call on type name".into(),
+                }));
+            }
+            if args.len() != sig.params.len() {
+                return Err(TypeError::Unify(UnifyError::Mismatch {
+                    expected: format!("{} arguments", sig.params.len()),
+                    found: format!("{} arguments", args.len()),
+                }));
+            }
+            for (arg, (_, pty)) in args.iter().zip(sig.params.iter()) {
+                let aty = self.infer_expr(env, arg)?;
+                unify(&mut self.ctx, &aty, pty)?;
+            }
+            return Ok(Some(self.ctx.apply(&sig.ret)));
+        }
+
+        // Instance: `v.magnitude()` / `v.scale(2.0)`
+        // Peek: only attempt when some inherent method with this name exists.
+        let candidate_tys: Vec<String> = self
+            .inherent_methods
+            .iter()
+            .filter_map(|(ty, methods)| {
+                if methods.contains_key(&field.name) {
+                    Some(ty.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        if candidate_tys.is_empty() {
+            return Ok(None);
+        }
+
+        let base_ty = self.infer_expr(env, base)?;
+        let base_ty = self.ctx.apply(&base_ty);
+        let ty_name = match &base_ty {
+            Ty::Named { name, .. } => name.clone(),
+            Ty::Var(v) if candidate_tys.len() == 1 => {
+                let name = candidate_tys[0].clone();
+                unify(
+                    &mut self.ctx,
+                    &Ty::Var(*v),
+                    &Ty::Named {
+                        name: name.clone(),
+                        args: vec![],
+                    },
+                )?;
+                name
+            }
+            _ => return Ok(None),
+        };
+
+        let Some(sig) = self.method_sig(&ty_name, &field.name).cloned() else {
+            return Ok(None);
+        };
+        let has_self = sig
+            .params
+            .first()
+            .map(|(n, _)| n == "self")
+            .unwrap_or(false);
+        if !has_self {
+            // Associated method called on a value — not supported.
+            return Ok(None);
+        }
+        let self_ty = Ty::Named {
+            name: ty_name,
+            args: vec![],
+        };
+        unify(&mut self.ctx, &base_ty, &self_ty)?;
+        let param_tys: Vec<&Ty> = sig.params.iter().skip(1).map(|(_, t)| t).collect();
+        if args.len() != param_tys.len() {
+            return Err(TypeError::Unify(UnifyError::Mismatch {
+                expected: format!("{} arguments", param_tys.len()),
+                found: format!("{} arguments", args.len()),
+            }));
+        }
+        for (arg, pty) in args.iter().zip(param_tys) {
+            let aty = self.infer_expr(env, arg)?;
+            unify(&mut self.ctx, &aty, pty)?;
+        }
+        Ok(Some(self.ctx.apply(&sig.ret)))
     }
 
     fn field_type(&mut self, base: &Ty, field: &str, span: Span) -> Result<Ty, TypeError> {

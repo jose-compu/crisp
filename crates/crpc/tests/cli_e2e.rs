@@ -74,6 +74,9 @@ fn crpc_check_all_examples() {
         "abnormal_suite",
         "design_patterns",
         "nested_math",
+        "vec2_methods",
+        "point_impl",
+        "feature_gallery",
     ] {
         run_ok(
             "crpc",
@@ -89,6 +92,29 @@ fn crpc_run_nested_math() {
         &["run", &examples_dir().join("nested_math").to_string_lossy()],
     );
     assert!(out.contains("sum=3"), "output: {out}");
+}
+
+#[test]
+fn crpc_run_vec2_methods() {
+    let out = run_ok(
+        "crpc",
+        &[
+            "run",
+            &examples_dir().join("vec2_methods").to_string_lossy(),
+        ],
+    );
+    assert!(out.contains("m=5"), "output: {out}");
+}
+
+#[test]
+fn crpc_test_feature_gallery() {
+    run_ok(
+        "crpc",
+        &[
+            "test",
+            &examples_dir().join("feature_gallery").to_string_lossy(),
+        ],
+    );
 }
 
 #[test]

@@ -284,6 +284,71 @@ fn reveal_ownership_ownership_demo() {
 }
 
 #[test]
+fn reveal_help_lists_section_16_commands() {
+    let out = run_ok("reveal", &["--help"]);
+    for cmd in [
+        "types",
+        "ownership",
+        "lifetimes",
+        "errors",
+        "traits",
+        "rust",
+        "seal",
+        "expand",
+        "diff",
+        "map",
+    ] {
+        assert!(out.contains(cmd), "reveal --help missing `{cmd}`:\n{out}");
+    }
+    assert!(
+        out.contains("§16") || out.contains("spec"),
+        "expected §16/spec mention in help:\n{out}"
+    );
+}
+
+#[test]
+fn reveal_types_help_mentions_path() {
+    let out = run_ok("reveal", &["types", "--help"]);
+    assert!(out.contains("PATH") || out.contains("path"), "help:\n{out}");
+}
+
+#[test]
+fn reveal_lifetimes_hello() {
+    let out = run_ok(
+        "reveal",
+        &["lifetimes", &examples_dir().join("hello").to_string_lossy()],
+    );
+    assert!(
+        out.contains("greet") || out.contains("main") || out.contains("'"),
+        "lifetimes output: {out}"
+    );
+}
+
+#[test]
+fn reveal_diff_and_map_hello_smoke() {
+    let hello = examples_dir().join("hello").to_string_lossy().to_string();
+    let diff = run_ok("reveal", &["diff", &hello]);
+    assert!(!diff.trim().is_empty(), "diff should print something");
+    let map = run_ok("reveal", &["map", &hello]);
+    assert!(!map.trim().is_empty(), "map should print something");
+}
+
+#[test]
+fn reveal_bad_path_prints_hint() {
+    let output = Command::new(bin_path("reveal"))
+        .args(["types", "/tmp/crisp-reveal-no-such-crate-xyz"])
+        .output()
+        .expect("spawn reveal");
+    assert!(!output.status.success());
+    let err = String::from_utf8_lossy(&output.stderr);
+    eprintln!("stderr:\n{err}");
+    assert!(
+        err.contains("hint:") || err.contains("crisp.toml") || err.contains("failed"),
+        "stderr: {err}"
+    );
+}
+
+#[test]
 fn sealed_drift_fails_check() {
     let dir = tempfile::TempDir::new().unwrap();
     let src = examples_dir().join("sealed");

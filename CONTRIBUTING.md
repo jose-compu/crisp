@@ -4,8 +4,9 @@ Thank you for contributing. Crisp is a **Rust-hosted bootstrap** compiler that t
 
 ## Prerequisites
 
-- Rust **1.85+** (see `rust-version` in root `Cargo.toml`)
+- Rust **1.85+** (MSRV in `[workspace.package] rust-version`; local default via `rust-toolchain.toml` → stable)
 - `cargo`, `rustc`, and preferably `rustfmt` / `clippy` on `PATH`
+- CI: Ubuntu + macOS on stable, plus an Ubuntu **MSRV 1.85** job (`.github/workflows/ci.yml`)
 
 ## Setup
 
@@ -17,6 +18,7 @@ cargo build --release -p crpc
 # binaries: target/release/crpc and target/release/reveal
 export PATH="$PWD/target/release:$PATH"
 crpc --version
+reveal --version
 ```
 
 Git hooks live in [`.githooks/`](.githooks/) (`core.hooksPath`). They mirror CI: `cargo fmt --all -- --check`.
@@ -25,10 +27,8 @@ Alternatively:
 
 ```bash
 cargo install --path crates/crpc --locked
-cargo install --path crates/crisp-reveal --locked
+# installs both `crpc` and `reveal` (do not `cargo install` crates/crisp-reveal — library only)
 ```
-
-(`reveal` is a second binary from the `crpc` package: `cargo build --release -p crpc` produces `target/release/reveal`.)
 
 ## Development loop
 

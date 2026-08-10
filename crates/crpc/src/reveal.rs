@@ -1,12 +1,30 @@
+//! `reveal` CLI — inspect inferred Crisp precision (spec §16).
+//!
+//! Built as a second binary of the `crpc` package:
+//! `cargo build -p crpc` → `target/debug/reveal`.
+
 use clap::{Parser, Subcommand};
 use crisp_reveal::{
     reveal_diff, reveal_errors, reveal_expand, reveal_lifetimes, reveal_map, reveal_ownership,
     reveal_rust, reveal_seal, reveal_traits, reveal_types,
 };
 use std::path::PathBuf;
+use std::process::ExitCode;
 
 #[derive(Parser)]
-#[command(name = "reveal", version, about = "Inspect inferred Crisp precision")]
+#[command(
+    name = "reveal",
+    version,
+    about = "Inspect inferred Crisp precision (spec §16)",
+    long_about = "Inspect inferred Crisp precision (spec §16).\n\n\
+                  Reconstructs types, ownership, lifetimes, errors, and emitted Rust that\
+                  \nsurface syntax omits.\n\n\
+                  Install (ships both `crpc` and `reveal`):\n\
+                  \x20 cargo install --path crates/crpc --locked\n\n\
+                  Deepest overlays: `types`, `ownership`, `lifetimes`, `errors`, `rust`, `seal`.\n\
+                  Shallower today: `expand`, `diff`, `map`, `traits` — see QUICKSTART §10 and\
+                  \ndocs/KNOWN_LIMITATIONS.md."
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -14,93 +32,126 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Inferred type signatures for functions in the crate
+    #[command(long_about = "Print inferred signatures (params, return, error sets). Spec §16.1.")]
     Types {
-        #[arg(default_value = ".")]
+        /// Crate root or path under a crisp.toml (default: .)
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Borrow / move / copy modes and §7.6 rustc fallbacks
+    #[command(long_about = "Print ownership modes per parameter and local. Spec §16.1.")]
     Ownership {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Emitted lifetime parameters
+    #[command(long_about = "Print lifetime assignments from the region pass. Spec §16.1.")]
     Lifetimes {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Per-function reachable CrispError variant sets
+    #[command(long_about = "Print ambient `!` error sets as CrispError variants. Spec §16.1.")]
     Errors {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Shape / trait impl summary (limited today)
+    #[command(
+        long_about = "List shape traits known to CIR. Full trait/impl e2e is still in progress\
+                      \n(#20); shapes resolve as E0039 (#21)."
+    )]
     Traits {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Emitted Rust for the crate (main / lib entry)
+    #[command(
+        long_about = "Emit via the normal pipeline and print the primary Rust entry file.\n\
+                      Spec §16.1 `reveal rust`."
+    )]
     Rust {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Frozen sealed-crate API (crisp.lock or computed)
+    #[command(long_about = "Show the sealed pub API (§12.5). Spec §16.1 `reveal seal`.")]
     Seal {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Annotated Crisp outline (shallow stubs for bodies)
+    #[command(
+        long_about = "Print signatures plus a shallow body outline (`<inferred>` / `<body>`).\n\
+                      Not a full annotated source rewrite yet — see KNOWN_LIMITATIONS."
+    )]
     Expand {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Summary of Crisp fn names vs emitted Rust (not a full side-by-side)
+    #[command(
+        long_about = "Compare function names present in Crisp vs emitted Rust.\n\
+                      Spec §16.1 asks for a true side-by-side; this is a name-level summary today."
+    )]
     Diff {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
+    /// Alloc / drop notes against CIR (generic, not span-accurate)
+    #[command(
+        long_about = "Annotate alloc/drop-related CIR notes. Spec §16.1 wants span-accurate\
+                      \nmap against emitted Rust; current output is a coarser summary."
+    )]
     Map {
-        #[arg(default_value = ".")]
+        #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> ExitCode {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
-    match cli.command {
-        Commands::Types { path } => {
-            println!("{}", reveal_types(&path)?);
-            Ok(())
-        }
-        Commands::Ownership { path } => {
-            println!("{}", reveal_ownership(&path)?);
-            Ok(())
-        }
-        Commands::Lifetimes { path } => {
-            println!("{}", reveal_lifetimes(&path)?);
-            Ok(())
-        }
-        Commands::Errors { path } => {
-            println!("{}", reveal_errors(&path)?);
-            Ok(())
-        }
-        Commands::Traits { path } => {
-            println!("{}", reveal_traits(&path)?);
-            Ok(())
-        }
+    let result = match cli.command {
+        Commands::Types { path } => run("types", &path, reveal_types),
+        Commands::Ownership { path } => run("ownership", &path, reveal_ownership),
+        Commands::Lifetimes { path } => run("lifetimes", &path, reveal_lifetimes),
+        Commands::Errors { path } => run("errors", &path, reveal_errors),
+        Commands::Traits { path } => run("traits", &path, reveal_traits),
         Commands::Rust { path } => {
             let root = crisp_resolve::find_crate_root(&path).unwrap_or(path);
-            println!("{}", reveal_rust(&root)?);
-            Ok(())
+            run("rust", &root, reveal_rust)
         }
-        Commands::Seal { path } => {
-            println!("{}", reveal_seal(&path)?);
-            Ok(())
-        }
-        Commands::Expand { path } => {
-            println!("{}", reveal_expand(&path)?);
-            Ok(())
-        }
-        Commands::Diff { path } => {
-            println!("{}", reveal_diff(&path)?);
-            Ok(())
-        }
-        Commands::Map { path } => {
-            println!("{}", reveal_map(&path)?);
-            Ok(())
+        Commands::Seal { path } => run("seal", &path, reveal_seal),
+        Commands::Expand { path } => run("expand", &path, reveal_expand),
+        Commands::Diff { path } => run("diff", &path, reveal_diff),
+        Commands::Map { path } => run("map", &path, reveal_map),
+    };
+
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("reveal: {e:#}");
+            ExitCode::FAILURE
         }
     }
+}
+
+fn run(
+    cmd: &str,
+    path: &std::path::Path,
+    f: impl FnOnce(&std::path::Path) -> anyhow::Result<String>,
+) -> anyhow::Result<()> {
+    let display = path.display();
+    let out = f(path).map_err(|e| {
+        anyhow::anyhow!(
+            "{cmd} failed for `{display}`: {e}\n\
+             hint: pass a crate root (directory with crisp.toml) or a path inside one; \
+             try `reveal {cmd} examples/hello`"
+        )
+    })?;
+    println!("{out}");
+    Ok(())
 }

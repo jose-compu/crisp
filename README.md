@@ -67,7 +67,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | Emit | `crisp-rust-emit` | Rust project under `target/rust/`, tests, `crisp.lock` |
 | CLI | `crpc` | `check`, `emit`, `build`, `run`, `test` |
 | Inspect | `reveal` | Inferred Rust, ownership, errors, sealed API |
-| IDE | `crisp-lsp` | Analysis API (hover, hints, overlays); stdio server TBD |
+| IDE | `crisp-lsp` | Analysis API (`CrispAnalysis`); no stdio LSP host yet (#18) |
 
 **Sealed crates (`crisp.lock`):** a crate’s `pub` API has fully resolved signatures frozen at publish time. Downstream code analyzes against the lockfile, not re-inferred internals — the explicit tradeoff for whole-program inference inside a boundary.
 
@@ -91,7 +91,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 **v1.2.0** — Nested module emit; shapes → `E0039`; diagnostics snippets/hints; CIR/emit pins for hello/math; module stub resolve; probe emit hardening; enums/field access from the v1.2 language track.
 
-Next: **v1.3.0** (LSP/reveal/stdlib). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
+Next: **v1.3.0** (reveal polish, CI matrix, LSP host or docs, impl/trait path). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
+
+**MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 
 ## Quick start
 

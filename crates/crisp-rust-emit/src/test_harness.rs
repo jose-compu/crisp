@@ -279,18 +279,19 @@ fn contains_float_literal(expr: &Expr) -> bool {
 
 fn emit_call_arg_for_test(expr: &Expr) -> String {
     match &expr.kind {
-        // Primitive params are emitted as `&T` in CIR/Rust; take references.
-        ExprKind::Int(n) => format!("&{n}"),
+        // Copy scalars emit by value in CIR/Rust (Owned); do not borrow literals.
+        ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
-                format!("&{f}.0")
+                format!("{f}.0")
             } else {
-                format!("&{f}")
+                format!("{f}")
             }
         }
         ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(expr),
+        // Prefer `&ident` for stringish/`&T` params; copy locals still coerce via Copy.
         ExprKind::Ident(id) => format!("&{}", id.name),
-        // Enum values are owned; pass by reference for &T params.
+        // Enum values are owned; pass by reference for `&Color` params.
         ExprKind::Field { base, .. } if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())) =>
         {
             format!("&{}", emit_expr(expr))

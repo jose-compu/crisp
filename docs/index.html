@@ -106,6 +106,118 @@ pub main() = {
 
   <section class="band-light">
     <div class="wrap">
+      <h2 class="section-title">Language features</h2>
+      <p class="section-lede">Compact snippets from the repo examples — more in the <a href="tutorial.html">tutorial</a>.</p>
+      <div class="snippet-grid">
+        <div class="code-panel">
+          <div class="caption"><span>Enums + match</span><span>examples/enums</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type Color =
+    | Red
+    | Green
+    | Custom(int, int, int)
+
+describe(color) = match color {
+    Color.Red -> "red"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+    _ -> "other"
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Inherent methods</span><span>examples/vec2_methods</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type Vec2 = {
+    x: float
+    y: float
+}
+
+impl Vec2 = {
+    pub new(x: float, y: float) = Vec2 {
+        x: x
+        y: y
+    }
+    pub magnitude(self) =
+        (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+}
+
+pub main() = {
+    v := Vec2.new(3.0, 4.0)
+    log("mag={v.magnitude()}")
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Traits</span><span>examples/show_trait</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>trait Show = { show(self) -> str }
+
+type Point = {
+    x: int
+    y: int
+}
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}
+
+pub main() = {
+    p := Point { x: 3, y: 4 }
+    log("p={p.show()}")
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Rust crate import</span><span>examples/rust_import</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>-- crisp.toml: serde_json = { version = "1", rust = true }
+use serde_json { from_str, to_string }
+
+pub main() = {
+    v := from_str("[1, true, \"crisp\"]")
+    print(to_string(v))
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Fallible + catch</span><span>examples/fallible</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>parse_port(s) ! = {
+    if s == "" then throw "empty"
+    -- …
+}
+
+pub main() = {
+    p := parse_port("8080") catch { e => 0 }
+    log("port={p}")
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Async</span><span>examples/async_hello</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>pub main() = async {
+    sleep_ms(1)
+    print("async-ok")
+}</pre>
+          </div>
+        </div>
+      </div>
+      <p class="cta" style="justify-content:center;margin-top:2rem">
+        <a class="btn" href="tutorial.html">Full tutorial →</a>
+        <a class="btn ghost" href="language.html">Language summary →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="band-dark">
+    <div class="wrap">
       <h2 class="section-title">Pipeline</h2>
       <p class="section-lede">Source → CIR → Rust → native. The emitted crate is an ordinary Cargo project under <code>target/rust/</code>.</p>
       <pre class="pipe">.crp → resolve → typeck → ownership → CIR → Rust → rustc → native</pre>

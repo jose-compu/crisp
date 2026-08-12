@@ -12,7 +12,8 @@ Static site for GitHub Pages (branch `docs`, folder `/docs`). Content tracks com
 | `docs.html` | Documentation hub |
 | `use-cases.html` | Popular Rust domains made easier in Crisp |
 | `tutorial.html` | Beginner language tutorial |
-| `language.html`, `cli.html`, `limitations.html` | Doc detail pages |
+| `language.html`, `cli.html`, `limitations.html` | Doc detail pages (+ language snippets) |
+| `index.html` “Language features” | Snippet gallery (enums, traits, rust import, …) |
 
 Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). Structure inspired by [elixir-lang.org](https://elixir-lang.org/).
 

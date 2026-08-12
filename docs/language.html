@@ -40,6 +40,8 @@
         <li><strong>Bindings</strong> — <code>x := value</code></li>
         <li><strong>Types</strong> — inferred; annotate when needed (<code>int</code>, <code>str</code>, <code>float</code>, …)</li>
         <li><strong>Structs</strong> — <code>type T = { … }</code> with field defaults</li>
+        <li><strong>Enums</strong> — <code>type Color = | Red | Custom(int, int, int)</code> + <code>match</code></li>
+        <li><strong>Methods</strong> — <code>impl Type = { … }</code></li>
         <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code> (shapes deferred)</li>
         <li><strong>Rust crates</strong> — <code>rust = true</code> deps; <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
         <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
@@ -48,7 +50,94 @@
         <li><strong>Async / FFI</strong> — <code>async</code>, <code>await</code>, <code>extern "C"</code></li>
       </ul>
       <p>Comments: <code>--</code> and nested <code>{- -}</code>. Interpolation: <code>"hello {name}"</code>. Exponentiation: <code>**</code>.</p>
-      <p><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec on GitHub →</a></p>
+    </div>
+  </section>
+
+  <section class="band-dark">
+    <div class="wrap">
+      <h2 class="section-title">Snippets</h2>
+      <p class="section-lede">Short, copyable patterns. Guided tour: <a href="tutorial.html">tutorial</a>.</p>
+      <div class="snippet-grid">
+        <div class="code-panel">
+          <div class="caption"><span>Struct + defaults</span><span>type</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type ServerConfig = {
+    host: str  = "127.0.0.1"
+    port: uint = 9000
+}
+
+pub main() = {
+    cfg := ServerConfig { port: 3000 }
+    log("host={cfg.host} port={cfg.port}")
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Enum + match</span><span>examples/enums</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type Color =
+    | Red
+    | Custom(int, int, int)
+
+describe(c) = match c {
+    Color.Red -> "red"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Trait + impl</span><span>examples/show_trait</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>trait Show = { show(self) -> str }
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Rust import</span><span>examples/rust_import</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>use serde_json { from_str, to_string }
+
+pub main() = {
+    v := from_str("[1, true]")
+    print(to_string(v))
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Tests</span><span>test</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>test "greet works" = {
+    assert_eq(greet("world"), "hello world")
+}
+
+test_compile_fail "unknown" = {
+    definitely_not_a_builtin()
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Async main</span><span>examples/async_hello</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>pub main() = async {
+    sleep_ms(1)
+    print("async-ok")
+}</pre>
+          </div>
+        </div>
+      </div>
+      <p class="cta" style="justify-content:center;margin-top:2rem">
+        <a class="btn" href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec on GitHub →</a>
+        <a class="btn ghost" href="tutorial.html">Tutorial →</a>
+      </p>
     </div>
   </section>
 

@@ -122,7 +122,7 @@ use arith { sum }
 pub main() = {
     log("sum={sum(2, 3)}")
 }</pre>
-          <p>In a flat <code>src/</code> tree, modules imported by <code>main</code> must sort <strong>before</strong> <code>main</code> alphabetically.</p>
+          <p>Flat <code>src/*.crp</code> modules may import each other regardless of filename order. Nested paths (e.g. <code>src/math/vector.crp</code>) emit a Rust module tree.</p>
         </article>
 
         <article class="tutorial-step" id="tests">
@@ -154,10 +154,103 @@ pub main() = {
           <p>See <code>examples/fallible</code> for fuller patterns.</p>
         </article>
 
+        <article class="tutorial-step" id="enums">
+          <div class="step-label">Step 09</div>
+          <h2>Enums and match</h2>
+          <pre class="pipe">type Color =
+    | Red
+    | Green
+    | Blue
+    | Custom(int, int, int)
+
+describe(color) = match color {
+    Color.Red -> "red"
+    Color.Green -> "green"
+    Color.Blue -> "blue"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}</pre>
+          <p>Run: <code>crpc run examples/enums</code></p>
+        </article>
+
+        <article class="tutorial-step" id="methods">
+          <div class="step-label">Step 10</div>
+          <h2>Inherent methods</h2>
+          <pre class="pipe">type Vec2 = {
+    x: float
+    y: float
+}
+
+impl Vec2 = {
+    pub new(x: float, y: float) = Vec2 {
+        x: x
+        y: y
+    }
+    pub magnitude(self) =
+        (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+}
+
+pub main() = {
+    v := Vec2.new(3.0, 4.0)
+    log("mag={v.magnitude()}")
+}</pre>
+          <p>See <code>examples/vec2_methods</code> (also nested modules).</p>
+        </article>
+
+        <article class="tutorial-step" id="traits">
+          <div class="step-label">Step 11</div>
+          <h2>Traits</h2>
+          <p>Nominal contracts with explicit <code>impl</code>. Prelude also ships Show / Eq / Ord shims.</p>
+          <pre class="pipe">trait Show = { show(self) -> str }
+
+type Point = {
+    x: int
+    y: int
+}
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}
+
+pub main() = {
+    p := Point { x: 1, y: 2 }
+    log("p={p.show()}")
+}</pre>
+          <p>Run: <code>crpc run examples/show_trait</code> · also <code>examples/std_traits</code>.</p>
+        </article>
+
+        <article class="tutorial-step" id="rust-import">
+          <div class="step-label">Step 12</div>
+          <h2>Import a Rust crate</h2>
+          <p>Declare the dependency with <code>rust = true</code> in <code>crisp.toml</code>, then import like TypeScript.</p>
+          <pre class="pipe">-- crisp.toml
+-- [dependencies]
+-- serde_json = { version = "1", rust = true }
+
+use serde_json { from_str, to_string }
+
+pub main() = {
+    v := from_str("[1, true, \"crisp\"]")
+    print(to_string(v))
+}</pre>
+          <p>Compat alias: <code>use rust.serde_json { … }</code>. Sharp edge: Rust <code>Result</code> currently becomes <code>.expect(...)</code> — see <a href="limitations.html">limitations</a>.</p>
+          <p>Run: <code>crpc run examples/rust_import</code></p>
+        </article>
+
+        <article class="tutorial-step" id="async">
+          <div class="step-label">Step 13</div>
+          <h2>Async</h2>
+          <pre class="pipe">pub main() = async {
+    sleep_ms(1)
+    print("async-ok")
+}</pre>
+          <p>Run: <code>crpc run examples/async_hello</code> · also <code>examples/async_spawn</code>.</p>
+        </article>
+
         <article class="tutorial-step" id="next">
           <div class="step-label">Next</div>
           <h2>Where to go</h2>
           <ul>
+            <li><a href="index.html">Home</a> — feature snippet gallery</li>
             <li><a href="use-cases.html">Use cases</a> — Rust domains Crisp targets</li>
             <li><a href="docs.html">Docs</a> — CLI, limitations, draft spec</li>
             <li><a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a> — project layout end to end</li>
@@ -175,7 +268,12 @@ pub main() = {
           <li><a href="#modules"><span class="num">06</span> Modules</a></li>
           <li><a href="#tests"><span class="num">07</span> Tests</a></li>
           <li><a href="#errors"><span class="num">08</span> Errors</a></li>
-          <li><a href="#next"><span class="num">09</span> Next</a></li>
+          <li><a href="#enums"><span class="num">09</span> Enums</a></li>
+          <li><a href="#methods"><span class="num">10</span> Methods</a></li>
+          <li><a href="#traits"><span class="num">11</span> Traits</a></li>
+          <li><a href="#rust-import"><span class="num">12</span> Rust import</a></li>
+          <li><a href="#async"><span class="num">13</span> Async</a></li>
+          <li><a href="#next"><span class="num">14</span> Next</a></li>
         </ol>
       </nav>
     </div>

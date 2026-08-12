@@ -309,6 +309,26 @@ a:hover { color: var(--accent-soft); }
 @media (max-width: 700px) {
   .feature-grid { grid-template-columns: 1fr; }
 }
+
+.snippet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .snippet-grid { grid-template-columns: 1fr; }
+}
+.snippet-grid .code-panel .caption span:last-child {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.band-light .snippet-grid .code-window {
+  box-shadow: 0 10px 28px rgba(20, 40, 70, 0.12);
+}
+.band-light .snippet-grid .code-output {
+  background: #0f1a2a;
+}
 .feature h3 {
   margin: 0 0 0.4rem;
   font-size: 1.15rem;

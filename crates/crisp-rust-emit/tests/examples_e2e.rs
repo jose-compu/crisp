@@ -48,6 +48,8 @@ const EXAMPLES: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "show_trait",
+    "std_traits",
+    "net_http",
     "feature_gallery",
     "rust_import",
     "rust_shadow",
@@ -126,6 +128,7 @@ fn examples_with_tests_pass_crpc_test() {
         "vec2_methods",
         "point_impl",
         "show_trait",
+        "std_traits",
         "feature_gallery",
     ] {
         let root = example(name);
@@ -175,9 +178,11 @@ fn runnable_examples_build_and_run() {
         "vec2_methods",
         "point_impl",
         "show_trait",
+        "std_traits",
         "feature_gallery",
         "rust_import",
         "rust_shadow",
+        "net_http",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -195,6 +200,37 @@ fn runnable_examples_build_and_run() {
             Err(e) => panic!("{name} run failed: {e}"),
         }
     }
+}
+
+#[test]
+fn std_traits_example_emits_display_bridges() {
+    let out = emit_to_target(&example("std_traits")).expect("emit std_traits");
+    let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
+    assert!(main_rs.contains("pub trait Show"), "{main_rs}");
+    assert!(main_rs.contains("pub trait Eq"), "{main_rs}");
+    assert!(main_rs.contains("pub trait Ord"), "{main_rs}");
+    assert!(
+        main_rs.contains("impl std::fmt::Display for Point"),
+        "{main_rs}"
+    );
+    assert!(main_rs.contains("impl PartialEq for Point"), "{main_rs}");
+    assert!(
+        main_rs.contains("impl std::cmp::Ord for Point"),
+        "{main_rs}"
+    );
+}
+
+#[test]
+fn net_http_example_wires_ureq_and_parse_ip() {
+    let root = example("net_http");
+    let resolved = Resolver::resolve_crate(&root).expect("resolve net_http");
+    assert!(resolved.rust_imports.iter().any(|i| i.item == "get"));
+    let out = emit_to_target(&root).expect("emit net_http");
+    let cargo = std::fs::read_to_string(out.out_dir.join("Cargo.toml")).unwrap();
+    assert!(cargo.contains("ureq"), "{cargo}");
+    let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
+    assert!(main_rs.contains("ureq::get("), "{main_rs}");
+    assert!(main_rs.contains("parse::<std::net::IpAddr>()"), "{main_rs}");
 }
 
 #[test]
@@ -299,6 +335,8 @@ const BUILDABLE: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "show_trait",
+    "std_traits",
+    "net_http",
     "feature_gallery",
     "rust_import",
     "rust_shadow",

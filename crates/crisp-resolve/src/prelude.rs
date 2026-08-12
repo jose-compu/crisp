@@ -9,6 +9,8 @@ pub fn prelude_symbols() -> Vec<Symbol> {
         "int", "uint", "float", "bool", "char", "str", "Never", "vec", "map", "set",
     ];
     let fns = ["log", "print", "some", "none", "assert_eq"];
+    // Spec §15.4 — compiler-injected shims (Show→Display, Eq→PartialEq/Eq, Ord→Ord).
+    let traits = ["Show", "Eq", "Ord"];
 
     let mut out = Vec::new();
     for name in types {
@@ -30,6 +32,18 @@ pub fn prelude_symbols() -> Vec<Symbol> {
                 name: name.to_string(),
             },
             kind: SymbolKind::PreludeFn,
+            visibility: Visibility::Public,
+            span,
+            from_prelude: true,
+        });
+    }
+    for name in traits {
+        out.push(Symbol {
+            key: SymbolKey {
+                module: module.clone(),
+                name: name.to_string(),
+            },
+            kind: SymbolKind::Trait,
             visibility: Visibility::Public,
             span,
             from_prelude: true,

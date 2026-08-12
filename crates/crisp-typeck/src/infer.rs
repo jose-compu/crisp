@@ -1277,6 +1277,13 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
                 ret: Box::new(Ty::Unit),
             },
         ),
+        (
+            "parse_ip",
+            Ty::Fn {
+                params: vec![Ty::Str],
+                ret: Box::new(Ty::Str),
+            },
+        ),
     ]
 }
 
@@ -1292,6 +1299,7 @@ fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
         ("serde_json", "from_value") => (vec![json_value.clone()], json_value),
         // Type-like imports (e.g. `Value as JsonValue`) — not callable; placeholder unit fn.
         ("serde_json", "Value") => (vec![], json_value),
+        ("ureq", "get") => (vec![Ty::Str], Ty::Str),
         _ => (
             vec![Ty::Str],
             Ty::Named {

@@ -137,8 +137,41 @@ fn emit_prelude(out: &mut String, cir: &CirCrate) {
         let _ = writeln!(out, "{}", format_crisp_error_enum(&cir.crisp_error));
         let _ = writeln!(out);
     }
+    emit_std_trait_shims(out, cir);
     for shape in &cir.shape_traits {
         emit_shape_trait(out, shape);
+    }
+}
+
+/// Spec §15.4 — inject Show/Eq/Ord when the crate did not define them locally.
+fn emit_std_trait_shims(out: &mut String, cir: &CirCrate) {
+    let mut defined = std::collections::BTreeSet::new();
+    for m in &cir.modules {
+        for item in &m.items {
+            if let CirItem::Trait(t) = item {
+                defined.insert(t.name.as_str());
+            }
+        }
+    }
+    if !defined.contains("Show") {
+        let _ = writeln!(out, "pub trait Show {{");
+        let _ = writeln!(out, "    fn show(&self) -> String;");
+        let _ = writeln!(out, "}}");
+    }
+    if !defined.contains("Eq") {
+        // Method `equal` (not `eq`) avoids clashing with PartialEq::eq after the bridge.
+        let _ = writeln!(out, "pub trait Eq {{");
+        let _ = writeln!(out, "    fn equal(&self, other: &Self) -> bool;");
+        let _ = writeln!(out, "}}");
+    }
+    if !defined.contains("Ord") {
+        // Method `compare` (not `cmp`) avoids clashing with std::cmp::Ord::cmp.
+        let _ = writeln!(out, "pub trait Ord {{");
+        let _ = writeln!(out, "    fn compare(&self, other: &Self) -> i64;");
+        let _ = writeln!(out, "}}");
+    }
+    if !defined.contains("Show") || !defined.contains("Eq") || !defined.contains("Ord") {
+        let _ = writeln!(out);
     }
 }
 
@@ -165,7 +198,7 @@ fn emit_module_items(
             }
             CirItem::Function(f) => {
                 if include_main || !f.is_main {
-                    emit_function(out, f, &module.path, map, true);
+                    emit_function(out, f, &module.path, map, true, None);
                 }
             }
             CirItem::Trait(t) => emit_user_trait(out, t, map),
@@ -178,9 +211,19 @@ fn emit_module_items(
                 // Trait impl methods must not carry `pub` (E0449).
                 let allow_pub = ib.trait_name.is_none();
                 for f in &ib.functions {
-                    emit_function(out, f, &module.path, map, allow_pub);
+                    emit_function(
+                        out,
+                        f,
+                        &module.path,
+                        map,
+                        allow_pub,
+                        ib.trait_name.as_deref(),
+                    );
                 }
                 let _ = writeln!(out, "}}");
+                if let Some(tn) = &ib.trait_name {
+                    emit_std_trait_rust_bridge(out, tn, &ib.ty_name);
+                }
             }
             CirItem::Extern(ext) => emit_extern_block(out, ext, map),
         }
@@ -198,6 +241,8 @@ fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSour
             .map(|(n, ty)| {
                 if n == "self" {
                     "&self".to_string()
+                } else if matches!(t.name.as_str(), "Eq" | "Ord") {
+                    format!("{n}: &Self")
                 } else {
                     format!("{n}: {}", format_ty(ty))
                 }
@@ -211,6 +256,56 @@ fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSour
         let _ = writeln!(out, "    fn {}({}){};", m.name, params.join(", "), ret);
     }
     let _ = writeln!(out, "}}");
+}
+
+/// Bridge Crisp Show/Eq/Ord impls to Rust Display / PartialEq+Eq / Ord (§15.4).
+fn emit_std_trait_rust_bridge(out: &mut String, trait_name: &str, ty_name: &str) {
+    match trait_name {
+        "Show" => {
+            let _ = writeln!(out, "impl std::fmt::Display for {ty_name} {{");
+            let _ = writeln!(
+                out,
+                "    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{"
+            );
+            let _ = writeln!(out, "        write!(f, \"{{}}\", Show::show(self))");
+            let _ = writeln!(out, "    }}");
+            let _ = writeln!(out, "}}");
+        }
+        "Eq" => {
+            let _ = writeln!(out, "impl PartialEq for {ty_name} {{");
+            let _ = writeln!(out, "    fn eq(&self, other: &Self) -> bool {{");
+            let _ = writeln!(out, "        <{ty_name} as Eq>::equal(self, other)");
+            let _ = writeln!(out, "    }}");
+            let _ = writeln!(out, "}}");
+            let _ = writeln!(out, "impl std::cmp::Eq for {ty_name} {{}}");
+        }
+        "Ord" => {
+            let _ = writeln!(out, "impl std::cmp::Ord for {ty_name} {{");
+            let _ = writeln!(
+                out,
+                "    fn cmp(&self, other: &Self) -> std::cmp::Ordering {{"
+            );
+            let _ = writeln!(
+                out,
+                "        match <{ty_name} as Ord>::compare(self, other) {{"
+            );
+            let _ = writeln!(out, "            n if n < 0 => std::cmp::Ordering::Less,");
+            let _ = writeln!(out, "            0 => std::cmp::Ordering::Equal,");
+            let _ = writeln!(out, "            _ => std::cmp::Ordering::Greater,");
+            let _ = writeln!(out, "        }}");
+            let _ = writeln!(out, "    }}");
+            let _ = writeln!(out, "}}");
+            let _ = writeln!(out, "impl PartialOrd for {ty_name} {{");
+            let _ = writeln!(
+                out,
+                "    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {{"
+            );
+            let _ = writeln!(out, "        Some(std::cmp::Ord::cmp(self, other))");
+            let _ = writeln!(out, "    }}");
+            let _ = writeln!(out, "}}");
+        }
+        _ => {}
+    }
 }
 
 fn emit_extern_block(out: &mut String, ext: &crisp_cir::CirExternBlock, map: &mut EmitSourceMap) {
@@ -334,6 +429,7 @@ fn emit_function(
     current_module: &str,
     map: &mut EmitSourceMap,
     allow_pub: bool,
+    trait_impl: Option<&str>,
 ) {
     map.record(out.len() as u32, f.span);
     let vis = if allow_pub && f.is_pub { "pub " } else { "" };
@@ -341,14 +437,18 @@ fn emit_function(
         let _ = writeln!(out, "#[tokio::main]");
     }
     let async_kw = if f.is_async { "async " } else { "" };
-    let sig = format_fn_sig(f);
+    let sig = format_fn_sig(f, trait_impl);
     let _ = write!(out, "{vis}{async_kw}fn {}{sig} ", f.name);
     emit_block_body(out, &f.body, f.fallible, &f.ret, current_module, 0, map);
     let _ = writeln!(out);
 }
 
-fn format_fn_sig(f: &CirFunction) -> String {
-    let params: Vec<_> = f.params.iter().map(format_param).collect();
+fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>) -> String {
+    let params: Vec<_> = f
+        .params
+        .iter()
+        .map(|p| format_param(p, trait_impl))
+        .collect();
     if f.is_async {
         return format!("({})", params.join(", "));
     }
@@ -369,13 +469,16 @@ fn format_extern_ty(ty: &CirTy) -> String {
     }
 }
 
-fn format_param(p: &CirParam) -> String {
+fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
     if p.name == "self" {
         return match p.mode {
             OwnershipMode::Borrow => "&self".into(),
             OwnershipMode::MutBorrow => "&mut self".into(),
             OwnershipMode::Owned => "self".into(),
         };
+    }
+    if matches!(trait_impl, Some("Eq") | Some("Ord")) {
+        return format!("{}: &Self", p.name);
     }
     let lt = p
         .lifetime
@@ -679,9 +782,14 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             emit_expr(out, receiver, current_module, map);
             let _ = write!(out, ".{method}(");
+            // Eq.equal / Ord.compare take `&Self`; auto-borrow args.
+            let borrow_args = matches!(method.as_str(), "equal" | "compare");
             for (i, arg) in args.iter().enumerate() {
                 if i > 0 {
                     let _ = write!(out, ", ");
+                }
+                if borrow_args && !matches!(arg, CirExpr::Borrow { .. }) {
+                    let _ = write!(out, "&");
                 }
                 emit_expr(out, arg, current_module, map);
             }
@@ -897,6 +1005,14 @@ fn emit_call_expr(
                 emit_expr(out, &args[0].expr, current_module, map);
                 let _ = write!(out, "))");
             }
+            "std::net::parse_ip" if !args.is_empty() => {
+                let _ = write!(out, "({{ match ");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(
+                    out,
+                    ".parse::<std::net::IpAddr>() {{ Ok(a) => a.to_string(), Err(_) => \"invalid\".to_string() }} }})"
+                );
+            }
             other => {
                 let _ = write!(out, "{other}(");
                 for (i, arg) in args.iter().enumerate() {
@@ -965,6 +1081,19 @@ fn emit_rust_crate_call(
                 emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
             }
             let _ = write!(out, ").expect(\"serde_json::{callee}\")");
+        }
+        ("ureq", "get") => {
+            let _ = write!(out, "ureq::get(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+            }
+            let _ = write!(
+                out,
+                ").call().expect(\"ureq::get\").into_string().expect(\"ureq::get body\")"
+            );
         }
         _ => {
             let _ = write!(out, "{crate_name}::{callee}(");
@@ -1163,8 +1292,13 @@ fn binop_rust(op: CirBinOp) -> &'static str {
         CirBinOp::Mul => "*",
         CirBinOp::Div => "/",
         CirBinOp::Eq => "==",
+        CirBinOp::Ne => "!=",
         CirBinOp::Lt => "<",
+        CirBinOp::Le => "<=",
         CirBinOp::Gt => ">",
+        CirBinOp::Ge => ">=",
+        CirBinOp::And => "&&",
+        CirBinOp::Or => "||",
         CirBinOp::Pow => ".powf",
         CirBinOp::Concat => "+",
     }

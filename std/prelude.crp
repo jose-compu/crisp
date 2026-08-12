@@ -1,7 +1,8 @@
 -- Crisp standard library prelude (spec §15)
--- Maps onto Rust std + thin Crisp shims.
+-- Documentation mirror; live symbols are compiler-injected (see crisp-resolve).
 
 -- Core types: ?T, Result<T,E>, str, vec, map, set
--- IO: std.io, std.fs, std.net, std.http
+-- IO: std.io, std.fs, std.net.parse_ip; HTTP via rust=true crates (e.g. ureq)
 -- Concurrency: std.async, std.sync, std.atomic
--- Traits: Show, Eq, Ord, Hash, Clone, Copy, Drop, Default, Into, From, Iterator
+-- Traits (injected): Show.show, Eq.equal, Ord.compare → Display / PartialEq / Ord
+-- Still deferred: Hash, Clone, Copy, Drop, Default, Into, From, Iterator; std.http server API

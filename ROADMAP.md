@@ -159,10 +159,10 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 - [x] Core: vec shims (`new` / `push` / `len`); option/result/string/map/set symbols
 - [x] IO: `std.fs.read_to_string` shim
-- [ ] IO: net; http via manifest deps
+- [x] IO: net; http via manifest deps (`std.net.parse_ip`, `ureq` / #28)
 - [x] Concurrency: async/tokio (`#[tokio::main]`, `sleep_ms`)
 - [ ] Concurrency: sync, atomic (symbols only)
-- [ ] Trait shims: Show, Eq, Ord, …
+- [x] Trait shims: Show, Eq, Ord (`examples/std_traits` / #27)
 
 **Language features**
 
@@ -312,7 +312,7 @@ Not committed to dates; tracked for direction only.
 
 Tracking epic: [jose-compu/crisp#1](https://github.com/jose-compu/crisp/issues/1) (labels: `epic:publication`, `P0` / `P1` / `P2`).
 
-Current compiler: **v1.3.0**. Planned GitHub milestones:
+Current compiler: **v1.4.0**. Planned GitHub milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -332,4 +332,4 @@ Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/iss
 
 ---
 
-*Last updated: 2026-08-12 — v1.3.0 shipped; trait path → #50 / v1.4.0.*
+*Last updated: 2026-08-12 — v1.4.0: Rust interop, traits, Show/Eq/Ord, net/http shims.*

@@ -115,6 +115,27 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Show",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Show",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Eq",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Ord",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Ord",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -161,6 +182,13 @@ ResolvedCrate {
                     symbol: SymbolKey {
                         module: "std.atomic",
                         name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "parse_ip",
+                    symbol: SymbolKey {
+                        module: "std.net",
+                        name: "parse_ip",
                     },
                 },
                 ResolvedBinding {
@@ -229,6 +257,9 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "Show",
+                "Eq",
+                "Ord",
                 "new",
                 "push",
                 "len",
@@ -236,6 +267,7 @@ ResolvedCrate {
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
+                "parse_ip",
                 "Option",
                 "Result",
                 "String",
@@ -355,6 +387,27 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Show",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Show",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Eq",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Ord",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Ord",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -401,6 +454,13 @@ ResolvedCrate {
                     symbol: SymbolKey {
                         module: "std.atomic",
                         name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "parse_ip",
+                    symbol: SymbolKey {
+                        module: "std.net",
+                        name: "parse_ip",
                     },
                 },
                 ResolvedBinding {
@@ -469,6 +529,9 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "Show",
+                "Eq",
+                "Ord",
                 "new",
                 "push",
                 "len",
@@ -476,6 +539,7 @@ ResolvedCrate {
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
+                "parse_ip",
                 "Option",
                 "Result",
                 "String",
@@ -595,6 +659,27 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Show",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Show",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Eq",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Eq",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Ord",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Ord",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -641,6 +726,13 @@ ResolvedCrate {
                     symbol: SymbolKey {
                         module: "std.atomic",
                         name: "new_int",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "parse_ip",
+                    symbol: SymbolKey {
+                        module: "std.net",
+                        name: "parse_ip",
                     },
                 },
                 ResolvedBinding {
@@ -723,6 +815,9 @@ ResolvedCrate {
                 "some",
                 "none",
                 "assert_eq",
+                "Show",
+                "Eq",
+                "Ord",
                 "new",
                 "push",
                 "len",
@@ -730,6 +825,7 @@ ResolvedCrate {
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
+                "parse_ip",
                 "Option",
                 "Result",
                 "String",
@@ -742,7 +838,7 @@ ResolvedCrate {
             ],
         },
     ],
-    symbol_count: 31,
+    symbol_count: 35,
     rust_imports: [],
     warnings: [],
 }

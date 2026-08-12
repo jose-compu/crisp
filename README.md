@@ -89,7 +89,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.3.0** — Inherent `impl Type` methods; reveal/QUICKSTART polish; CI Ubuntu+macOS + MSRV 1.85; `crisp-lsp` documented as analysis-API-only. Traits deferred to [#50](https://github.com/jose-compu/crisp/issues/50).
+**v1.4.0** — Rust crate interop (`use` / `rust = true`); `trait` / `impl Trait for`; prelude Show/Eq/Ord; `std.net` + thin HTTP (`ureq`); `.crp` VS Code highlighting.
 
 Next: **v1.4.0** (Rust crate interop, trait path, stdlib expansion). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
 

@@ -350,6 +350,8 @@ Then **Developer: Reload Window**. Or open that folder and press **F5** (Extensi
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
+| `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |
+| `net_http` | `parse_ip` + `ureq` GET via `rust = true` (§15.2 / #28) |
 | `feature_gallery` | Nested mods + enums + inherent methods together |
 | `rust_import` | Call `serde_json` via bare `use serde_json { from_str, to_string }` (§14.2 / #41) |
 | `rust_shadow` | W0048 when Crisp module name collides with a Rust dep |

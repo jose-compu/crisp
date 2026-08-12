@@ -180,12 +180,16 @@ fn emit_expr(expr: &Expr) -> String {
                     return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
                 }
                 // Instance: recv.method(args) — including chained AssocCall receivers.
-                return format!(
-                    "{}.{}({})",
-                    emit_expr(base),
-                    field.name,
+                // Eq.equal / Ord.compare take `&Self`.
+                let args_fmt = if matches!(field.name.as_str(), "equal" | "compare") {
+                    args.iter()
+                        .map(|a| format!("&{}", emit_expr(a)))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                } else {
                     arg_strs.join(", ")
-                );
+                };
+                return format!("{}.{}({})", emit_expr(base), field.name, args_fmt);
             }
             let name = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),
@@ -206,6 +210,14 @@ fn emit_expr(expr: &Expr) -> String {
                 crisp_ast::expr::BinaryOp::Div => "/",
                 crisp_ast::expr::BinaryOp::Pow => ".powf",
                 crisp_ast::expr::BinaryOp::Concat => "+",
+                crisp_ast::expr::BinaryOp::Eq => "==",
+                crisp_ast::expr::BinaryOp::Ne => "!=",
+                crisp_ast::expr::BinaryOp::Lt => "<",
+                crisp_ast::expr::BinaryOp::Le => "<=",
+                crisp_ast::expr::BinaryOp::Gt => ">",
+                crisp_ast::expr::BinaryOp::Ge => ">=",
+                crisp_ast::expr::BinaryOp::And => "&&",
+                crisp_ast::expr::BinaryOp::Or => "||",
                 _ => "+",
             };
             if matches!(op, crisp_ast::expr::BinaryOp::Pow) {

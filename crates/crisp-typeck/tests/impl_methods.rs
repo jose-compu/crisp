@@ -43,3 +43,17 @@ fn vec2_methods_nested_typechecks() {
 fn feature_gallery_typechecks() {
     TypeChecker::check_crate(&example("feature_gallery")).expect("feature_gallery");
 }
+
+#[test]
+fn show_trait_typechecks_and_registers_methods() {
+    let typed = TypeChecker::check_crate(&example("show_trait")).expect("show_trait");
+    assert!(
+        typed
+            .inherent_methods
+            .get("Point")
+            .is_some_and(|m| m.contains_key("show")),
+        "expected Point.show from trait impl, got {:?}",
+        typed.inherent_methods
+    );
+    assert!(typed.signatures.contains_key("main::Point::show"));
+}

@@ -23,7 +23,7 @@ impl ErrorPass {
                         let key = format!("{}::{}", node.module_path, f.name.name);
                         fn_defs.insert(key, (node.module_path.clone(), f.clone()));
                     }
-                    Item::Impl(ib) if ib.trait_name.is_none() => {
+                    Item::Impl(ib) => {
                         let ty_name = match &ib.ty.kind {
                             crisp_ast::ty::TypeKind::Named(id) => id.name.clone(),
                             _ => continue,

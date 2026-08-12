@@ -30,8 +30,16 @@ pub enum CirItem {
         span: Span,
     },
     Function(CirFunction),
+    Trait(CirTrait),
     Impl(CirImpl),
     Extern(CirExternBlock),
+}
+
+#[derive(Debug, Clone)]
+pub struct CirTrait {
+    pub name: String,
+    pub methods: Vec<CirTraitMethod>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]

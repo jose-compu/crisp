@@ -47,6 +47,7 @@ Expected output:
 Other useful commands:
 
 ```bash
+reveal types examples/hello  # see inferred signatures (see §10)
 crpc check examples/hello    # resolve + typecheck (fast)
 crpc emit examples/hello     # write Rust to examples/hello/target/rust/
 crpc build examples/hello    # emit + cargo build
@@ -244,31 +245,71 @@ See `examples/fallible`, `examples/fallible_chain`.
 
 `<path>` defaults to `.` (searches upward for `crisp.toml`).
 
-## 10. Inspect what the compiler inferred (`reveal`, spec §16)
+## 10. Inspect what the compiler inferred (`reveal`)
 
-`reveal` is a second binary from the `crpc` package. It reconstructs precision that surface syntax omits.
+### What is `reveal`?
+
+`crpc` **builds and runs** your project. `reveal` **explains** what the compiler decided behind the scenes.
+
+Crisp source often omits types, borrows (`&` / `&mut`), lifetimes, and error sets — the compiler infers them. `reveal` prints those decisions so you can learn the language and debug surprises without opening `target/rust/` by hand.
+
+| Tool | Job |
+|------|-----|
+| `crpc check` / `run` / `test` | “Does this compile and work?” |
+| `reveal <subcommand>` | “What did inference emit / decide?” |
+| `crpc emit` | Write the full generated Rust crate under `target/rust/` |
+
+`reveal` ships next to `crpc` (same `cargo build -p crpc` / `cargo install --path crates/crpc`). Spec reference: §16.
+
+### Try it (hello)
+
+From the repo root (with `reveal` on `PATH`):
 
 ```bash
-reveal types examples/hello
-reveal ownership examples/server
-reveal rust examples/math
+reveal types examples/hello      # inferred signatures
+reveal ownership examples/hello  # & / &mut / owned per param
+reveal rust examples/hello       # generated Rust entry file
 reveal --help
 ```
 
-| Command | Role | Fidelity today |
-|---------|------|----------------|
-| `reveal types <path>` | Inferred signatures | Solid |
-| `reveal ownership <path>` | Borrow / move / copy (+ §7.6 fallbacks) | Solid |
-| `reveal lifetimes <path>` | Region / lifetime params | Solid |
-| `reveal errors <path>` | Reachable `CrispError` sets | Solid |
-| `reveal rust <path>` | Emitted Rust entry | Solid (crate-level) |
-| `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
-| `reveal traits <path>` | Shape / trait summary | Limited (see #20 / #21) |
-| `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
-| `reveal diff <path>` | Crisp vs Rust | Name-level summary, not full side-by-side |
-| `reveal map <path>` | Alloc / drop notes | Coarse CIR notes, not span-accurate |
+Example — `reveal types examples/hello` prints something like:
 
-`<path>` is a crate root (directory with `crisp.toml`) or a path inside one. Details and gaps: [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [SPEC_IMPL_DELTA.md](docs/SPEC_IMPL_DELTA.md).
+```
+greet(name: &str) -> str
+main() -> ()
+```
+
+Your Crisp may only say `greet(name) = …`; `reveal` shows that `name` became `&str`.
+
+### Common questions → which command
+
+| I want to… | Run |
+|------------|-----|
+| See function signatures (types / `&`) | `reveal types <path>` or `reveal ownership <path>` |
+| See the Rust `crpc` would generate | `reveal rust <path>` |
+| See which errors a fallible fn can throw | `reveal errors <path>` |
+| List `trait` / `impl Trait for` in a crate | `reveal traits <path>` (try `examples/show_trait`) |
+| See lifetimes on parameters | `reveal lifetimes <path>` |
+| See the sealed public API (`crisp.lock`) | `reveal seal <path>` |
+
+`<path>` is a crate root (folder with `crisp.toml`) or any path inside that crate. Default is `.`.
+
+### Full command list
+
+| Command | Role | Status |
+|---------|------|--------|
+| `reveal types <path>` | Inferred signatures | Solid |
+| `reveal ownership <path>` | Borrow / move / copy (+ rustc fallbacks) | Solid |
+| `reveal lifetimes <path>` | Lifetime parameters | Solid |
+| `reveal errors <path>` | Reachable `CrispError` sets | Solid |
+| `reveal rust <path>` | Emitted Rust entry | Solid |
+| `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
+| `reveal traits <path>` | User traits + impls (+ shape traits if any) | User traits solid; shapes still `E0039` (#21) |
+| `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
+| `reveal diff <path>` | Crisp vs Rust names | Name-level summary only |
+| `reveal map <path>` | Alloc / drop notes | Coarse CIR notes |
+
+Gaps vs the draft spec: [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [SPEC_IMPL_DELTA.md](docs/SPEC_IMPL_DELTA.md).
 
 ## 11. Editor analysis API (`crisp-lsp`)
 
@@ -287,6 +328,18 @@ let hints = analysis.inlay_hints(Path::new("examples/hello/src/main.crp"))?;
 
 Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’s task runner.
 
+### Syntax highlighting (VS Code / Cursor)
+
+Highlighting-only TextMate grammar for `.crp` (not LSP) lives in [`editors/vscode-crisp`](editors/vscode-crisp):
+
+```bash
+# from repo root — Cursor
+ln -sf "$PWD/editors/vscode-crisp" "$HOME/.cursor/extensions/jose-compu.crisp-lang-0.1.0"
+# VS Code: use ~/.vscode/extensions/… instead
+```
+
+Then **Developer: Reload Window**. Or open that folder and press **F5** (Extension Development Host). Details: [`editors/vscode-crisp/README.md`](editors/vscode-crisp/README.md).
+
 ## 12. Example projects
 
 | Example | Topics |
@@ -296,6 +349,7 @@ Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’
 | `nested_math` | Nested `src/math/vector.crp` module tree |
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
+| `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
 | `feature_gallery` | Nested mods + enums + inherent methods together |
 | `rust_import` | Call `serde_json` via bare `use serde_json { from_str, to_string }` (§14.2 / #41) |
 | `rust_shadow` | W0048 when Crisp module name collides with a Rust dep |
@@ -322,11 +376,12 @@ crpc test examples/<name>
 ## 13. Project layout reference
 
 ```
-crates/          Compiler workspace (`crpc`, emit, typeck, …)
-docs/spec/       Language specification
-examples/        Sample `.crp` projects
-std/             Standard library (Crisp)
-tests/           Integration fixtures
+crates/                 Compiler workspace (`crpc`, emit, typeck, …)
+docs/spec/              Language specification
+editors/vscode-crisp/   `.crp` syntax highlighting (VS Code / Cursor)
+examples/               Sample `.crp` projects
+std/                    Standard library (Crisp)
+tests/                  Integration fixtures
 ```
 
 ## Philosophy

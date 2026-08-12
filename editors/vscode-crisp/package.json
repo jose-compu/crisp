@@ -1,0 +1,45 @@
+{
+  "name": "crisp-lang",
+  "displayName": "Crisp",
+  "description": "Syntax highlighting for the Crisp programming language (.crp)",
+  "version": "0.1.0",
+  "publisher": "jose-compu",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "crisp",
+    "crp",
+    "crpc"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jose-compu/crisp"
+  },
+  "license": "MIT OR Apache-2.0",
+  "contributes": {
+    "languages": [
+      {
+        "id": "crisp",
+        "aliases": [
+          "Crisp",
+          "crisp"
+        ],
+        "extensions": [
+          ".crp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "crisp",
+        "scopeName": "source.crisp",
+        "path": "./syntaxes/crisp.tmLanguage.json"
+      }
+    ]
+  }
+}

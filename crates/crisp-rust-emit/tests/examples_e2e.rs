@@ -47,6 +47,7 @@ const EXAMPLES: &[&str] = &[
     "nested_math",
     "vec2_methods",
     "point_impl",
+    "show_trait",
     "feature_gallery",
     "rust_import",
     "rust_shadow",
@@ -124,6 +125,7 @@ fn examples_with_tests_pass_crpc_test() {
         "design_patterns",
         "vec2_methods",
         "point_impl",
+        "show_trait",
         "feature_gallery",
     ] {
         let root = example(name);
@@ -172,6 +174,7 @@ fn runnable_examples_build_and_run() {
         "nested_math",
         "vec2_methods",
         "point_impl",
+        "show_trait",
         "feature_gallery",
         "rust_import",
         "rust_shadow",
@@ -295,6 +298,7 @@ const BUILDABLE: &[&str] = &[
     "nested_math",
     "vec2_methods",
     "point_impl",
+    "show_trait",
     "feature_gallery",
     "rust_import",
     "rust_shadow",

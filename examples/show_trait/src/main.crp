@@ -1,0 +1,31 @@
+-- examples/show_trait — trait + impl Trait for Type (spec §3.6 / §5.4 / #50)
+
+trait Show = {
+    show(self) -> str
+}
+
+type Point = {
+    x: int
+    y: int
+}
+
+impl Point = {
+    pub new(x: int, y: int) = Point {
+        x: x
+        y: y
+    }
+}
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}
+
+test "show" = {
+    p := Point.new(1, 2)
+    assert_eq(p.show(), "(1,2)")
+}
+
+pub main() = {
+    p := Point.new(3, 4)
+    log("p={p.show()}")
+}

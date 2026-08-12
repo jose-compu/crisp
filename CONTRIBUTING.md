@@ -21,6 +21,8 @@ crpc --version
 reveal --version
 ```
 
+`crpc` builds/runs Crisp crates. `reveal` prints what inference decided (types, ownership, emitted Rust, …). Beginner guide: [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
+
 Git hooks live in [`.githooks/`](.githooks/) (`core.hooksPath`). They mirror CI: `cargo fmt --all -- --check`.
 
 Alternatively:

@@ -95,7 +95,7 @@ fn collect_functions(
                 let key = format!("{module}::{}", f.name.name);
                 out.insert(key, (module.to_string(), f.clone()));
             }
-            Item::Impl(ib) if ib.trait_name.is_none() => {
+            Item::Impl(ib) => {
                 let ty_name = match &ib.ty.kind {
                     crisp_ast::ty::TypeKind::Named(id) => id.name.clone(),
                     _ => continue,

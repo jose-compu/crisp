@@ -29,7 +29,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
-| Traits / `impl Trait for` | §3.6 | Parse/AST; typeck/CIR incomplete — tracked in [#50](https://github.com/jose-compu/crisp/issues/50) |
+| Traits / `impl Trait for` | §3.6 | Working for method traits + `impl Trait for Type` (`examples/show_trait`); defaults / bounds / dyn / std Show deferred — [#50](https://github.com/jose-compu/crisp/issues/50) |
 | Rust crate imports | §14.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; known `serde_json` stubs (`examples/rust_import`); Result → `.expect` until `?` absorption — [#41](https://github.com/jose-compu/crisp/issues/41) |
 | Shapes | §3.5 | Parse + keyword only; resolve emits `E0039` (unsupported) until full §3.5 lands |
 | Channels | §11.4 | Not implemented |
@@ -38,13 +38,15 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)
 
+Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal) (`crpc` = build/run; `reveal` = inspect inference).
+
 | Spec command | Implementation |
 |--------------|----------------|
 | `reveal types` | Implemented (`reveal_types`) |
 | `reveal ownership` | Implemented (+ rustc fallbacks) |
 | `reveal lifetimes` | Implemented |
 | `reveal errors` | Implemented |
-| `reveal traits` | Partial — CIR shape traits only |
+| `reveal traits` | User traits + trait impls from CIR; shape traits when present |
 | `reveal rust` | Implemented (crate entry via emit pipeline) |
 | `reveal seal` | Implemented |
 | `reveal expand` | Partial — signature + shallow body stubs |

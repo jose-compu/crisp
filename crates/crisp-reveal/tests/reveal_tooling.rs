@@ -1,14 +1,28 @@
 use crisp_reveal::{reveal_expand, reveal_map, reveal_seal, reveal_traits};
 use std::path::PathBuf;
 
+fn example(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!("../../examples/{name}"))
+}
+
 fn hello_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/hello")
+    example("hello")
 }
 
 #[test]
 fn reveal_traits_hello() {
     let out = reveal_traits(&hello_root()).unwrap();
-    assert!(out.contains("no shape traits") || out.contains("shape"));
+    assert!(
+        out.contains("no traits in this crate") || out.contains("shape") || out.contains("trait "),
+        "unexpected reveal traits output: {out}"
+    );
+}
+
+#[test]
+fn reveal_traits_show_trait() {
+    let out = reveal_traits(&example("show_trait")).unwrap();
+    assert!(out.contains("trait Show"), "output: {out}");
+    assert!(out.contains("impl Show for Point"), "output: {out}");
 }
 
 #[test]

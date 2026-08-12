@@ -308,28 +308,27 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-## Publication readiness (public release backlog)
+## Publication readiness (public preview)
 
-Tracking epic: [jose-compu/crisp#1](https://github.com/jose-compu/crisp/issues/1) (labels: `epic:publication`, `P0` / `P1` / `P2`).
+**v1.4.1** is the public-preview hygiene release. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.4.0**. Planned GitHub milestones:
+Current compiler: **v1.4.1**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
-| **v1.1.1** | patch | Docs, license, release hygiene, CI/example matrix | [milestone](https://github.com/jose-compu/crisp/milestone/1) · label `release:v1.1.1` |
-| **v1.2.0** | minor | Critical language/DX (enums, fields, modules, probe) — first public-usable target | [milestone](https://github.com/jose-compu/crisp/milestone/2) · label `release:v1.2.0` |
-| **v1.3.0** | minor | LSP docs, reveal polish, inherent impl methods, CI matrix (shipped) | [milestone](https://github.com/jose-compu/crisp/milestone/3) · label `release:v1.3.0` |
-| **v1.4.0** | minor | Rust crate interop, `trait` / `impl Trait for`, stdlib expansion | [milestone](https://github.com/jose-compu/crisp/milestone/5) · label `release:v1.4.0` |
-| **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) · label `release:v2.0.0` |
+| **v1.4.0** | minor | Rust interop, traits, Show/Eq/Ord, net/http (shipped) | [milestone](https://github.com/jose-compu/crisp/milestone/5) |
+| **v1.4.1** | patch | Public preview docs/badge/homepage honesty | [milestone](https://github.com/jose-compu/crisp/milestone/7) · label `release:v1.4.1` |
+| **v1.5.0** | minor | Result `?`, stdio LSP, editor package, trait polish | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
+| **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
 |----------|--------|----------|
-| **P0** | Docs, honesty, install, known limitations, critical compiler gaps | [#2](https://github.com/jose-compu/crisp/issues/2)–[#17](https://github.com/jose-compu/crisp/issues/17); also [#33](https://github.com/jose-compu/crisp/issues/33) license, [#34](https://github.com/jose-compu/crisp/issues/34) enums, [#36](https://github.com/jose-compu/crisp/issues/36) design_patterns e2e |
-| **P1** | Interop, traits (#50), shapes, stdlib shims | [#24](https://github.com/jose-compu/crisp/issues/24)–[#29](https://github.com/jose-compu/crisp/issues/29), [#50](https://github.com/jose-compu/crisp/issues/50); also [#35](https://github.com/jose-compu/crisp/issues/35) nested mods, [#37](https://github.com/jose-compu/crisp/issues/37) parse coverage |
-| **P2** | Deferred (watch mode, library API, self-hosting, channels) | [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32), [#38](https://github.com/jose-compu/crisp/issues/38) |
+| **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
+| **P1** | Result `?`, LSP host, shapes, trait defaults/`dyn` | [#55](https://github.com/jose-compu/crisp/issues/55), [#56](https://github.com/jose-compu/crisp/issues/56), [#61](https://github.com/jose-compu/crisp/issues/61), [#59](https://github.com/jose-compu/crisp/issues/59) |
+| **P2** | Editor Marketplace, crates.io revisit, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57), [#60](https://github.com/jose-compu/crisp/issues/60), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-*Last updated: 2026-08-12 — v1.4.0: Rust interop, traits, Show/Eq/Ord, net/http shims.*
+*Last updated: 2026-08-12 — v1.4.1 public-preview hygiene; active work → v1.5.0.*

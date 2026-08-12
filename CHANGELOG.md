@@ -9,6 +9,19 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.4.1] — 2026-08-12
+
+### Changed
+
+- Public-preview hygiene: CI badge, README motto + Result sharp-edge callout, homepage/topics for GitHub Pages.
+- [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md) brought current for v1.4 (Show/Eq/Ord, net/http, interop `.expect`).
+- [RELEASE.md](docs/RELEASE.md) / [CONTRIBUTING.md](CONTRIBUTING.md) public checklist updated; deferred work under milestone [v1.5.0](https://github.com/jose-compu/crisp/milestone/6).
+- Workspace version bump to **1.4.1**.
+
+### Notes
+
+- Repository visibility flip remains a maintainer action ([#58](https://github.com/jose-compu/crisp/issues/58) · milestone [v1.4.1](https://github.com/jose-compu/crisp/milestone/7)).
+
 ## [1.4.0] — 2026-08-12
 
 ### Added
@@ -126,7 +139,8 @@ Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.
 [0.7.0]: https://github.com/jose-compu/crisp/releases/tag/v0.7.0
 
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/jose-compu/crisp/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/jose-compu/crisp/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0
 [1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0

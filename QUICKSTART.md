@@ -30,7 +30,9 @@ crpc --version
 reveal --version
 ```
 
-Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site lives on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch under `docs/`.
+Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site: [jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/) (source on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch).
+
+**Interop note:** Rust APIs that return `Result` currently emit `.expect(...)` (panic on Err) until [#55](https://github.com/jose-compu/crisp/issues/55).
 
 ## 2. Run the hello example
 
@@ -304,7 +306,7 @@ Your Crisp may only say `greet(name) = …`; `reveal` shows that `name` became `
 | `reveal errors <path>` | Reachable `CrispError` sets | Solid |
 | `reveal rust <path>` | Emitted Rust entry | Solid |
 | `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
-| `reveal traits <path>` | User traits + impls (+ shape traits if any) | User traits solid; shapes still `E0039` (#21) |
+| `reveal traits <path>` | User traits + impls (+ shape traits if any) | User traits solid; shapes still `E0039` (#61) |
 | `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
 | `reveal diff <path>` | Crisp vs Rust names | Name-level summary only |
 | `reveal map <path>` | Alloc / drop notes | Coarse CIR notes |

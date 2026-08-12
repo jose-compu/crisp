@@ -62,11 +62,18 @@ crpc run examples/float_demo
 
 ## Pull requests
 
-1. Prefer an open issue from [milestone v1.1.1+](https://github.com/jose-compu/crisp/milestones) or [epic #1](https://github.com/jose-compu/crisp/issues/1).
+1. Prefer an open issue from [milestone v1.5.0+](https://github.com/jose-compu/crisp/milestones) or label `epic:publication`.
 2. Cross-reference the **spec section** (e.g. §7.6, §12) in the PR description.
 3. Add or update tests under the relevant crate’s `tests/` (or examples e2e lists).
 4. Keep `cargo fmt --check` and clippy `-D warnings` green.
 5. Do not attribute authorship to AI tools in commit trailers.
+
+## Public preview notes
+
+- Install: `cargo install --path crates/crpc --locked` (crates.io deferred — [#60](https://github.com/jose-compu/crisp/issues/60)).
+- Site: https://jose-compu.github.io/crisp/
+- Maintainers: enable branch protection on `main` (require CI) when the GitHub plan allows; flip visibility via [#58](https://github.com/jose-compu/crisp/issues/58).
+- Release checklist: [docs/RELEASE.md](docs/RELEASE.md).
 
 ## License
 

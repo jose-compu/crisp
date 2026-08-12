@@ -9,14 +9,25 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-08-12
+
 ### Added
 
-- TypeScript-style Rust crate imports: bare `use serde_json { … }` when the crate is a `rust = true` dependency; `use rust.<crate>` / `use rust::<crate>` kept as aliases (`E0044`–`E0047`, `ResolvedRustImport`) (#41, epic #51).
+- TypeScript-style Rust crate imports: bare `use serde_json { … }` when the crate is a `rust = true` dependency; `use rust.<crate>` / `use rust::<crate>` kept as aliases (`E0044`–`E0047`, `ResolvedRustImport`) (#41).
 - **W0048** when a Crisp module and a Rust dep share a name: bare `use` binds the module; `use rust.<name>` selects the crate.
-- Examples: `examples/rust_import` (calls `serde_json::from_str` / `to_string`), `examples/rust_shadow`.
-- Typeck/emit stubs for imported Rust fns (serde_json); Result APIs emit `.expect(...)` pending `?` absorption.
-- `trait` / `impl Trait for Type` through typeck → CIR → emit (`examples/show_trait`); `reveal traits` lists user traits (#50).
-- VS Code / Cursor TextMate extension for `.crp` highlighting (`editors/vscode-crisp`).
+- Examples: `examples/rust_import`, `examples/rust_shadow`.
+- Typeck/emit stubs for imported Rust fns (`serde_json`, `ureq`); Result APIs emit `.expect(...)` until Crisp `?` absorbs Rust errors.
+- `trait` / `impl Trait for Type` through typeck → CIR → emit (`examples/show_trait`) (#50).
+- Prelude **Show / Eq / Ord** shims (§15.4): emit Crisp traits + Rust `Display` / `PartialEq`+`Eq` / `Ord` bridges; methods `show` / `equal` / `compare` (`examples/std_traits`) (#27).
+- **std.net.parse_ip** shim + **ureq** HTTP GET via `rust = true` (`examples/net_http`) (#28).
+- VS Code / Cursor TextMate extension for `.crp` (`editors/vscode-crisp`).
+- Beginner-oriented `reveal` documentation (QUICKSTART §10).
+- CIR/emit: `&&` / `||` / `!=` / `<=` / `>=` binary ops (no longer mis-lowered to `+`).
+
+### Notes
+
+- Rust `Result` from imported crates still uses `.expect(...)` (follow-up for `?` absorption).
+- Full Crisp `std.http` server API (§20) remains deferred; #28 ships thin re-exports.
 
 ## [1.3.0] — 2026-08-12
 
@@ -106,7 +117,17 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0
+[1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0
+[1.1.0]: https://github.com/jose-compu/crisp/releases/tag/v1.1.0
+[1.0.0]: https://github.com/jose-compu/crisp/releases/tag/v1.0.0
+[0.9.0]: https://github.com/jose-compu/crisp/releases/tag/v0.9.0
+[0.8.0]: https://github.com/jose-compu/crisp/releases/tag/v0.8.0
+[0.7.0]: https://github.com/jose-compu/crisp/releases/tag/v0.7.0
+
+
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/jose-compu/crisp/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0
 [1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/jose-compu/crisp/releases/tag/v1.1.0

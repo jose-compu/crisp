@@ -367,8 +367,13 @@ pub enum CirBinOp {
     Div,
     Pow,
     Eq,
+    Ne,
     Lt,
+    Le,
     Gt,
+    Ge,
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone)]

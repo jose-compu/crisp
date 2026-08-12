@@ -49,6 +49,11 @@ pub fn std_functions() -> &'static [StdFn] {
             name: "new_int",
             rust_path: "std::sync::atomic::AtomicI64::new",
         },
+        StdFn {
+            module: "std.net",
+            name: "parse_ip",
+            rust_path: "std::net::parse_ip",
+        },
     ]
 }
 

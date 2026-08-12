@@ -816,8 +816,13 @@ fn lower_expr(
                 BinaryOp::Div => CirBinOp::Div,
                 BinaryOp::Pow => CirBinOp::Pow,
                 BinaryOp::Eq => CirBinOp::Eq,
+                BinaryOp::Ne => CirBinOp::Ne,
                 BinaryOp::Lt => CirBinOp::Lt,
+                BinaryOp::Le => CirBinOp::Le,
                 BinaryOp::Gt => CirBinOp::Gt,
+                BinaryOp::Ge => CirBinOp::Ge,
+                BinaryOp::And => CirBinOp::And,
+                BinaryOp::Or => CirBinOp::Or,
                 _ => CirBinOp::Add,
             };
             E::BinOp {

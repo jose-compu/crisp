@@ -4,9 +4,11 @@
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
 </p>
 
-A systems programming language that transpiles to Rust. You write compact `.crp` source; `crpc` infers types, ownership, lifetimes, and error propagation, emits explicit Rust, and `rustc` is the soundness boundary.
+> **Explicit on demand, implicit by default.**
 
-**This is a Rust-hosted bootstrap compiler (v1.2.x).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
+
+**This is a Rust-hosted bootstrap compiler (v1.4.0).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
@@ -22,8 +24,6 @@ License: **MIT OR Apache-2.0** ([LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), 
 ## Philosophy
 
 Crisp is optimized for **writing and local reading**. Semantics are defined by **lowering to Rust**, not by a separate runtime or VM.
-
-> **Explicit on demand, implicit by default.**
 
 In practice that means:
 
@@ -91,7 +91,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 **v1.4.0** — Rust crate interop (`use` / `rust = true`); `trait` / `impl Trait for`; prelude Show/Eq/Ord; `std.net` + thin HTTP (`ureq`); `.crp` VS Code highlighting.
 
-Next: **v1.4.0** (Rust crate interop, trait path, stdlib expansion). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
+See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones) for what comes next.
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 

@@ -7,14 +7,18 @@
 (function () {
   function looksLikeCrisp(text) {
     return (
-      /(?:^|\n)\s*(?:pub\s+)?(?:main|type|test|use|extern)\b/.test(text) ||
+      /(?:^|\n)\s*(?:pub\s+)?(?:main|type|test|use|extern|trait|impl|shape|enum)\b/.test(
+        text
+      ) ||
+      /(?:^|\n)\s*impl\s+\w+\s+for\s+\w+/.test(text) ||
       /:=/.test(text) ||
       /\+\+/.test(text) ||
       /(?:^|\n)\s*--/.test(text) ||
       /\bthen\b/.test(text) ||
       /\bcatch\b/.test(text) ||
       /\bthrow\b/.test(text) ||
-      /^\s*\w[\w']*\([^)]*\)\s*=/.test(text)
+      /\bmatch\b/.test(text) ||
+      /(?:^|\n)\s*\w[\w']*\([^)]*\)\s*=/.test(text)
     );
   }
 

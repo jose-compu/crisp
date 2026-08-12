@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public preview <strong>v1.4.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -28,20 +28,23 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the bootstrap compiler versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.4.x public preview versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
   <section class="band-light">
     <div class="wrap content">
       <ul>
-        <li>Not self-hosted — Rust-hosted <code>crpc</code> only</li>
-        <li>Enums / match reliability incomplete</li>
-        <li>Field access on function parameters limited</li>
-        <li>Module load order is alphabetical in flat <code>src/</code></li>
-        <li><code>use rust::crate</code> imports not implemented yet (Cargo deps can be listed; calling Rust APIs from Crisp is tracked separately)</li>
-        <li>Shapes / some stdlib areas incomplete</li>
+        <li>Not self-hosted — Rust-hosted <code>crpc</code> only (self-hosting → v2.0.0)</li>
+        <li><strong>Shapes</strong> reserved; resolve rejects with <code>E0039</code> until full support (#61)</li>
+        <li>Rust <code>Result</code> APIs from <code>rust = true</code> deps currently lower to <code>.expect(...)</code> (#55)</li>
+        <li>Trait defaults / bounds / <code>dyn Trait</code> still incomplete (#59)</li>
+        <li>Enums: unit/tuple variants work; recursive enums and full exhaustiveness still gap</li>
+        <li>Field access on parameters: inferred when exactly one struct has the field; else annotate (<code>E0043</code>)</li>
+        <li><code>crisp-lsp</code> is analysis API only — no stdio LSP host yet (#56)</li>
+        <li>crates.io publish deferred; install from source</li>
       </ul>
+      <p><strong>Shipped in v1.4:</strong> Rust crate imports (<code>use serde_json { … }</code>), <code>trait</code> / <code>impl Trait for</code>, prelude Show/Eq/Ord, <code>std.net</code> + thin HTTP via <code>ureq</code>.</p>
       <p>
         <a href="https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md →</a>
         ·
@@ -73,7 +76,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public preview v1.4.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

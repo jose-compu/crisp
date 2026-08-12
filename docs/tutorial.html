@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Bootstrap compiler <strong>v1.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public preview <strong>v1.4.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -106,7 +106,7 @@ pub main() = {
     cfg := ServerConfig { port: 3000 }
     log("port={cfg.port}")
 }</pre>
-          <p>Omitted fields use defaults. Field access works on <strong>local</strong> bindings (not directly on function parameters today — see limitations).</p>
+          <p>Omitted fields use defaults. Field access on parameters is inferred when exactly one known struct has the field; otherwise annotate the param (see <a href="limitations.html">limitations</a>).</p>
         </article>
 
         <article class="tutorial-step" id="modules">
@@ -204,7 +204,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Compiler bootstrap (not yet self-hosted)</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public preview v1.4.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

@@ -1,6 +1,6 @@
 # Crisp documentation site
 
-Static site for GitHub Pages (branch `docs`, folder `/docs`).
+Static site for GitHub Pages (branch `docs`, folder `/docs`). Content tracks compiler **v1.4.1** public preview.
 
 ## Pages
 

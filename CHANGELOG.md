@@ -9,6 +9,23 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-08-12
+
+### Added
+
+- Absorb known Rust `Result` APIs into Crisp ambient errors: `.map_err(|e| CrispError::Thrown(...))?` for `serde_json` / `ureq` imports (#55).
+- `#[derive(Debug)]` on generated `CrispError` so fallible `main` can return `Result<(), CrispError>`.
+
+### Changed
+
+- Workspace version **1.5.0** — first public release track.
+- Docs / site framing for public launch; use-case pages with longer example snippets and GitHub links.
+- [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md) updated for Result absorption.
+
+### Notes
+
+- Remaining v1.5.0 board items: stdio LSP (#56), editor package (#57), trait polish (#59), shapes (#61), crates.io (#60). Visibility flip: (#58).
+
 ## [1.4.1] — 2026-08-12
 
 ### Changed
@@ -130,16 +147,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0
-[1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0
-[1.1.0]: https://github.com/jose-compu/crisp/releases/tag/v1.1.0
-[1.0.0]: https://github.com/jose-compu/crisp/releases/tag/v1.0.0
-[0.9.0]: https://github.com/jose-compu/crisp/releases/tag/v0.9.0
-[0.8.0]: https://github.com/jose-compu/crisp/releases/tag/v0.8.0
-[0.7.0]: https://github.com/jose-compu/crisp/releases/tag/v0.7.0
-
-
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/jose-compu/crisp/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/jose-compu/crisp/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/jose-compu/crisp/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0

@@ -7,5 +7,5 @@ mod types;
 mod unify;
 
 pub use display::{format_sig, format_ty};
-pub use infer::{TypeChecker, TypeError, TypedCrate};
+pub use infer::{TypeChecker, TypeError, TypedCrate, rust_import_returns_result};
 pub use types::{InferredSig, Ty};

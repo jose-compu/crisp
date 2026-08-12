@@ -10,9 +10,9 @@
 
 Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
-**This is a Rust-hosted bootstrap compiler (v1.4.1) — public preview.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+**This is a Rust-hosted bootstrap compiler (v1.5.0) — first public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
-**Sharp edge:** calling into Rust crates (`rust = true`) that return `Result` currently lowers to `.expect(...)` in generated Rust until Crisp `?` absorption lands ([#55](https://github.com/jose-compu/crisp/issues/55)).
+Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (`CrispError::Thrown` + `?`) — see `examples/rust_import`, `examples/net_http` (#55).
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
@@ -21,7 +21,7 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  
 **Security:** [SECURITY.md](SECURITY.md)  
-**Next milestone:** [v1.5.0](https://github.com/jose-compu/crisp/milestone/6)
+**Milestone:** [v1.5.0](https://github.com/jose-compu/crisp/milestone/6)
 
 License: **MIT OR Apache-2.0** ([LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE)).
 
@@ -93,9 +93,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.4.1** — public-preview hygiene on top of **v1.4.0** (Rust crate interop; `trait` / `impl Trait for`; prelude Show/Eq/Ord; `std.net` + thin HTTP; `.crp` highlighting).
+**v1.5.0** — first public release track: Rust `Result` → Crisp `?` (#55); plus v1.4.x interop, traits, Show/Eq/Ord, net/http, docs site.
 
-**v1.5.0** backlog: Result `?` absorption ([#55](https://github.com/jose-compu/crisp/issues/55)), stdio LSP ([#56](https://github.com/jose-compu/crisp/issues/56)), editor packaging ([#57](https://github.com/jose-compu/crisp/issues/57)), trait defaults/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), shapes ([#61](https://github.com/jose-compu/crisp/issues/61)). See [ROADMAP.md](ROADMAP.md) and [milestones](https://github.com/jose-compu/crisp/milestones).
+**Still open on v1.5.0:** stdio LSP ([#56](https://github.com/jose-compu/crisp/issues/56)), editor packaging ([#57](https://github.com/jose-compu/crisp/issues/57)), trait defaults/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), shapes ([#61](https://github.com/jose-compu/crisp/issues/61)), crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)). See [ROADMAP.md](ROADMAP.md).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 

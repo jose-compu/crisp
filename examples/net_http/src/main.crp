@@ -1,7 +1,7 @@
--- examples/net_http — std.net + HTTP via rust=true dep (§15.2 / #28)
+-- examples/net_http — std.net + HTTP via rust=true dep (§15.2 / #28 / #55)
 --
 -- `parse_ip` is a std.net shim (offline-friendly).
--- `ureq::get` is a thin Cargo re-export; emit expands to call().into_string().
+-- `ureq::get` is a thin Cargo re-export; failures become Crisp ambient errors (`?`).
 
 use ureq { get }
 

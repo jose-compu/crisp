@@ -1029,7 +1029,16 @@ fn emit_call_expr(
             }
         }
     } else if let Some(crate_name) = callee_module.strip_prefix("rust.") {
-        emit_rust_crate_call(out, crate_name, callee, args, current_module, map);
+        emit_rust_crate_call(
+            out,
+            crate_name,
+            callee,
+            args,
+            current_module,
+            map,
+            fallible,
+            propagate_error,
+        );
         return;
     } else {
         if callee_module != current_module && !callee_module.starts_with("std.") {
@@ -1052,7 +1061,8 @@ fn emit_call_expr(
 }
 
 /// Emit a call into a `rust = true` Cargo dependency (spec §14.2).
-/// Known Result-returning APIs get `.expect(...)` until Crisp `?` absorbs Rust errors.
+/// Known Result-returning APIs map into `CrispError::Thrown` and use `?` when propagating.
+#[allow(clippy::too_many_arguments)]
 fn emit_rust_crate_call(
     out: &mut String,
     crate_name: &str,
@@ -1060,6 +1070,8 @@ fn emit_rust_crate_call(
     args: &[crisp_cir::CirCallArg],
     current_module: &str,
     map: &mut EmitSourceMap,
+    fallible: bool,
+    propagate_error: bool,
 ) {
     match (crate_name, callee) {
         ("serde_json", "from_str") => {
@@ -1070,7 +1082,8 @@ fn emit_rust_crate_call(
                 }
                 emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
             }
-            let _ = write!(out, ").expect(\"serde_json::from_str\")");
+            let _ = write!(out, ")");
+            emit_rust_result_absorb(out, fallible, propagate_error);
         }
         ("serde_json", "to_string" | "to_string_pretty") => {
             let _ = write!(out, "serde_json::{callee}(");
@@ -1080,20 +1093,34 @@ fn emit_rust_crate_call(
                 }
                 emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
             }
-            let _ = write!(out, ").expect(\"serde_json::{callee}\")");
+            let _ = write!(out, ")");
+            emit_rust_result_absorb(out, fallible, propagate_error);
         }
         ("ureq", "get") => {
-            let _ = write!(out, "ureq::get(");
+            // ureq::Error and io::Error differ — map each step into CrispError.
+            let _ = write!(out, "({{ let __resp = ureq::get(");
             for (i, arg) in args.iter().enumerate() {
                 if i > 0 {
                     let _ = write!(out, ", ");
                 }
                 emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
             }
-            let _ = write!(
-                out,
-                ").call().expect(\"ureq::get\").into_string().expect(\"ureq::get body\")"
-            );
+            if fallible && propagate_error {
+                let _ = write!(
+                    out,
+                    ").call().map_err(|e| CrispError::Thrown(e.to_string()))?; __resp.into_string().map_err(|e| CrispError::Thrown(e.to_string()))? }})"
+                );
+            } else if fallible {
+                let _ = write!(
+                    out,
+                    ").call(); match __resp {{ Ok(r) => r.into_string().map_err(|e| CrispError::Thrown(e.to_string())), Err(e) => Err(CrispError::Thrown(e.to_string())) }} }})"
+                );
+            } else {
+                let _ = write!(
+                    out,
+                    ").call().expect(\"ureq::get\").into_string().expect(\"ureq::get body\") }})"
+                );
+            }
         }
         _ => {
             let _ = write!(out, "{crate_name}::{callee}(");
@@ -1105,6 +1132,18 @@ fn emit_rust_crate_call(
             }
             let _ = write!(out, ")");
         }
+    }
+}
+
+fn emit_rust_result_absorb(out: &mut String, fallible: bool, propagate_error: bool) {
+    if fallible {
+        let _ = write!(out, ".map_err(|e| CrispError::Thrown(e.to_string()))");
+        if propagate_error {
+            let _ = write!(out, "?");
+        }
+    } else {
+        // Defensive fallback if CIR failed to mark the call fallible.
+        let _ = write!(out, ".expect(\"rust Result\")");
     }
 }
 

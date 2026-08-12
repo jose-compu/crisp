@@ -3,8 +3,9 @@ use crate::result::{CrispErrorEnum, CrispErrorVariant, ErrorResult, ErrorSet, Er
 use crate::set::{absorbs_all, catch_handled_set, declared_set_from_fn, thrown_error_name};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{FunctionDef, Item};
+use crisp_resolve::ResolvedRustImport;
 use crisp_resolve::module::load_module_graph;
-use crisp_typeck::TypeChecker;
+use crisp_typeck::{TypeChecker, rust_import_returns_result};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -12,8 +13,9 @@ pub struct ErrorPass;
 
 impl ErrorPass {
     pub fn analyze_crate(crate_root: &Path) -> Result<ErrorResult, ErrorPassError> {
-        let _ = TypeChecker::check_crate(crate_root)?;
+        let typed = TypeChecker::check_crate(crate_root)?;
         let graph = load_module_graph(crate_root)?;
+        let rust_imports = &typed.rust_imports;
 
         let mut fn_defs: BTreeMap<String, (String, FunctionDef)> = BTreeMap::new();
         for node in graph.modules.values() {
@@ -47,7 +49,7 @@ impl ErrorPass {
         for _ in 0..max_iters {
             let mut changed = false;
             for (key, (module, def)) in &fn_defs {
-                let local = collect_local_errors(module, def, &fn_defs, &sigs);
+                let local = collect_local_errors(module, def, &fn_defs, &sigs, rust_imports);
                 let prev = sigs.get(key).cloned().unwrap_or_default();
                 if prev != local {
                     changed = true;
@@ -137,9 +139,17 @@ fn collect_local_errors(
     def: &FunctionDef,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
+    rust_imports: &[ResolvedRustImport],
 ) -> ErrorSet {
     let mut out = ErrorSet::new();
-    walk_expr(module, &def.body, fn_defs, callee_sigs, &mut out);
+    walk_expr(
+        module,
+        &def.body,
+        fn_defs,
+        callee_sigs,
+        rust_imports,
+        &mut out,
+    );
     out
 }
 
@@ -148,13 +158,14 @@ fn walk_block(
     block: &Block,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
+    rust_imports: &[ResolvedRustImport],
     out: &mut ErrorSet,
 ) {
     for stmt in &block.stmts {
-        walk_stmt(module, stmt, fn_defs, callee_sigs, out);
+        walk_stmt(module, stmt, fn_defs, callee_sigs, rust_imports, out);
     }
     if let Some(tail) = &block.tail {
-        walk_expr(module, tail, fn_defs, callee_sigs, out);
+        walk_expr(module, tail, fn_defs, callee_sigs, rust_imports, out);
     }
 }
 
@@ -163,12 +174,13 @@ fn walk_stmt(
     stmt: &Stmt,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
+    rust_imports: &[ResolvedRustImport],
     out: &mut ErrorSet,
 ) {
     match stmt {
-        Stmt::Expr(e) => walk_expr(module, e, fn_defs, callee_sigs, out),
+        Stmt::Expr(e) => walk_expr(module, e, fn_defs, callee_sigs, rust_imports, out),
         Stmt::Bind { value, .. } | Stmt::Assign { value, .. } => {
-            walk_expr(module, value, fn_defs, callee_sigs, out);
+            walk_expr(module, value, fn_defs, callee_sigs, rust_imports, out);
         }
     }
 }
@@ -178,19 +190,20 @@ fn walk_expr(
     expr: &Expr,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
+    rust_imports: &[ResolvedRustImport],
     out: &mut ErrorSet,
 ) {
     match &expr.kind {
-        ExprKind::Block(b) => walk_block(module, b, fn_defs, callee_sigs, out),
+        ExprKind::Block(b) => walk_block(module, b, fn_defs, callee_sigs, rust_imports, out),
         ExprKind::If {
             cond,
             then_branch,
             else_branch,
         } => {
-            walk_expr(module, cond, fn_defs, callee_sigs, out);
-            walk_expr(module, then_branch, fn_defs, callee_sigs, out);
+            walk_expr(module, cond, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, then_branch, fn_defs, callee_sigs, rust_imports, out);
             if let Some(e) = else_branch {
-                walk_expr(module, e, fn_defs, callee_sigs, out);
+                walk_expr(module, e, fn_defs, callee_sigs, rust_imports, out);
             }
         }
         ExprKind::Throw(inner) => {
@@ -199,12 +212,13 @@ fn walk_expr(
             }
         }
         ExprKind::Try(inner) => {
-            walk_expr(module, inner, fn_defs, callee_sigs, out);
+            walk_expr(module, inner, fn_defs, callee_sigs, rust_imports, out);
             propagate_call_errors(module, inner, fn_defs, callee_sigs, out);
+            propagate_rust_import_errors(inner, rust_imports, out);
         }
         ExprKind::Catch { body, arms } => {
             let mut inner = ErrorSet::new();
-            walk_expr(module, body, fn_defs, callee_sigs, &mut inner);
+            walk_expr(module, body, fn_defs, callee_sigs, rust_imports, &mut inner);
             let handled = catch_handled_set(arms);
             if absorbs_all(&handled) {
                 // all errors from body absorbed
@@ -213,48 +227,73 @@ fn walk_expr(
                 out.extend(&remaining);
             }
             for arm in arms {
-                walk_expr(module, &arm.body, fn_defs, callee_sigs, out);
+                walk_expr(module, &arm.body, fn_defs, callee_sigs, rust_imports, out);
             }
         }
         ExprKind::Call { func, args } => {
-            walk_expr(module, func, fn_defs, callee_sigs, out);
+            walk_expr(module, func, fn_defs, callee_sigs, rust_imports, out);
             for arg in args {
-                walk_expr(module, arg, fn_defs, callee_sigs, out);
+                walk_expr(module, arg, fn_defs, callee_sigs, rust_imports, out);
             }
             propagate_call_errors(module, func, fn_defs, callee_sigs, out);
+            propagate_rust_import_errors(func, rust_imports, out);
         }
         ExprKind::MethodCall { receiver, args, .. } => {
-            walk_expr(module, receiver, fn_defs, callee_sigs, out);
+            walk_expr(module, receiver, fn_defs, callee_sigs, rust_imports, out);
             for arg in args {
-                walk_expr(module, arg, fn_defs, callee_sigs, out);
+                walk_expr(module, arg, fn_defs, callee_sigs, rust_imports, out);
             }
         }
-        ExprKind::Bind { value, .. } => walk_expr(module, value, fn_defs, callee_sigs, out),
-        ExprKind::Assign { value, .. } => walk_expr(module, value, fn_defs, callee_sigs, out),
-        ExprKind::Return(Some(v)) => walk_expr(module, v, fn_defs, callee_sigs, out),
-        ExprKind::Binary { left, right, .. } => {
-            walk_expr(module, left, fn_defs, callee_sigs, out);
-            walk_expr(module, right, fn_defs, callee_sigs, out);
+        ExprKind::Bind { value, .. } => {
+            walk_expr(module, value, fn_defs, callee_sigs, rust_imports, out)
         }
-        ExprKind::Unary { expr: inner, .. } => walk_expr(module, inner, fn_defs, callee_sigs, out),
-        ExprKind::Field { base, .. } => walk_expr(module, base, fn_defs, callee_sigs, out),
+        ExprKind::Assign { value, .. } => {
+            walk_expr(module, value, fn_defs, callee_sigs, rust_imports, out)
+        }
+        ExprKind::Return(Some(v)) => walk_expr(module, v, fn_defs, callee_sigs, rust_imports, out),
+        ExprKind::Binary { left, right, .. } => {
+            walk_expr(module, left, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, right, fn_defs, callee_sigs, rust_imports, out);
+        }
+        ExprKind::Unary { expr: inner, .. } => {
+            walk_expr(module, inner, fn_defs, callee_sigs, rust_imports, out)
+        }
+        ExprKind::Field { base, .. } => {
+            walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out)
+        }
         ExprKind::Pipe { left, right } => {
-            walk_expr(module, left, fn_defs, callee_sigs, out);
-            walk_expr(module, right, fn_defs, callee_sigs, out);
+            walk_expr(module, left, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, right, fn_defs, callee_sigs, rust_imports, out);
         }
         ExprKind::StructLit { fields, .. } => {
             for f in fields {
-                walk_expr(module, &f.value, fn_defs, callee_sigs, out);
+                walk_expr(module, &f.value, fn_defs, callee_sigs, rust_imports, out);
             }
         }
         ExprKind::Str(parts) => {
             for part in &parts.0 {
                 if let crisp_ast::expr::StringPart::Expr(e) = part {
-                    walk_expr(module, e, fn_defs, callee_sigs, out);
+                    walk_expr(module, e, fn_defs, callee_sigs, rust_imports, out);
                 }
             }
         }
         _ => {}
+    }
+}
+
+fn propagate_rust_import_errors(
+    func: &Expr,
+    rust_imports: &[ResolvedRustImport],
+    out: &mut ErrorSet,
+) {
+    let ExprKind::Ident(id) = &func.kind else {
+        return;
+    };
+    for imp in rust_imports {
+        if imp.local_name == id.name && rust_import_returns_result(&imp.crate_name, &imp.item) {
+            out.insert("Thrown");
+            return;
+        }
     }
 }
 
@@ -379,5 +418,20 @@ mod tests {
     fn hello_has_no_errors() {
         let result = ErrorPass::analyze_crate(&examples("hello")).expect("hello");
         assert!(result.signatures.values().all(|s| !s.fallible));
+    }
+
+    #[test]
+    fn rust_import_marks_main_fallible() {
+        let result = ErrorPass::analyze_crate(&examples("rust_import")).expect("rust_import");
+        let main = result.get("main", "main").expect("main");
+        assert!(main.fallible, "Result APIs should mark main fallible");
+        assert!(main.errors.contains("Thrown"));
+        assert!(
+            result
+                .crisp_error
+                .variants
+                .iter()
+                .any(|v| v.name == "Thrown")
+        );
     }
 }

@@ -1287,7 +1287,7 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
     ]
 }
 
-/// Known Rust crate item stubs for typeck (Result Ok types; emit adds `.unwrap()`).
+/// Known Rust crate item stubs for typeck (Result Ok payload types).
 fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
     let json_value = Ty::Named {
         name: "serde_json::Value".into(),
@@ -1308,4 +1308,16 @@ fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
             },
         ),
     }
+}
+
+/// Whether a known `rust = true` import returns Rust `Result` and should lower via Crisp `?`
+/// / ambient errors (spec §14.2) instead of panic `.expect`.
+pub fn rust_import_returns_result(crate_name: &str, item: &str) -> bool {
+    matches!(
+        (crate_name, item),
+        (
+            "serde_json",
+            "from_str" | "to_string" | "to_string_pretty" | "to_vec" | "from_value"
+        ) | ("ureq", "get")
+    )
 }

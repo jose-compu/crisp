@@ -38,6 +38,8 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)
 
+Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal) (`crpc` = build/run; `reveal` = inspect inference).
+
 | Spec command | Implementation |
 |--------------|----------------|
 | `reveal types` | Implemented (`reveal_types`) |

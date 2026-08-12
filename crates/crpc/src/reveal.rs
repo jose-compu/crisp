@@ -16,13 +16,16 @@ use std::process::ExitCode;
     name = "reveal",
     version,
     about = "Inspect inferred Crisp precision (spec §16)",
-    long_about = "Inspect inferred Crisp precision (spec §16).\n\n\
-                  Reconstructs types, ownership, lifetimes, errors, and emitted Rust that\
-                  \nsurface syntax omits.\n\n\
+    long_about = "Inspect what the Crisp compiler inferred (spec §16).\n\n\
+                  `crpc` builds and runs your project. `reveal` explains the hidden precision:\n\
+                  types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and emitted Rust.\n\n\
                   Install (ships both `crpc` and `reveal`):\n\
                   \x20 cargo install --path crates/crpc --locked\n\n\
-                  Deepest overlays: `types`, `ownership`, `lifetimes`, `errors`, `rust`, `seal`.\n\
-                  Shallower today: `expand`, `diff`, `map`, `traits` — see QUICKSTART §10 and\
+                  Start here:\n\
+                  \x20 reveal types examples/hello\n\
+                  \x20 reveal rust examples/hello\n\n\
+                  Deep overlays: `types`, `ownership`, `lifetimes`, `errors`, `rust`, `seal`, `traits`.\n\
+                  Shallower today: `expand`, `diff`, `map` — see QUICKSTART §10 and\
                   \ndocs/KNOWN_LIMITATIONS.md."
 )]
 struct Cli {
@@ -57,10 +60,11 @@ enum Commands {
         #[arg(value_name = "PATH", default_value = ".")]
         path: PathBuf,
     },
-    /// Shape / trait impl summary (limited today)
+    /// User traits / impl Trait for + shape trait summary
     #[command(
-        long_about = "List shape traits known to CIR. Full trait/impl e2e is still in progress\
-                      \n(#20); shapes resolve as E0039 (#21)."
+        long_about = "List user `trait` / `impl Trait for` from CIR, plus any shape traits.\n\
+                      Try: `reveal traits examples/show_trait`.\n\
+                      Shapes still fail resolve with E0039 (#21)."
     )]
     Traits {
         #[arg(value_name = "PATH", default_value = ".")]

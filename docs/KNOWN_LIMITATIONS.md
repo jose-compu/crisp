@@ -25,7 +25,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - **`crpc check`** runs ownership probe emit + rustc (floats, `format!` interpolation, type defs). Remaining gaps may still yield non-borrow probe failures that are ignored rather than `E0057` ([#14](https://github.com/jose-compu/crisp/issues/14)).
 - **Diagnostics:** resolve/typeck errors from `crpc check` render source snippets and hints when spans resolve (E0035 names the defining module when known) ([#22](https://github.com/jose-compu/crisp/issues/22)).
 - **`test "name"`** becomes `fn test_<sanitized>` so it does not shadow crate items. Float `assert_eq` uses a small epsilon. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
-- **`reveal` (spec §16):** `types` / `ownership` / `lifetimes` / `errors` / `rust` / `seal` are the deep overlays. Gaps vs the draft spec ([#19](https://github.com/jose-compu/crisp/issues/19)):
+- **`reveal` (spec §16):** beginner walkthrough in [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal). Use `reveal` to inspect inference; use `crpc` to build/run. Deep overlays today: `types` / `ownership` / `lifetimes` / `errors` / `rust` / `seal`. Gaps vs the draft spec ([#19](https://github.com/jose-compu/crisp/issues/19)):
   - `expand` prints signatures + shallow `<inferred>` / `<body>` stubs, not a full annotated rewrite.
   - `diff` is a function-name summary, not a true Crisp↔Rust side-by-side.
   - `map` emits coarse CIR alloc/drop notes, not span-accurate annotations on emitted Rust.

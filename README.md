@@ -29,7 +29,7 @@ In practice that means:
 
 - Types, borrows, lifetimes, and error sets are **inferred globally** when the source stays silent.
 - When you need precision — public APIs, performance-sensitive paths, or ambiguous usage — you annotate, and the compiler treats those annotations as hard constraints.
-- **`reveal`** reconstructs everything inference computed: Rust signatures, ownership modes, lifetime overlays, and the error slice a function can produce.
+- **`reveal`** is the “show your work” companion to `crpc`: it prints inferred types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and the emitted Rust that compact `.crp` source leaves implicit. See [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
 
 Crisp is a **front end that produces Rust**. Rust remains the authority on memory safety and data races. Crisp’s own borrow/region passes exist to drive good diagnostics and to decide what to emit (`&`, `&mut`, owned, `.clone()` fallbacks); they are not claimed as an independent soundness boundary. If generated Rust fails to compile, that is a **`crpc` bug**, not a user error.
 
@@ -66,7 +66,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | IR | `crisp-cir` | Typed CIR consumed by emit |
 | Emit | `crisp-rust-emit` | Rust project under `target/rust/`, tests, `crisp.lock` |
 | CLI | `crpc` | `check`, `emit`, `build`, `run`, `test` |
-| Inspect | `reveal` | Inferred Rust, ownership, errors, sealed API |
+| Inspect | `reveal` | Companion CLI: inferred types/ownership/errors, traits, emitted Rust (QUICKSTART §10) |
 | IDE | `crisp-lsp` | Analysis API (`CrispAnalysis`); no stdio LSP host yet (#18) |
 
 **Sealed crates (`crisp.lock`):** a crate’s `pub` API has fully resolved signatures frozen at publish time. Downstream code analyzes against the lockfile, not re-inferred internals — the explicit tradeoff for whole-program inference inside a boundary.

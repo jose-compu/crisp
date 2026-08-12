@@ -1,6 +1,12 @@
 # The Crisp Programming Language
 
 [![CI](https://github.com/jose-compu/crisp/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/crisp/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.5.0-0A66C2.svg)](CHANGELOG.md)
+[![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
+[![Tests](https://img.shields.io/badge/tests-267-brightgreen.svg)](.github/workflows/ci.yml)
+[![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
+[![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://jose-compu.github.io/crisp/)
 
 <p align="center">
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />

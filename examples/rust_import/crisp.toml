@@ -1,0 +1,12 @@
+[package]
+name = "rust_import"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "ambient"
+
+[dependencies]
+serde_json = { rust = true, version = "1" }

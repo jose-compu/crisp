@@ -11,7 +11,9 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ### Added
 
-- Parse/resolve `use rust.<crate> { … }` and `use rust::<crate> { … }` when the crate is a `rust = true` dependency (`E0044`–`E0047`, `ResolvedRustImport`) (#41, epic #51).
+- TypeScript-style Rust crate imports: bare `use serde_json { … }` when the crate is a `rust = true` dependency; `use rust.<crate>` / `use rust::<crate>` kept as aliases (`E0044`–`E0047`, `ResolvedRustImport`) (#41, epic #51).
+- **W0048** when a Crisp module and a Rust dep share a name: bare `use` binds the module; `use rust.<name>` selects the crate.
+- Examples: `examples/rust_import`, `examples/rust_shadow`.
 
 ## [1.3.0] — 2026-08-12
 

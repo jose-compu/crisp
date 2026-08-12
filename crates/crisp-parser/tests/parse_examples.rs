@@ -52,6 +52,8 @@ fn parse_all_examples() {
         "abnormal_suite",
         "design_patterns",
         "float_demo",
+        "rust_import",
+        "rust_shadow",
     ] {
         eprintln!("=== {name} ===");
         parse_crate(name);

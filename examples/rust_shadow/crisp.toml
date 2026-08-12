@@ -1,0 +1,13 @@
+[package]
+name = "rust_shadow"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "ambient"
+
+[dependencies]
+# Shares a name with src/config.crp → bare `use config` binds the Crisp module (W0048).
+config = { rust = true, version = "0.14" }

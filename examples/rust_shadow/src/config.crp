@@ -1,0 +1,5 @@
+-- Crisp module that collides with the `config` Cargo dependency name.
+
+pub report(msg: str) = {
+    print("crisp-config:{msg}")
+}

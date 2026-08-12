@@ -3,6 +3,7 @@ use crate::module::{ModuleGraph, load_module_graph};
 use crate::prelude::prelude_symbols;
 use crate::stdlib::stdlib_symbols;
 use crate::symbols::{Symbol, SymbolKey, SymbolKind, Visibility, collect_module_symbols};
+use crate::warning::ResolveWarning;
 use crisp_ast::Span;
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::ident::Ident;
@@ -19,7 +20,9 @@ pub struct ResolvedBinding {
     pub symbol: SymbolKey,
 }
 
-/// A `use rust.<crate> { item }` binding (spec §14.2), for later typeck/emit.
+/// A Rust-crate import binding (spec §14.2), for later typeck/emit.
+///
+/// Primary surface: `use serde_json { from_str }`. Compat: `use rust.serde_json { … }`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolvedRustImport {
     pub crisp_module: String,
@@ -42,6 +45,7 @@ pub struct ResolvedCrate {
     pub modules: Vec<ResolvedModule>,
     pub symbol_count: usize,
     pub rust_imports: Vec<ResolvedRustImport>,
+    pub warnings: Vec<ResolveWarning>,
 }
 
 pub struct Resolver {
@@ -52,6 +56,7 @@ pub struct Resolver {
     /// Deps present but not marked `rust = true` (for E0045).
     unmarked_deps: HashSet<String>,
     rust_imports: Vec<ResolvedRustImport>,
+    warnings: Vec<ResolveWarning>,
 }
 
 impl Resolver {
@@ -89,6 +94,7 @@ impl Resolver {
             rust_deps,
             unmarked_deps,
             rust_imports: Vec::new(),
+            warnings: Vec::new(),
         })
     }
 
@@ -110,6 +116,7 @@ impl Resolver {
             modules: resolved_modules,
             symbol_count: self.global.len(),
             rust_imports: self.rust_imports.clone(),
+            warnings: self.warnings.clone(),
         })
     }
 
@@ -156,13 +163,67 @@ impl Resolver {
         scope: &mut HashMap<String, SymbolKey>,
         bindings: &mut Vec<ResolvedBinding>,
     ) -> Result<(), ResolveError> {
+        // Compat alias: `use rust.<crate> { … }` / `use rust::<crate> { … }`.
         if decl.path.first().is_some_and(|p| p.name == "rust") {
-            return self.apply_rust_use(current, decl, scope, bindings);
+            let path_str = decl
+                .path
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>()
+                .join(".");
+            if decl.path.len() != 2 {
+                return Err(ResolveError::RustUsePathInvalid {
+                    path: path_str,
+                    span: decl.span,
+                });
+            }
+            let crate_name = decl.path[1].name.clone();
+            return self.bind_rust_crate(current, &crate_name, decl, scope, bindings);
         }
 
-        let target_module = self.resolve_use_path(current, &decl.path)?;
-        let span = decl.span;
+        // Crisp module wins when present (TS-like bare crate path otherwise).
+        if let Some(target_module) = self.lookup_crisp_module(current, &decl.path) {
+            let joined = decl
+                .path
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>()
+                .join(".");
+            if self.rust_deps.contains(&joined) {
+                self.warnings.push(ResolveWarning::ModuleShadowsRustDep {
+                    name: joined.clone(),
+                    span: decl.span,
+                });
+            }
+            return self.bind_crisp_use(target_module, decl, scope, bindings);
+        }
 
+        // Bare `use serde_json { … }` when it is (or claims to be) a Cargo dependency.
+        if decl.path.len() == 1 {
+            let crate_name = decl.path[0].name.clone();
+            if self.rust_deps.contains(&crate_name) || self.unmarked_deps.contains(&crate_name) {
+                return self.bind_rust_crate(current, &crate_name, decl, scope, bindings);
+            }
+        }
+
+        Err(ResolveError::ModuleNotFound {
+            path: decl
+                .path
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>()
+                .join("."),
+        })
+    }
+
+    fn bind_crisp_use(
+        &self,
+        target_module: String,
+        decl: &UseDecl,
+        scope: &mut HashMap<String, SymbolKey>,
+        bindings: &mut Vec<ResolvedBinding>,
+    ) -> Result<(), ResolveError> {
+        let span = decl.span;
         if let Some(imports) = &decl.imports {
             for imp in imports {
                 let sym = self.lookup_export(&target_module, &imp.name.name)?;
@@ -184,45 +245,33 @@ impl Resolver {
                 self.insert_binding(&sym.key.name, sym.key.clone(), scope, bindings, span)?;
             }
         }
-        let _ = (current, decl.is_pub);
+        let _ = decl.is_pub;
         Ok(())
     }
 
-    fn apply_rust_use(
+    fn bind_rust_crate(
         &mut self,
         current: &str,
+        crate_name: &str,
         decl: &UseDecl,
         scope: &mut HashMap<String, SymbolKey>,
         bindings: &mut Vec<ResolvedBinding>,
     ) -> Result<(), ResolveError> {
-        let path_str = decl
-            .path
-            .iter()
-            .map(|p| p.name.as_str())
-            .collect::<Vec<_>>()
-            .join(".");
-        if decl.path.len() != 2 {
-            return Err(ResolveError::RustUsePathInvalid {
-                path: path_str,
-                span: decl.span,
-            });
-        }
-        let crate_name = decl.path[1].name.clone();
-        if self.unmarked_deps.contains(&crate_name) && !self.rust_deps.contains(&crate_name) {
+        if self.unmarked_deps.contains(crate_name) && !self.rust_deps.contains(crate_name) {
             return Err(ResolveError::RustCrateNotMarked {
-                name: crate_name,
+                name: crate_name.to_string(),
                 span: decl.span,
             });
         }
-        if !self.rust_deps.contains(&crate_name) {
+        if !self.rust_deps.contains(crate_name) {
             return Err(ResolveError::RustCrateNotFound {
-                name: crate_name,
+                name: crate_name.to_string(),
                 span: decl.span,
             });
         }
         let Some(imports) = &decl.imports else {
             return Err(ResolveError::RustImportNeedsList {
-                name: crate_name,
+                name: crate_name.to_string(),
                 span: decl.span,
             });
         };
@@ -248,12 +297,17 @@ impl Resolver {
             self.insert_binding(&local, key, scope, bindings, decl.span)?;
             self.rust_imports.push(ResolvedRustImport {
                 crisp_module: current.to_string(),
-                crate_name: crate_name.clone(),
+                crate_name: crate_name.to_string(),
                 item: imp.name.name.clone(),
                 local_name: local,
             });
         }
         Ok(())
+    }
+
+    /// Crisp module path for a `use`, if one exists (does not consider Rust deps).
+    fn lookup_crisp_module(&self, current: &str, path: &[Ident]) -> Option<String> {
+        self.resolve_use_path(current, path).ok()
     }
 
     fn insert_binding(

@@ -48,6 +48,8 @@ const EXAMPLES: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "feature_gallery",
+    "rust_import",
+    "rust_shadow",
 ];
 
 #[test]
@@ -171,6 +173,8 @@ fn runnable_examples_build_and_run() {
         "vec2_methods",
         "point_impl",
         "feature_gallery",
+        "rust_import",
+        "rust_shadow",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -188,6 +192,30 @@ fn runnable_examples_build_and_run() {
             Err(e) => panic!("{name} run failed: {e}"),
         }
     }
+}
+
+#[test]
+fn rust_import_example_wires_serde_json_dep() {
+    let root = example("rust_import");
+    let resolved = Resolver::resolve_crate(&root).expect("resolve rust_import");
+    assert!(resolved.rust_imports.iter().any(|i| i.item == "from_str"));
+    let out = emit_to_target(&root).expect("emit rust_import");
+    let cargo = std::fs::read_to_string(out.out_dir.join("Cargo.toml")).unwrap();
+    assert!(cargo.contains("serde_json"), "{cargo}");
+}
+
+#[test]
+fn rust_shadow_example_emits_w0048() {
+    let root = example("rust_shadow");
+    let resolved = Resolver::resolve_crate(&root).expect("resolve rust_shadow");
+    assert!(
+        resolved
+            .warnings
+            .iter()
+            .any(|w| w.to_string().contains("W0048")),
+        "{:?}",
+        resolved.warnings
+    );
 }
 
 #[test]
@@ -245,6 +273,8 @@ const BUILDABLE: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "feature_gallery",
+    "rust_import",
+    "rust_shadow",
 ];
 
 #[test]

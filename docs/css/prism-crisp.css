@@ -1,7 +1,8 @@
-/* Prism theme tuned to Crisp docs (slate + blue). Based on Tomorrow Night feel. */
+/* Prism theme for Crisp docs — dark code windows with readable contrast. */
+
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #e7ecf1;
+  color: #f5f8fc;
   background: none;
   font-family: var(--mono);
   font-size: 0.88rem;
@@ -29,70 +30,189 @@ pre.pipe > code,
   background: transparent;
 }
 
-.token.comment { color: #6b7c8f; font-style: italic; }
+/* —— Default dark syntax (code windows + dark bands) —— */
+.token.comment,
 .token.prolog,
 .token.doctype,
-.token.cdata { color: #6b7c8f; }
+.token.cdata {
+  color: #a8b6c6;
+  font-style: italic;
+}
 
-.token.punctuation { color: #9aa7b5; }
+.token.punctuation {
+  color: #d0dae4;
+}
 
 .token.property,
 .token.tag,
 .token.boolean,
 .token.constant,
 .token.symbol,
-.token.deleted { color: #7eb8f0; }
+.token.deleted {
+  color: #b3dcff;
+}
 
-.token.number { color: #c9a46c; }
+.token.number {
+  color: #f0c878;
+}
 
 .token.selector,
 .token.attr-name,
 .token.string,
 .token.char,
 .token.builtin,
-.token.inserted { color: #8fd4a0; }
+.token.inserted {
+  color: #b0ecc0;
+}
 
 .token.operator,
 .token.entity,
 .token.url,
 .language-css .token.string,
-.style .token.string { color: #9aa7b5; }
+.style .token.string {
+  color: #d0dae4;
+}
 
 .token.atrule,
 .token.attr-value,
-.token.keyword { color: #3d9cf0; font-weight: 500; }
+.token.keyword {
+  color: #9ed4ff;
+  font-weight: 600;
+}
 
 .token.function,
-.token.class-name { color: #d4b483; }
+.token.class-name {
+  color: #f6d49a;
+}
 
 .token.regex,
 .token.important,
-.token.variable { color: #e0a070; }
+.token.variable {
+  color: #f5bc90;
+}
 
 .token.important,
-.token.bold { font-weight: 700; }
-.token.italic { font-style: italic; }
+.token.bold {
+  font-weight: 700;
+}
+.token.italic {
+  font-style: italic;
+}
 
-.token.interpolation { color: #e7ecf1; }
-.token.interpolation .token.punctuation { color: #3d9cf0; }
+.token.interpolation {
+  color: #f5f8fc;
+}
+.token.interpolation .token.punctuation {
+  color: #9ed4ff;
+}
 
-.band-light pre.pipe > code[class*="language-"],
-.band-light code[class*="language-"] {
+.token.shell-symbol {
+  color: #9ed4ff;
+}
+
+/*
+ * Light-surface pipes (tutorial / docs content) — dark ink on light bg.
+ * Do NOT target .code-window: those stay dark even inside .band-light.
+ */
+.band-light .content > pre.pipe > code[class*="language-"],
+.band-light .tutorial-step > pre.pipe > code[class*="language-"],
+.band-light .use-snippet > pre.pipe > code[class*="language-"],
+.band-light .wrap > .content pre.pipe > code[class*="language-"] {
   color: #15202b;
 }
-.band-light .token.comment { color: #7a8b9c; }
-.band-light .token.punctuation { color: #5a6b7c; }
-.band-light .token.keyword { color: #1f6fb8; }
-.band-light .token.boolean,
-.band-light .token.constant { color: #1f6fb8; }
-.band-light .token.string,
-.band-light .token.char,
-.band-light .token.builtin { color: #2f7d4a; }
-.band-light .token.number { color: #9a6b2f; }
-.band-light .token.function,
-.band-light .token.class-name { color: #8a6a35; }
-.band-light .token.operator { color: #5a6b7c; }
-.band-light .token.interpolation .token.punctuation { color: #1f6fb8; }
 
-/* shell / bash on dark panels */
-.token.shell-symbol { color: #3d9cf0; }
+.band-light .content > pre.pipe .token.comment,
+.band-light .tutorial-step > pre.pipe .token.comment,
+.band-light .use-snippet > pre.pipe .token.comment {
+  color: #6a7d90;
+}
+.band-light .content > pre.pipe .token.punctuation,
+.band-light .tutorial-step > pre.pipe .token.punctuation,
+.band-light .use-snippet > pre.pipe .token.punctuation,
+.band-light .content > pre.pipe .token.operator,
+.band-light .tutorial-step > pre.pipe .token.operator,
+.band-light .use-snippet > pre.pipe .token.operator {
+  color: #4a5d70;
+}
+.band-light .content > pre.pipe .token.keyword,
+.band-light .tutorial-step > pre.pipe .token.keyword,
+.band-light .use-snippet > pre.pipe .token.keyword,
+.band-light .content > pre.pipe .token.boolean,
+.band-light .tutorial-step > pre.pipe .token.boolean,
+.band-light .use-snippet > pre.pipe .token.boolean,
+.band-light .content > pre.pipe .token.constant,
+.band-light .tutorial-step > pre.pipe .token.constant,
+.band-light .use-snippet > pre.pipe .token.constant {
+  color: #0d6ebd;
+  font-weight: 600;
+}
+.band-light .content > pre.pipe .token.string,
+.band-light .tutorial-step > pre.pipe .token.string,
+.band-light .use-snippet > pre.pipe .token.string,
+.band-light .content > pre.pipe .token.char,
+.band-light .tutorial-step > pre.pipe .token.char,
+.band-light .use-snippet > pre.pipe .token.char,
+.band-light .content > pre.pipe .token.builtin,
+.band-light .tutorial-step > pre.pipe .token.builtin,
+.band-light .use-snippet > pre.pipe .token.builtin {
+  color: #1f7a42;
+}
+.band-light .content > pre.pipe .token.number,
+.band-light .tutorial-step > pre.pipe .token.number,
+.band-light .use-snippet > pre.pipe .token.number {
+  color: #9a6220;
+}
+.band-light .content > pre.pipe .token.function,
+.band-light .tutorial-step > pre.pipe .token.function,
+.band-light .use-snippet > pre.pipe .token.function,
+.band-light .content > pre.pipe .token.class-name,
+.band-light .tutorial-step > pre.pipe .token.class-name,
+.band-light .use-snippet > pre.pipe .token.class-name {
+  color: #8a5a18;
+}
+.band-light .content > pre.pipe .token.interpolation .token.punctuation,
+.band-light .tutorial-step > pre.pipe .token.interpolation .token.punctuation,
+.band-light .use-snippet > pre.pipe .token.interpolation .token.punctuation {
+  color: #0d6ebd;
+}
+
+/* Snippet galleries: always keep bright-on-slate tokens. */
+.band-light .code-window code[class*="language-"] {
+  color: #f5f8fc;
+}
+.band-light .code-window .token.comment {
+  color: #a8b6c6;
+}
+.band-light .code-window .token.punctuation,
+.band-light .code-window .token.operator {
+  color: #d0dae4;
+}
+.band-light .code-window .token.keyword,
+.band-light .code-window .token.boolean,
+.band-light .code-window .token.constant {
+  color: #9ed4ff;
+  font-weight: 600;
+}
+.band-light .code-window .token.string,
+.band-light .code-window .token.char,
+.band-light .code-window .token.builtin {
+  color: #b0ecc0;
+}
+.band-light .code-window .token.number {
+  color: #f0c878;
+}
+.band-light .code-window .token.function,
+.band-light .code-window .token.class-name {
+  color: #f6d49a;
+}
+.band-light .code-window .token.property,
+.band-light .code-window .token.tag {
+  color: #b3dcff;
+}
+.band-light .code-window .token.variable,
+.band-light .code-window .token.regex {
+  color: #f5bc90;
+}
+.band-light .code-window .token.interpolation .token.punctuation {
+  color: #9ed4ff;
+}

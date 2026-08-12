@@ -223,23 +223,24 @@ a:hover { color: var(--accent-soft); }
   font-size: 0.95rem;
 }
 .code-window {
-  background: var(--card);
-  border: 1px solid var(--accent);
+  background: #31485f;
+  border: 1px solid #4a647c;
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
 }
 .code-chrome {
   display: flex;
   gap: 6px;
   padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #425a72;
+  background: #2a3d52;
 }
 .code-chrome span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3a4a5c;
+  background: #7a90a8;
 }
 .code-window pre,
 .pipe {
@@ -324,10 +325,12 @@ a:hover { color: var(--accent-soft); }
   font-size: 0.8rem;
 }
 .band-light .snippet-grid .code-window {
-  box-shadow: 0 10px 28px rgba(20, 40, 70, 0.12);
+  box-shadow: 0 12px 32px rgba(20, 40, 70, 0.12);
+  background: #31485f;
+  border-color: #4a647c;
 }
 .band-light .snippet-grid .code-output {
-  background: #0f1a2a;
+  background: #243447;
 }
 .feature h3 {
   margin: 0 0 0.4rem;

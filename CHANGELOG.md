@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-08-12
+
 ### Added
 
 - CI: Ubuntu + macOS matrix; dedicated MSRV **1.85** job; `rust-toolchain.toml` (stable + rustfmt/clippy) (#23).
@@ -23,6 +25,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - CONTRIBUTING: install `reveal` via `-p crpc` only (library `crisp-reveal` is not installable as a binary).
 - Multi-module emit writes main-module structs/enums/impls (not only functions).
 - Test harness emits instance/associated method calls (no more `unknown()`).
+
+### Notes
+
+- `trait` / `impl Trait for Type` deferred to [#50](https://github.com/jose-compu/crisp/issues/50) (v1.4.0).
 
 ## [1.2.0] — 2026-08-09
 
@@ -91,7 +97,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/jose-compu/crisp/releases/tag/v1.3.0
 [1.2.0]: https://github.com/jose-compu/crisp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/jose-compu/crisp/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jose-compu/crisp/releases/tag/v1.0.0

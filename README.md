@@ -89,9 +89,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.2.0** — Nested module emit; shapes → `E0039`; diagnostics snippets/hints; CIR/emit pins for hello/math; module stub resolve; probe emit hardening; enums/field access from the v1.2 language track.
+**v1.3.0** — Inherent `impl Type` methods; reveal/QUICKSTART polish; CI Ubuntu+macOS + MSRV 1.85; `crisp-lsp` documented as analysis-API-only. Traits deferred to [#50](https://github.com/jose-compu/crisp/issues/50).
 
-Next: **v1.3.0** (reveal polish, CI matrix, LSP host or docs, impl/trait path). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
+Next: **v1.4.0** (Rust crate interop, trait path, stdlib expansion). See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 

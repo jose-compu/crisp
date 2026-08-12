@@ -312,23 +312,24 @@ Not committed to dates; tracked for direction only.
 
 Tracking epic: [jose-compu/crisp#1](https://github.com/jose-compu/crisp/issues/1) (labels: `epic:publication`, `P0` / `P1` / `P2`).
 
-Current compiler: **v1.2.0**. Planned GitHub milestones:
+Current compiler: **v1.3.0**. Planned GitHub milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
 | **v1.1.1** | patch | Docs, license, release hygiene, CI/example matrix | [milestone](https://github.com/jose-compu/crisp/milestone/1) · label `release:v1.1.1` |
 | **v1.2.0** | minor | Critical language/DX (enums, fields, modules, probe) — first public-usable target | [milestone](https://github.com/jose-compu/crisp/milestone/2) · label `release:v1.2.0` |
-| **v1.3.0** | minor | LSP, reveal, impl/trait, CI matrix, stdlib shims | [milestone](https://github.com/jose-compu/crisp/milestone/3) · label `release:v1.3.0` |
+| **v1.3.0** | minor | LSP docs, reveal polish, inherent impl methods, CI matrix (shipped) | [milestone](https://github.com/jose-compu/crisp/milestone/3) · label `release:v1.3.0` |
+| **v1.4.0** | minor | Rust crate interop, `trait` / `impl Trait for`, stdlib expansion | [milestone](https://github.com/jose-compu/crisp/milestone/5) · label `release:v1.4.0` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) · label `release:v2.0.0` |
 
 | Priority | Theme | Examples |
 |----------|--------|----------|
 | **P0** | Docs, honesty, install, known limitations, critical compiler gaps | [#2](https://github.com/jose-compu/crisp/issues/2)–[#17](https://github.com/jose-compu/crisp/issues/17); also [#33](https://github.com/jose-compu/crisp/issues/33) license, [#34](https://github.com/jose-compu/crisp/issues/34) enums, [#36](https://github.com/jose-compu/crisp/issues/36) design_patterns e2e |
-| **P1** | LSP host, reveal, impl/trait demo, shapes, CI, stdlib shims | [#18](https://github.com/jose-compu/crisp/issues/18)–[#29](https://github.com/jose-compu/crisp/issues/29); also [#35](https://github.com/jose-compu/crisp/issues/35) nested mods, [#37](https://github.com/jose-compu/crisp/issues/37) parse coverage |
+| **P1** | Interop, traits (#50), shapes, stdlib shims | [#24](https://github.com/jose-compu/crisp/issues/24)–[#29](https://github.com/jose-compu/crisp/issues/29), [#50](https://github.com/jose-compu/crisp/issues/50); also [#35](https://github.com/jose-compu/crisp/issues/35) nested mods, [#37](https://github.com/jose-compu/crisp/issues/37) parse coverage |
 | **P2** | Deferred (watch mode, library API, self-hosting, channels) | [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32), [#38](https://github.com/jose-compu/crisp/issues/38) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-*Last updated: 2026-07-27 — milestones v1.1.1–v2.0.0 + release labels; publication backlog #1–#38.*
+*Last updated: 2026-08-12 — v1.3.0 shipped; trait path → #50 / v1.4.0.*

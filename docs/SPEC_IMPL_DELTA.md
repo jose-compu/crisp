@@ -29,7 +29,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
-| Traits / `impl Trait for` | §3.6 | Parse/AST; typeck/CIR incomplete for trait bodies |
+| Traits / `impl Trait for` | §3.6 | Parse/AST; typeck/CIR incomplete — tracked in [#50](https://github.com/jose-compu/crisp/issues/50) |
 | Shapes | §3.5 | Parse + keyword only; resolve emits `E0039` (unsupported) until full §3.5 lands |
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord, net/http | §15 | Not implemented |

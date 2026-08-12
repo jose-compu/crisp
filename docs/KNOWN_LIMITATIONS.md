@@ -17,7 +17,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - **Enums / variant `match`:** unit and simple tuple variants work (`Color.Red`, `Color.Custom(r,g,b)` with `match color { … }`). See `examples/enums`. Remaining gaps: recursive enums beyond CIR `Box`, bare unqualified variant values, full exhaustiveness checking ([#11](https://github.com/jose-compu/crisp/issues/11) / [#34](https://github.com/jose-compu/crisp/issues/34)).
 - `match name {` with a bare identifier scrutinee is supported; prefer `match (expr) { … }` for complex scrutinees.
 - **`shape`** is reserved and parseable, but **not supported** yet: `shape` definitions and `shape` bounds fail resolve with `E0039` ([#21](https://github.com/jose-compu/crisp/issues/21)).
-- **Inherent `impl Type` methods** work end-to-end (`Vec2.new`, `v.magnitude()`, nested modules); see `examples/vec2_methods`, `point_impl`, `feature_gallery` ([#20](https://github.com/jose-compu/crisp/issues/20)). **`trait` / `impl Trait for Type`** still lack a full path.
+- **Inherent `impl Type` methods** work end-to-end (`Vec2.new`, `v.magnitude()`, nested modules); see `examples/vec2_methods`, `point_impl`, `feature_gallery` ([#20](https://github.com/jose-compu/crisp/issues/20)). **`trait` / `impl Trait for Type`** still lack a full path ([#50](https://github.com/jose-compu/crisp/issues/50)).
 - Multi-module crates now emit main-module enums/structs alongside nested `mod` trees (regression fixed with `feature_gallery`).
 
 ## Tooling
@@ -29,7 +29,7 @@ This page documents behaviors that surprise users and are **not** always full la
   - `expand` prints signatures + shallow `<inferred>` / `<body>` stubs, not a full annotated rewrite.
   - `diff` is a function-name summary, not a true Crisp↔Rust side-by-side.
   - `map` emits coarse CIR alloc/drop notes, not span-accurate annotations on emitted Rust.
-  - `traits` only summarizes shape traits known to CIR; full `trait` / `impl Trait for` remains open under [#20](https://github.com/jose-compu/crisp/issues/20).
+  - `traits` only summarizes shape traits known to CIR; full `trait` / `impl Trait for` remains open under [#50](https://github.com/jose-compu/crisp/issues/50).
 - **`crisp-lsp`:** analysis API only (`CrispAnalysis` — hover, inlay hints, call overlays, code lenses, emitted Rust). No stdio/`tower-lsp` host yet; see QUICKSTART §11 ([#18](https://github.com/jose-compu/crisp/issues/18)).
 
 ## Stdlib

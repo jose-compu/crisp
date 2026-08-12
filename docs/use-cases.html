@@ -28,7 +28,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Use cases</h1>
-      <p class="lede">No production case studies yet. These are popular Rust domains where Crisp’s compact syntax and global inference are meant to make the same jobs easier to write and read — while still emitting Rust that <code>rustc</code> checks.</p>
+      <p class="lede">No production case studies yet. These are popular Rust domains where Crisp’s compact syntax and global inference are meant to make the same jobs easier to write and read — while still emitting Rust that <code>rustc</code> checks. Each card links to live examples on GitHub.</p>
     </div>
   </section>
 
@@ -37,47 +37,295 @@
       <div class="tabs">
         <a class="active" href="#domains">Domains</a>
         <a href="#examples">Repo examples</a>
+        <a href="#snippets">Snippets</a>
       </div>
 
       <div id="domains" class="use-grid">
         <article class="use-card" id="cli">
           <h3>CLI tools</h3>
           <p>Parse args, format output, exit codes — without spelling every type and borrow up front. Emit stays a normal Rust binary.</p>
-          <span class="tag">examples/hello · inventory</span>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/hello">examples/hello</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/inventory">inventory</a>
+            <a href="tutorial.html#hello">tutorial</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">greet(name) = "hello " ++ name
+
+pub main() = {
+    print(greet("world"))
+}</pre>
+          </div>
         </article>
         <article class="use-card" id="services">
           <h3>Config &amp; services</h3>
           <p>Structs with defaults, modules, and sealed APIs for small services that would otherwise drown in boilerplate.</p>
-          <span class="tag">examples/defaults · server · sealed</span>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/defaults">examples/defaults</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/server">server</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/sealed">sealed</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">type ServerConfig = {
+    host: str  = "127.0.0.1"
+    port: uint = 9000
+}
+
+pub main() = {
+    cfg := ServerConfig { port: 3000 }
+    log("port={cfg.port}")
+}</pre>
+          </div>
         </article>
         <article class="use-card" id="async">
           <h3>Async workers</h3>
           <p>Tokio-backed <code>async</code> / <code>await</code> with Crisp’s lighter surface for spawn and sleep-style workflows.</p>
-          <span class="tag">examples/async_hello · async_spawn</span>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/async_hello">examples/async_hello</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/async_spawn">async_spawn</a>
+            <a href="tutorial.html#async">tutorial</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">pub main() = async {
+    spawn worker()
+    sleep_ms(5)
+    print("main-done")
+}</pre>
+          </div>
         </article>
         <article class="use-card" id="ffi">
           <h3>FFI bridges</h3>
-          <p>Call C with <code>extern "C"</code> and <code>unsafe</code> when you need native libraries. Rust-crate imports (<code>use rust::</code>) are planned.</p>
-          <span class="tag">examples/ffi</span>
+          <p>Call C with <code>extern "C"</code> and <code>unsafe</code>. Rust crates use <code>rust = true</code> + <code>use serde_json { … }</code> (see Interop).</p>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/ffi">examples/ffi</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/unsafe_math">unsafe_math</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">extern "C" {
+    abs(x: int) -> int
+}
+
+pub main() = {
+    r := unsafe { abs(7) }
+    print("ffi-result={r}")
+}</pre>
+          </div>
         </article>
         <article class="use-card" id="pipelines">
           <h3>Data pipelines</h3>
           <p>Vec operations, fallible IO, and chained transforms with ambient <code>!</code> error sets instead of noisy <code>Result</code> at every step.</p>
-          <span class="tag">examples/vec_ops · data_pipeline · fallible</span>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/vec_ops">examples/vec_ops</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/data_pipeline">data_pipeline</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/fallible">fallible</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">parse_port(s) ! = {
+    if s == "" then throw "empty"
+    -- …
+}
+
+pub main() = {
+    p := parse_port("8080") catch { e => 0 }
+    log("port={p}")
+}</pre>
+          </div>
         </article>
         <article class="use-card" id="patterns">
           <h3>Multi-module design</h3>
           <p>Organize GoF-style patterns across files with Crisp modules — good practice for larger programs before sealed publish.</p>
-          <span class="tag">examples/design_patterns · workshop</span>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/design_patterns">examples/design_patterns</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/workshop">workshop</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/nested_math">nested_math</a>
+          </div>
+        </article>
+        <article class="use-card" id="interop">
+          <h3>Rust crate interop</h3>
+          <p>Depend on Cargo crates with <code>rust = true</code>, then import APIs TypeScript-style. Thin HTTP via <code>ureq</code>; JSON via <code>serde_json</code>.</p>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/rust_import">examples/rust_import</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/net_http">net_http</a>
+            <a href="tutorial.html#rust-import">tutorial</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">use serde_json { from_str, to_string }
+
+pub main() = {
+    v := from_str("[1, true, \"crisp\"]")
+    print(to_string(v))
+}</pre>
+          </div>
+        </article>
+        <article class="use-card" id="traits">
+          <h3>Traits &amp; methods</h3>
+          <p>Nominal <code>trait</code> / <code>impl Trait for</code>, inherent <code>impl Type</code>, and prelude Show / Eq / Ord shims.</p>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/show_trait">examples/show_trait</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/std_traits">std_traits</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/vec2_methods">vec2_methods</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">trait Show = { show(self) -> str }
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}</pre>
+          </div>
+        </article>
+        <article class="use-card" id="enums">
+          <h3>Enums &amp; match</h3>
+          <p>Unit and tuple variants with <code>match</code> — a core systems-language pattern without Rust ceremony.</p>
+          <div class="tag-row">
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/enums">examples/enums</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/match">match</a>
+            <a href="tutorial.html#enums">tutorial</a>
+          </div>
+          <div class="use-snippet">
+            <pre class="pipe">type Color =
+    | Red
+    | Custom(int, int, int)
+
+describe(c) = match c {
+    Color.Red -> "red"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}</pre>
+          </div>
         </article>
       </div>
 
       <div id="examples" class="content" style="margin-top:2.75rem">
-        <h2>Try one</h2>
+        <h2>Repo examples</h2>
+        <p>Open any folder on GitHub, or run from a clone:</p>
         <pre class="pipe">crpc run examples/hello
+crpc run examples/enums
+crpc run examples/show_trait
+crpc run examples/rust_import
 crpc test examples/math
 crpc check examples/design_patterns</pre>
-        <p><a href="tutorial.html">Tutorial →</a> · <a href="install.html">Install →</a></p>
+        <ul class="example-list">
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/hello">hello</a>
+            <span>Minimal greet / print</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/enums">enums</a>
+            <span>Color enum + match</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/show_trait">show_trait</a>
+            <span>trait / impl Trait for</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/std_traits">std_traits</a>
+            <span>Show / Eq / Ord prelude</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/rust_import">rust_import</a>
+            <span>serde_json via rust = true</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/net_http">net_http</a>
+            <span>parse_ip + ureq GET</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/async_hello">async_hello</a>
+            <span>async main</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/async_spawn">async_spawn</a>
+            <span>spawn + sleep</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/ffi">ffi</a>
+            <span>extern "C" + unsafe</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/fallible">fallible</a>
+            <span>! / throw / catch</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/vec2_methods">vec2_methods</a>
+            <span>impl methods + nested mods</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/design_patterns">design_patterns</a>
+            <span>Multi-module patterns</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/sealed">sealed</a>
+            <span>crisp.lock sealed API</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/feature_gallery">feature_gallery</a>
+            <span>Broader feature tour</span>
+          </li>
+        </ul>
+        <p style="margin-top:1.25rem">
+          <a href="https://github.com/jose-compu/crisp/tree/main/examples">All examples on GitHub →</a>
+          · <a href="tutorial.html">Tutorial →</a>
+          · <a href="install.html">Install →</a>
+        </p>
+      </div>
+
+      <div id="snippets" style="margin-top:2.75rem">
+        <h2 class="section-title" style="text-align:left">Feature snippets</h2>
+        <p class="section-lede" style="text-align:left;margin-left:0">Same patterns as the <a href="index.html">home gallery</a> — copyable Crisp.</p>
+        <div class="snippet-grid">
+          <div class="code-panel">
+            <div class="caption"><span>Enums + match</span><span>examples/enums</span></div>
+            <div class="code-window">
+              <div class="code-chrome"><span></span><span></span><span></span></div>
+              <pre>type Color =
+    | Red
+    | Custom(int, int, int)
+
+describe(color) = match color {
+    Color.Red -> "red"
+    Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}</pre>
+            </div>
+          </div>
+          <div class="code-panel">
+            <div class="caption"><span>Rust import</span><span>examples/rust_import</span></div>
+            <div class="code-window">
+              <div class="code-chrome"><span></span><span></span><span></span></div>
+              <pre>use serde_json { from_str, to_string }
+
+pub main() = {
+    v := from_str("[1, true, \"crisp\"]")
+    print(to_string(v))
+}</pre>
+            </div>
+          </div>
+          <div class="code-panel">
+            <div class="caption"><span>Traits</span><span>examples/show_trait</span></div>
+            <div class="code-window">
+              <div class="code-chrome"><span></span><span></span><span></span></div>
+              <pre>trait Show = { show(self) -> str }
+
+impl Show for Point = {
+    show(self) = "({self.x},{self.y})"
+}</pre>
+            </div>
+          </div>
+          <div class="code-panel">
+            <div class="caption"><span>Async spawn</span><span>examples/async_spawn</span></div>
+            <div class="code-window">
+              <div class="code-chrome"><span></span><span></span><span></span></div>
+              <pre>worker() = async {
+    sleep_ms(2)
+    print("worker-done")
+}
+
+pub main() = async {
+    spawn worker()
+    sleep_ms(5)
+    print("main-done")
+}</pre>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>

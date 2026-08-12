@@ -382,6 +382,60 @@ a:hover { color: var(--accent-soft); }
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.use-card .tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.9rem;
+}
+.use-card .tag-row a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1f6fb8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+.use-card .tag-row a:hover {
+  text-decoration: underline;
+}
+.use-snippet {
+  margin-top: 0.9rem;
+}
+.use-snippet pre.pipe {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.example-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem 1.25rem;
+}
+@media (max-width: 700px) {
+  .example-list { grid-template-columns: 1fr; }
+}
+.example-list li {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--light-border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.example-list a {
+  font-weight: 600;
+  color: #1f6fb8;
+  text-decoration: none;
+}
+.example-list a:hover { text-decoration: underline; }
+.example-list span {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--light-muted);
+  font-size: 0.88rem;
+}
 
 .pill-row {
   display: flex;

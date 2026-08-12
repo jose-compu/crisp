@@ -345,6 +345,8 @@ cargo install --path crates/crisp-lsp --locked   # crisp-lsp on PATH
 
 Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/README.md).
 
+Web docs ([jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/)) highlight `.crp` with Prism (`docs/js/prism-crisp.js` on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch); see that branch’s `docs/README.md` and [RELEASE.md § Web docs](docs/RELEASE.md#web-docs-branch).
+
 ## 12. Example projects
 
 | Example | Topics |

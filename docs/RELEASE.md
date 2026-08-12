@@ -50,7 +50,7 @@ cargo install --path crates/crpc --locked
 
 ## Web docs branch
 
-The documentation **website** lives on branch **`docs`**, under folder **`docs/`**. Spec and markdown guides stay on `main` under `docs/spec/`, `docs/KNOWN_LIMITATIONS.md`, etc.
+The documentation **website** lives on branch **`docs`**, under folder **`docs/`**. Spec and markdown guides stay on `main` under `docs/spec/`, `KNOWN_LIMITATIONS.md`, etc.
 
 Live site: https://jose-compu.github.io/crisp/
 
@@ -61,3 +61,5 @@ git checkout docs
 ```
 
 GitHub Pages: Settings → Pages → Deploy from branch `docs` / folder `/docs`.
+
+**Syntax highlighting (site):** Prism.js with a custom Crisp grammar (`docs/js/prism-crisp.js`), theme (`docs/css/prism-crisp.css`), and page hook (`docs/js/site-highlight.js`). Dark `.code-window` snippets use bright tokens; light-surface `.pipe` blocks use dark ink. See `docs/README.md` on the `docs` branch. Editor TextMate highlighting is separate: [`editors/vscode-crisp`](../editors/vscode-crisp).

@@ -263,7 +263,7 @@ reveal --help
 | `reveal errors <path>` | Reachable `CrispError` sets | Solid |
 | `reveal rust <path>` | Emitted Rust entry | Solid (crate-level) |
 | `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
-| `reveal traits <path>` | Shape / trait summary | Limited (see #20 / #21) |
+| `reveal traits <path>` | User `trait` / `impl Trait for` + shape traits | User traits solid (`examples/show_trait`); shapes still `E0039` (#21) |
 | `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
 | `reveal diff <path>` | Crisp vs Rust | Name-level summary, not full side-by-side |
 | `reveal map <path>` | Alloc / drop notes | Coarse CIR notes, not span-accurate |
@@ -287,6 +287,18 @@ let hints = analysis.inlay_hints(Path::new("examples/hello/src/main.crp"))?;
 
 Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’s task runner.
 
+### Syntax highlighting (VS Code / Cursor)
+
+Highlighting-only TextMate grammar for `.crp` (not LSP) lives in [`editors/vscode-crisp`](editors/vscode-crisp):
+
+```bash
+# from repo root — Cursor
+ln -sf "$PWD/editors/vscode-crisp" "$HOME/.cursor/extensions/jose-compu.crisp-lang-0.1.0"
+# VS Code: use ~/.vscode/extensions/… instead
+```
+
+Then **Developer: Reload Window**. Or open that folder and press **F5** (Extension Development Host). Details: [`editors/vscode-crisp/README.md`](editors/vscode-crisp/README.md).
+
 ## 12. Example projects
 
 | Example | Topics |
@@ -296,6 +308,7 @@ Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’
 | `nested_math` | Nested `src/math/vector.crp` module tree |
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
+| `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
 | `feature_gallery` | Nested mods + enums + inherent methods together |
 | `rust_import` | Call `serde_json` via bare `use serde_json { from_str, to_string }` (§14.2 / #41) |
 | `rust_shadow` | W0048 when Crisp module name collides with a Rust dep |
@@ -322,11 +335,12 @@ crpc test examples/<name>
 ## 13. Project layout reference
 
 ```
-crates/          Compiler workspace (`crpc`, emit, typeck, …)
-docs/spec/       Language specification
-examples/        Sample `.crp` projects
-std/             Standard library (Crisp)
-tests/           Integration fixtures
+crates/                 Compiler workspace (`crpc`, emit, typeck, …)
+docs/spec/              Language specification
+editors/vscode-crisp/   `.crp` syntax highlighting (VS Code / Cursor)
+examples/               Sample `.crp` projects
+std/                    Standard library (Crisp)
+tests/                  Integration fixtures
 ```
 
 ## Philosophy

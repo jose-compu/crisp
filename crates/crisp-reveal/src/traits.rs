@@ -7,6 +7,35 @@ use std::path::Path;
 pub fn reveal_traits(crate_root: &Path) -> Result<String> {
     let cir = CirBuilder::build_crate(crate_root)?;
     let mut out = String::new();
+    for m in &cir.modules {
+        for item in &m.items {
+            match item {
+                crisp_cir::CirItem::Trait(t) => {
+                    let _ = writeln!(out, "trait {} {{", t.name);
+                    for meth in &t.methods {
+                        let params: Vec<_> = meth
+                            .params
+                            .iter()
+                            .map(|(n, ty)| format!("{n}: {}", format_ty(ty)))
+                            .collect();
+                        let ret = if matches!(meth.ret, crisp_cir::CirTy::Unit) {
+                            String::new()
+                        } else {
+                            format!(" -> {}", format_ty(&meth.ret))
+                        };
+                        let _ = writeln!(out, "    {}({}){ret}", meth.name, params.join(", "));
+                    }
+                    let _ = writeln!(out, "}}");
+                }
+                crisp_cir::CirItem::Impl(ib) => {
+                    if let Some(tn) = &ib.trait_name {
+                        let _ = writeln!(out, "impl {tn} for {}", ib.ty_name);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
     for shape in &cir.shape_traits {
         let _ = writeln!(out, "shape {} {{", shape.name);
         for (name, ty) in &shape.fields {
@@ -33,7 +62,7 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
         let _ = writeln!(out);
     }
     if out.is_empty() {
-        out.push_str("// (no shape traits in this crate)\n");
+        out.push_str("// (no traits in this crate)\n");
     }
     Ok(out)
 }

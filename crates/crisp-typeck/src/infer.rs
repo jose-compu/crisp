@@ -270,7 +270,7 @@ impl TypeChecker {
                         }),
                     );
                 }
-                Item::Impl(ib) if ib.trait_name.is_none() => {
+                Item::Impl(ib) => {
                     self.collect_impl_stubs(module, ib)?;
                 }
                 _ => {}
@@ -340,7 +340,7 @@ impl TypeChecker {
         for item in &file.items {
             match item {
                 Item::Function(f) => self.check_function(module, f)?,
-                Item::Impl(ib) if ib.trait_name.is_none() => self.check_impl(module, ib)?,
+                Item::Impl(ib) => self.check_impl(module, ib)?,
                 Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
                 Item::TestCompileFail(_) | Item::Extern(_) => {}
                 _ => {}

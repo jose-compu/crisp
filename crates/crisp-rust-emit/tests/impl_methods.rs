@@ -66,3 +66,50 @@ fn vec2_methods_run_and_test() {
     let r = run_tests(&example("vec2_methods")).expect("test");
     assert!(r.runtime_passed >= 2);
 }
+
+#[test]
+fn show_trait_emits_trait_and_impl() {
+    let cir = CirBuilder::build_crate(&example("show_trait")).expect("cir");
+    let main = cir.modules.iter().find(|m| m.path == "main").expect("main");
+    assert!(
+        main.items
+            .iter()
+            .any(|i| matches!(i, crisp_cir::CirItem::Trait(t) if t.name == "Show")),
+        "expected CirTrait Show"
+    );
+    let trait_impl = main
+        .items
+        .iter()
+        .find_map(|i| match i {
+            crisp_cir::CirItem::Impl(ib) if ib.trait_name.as_deref() == Some("Show") => Some(ib),
+            _ => None,
+        })
+        .expect("impl Show for Point");
+    assert_eq!(trait_impl.ty_name, "Point");
+    assert_eq!(trait_impl.functions.len(), 1);
+
+    let out = emit_crate(&cir);
+    assert!(
+        out.lib_rs.contains("trait Show"),
+        "emitted:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("impl Show for Point"),
+        "emitted:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("fn show(&self)"),
+        "emitted:\n{}",
+        out.lib_rs
+    );
+}
+
+#[test]
+fn show_trait_run_and_test() {
+    let out = run_emitted(&example("show_trait")).expect("run");
+    assert!(out.contains("p=(3,4)"), "stdout: {out}");
+    let r = run_tests(&example("show_trait")).expect("test");
+    assert!(r.runtime_passed >= 1);
+}

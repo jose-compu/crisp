@@ -105,6 +105,9 @@ impl CirBuilder {
                     Item::ShapeDef(shape) => {
                         shape_traits.push(synthesize_shape_trait(shape, &all_structs));
                     }
+                    Item::TraitDef(td) => {
+                        items.push(CirItem::Trait(lower_trait_def(td)));
+                    }
                     Item::Function(f) => {
                         let key = format!("{}::{}", node.module_path, f.name.name);
                         if let (Some(o), Some(t), Some(e)) = (
@@ -208,6 +211,43 @@ fn type_name_from_ast(ty: &crisp_ast::ty::Type) -> String {
     match &ty.kind {
         TypeKind::Named(id) => id.name.clone(),
         _ => "Unknown".into(),
+    }
+}
+
+fn lower_trait_def(td: &crisp_ast::item::TraitDef) -> CirTrait {
+    use crisp_ast::expr::Param;
+    CirTrait {
+        name: td.name.name.clone(),
+        methods: td
+            .items
+            .iter()
+            .map(|m| CirTraitMethod {
+                name: m.name.name.clone(),
+                params: m
+                    .params
+                    .iter()
+                    .map(|p: &Param| {
+                        let ty = if p.name.name == "self" && p.ty.is_none() {
+                            CirTy::Named {
+                                name: "Self".into(),
+                                args: vec![],
+                            }
+                        } else {
+                            p.ty.as_ref()
+                                .map(ast_type_to_cir_ty)
+                                .unwrap_or(CirTy::Error)
+                        };
+                        (p.name.name.clone(), ty)
+                    })
+                    .collect(),
+                ret: m
+                    .ret_type
+                    .as_ref()
+                    .map(ast_type_to_cir_ty)
+                    .unwrap_or(CirTy::Unit),
+            })
+            .collect(),
+        span: td.span,
     }
 }
 

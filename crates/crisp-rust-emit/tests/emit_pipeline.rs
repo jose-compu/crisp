@@ -169,6 +169,9 @@ fn cir_outline(cir: &CirCrate) -> String {
                     let params: Vec<_> = f.params.iter().map(|p| p.name.as_str()).collect();
                     let _ = writeln!(out, "  fn {}({})", f.name, params.join(", "));
                 }
+                CirItem::Trait(t) => {
+                    let _ = writeln!(out, "  trait {}", t.name);
+                }
                 CirItem::Impl(i) => {
                     let _ = writeln!(out, "  impl {}", i.trait_name.as_deref().unwrap_or("_"));
                 }

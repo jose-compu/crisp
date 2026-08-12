@@ -430,6 +430,9 @@ impl Resolver {
                 Item::Test(t) => self.check_block(&scope, &t.body)?,
                 Item::TestCompileFail(_) => {}
                 Item::Impl(i) => {
+                    if let Some(tn) = &i.trait_name {
+                        self.check_name(&scope, &tn.name, tn.span)?;
+                    }
                     self.check_type(&scope, &i.ty)?;
                     for f in &i.items {
                         let mut local = scope.clone();
@@ -451,13 +454,36 @@ impl Resolver {
                         self.check_expr(&local, &f.body)?;
                     }
                 }
+                Item::TraitDef(t) => {
+                    for item in &t.items {
+                        let mut local = scope.clone();
+                        for p in &item.params {
+                            local.insert(
+                                p.name.name.clone(),
+                                SymbolKey {
+                                    module: "_param".to_string(),
+                                    name: p.name.name.clone(),
+                                },
+                            );
+                            if let Some(ty) = &p.ty {
+                                self.check_type(&local, ty)?;
+                            }
+                        }
+                        if let Some(ty) = &item.ret_type {
+                            self.check_type(&local, ty)?;
+                        }
+                        if let Some(body) = &item.default_body {
+                            self.check_expr(&local, body)?;
+                        }
+                    }
+                }
                 Item::ShapeDef(s) => {
                     return Err(ResolveError::ShapesUnsupported {
                         name: s.name.name.clone(),
                         span: s.name.span,
                     });
                 }
-                Item::Use(_) | Item::TraitDef(_) | Item::Extern(_) => {}
+                Item::Use(_) | Item::Extern(_) => {}
             }
         }
         let _ = current;

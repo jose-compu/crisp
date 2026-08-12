@@ -165,17 +165,20 @@ fn emit_module_items(
             }
             CirItem::Function(f) => {
                 if include_main || !f.is_main {
-                    emit_function(out, f, &module.path, map);
+                    emit_function(out, f, &module.path, map, true);
                 }
             }
+            CirItem::Trait(t) => emit_user_trait(out, t, map),
             CirItem::Impl(ib) => {
-                let _ = write!(out, "impl");
                 if let Some(tn) = &ib.trait_name {
-                    let _ = write!(out, " {tn} for ");
+                    let _ = writeln!(out, "impl {tn} for {} {{", ib.ty_name);
+                } else {
+                    let _ = writeln!(out, "impl {} {{", ib.ty_name);
                 }
-                let _ = writeln!(out, " {} {{", ib.ty_name);
+                // Trait impl methods must not carry `pub` (E0449).
+                let allow_pub = ib.trait_name.is_none();
                 for f in &ib.functions {
-                    emit_function(out, f, &module.path, map);
+                    emit_function(out, f, &module.path, map, allow_pub);
                 }
                 let _ = writeln!(out, "}}");
             }
@@ -183,6 +186,31 @@ fn emit_module_items(
         }
     }
     let _ = cir;
+}
+
+fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSourceMap) {
+    map.record(out.len() as u32, t.span);
+    let _ = writeln!(out, "trait {} {{", t.name);
+    for m in &t.methods {
+        let params: Vec<_> = m
+            .params
+            .iter()
+            .map(|(n, ty)| {
+                if n == "self" {
+                    "&self".to_string()
+                } else {
+                    format!("{n}: {}", format_ty(ty))
+                }
+            })
+            .collect();
+        let ret = if matches!(m.ret, CirTy::Unit) {
+            String::new()
+        } else {
+            format!(" -> {}", format_ty(&m.ret))
+        };
+        let _ = writeln!(out, "    fn {}({}){};", m.name, params.join(", "), ret);
+    }
+    let _ = writeln!(out, "}}");
 }
 
 fn emit_extern_block(out: &mut String, ext: &crisp_cir::CirExternBlock, map: &mut EmitSourceMap) {
@@ -300,9 +328,15 @@ fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
     let _ = writeln!(out);
 }
 
-fn emit_function(out: &mut String, f: &CirFunction, current_module: &str, map: &mut EmitSourceMap) {
+fn emit_function(
+    out: &mut String,
+    f: &CirFunction,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+    allow_pub: bool,
+) {
     map.record(out.len() as u32, f.span);
-    let vis = if f.is_pub { "pub " } else { "" };
+    let vis = if allow_pub && f.is_pub { "pub " } else { "" };
     if f.is_main && f.is_async {
         let _ = writeln!(out, "#[tokio::main]");
     }

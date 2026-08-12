@@ -1,5 +1,7 @@
 # The Crisp Programming Language
 
+[![CI](https://github.com/jose-compu/crisp/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/crisp/actions/workflows/ci.yml)
+
 <p align="center">
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
 </p>
@@ -8,16 +10,18 @@
 
 Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
-**This is a Rust-hosted bootstrap compiler (v1.4.0).** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+**This is a Rust-hosted bootstrap compiler (v1.4.1) — public preview.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+
+**Sharp edge:** calling into Rust crates (`rust = true`) that return `Result` currently lowers to `.expect(...)` in generated Rust until Crisp `?` absorption lands ([#55](https://github.com/jose-compu/crisp/issues/55)).
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
-**Web docs:** branch [`docs`](https://github.com/jose-compu/crisp/tree/docs) · folder `docs/` · [#39](https://github.com/jose-compu/crisp/issues/39)  
+**Web docs:** [jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
 **Roadmap:** [ROADMAP.md](ROADMAP.md)  
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  
 **Security:** [SECURITY.md](SECURITY.md)  
-**Public release backlog:** [Issue #1](https://github.com/jose-compu/crisp/issues/1)
+**Next milestone:** [v1.5.0](https://github.com/jose-compu/crisp/milestone/6)
 
 License: **MIT OR Apache-2.0** ([LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE)).
 
@@ -67,7 +71,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | Emit | `crisp-rust-emit` | Rust project under `target/rust/`, tests, `crisp.lock` |
 | CLI | `crpc` | `check`, `emit`, `build`, `run`, `test` |
 | Inspect | `reveal` | Companion CLI: inferred types/ownership/errors, traits, emitted Rust (QUICKSTART §10) |
-| IDE | `crisp-lsp` | Analysis API (`CrispAnalysis`); no stdio LSP host yet (#18) |
+| IDE | `crisp-lsp` | Analysis API (`CrispAnalysis`); no stdio LSP host yet (#18 / #56) |
 
 **Sealed crates (`crisp.lock`):** a crate’s `pub` API has fully resolved signatures frozen at publish time. Downstream code analyzes against the lockfile, not re-inferred internals — the explicit tradeoff for whole-program inference inside a boundary.
 
@@ -89,9 +93,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.4.0** — Rust crate interop (`use` / `rust = true`); `trait` / `impl Trait for`; prelude Show/Eq/Ord; `std.net` + thin HTTP (`ureq`); `.crp` VS Code highlighting.
+**v1.4.1** — public-preview hygiene on top of **v1.4.0** (Rust crate interop; `trait` / `impl Trait for`; prelude Show/Eq/Ord; `std.net` + thin HTTP; `.crp` highlighting).
 
-See [ROADMAP.md](ROADMAP.md) and [GitHub milestones](https://github.com/jose-compu/crisp/milestones) for what comes next.
+**v1.5.0** backlog: Result `?` absorption ([#55](https://github.com/jose-compu/crisp/issues/55)), stdio LSP ([#56](https://github.com/jose-compu/crisp/issues/56)), editor packaging ([#57](https://github.com/jose-compu/crisp/issues/57)), trait defaults/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), shapes ([#61](https://github.com/jose-compu/crisp/issues/61)). See [ROADMAP.md](ROADMAP.md) and [milestones](https://github.com/jose-compu/crisp/milestones).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 

@@ -9,6 +9,21 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- Data `shape` support end-to-end (`examples/shapes`): resolve/typeck structural match, generated traits + accessors (#61).
+- Stdio `crisp-lsp` binary — hover, inlay hints, crate diagnostics (#56).
+- VS Code/Cursor VSIX packaging script (`scripts/package-vsix.sh`) + optional LSP client hook (#57).
+- Trait default method bodies for literal/simple expressions (`examples/trait_defaults`) (#59).
+
+### Fixed
+
+- Test harness struct literals emit as `Type { fields }` (not invalid `Type::with(...)`).
+
+### Notes
+
+- Still open for v1.5.0: crates.io (#60), repo visibility (#58); trait bounds/`dyn` remain partial (#59).
+
 ## [1.5.0] — 2026-08-12
 
 ### Added
@@ -24,7 +39,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ### Notes
 
-- Remaining v1.5.0 board items: stdio LSP (#56), editor package (#57), trait polish (#59), shapes (#61), crates.io (#60). Visibility flip: (#58).
+- Remaining v1.5.0 board items after start PR: stdio LSP (#56), editor package (#57), trait polish (#59), shapes (#61), crates.io (#60). Visibility flip: (#58).
 
 ## [1.4.1] — 2026-08-12
 

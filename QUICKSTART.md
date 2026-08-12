@@ -235,18 +235,19 @@ See `examples/fallible`, `examples/fallible_chain`.
 
 ## 9. `crpc` commands
 
-| Command | Description |
-|---------|-------------|
-| `crpc check <path>` | Resolve, typecheck, ownership probe (no full build) |
-| `crpc emit <path>` | Emit Rust to `<path>/target/rust/` |
-| `crpc build <path>` | Emit + `cargo build` |
-| `crpc run <path>` | Build and run the binary |
-| `crpc test <path>` | Run `test` / `test_compile_fail` blocks |
-| `crpc resolve <path>` | Print resolved module graph (debug) |
-| `crpc parse <file.crp>` | Print AST (debug) |
-
 `<path>` defaults to `.` (searches upward for `crisp.toml`).
 
+| Command | What it does |
+|---------|----------------|
+| `crpc check <path>` | Fast analyze: resolve, typecheck, ownership probe — **no** Cargo build |
+| `crpc emit <path>` | Write generated Rust crate to `<path>/target/rust/` and stop |
+| `crpc build <path>` | Emit + `cargo build` (native binary via `rustc`) |
+| `crpc run <path>` | Build and run the binary (day-to-day for apps/examples) |
+| `crpc test <path>` | Emit + run Crisp `test` / `test_compile_fail` via `cargo test` |
+| `crpc resolve <path>` | Print resolved module graph (debug) |
+| `crpc parse <file.crp>` | Print AST for one file (debug) |
+
+Pipeline order for a successful `run`/`test`: analyze → emit Rust under `target/rust/` → Cargo/`rustc`. Use `check` while editing; use `emit` when you want to read the generated Rust.
 ## 10. Inspect what the compiler inferred (`reveal`)
 
 ### What is `reveal`?
@@ -306,19 +307,23 @@ Your Crisp may only say `greet(name) = …`; `reveal` shows that `name` became `
 | `reveal errors <path>` | Reachable `CrispError` sets | Solid |
 | `reveal rust <path>` | Emitted Rust entry | Solid |
 | `reveal seal <path>` | Sealed pub API (`crisp.lock`) | Solid |
-| `reveal traits <path>` | User traits + impls (+ shape traits if any) | User traits solid; shapes still `E0039` (#61) |
+| `reveal traits <path>` | User traits + impls (+ shape traits if any) | User traits + data shapes (`examples/shapes`, #61) |
 | `reveal expand <path>` | Annotated Crisp outline | Shallow body stubs |
 | `reveal diff <path>` | Crisp vs Rust names | Name-level summary only |
 | `reveal map <path>` | Alloc / drop notes | Coarse CIR notes |
 
 Gaps vs the draft spec: [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [SPEC_IMPL_DELTA.md](docs/SPEC_IMPL_DELTA.md).
 
-## 11. Editor analysis API (`crisp-lsp`)
+## 11. Language server (`crisp-lsp`)
 
-There is **no stdio LSP server** yet. The `crisp-lsp` crate exposes `CrispAnalysis` for hosts that want to wire their own protocol:
+Stdio LSP host (#56):
 
-- `CrispAnalysis::analyze(path)` — full-crate pipeline
-- `hover` / `inlay_hints` / `call_overlays` / `code_lenses` / `emitted_rust`
+```bash
+cargo install --path crates/crisp-lsp --locked
+crisp-lsp   # speaks LSP on stdin/stdout
+```
+
+Capabilities today: `textDocument/hover`, `textDocument/inlayHint`, diagnostics on open/change/save (crate-level analyze). Library API remains `CrispAnalysis` for custom hosts.
 
 ```rust
 use crisp_lsp::CrispAnalysis;
@@ -328,19 +333,17 @@ let analysis = CrispAnalysis::analyze(Path::new("examples/hello"))?;
 let hints = analysis.inlay_hints(Path::new("examples/hello/src/main.crp"))?;
 ```
 
-Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’s task runner.
+### VS Code / Cursor extension
 
-### Syntax highlighting (VS Code / Cursor)
-
-Highlighting-only TextMate grammar for `.crp` (not LSP) lives in [`editors/vscode-crisp`](editors/vscode-crisp):
+[`editors/vscode-crisp`](editors/vscode-crisp) — highlighting + optional LSP client:
 
 ```bash
-# from repo root — Cursor
-ln -sf "$PWD/editors/vscode-crisp" "$HOME/.cursor/extensions/jose-compu.crisp-lang-0.1.0"
-# VS Code: use ~/.vscode/extensions/… instead
+./scripts/package-vsix.sh
+# Extensions: Install from VSIX… → editors/vscode-crisp/*.vsix
+cargo install --path crates/crisp-lsp --locked   # crisp-lsp on PATH
 ```
 
-Then **Developer: Reload Window**. Or open that folder and press **F5** (Extension Development Host). Details: [`editors/vscode-crisp/README.md`](editors/vscode-crisp/README.md).
+Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/README.md).
 
 ## 12. Example projects
 
@@ -352,6 +355,8 @@ Then **Developer: Reload Window**. Or open that folder and press **F5** (Extensi
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
+| `shapes` | Data `shape` → generated trait + structural calls (§3.5 / #61) |
+| `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |
 | `net_http` | `parse_ip` + `ureq` GET via `rust = true` (§15.2 / #28) |
 | `feature_gallery` | Nested mods + enums + inherent methods together |

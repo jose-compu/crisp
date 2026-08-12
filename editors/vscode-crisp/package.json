@@ -1,7 +1,7 @@
 {
   "name": "crisp-lang",
   "displayName": "Crisp",
-  "description": "Syntax highlighting for the Crisp programming language (.crp)",
+  "description": "Crisp language support — highlighting + optional crisp-lsp",
   "version": "0.1.0",
   "publisher": "jose-compu",
   "engines": {
@@ -13,13 +13,18 @@
   "keywords": [
     "crisp",
     "crp",
-    "crpc"
+    "crpc",
+    "lsp"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/jose-compu/crisp"
   },
   "license": "MIT OR Apache-2.0",
+  "activationEvents": [
+    "onLanguage:crisp"
+  ],
+  "main": "./extension.js",
   "contributes": {
     "languages": [
       {
@@ -40,6 +45,21 @@
         "scopeName": "source.crisp",
         "path": "./syntaxes/crisp.tmLanguage.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Crisp",
+      "properties": {
+        "crisp.lsp.path": {
+          "type": "string",
+          "default": "crisp-lsp",
+          "description": "Path to the crisp-lsp stdio binary (cargo install --path crates/crisp-lsp)."
+        },
+        "crisp.lsp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start crisp-lsp for .crp files when the binary is available."
+        }
+      }
+    }
   }
 }

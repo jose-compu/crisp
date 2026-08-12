@@ -1,5 +1,15 @@
--- Bound syntax without a shape def still must fail clearly (#21).
-distance(a: T + shape HasPosition, b: T + shape HasPosition) = 0.0
+-- Shape bound on a concrete type resolves (#61).
+shape HasPosition = {
+    x: float
+    y: float
+}
+
+type Point = {
+    x: float
+    y: float
+}
+
+distance(a: Point + shape HasPosition) = 0.0
 
 pub main() = {
     log("unused")

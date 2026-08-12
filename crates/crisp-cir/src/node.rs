@@ -96,6 +96,8 @@ pub struct CirTraitMethod {
     pub name: String,
     pub params: Vec<(String, CirTy)>,
     pub ret: CirTy,
+    /// Optional default method body (user `trait` only; shapes leave this `None`).
+    pub default_body: Option<CirExpr>,
 }
 
 #[derive(Debug, Clone)]

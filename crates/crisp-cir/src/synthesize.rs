@@ -175,6 +175,7 @@ pub fn synthesize_shape_trait(shape: &ShapeDef, structs: &[(String, CirStruct)])
                         })
                         .collect(),
                     ret: ast_type_to_cir(ret_type),
+                    default_body: None,
                 });
             }
         }

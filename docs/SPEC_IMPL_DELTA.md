@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crpc 1.2.x)
+# Spec vs implementation delta (v0.2.0-draft ↔ crpc 1.5.x)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,15 +23,15 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (through 1.4.x) |
+| Feature | Spec | Impl (through 1.5.x) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
-| Traits / `impl Trait for` | §3.6 | Working for method traits + `impl Trait for Type` (`examples/show_trait`); defaults / bounds / dyn deferred — [#50](https://github.com/jose-compu/crisp/issues/50) |
+| Traits / `impl Trait for` | §3.6 | Method traits + literal/simple defaults (`examples/show_trait`, `trait_defaults`); bounds / dyn still limited — [#59](https://github.com/jose-compu/crisp/issues/59) |
 | Rust crate imports | §14.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; stubs for `serde_json` / `ureq`; known Result APIs → `CrispError::Thrown` + `?` (#55) |
-| Shapes | §3.5 | Parse + keyword only; resolve emits `E0039` (unsupported) until full §3.5 lands |
+| Shapes | §3.5 | Data shapes: resolve/typeck/emit + `examples/shapes`; method/anonymous shapes still limited |
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord | §15.4 | Prelude shims + Display/PartialEq/Ord bridges (`examples/std_traits`) — [#27](https://github.com/jose-compu/crisp/issues/27) |
 | Std net/http | §15.2 | `std.net.parse_ip` + thin `ureq` GET (`examples/net_http`); full `std.http` server API deferred — [#28](https://github.com/jose-compu/crisp/issues/28) |
@@ -53,7 +53,7 @@ Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compil
 | `reveal expand` | Partial — signature + shallow body stubs |
 | `reveal diff` | Partial — fn-name summary, not side-by-side |
 | `reveal map` | Partial — coarse CIR notes |
-| §16.3 LSP host | Analysis API in `crisp-lsp` (`CrispAnalysis`); **no** stdio server |
+| §16.3 LSP host | Stdio `crisp-lsp` binary (hover, inlays, diagnostics) + `CrispAnalysis` library (#56) |
 
 CLI: `crates/crpc/src/reveal.rs` (binary from `-p crpc`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
 

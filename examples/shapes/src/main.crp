@@ -1,0 +1,48 @@
+-- examples/shapes — data shapes → generated traits (§3.5 / #61)
+
+shape HasPosition = {
+    x: float
+    y: float
+}
+
+type Point = {
+    x: float
+    y: float
+}
+
+type Vec2 = {
+    x: float
+    y: float
+}
+
+-- Squared Euclidean distance; any matching struct satisfies HasPosition.
+distance(a: HasPosition, b: HasPosition) -> float = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+
+test "shape distance" = {
+    p := Point {
+        x: 0.0
+        y: 0.0
+    }
+    q := Vec2 {
+        x: 3.0
+        y: 4.0
+    }
+    assert_eq(distance(p, q), 25.0)
+}
+
+pub main() = {
+    p := Point {
+        x: 1.0
+        y: 2.0
+    }
+    q := Vec2 {
+        x: 4.0
+        y: 6.0
+    }
+    d := distance(p, q)
+    log("d={d}")
+}

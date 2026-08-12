@@ -247,13 +247,21 @@ fn emit_expr(expr: &Expr) -> String {
         }
         ExprKind::StructLit { name, fields } => {
             if fields.is_empty() {
-                format!("{}::with()", name.name)
+                format!("{} {{}}", name.name)
             } else {
                 let parts: Vec<_> = fields
                     .iter()
-                    .map(|f| format!("{}: {}", f.name.name, emit_expr(&f.value)))
+                    .map(|f| {
+                        let val = emit_expr(&f.value);
+                        let val = if matches!(f.value.kind, ExprKind::Str(_)) {
+                            format!("{val}.to_string()")
+                        } else {
+                            val
+                        };
+                        format!("{}: {val}", f.name.name)
+                    })
                     .collect();
-                format!("{}::with({})", name.name, parts.join(", "))
+                format!("{} {{ {} }}", name.name, parts.join(", "))
             }
         }
         _ => "()".into(),

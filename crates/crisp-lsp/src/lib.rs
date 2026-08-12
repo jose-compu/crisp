@@ -1,13 +1,16 @@
 //! LSP **analysis** layer — ghost-text hints, hover, ownership overlays (spec §16.3).
 //!
-//! # Status (v1.3 track)
+//! # Status (v1.5)
 //!
-//! This crate ships the editor-facing **analysis API** used by tests and future hosts.
-//! There is **no** stdio/`tower-lsp` server binary yet ([#18](https://github.com/jose-compu/crisp/issues/18)).
-//! Until one lands, call [`CrispAnalysis`] from an IDE extension or use the `reveal` / `crpc`
-//! CLIs (see QUICKSTART §10–§11).
+//! - Library: [`CrispAnalysis`] for tests and custom hosts.
+//! - Stdio server: binary `crisp-lsp` ([#56](https://github.com/jose-compu/crisp/issues/56)).
 //!
-//! # Example
+//! ```bash
+//! cargo run -p crisp-lsp --bin crisp-lsp
+//! # or: cargo install --path crates/crisp-lsp --locked
+//! ```
+//!
+//! # Example (library)
 //!
 //! ```no_run
 //! use crisp_lsp::CrispAnalysis;
@@ -28,12 +31,7 @@ mod overlays;
 mod walk;
 
 pub use analysis::{AnalysisError, CrispAnalysis};
-pub use hints::InlayHint;
+pub use hints::{InlayHint, InlayHintKind};
 pub use hover::HoverInfo;
 pub use lenses::CodeLens;
 pub use overlays::CallOverlay;
-
-/// Placeholder for a future stdio/TCP LSP server host ([#18](https://github.com/jose-compu/crisp/issues/18)).
-///
-/// Prefer [`CrispAnalysis`] until a real protocol host is wired.
-pub struct CrispLanguageServer;

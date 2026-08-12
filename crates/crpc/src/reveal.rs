@@ -64,7 +64,7 @@ enum Commands {
     #[command(
         long_about = "List user `trait` / `impl Trait for` from CIR, plus any shape traits.\n\
                       Try: `reveal traits examples/show_trait`.\n\
-                      Shapes still fail resolve with E0039 (#21)."
+                      Shape traits appear when the crate defines `shape` (§3.5)."
     )]
     Traits {
         #[arg(value_name = "PATH", default_value = ".")]

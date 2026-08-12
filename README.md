@@ -71,7 +71,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | Emit | `crisp-rust-emit` | Rust project under `target/rust/`, tests, `crisp.lock` |
 | CLI | `crpc` | `check`, `emit`, `build`, `run`, `test` |
 | Inspect | `reveal` | Companion CLI: inferred types/ownership/errors, traits, emitted Rust (QUICKSTART §10) |
-| IDE | `crisp-lsp` | Analysis API (`CrispAnalysis`); no stdio LSP host yet (#18 / #56) |
+| IDE | `crisp-lsp` | Stdio LSP host (hover, inlay hints, diagnostics) + `CrispAnalysis` API (#56) |
 
 **Sealed crates (`crisp.lock`):** a crate’s `pub` API has fully resolved signatures frozen at publish time. Downstream code analyzes against the lockfile, not re-inferred internals — the explicit tradeoff for whole-program inference inside a boundary.
 
@@ -93,9 +93,9 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.5.0** — first public release track: Rust `Result` → Crisp `?` (#55); plus v1.4.x interop, traits, Show/Eq/Ord, net/http, docs site.
+**v1.5.0** — first public release track: Rust `Result` → Crisp `?` (#55), data shapes (#61), stdio LSP (#56), VSIX packaging (#57), trait default bodies (#59); plus v1.4.x interop, Show/Eq/Ord, net/http, docs site.
 
-**Still open on v1.5.0:** stdio LSP ([#56](https://github.com/jose-compu/crisp/issues/56)), editor packaging ([#57](https://github.com/jose-compu/crisp/issues/57)), trait defaults/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), shapes ([#61](https://github.com/jose-compu/crisp/issues/61)), crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)). See [ROADMAP.md](ROADMAP.md).
+**Still open:** crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 
@@ -151,6 +151,8 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 | Example | Topics | Notes |
 |---------|--------|--------|
 | `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crpc test` |
+| `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crpc test` |
+| `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |
 | `vec_ops`, `data_pipeline` | `vec` stdlib, fallible IO | |

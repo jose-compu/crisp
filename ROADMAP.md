@@ -181,6 +181,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [x] Ghost-text type hints, hover, ownership overlays — `crisp-lsp` analysis API
 - [x] Reachable-error-set on calls — `call_overlays`
 - [x] "Show emitted Rust" code lens — `code_lenses` + `emitted_rust`
+- [x] Stdio LSP host — `crisp-lsp` binary (#56, v1.5.0)
 
 **Quality**
 
@@ -317,17 +318,17 @@ Current compiler: **v1.5.0**. Active milestones:
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
 | **v1.4.x** | patch/minor | Interop, traits, Show/Eq/Ord, net/http, preview hygiene (shipped) | [v1.4.0](https://github.com/jose-compu/crisp/milestone/5) · [v1.4.1](https://github.com/jose-compu/crisp/milestone/7) |
-| **v1.5.0** | minor | Public launch: Result `?` (#55 landed), LSP, shapes, editor, trait polish | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
+| **v1.5.0** | minor | Public launch: Result `?`, data shapes, stdio LSP, VSIX, trait defaults | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
 |----------|--------|----------|
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
-| **P1** | LSP host, shapes, trait defaults/`dyn` | [#56](https://github.com/jose-compu/crisp/issues/56), [#61](https://github.com/jose-compu/crisp/issues/61), [#59](https://github.com/jose-compu/crisp/issues/59) |
-| **P2** | Editor Marketplace, crates.io revisit, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57), [#60](https://github.com/jose-compu/crisp/issues/60), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
+| **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
+| **P2** | Marketplace listing, crates.io, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#60](https://github.com/jose-compu/crisp/issues/60), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-*Last updated: 2026-08-12 — v1.5.0 first public release track (Result `?` landed).*
+*Last updated: 2026-08-12 — v1.5.0 finish: shapes (#61), LSP (#56), VSIX (#57), trait defaults (#59).*

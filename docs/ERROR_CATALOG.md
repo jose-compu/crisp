@@ -9,7 +9,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0036 | resolve | Name is private — export with `pub` or import from the defining module |
 | E0037 | resolve | Symbol not exported from module |
 | E0038 | resolve | Ambiguous import — qualify or narrow `use` |
-| E0039 | resolve | Shapes not yet supported — remove `shape` defs/bounds ([#61](https://github.com/jose-compu/crisp/issues/61)) |
+| E0039 | resolve | Reserved (was shapes-unsupported); data shapes are supported — see [#61](https://github.com/jose-compu/crisp/issues/61) |
 | E0044 | resolve | `use rust…` crate missing from `[dependencies]` — add with `rust = true` ([#41](https://github.com/jose-compu/crisp/issues/41)) |
 | E0045 | resolve | Dependency used via `use rust…` must set `rust = true` |
 | E0046 | resolve | `use rust…` requires `{ item, … }` import list |

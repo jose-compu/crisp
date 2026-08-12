@@ -478,10 +478,23 @@ impl Resolver {
                     }
                 }
                 Item::ShapeDef(s) => {
-                    return Err(ResolveError::ShapesUnsupported {
-                        name: s.name.name.clone(),
-                        span: s.name.span,
-                    });
+                    for f in &s.fields {
+                        match f {
+                            crisp_ast::item::ShapeField::Data { ty, .. } => {
+                                self.check_type(&scope, ty)?;
+                            }
+                            crisp_ast::item::ShapeField::Method {
+                                params, ret_type, ..
+                            } => {
+                                for p in params {
+                                    if let Some(ty) = &p.ty {
+                                        self.check_type(&scope, ty)?;
+                                    }
+                                }
+                                self.check_type(&scope, ret_type)?;
+                            }
+                        }
+                    }
                 }
                 Item::Use(_) | Item::Extern(_) => {}
             }
@@ -547,10 +560,22 @@ impl Resolver {
                 for b in bounds {
                     match b {
                         TypeBound::Shape(id) => {
-                            return Err(ResolveError::ShapesUnsupported {
-                                name: id.name.clone(),
-                                span: id.span,
-                            });
+                            self.check_name(scope, &id.name, id.span)?;
+                            // Ensure the name is a shape (not a random type).
+                            if let Some(key) = scope.get(&id.name)
+                                && let Some(sym) = self.global.get(key)
+                                && sym.kind != SymbolKind::Shape
+                            {
+                                return Err(ResolveError::UnresolvedName {
+                                    name: id.name.clone(),
+                                    span: id.span,
+                                    message: format!(
+                                        "[E0035] `{name}` is not a shape",
+                                        name = id.name
+                                    ),
+                                    hint: Some("shape bounds require a `shape` definition".into()),
+                                });
+                            }
                         }
                         TypeBound::Trait(id) => {
                             self.check_name(scope, &id.name, id.span)?;
@@ -829,22 +854,11 @@ impl Resolver {
 
     fn reject_shape_type(
         &self,
-        scope: &HashMap<String, SymbolKey>,
-        name: &str,
-        span: Span,
+        _scope: &HashMap<String, SymbolKey>,
+        _name: &str,
+        _span: Span,
     ) -> Result<(), ResolveError> {
-        let Some(key) = scope.get(name) else {
-            return Ok(());
-        };
-        let Some(sym) = self.global.get(key) else {
-            return Ok(());
-        };
-        if sym.kind == SymbolKind::Shape {
-            return Err(ResolveError::ShapesUnsupported {
-                name: name.to_string(),
-                span,
-            });
-        }
+        // Named shapes are supported as types (v1.5 / #61).
         Ok(())
     }
 }

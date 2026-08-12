@@ -1,6 +1,6 @@
 # Known limitations (Crisp v1.5)
 
-This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Publication backlog: [milestone v1.5.0](https://github.com/jose-compu/crisp/milestone/6).
+This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
 ## Bootstrap status
 
@@ -17,9 +17,9 @@ This page documents behaviors that surprise users and are **not** always full la
 - **Field access on function parameters:** if exactly one known struct has the field, the param type is inferred (`item.sku`). If several structs share the field name, annotate the param or you get `E0043` ([#12](https://github.com/jose-compu/crisp/issues/12)).
 - **Enums / variant `match`:** unit and simple tuple variants work (`Color.Red`, `Color.Custom(r,g,b)` with `match color { … }`). See `examples/enums`. Remaining gaps: recursive enums beyond CIR `Box`, bare unqualified variant values, full exhaustiveness checking ([#11](https://github.com/jose-compu/crisp/issues/11) / [#34](https://github.com/jose-compu/crisp/issues/34)).
 - `match name {` with a bare identifier scrutinee is supported; prefer `match (expr) { … }` for complex scrutinees.
-- **`shape`** is reserved and parseable, but **not supported** yet: `shape` definitions and `shape` bounds fail resolve with `E0039` ([#61](https://github.com/jose-compu/crisp/issues/61) → v1.5.0).
+- **`shape`** data shapes work end-to-end for field accessors (`examples/shapes`): generated trait + structural call sites (§3.5). Remaining gaps: method shapes, anonymous `{ x: float }` params, full bound/`dyn`-style use ([#61](https://github.com/jose-compu/crisp/issues/61)).
 - **Inherent `impl Type` methods** work end-to-end (`Vec2.new`, `v.magnitude()`, nested modules); see `examples/vec2_methods`, `point_impl`, `feature_gallery` ([#20](https://github.com/jose-compu/crisp/issues/20)).
-- **`trait` / `impl Trait for Type`** work for simple method traits (`examples/show_trait`). Remaining gaps: default bodies, bound enforcement, `dyn Trait` ([#59](https://github.com/jose-compu/crisp/issues/59)).
+- **`trait` / `impl Trait for Type`** work for method traits (`examples/show_trait`). Literal/simple **default method bodies** emit (`examples/trait_defaults`). Remaining gaps: complex default bodies, full bound enforcement, `dyn Trait` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 - **Std Show / Eq / Ord** are prelude shims (`show` / `equal` / `compare`) with Rust `Display` / `PartialEq`+`Eq` / `Ord` bridges (`examples/std_traits`) ([#27](https://github.com/jose-compu/crisp/issues/27)).
 - Multi-module crates emit main-module enums/structs alongside nested `mod` trees.
 
@@ -29,8 +29,8 @@ This page documents behaviors that surprise users and are **not** always full la
 - **Diagnostics:** resolve/typeck errors from `crpc check` render source snippets and hints when spans resolve (E0035 names the defining module when known) ([#22](https://github.com/jose-compu/crisp/issues/22)).
 - **`test "name"`** becomes `fn test_<sanitized>` so it does not shadow crate items. Float `assert_eq` uses a small epsilon. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
 - **`reveal` (spec §16):** beginner walkthrough in [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal). Deep overlays today: `types` / `ownership` / `lifetimes` / `errors` / `rust` / `seal` / user `traits`. Gaps ([#19](https://github.com/jose-compu/crisp/issues/19)): `expand` / `diff` / `map` remain shallow.
-- **`crisp-lsp`:** analysis API only (`CrispAnalysis`). No stdio LSP host yet ([#18](https://github.com/jose-compu/crisp/issues/18) / [#56](https://github.com/jose-compu/crisp/issues/56)).
-- **Editor highlighting:** in-tree TextMate grammar at [`editors/vscode-crisp`](../editors/vscode-crisp) (symlink / F5). Marketplace / VSIX packaging tracked in [#57](https://github.com/jose-compu/crisp/issues/57).
+- **`crisp-lsp`:** stdio LSP binary (`cargo install --path crates/crisp-lsp`) — hover, inlay hints, crate diagnostics on open/save ([#56](https://github.com/jose-compu/crisp/issues/56)). Library API: `CrispAnalysis`.
+- **Editor packaging:** [`editors/vscode-crisp`](../editors/vscode-crisp) + `./scripts/package-vsix.sh` ([#57](https://github.com/jose-compu/crisp/issues/57)). Marketplace listing still optional.
 
 ## Rust crate interop (spec §14.2)
 

@@ -2,20 +2,30 @@ use crate::error::ResolveError;
 use crate::module::{ModuleGraph, load_module_graph};
 use crate::prelude::prelude_symbols;
 use crate::stdlib::stdlib_symbols;
-use crate::symbols::{Symbol, SymbolKey, SymbolKind, collect_module_symbols};
+use crate::symbols::{Symbol, SymbolKey, SymbolKind, Visibility, collect_module_symbols};
 use crisp_ast::Span;
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::ident::Ident;
 use crisp_ast::item::{Item, SourceFile, UseDecl};
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeBound, TypeKind};
-use std::collections::{BTreeMap, HashMap};
+use crisp_manifest::{read_manifest, resolve_dependencies};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct ResolvedBinding {
     pub local_name: String,
     pub symbol: SymbolKey,
+}
+
+/// A `use rust.<crate> { item }` binding (spec §14.2), for later typeck/emit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolvedRustImport {
+    pub crisp_module: String,
+    pub crate_name: String,
+    pub item: String,
+    pub local_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -31,21 +41,32 @@ pub struct ResolvedCrate {
     pub crate_root: String,
     pub modules: Vec<ResolvedModule>,
     pub symbol_count: usize,
+    pub rust_imports: Vec<ResolvedRustImport>,
 }
 
 pub struct Resolver {
     graph: ModuleGraph,
     global: BTreeMap<SymbolKey, Symbol>,
+    /// Crate names from `crisp.toml` with `rust = true` (plus auto tokio when applicable).
+    rust_deps: HashSet<String>,
+    /// Deps present but not marked `rust = true` (for E0045).
+    unmarked_deps: HashSet<String>,
+    rust_imports: Vec<ResolvedRustImport>,
 }
 
 impl Resolver {
     pub fn resolve_crate(crate_root: &Path) -> Result<ResolvedCrate, ResolveError> {
         let graph = load_module_graph(crate_root)?;
-        let mut resolver = Self::new(graph)?;
+        let (rust_deps, unmarked_deps) = load_dep_sets(crate_root)?;
+        let mut resolver = Self::new(graph, rust_deps, unmarked_deps)?;
         resolver.run()
     }
 
-    fn new(graph: ModuleGraph) -> Result<Self, ResolveError> {
+    fn new(
+        graph: ModuleGraph,
+        rust_deps: HashSet<String>,
+        unmarked_deps: HashSet<String>,
+    ) -> Result<Self, ResolveError> {
         let mut global = BTreeMap::new();
         for sym in prelude_symbols().into_iter().chain(stdlib_symbols()) {
             global.insert(sym.key.clone(), sym);
@@ -62,7 +83,13 @@ impl Resolver {
                 global.insert(sym.key.clone(), sym);
             }
         }
-        Ok(Self { graph, global })
+        Ok(Self {
+            graph,
+            global,
+            rust_deps,
+            unmarked_deps,
+            rust_imports: Vec::new(),
+        })
     }
 
     fn run(&mut self) -> Result<ResolvedCrate, ResolveError> {
@@ -82,11 +109,12 @@ impl Resolver {
             crate_root: self.graph.crate_root.display().to_string(),
             modules: resolved_modules,
             symbol_count: self.global.len(),
+            rust_imports: self.rust_imports.clone(),
         })
     }
 
     fn resolve_module_imports(
-        &self,
+        &mut self,
         current: &str,
         file: &SourceFile,
     ) -> Result<Vec<ResolvedBinding>, ResolveError> {
@@ -122,12 +150,16 @@ impl Resolver {
     }
 
     fn apply_use(
-        &self,
+        &mut self,
         current: &str,
         decl: &UseDecl,
         scope: &mut HashMap<String, SymbolKey>,
         bindings: &mut Vec<ResolvedBinding>,
     ) -> Result<(), ResolveError> {
+        if decl.path.first().is_some_and(|p| p.name == "rust") {
+            return self.apply_rust_use(current, decl, scope, bindings);
+        }
+
         let target_module = self.resolve_use_path(current, &decl.path)?;
         let span = decl.span;
 
@@ -153,6 +185,74 @@ impl Resolver {
             }
         }
         let _ = (current, decl.is_pub);
+        Ok(())
+    }
+
+    fn apply_rust_use(
+        &mut self,
+        current: &str,
+        decl: &UseDecl,
+        scope: &mut HashMap<String, SymbolKey>,
+        bindings: &mut Vec<ResolvedBinding>,
+    ) -> Result<(), ResolveError> {
+        let path_str = decl
+            .path
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(".");
+        if decl.path.len() != 2 {
+            return Err(ResolveError::RustUsePathInvalid {
+                path: path_str,
+                span: decl.span,
+            });
+        }
+        let crate_name = decl.path[1].name.clone();
+        if self.unmarked_deps.contains(&crate_name) && !self.rust_deps.contains(&crate_name) {
+            return Err(ResolveError::RustCrateNotMarked {
+                name: crate_name,
+                span: decl.span,
+            });
+        }
+        if !self.rust_deps.contains(&crate_name) {
+            return Err(ResolveError::RustCrateNotFound {
+                name: crate_name,
+                span: decl.span,
+            });
+        }
+        let Some(imports) = &decl.imports else {
+            return Err(ResolveError::RustImportNeedsList {
+                name: crate_name,
+                span: decl.span,
+            });
+        };
+
+        let module = format!("rust.{crate_name}");
+        for imp in imports {
+            let key = SymbolKey {
+                module: module.clone(),
+                name: imp.name.name.clone(),
+            };
+            self.global.entry(key.clone()).or_insert_with(|| Symbol {
+                key: key.clone(),
+                kind: SymbolKind::RustFn,
+                visibility: Visibility::Public,
+                span: imp.span,
+                from_prelude: false,
+            });
+            let local = imp
+                .alias
+                .as_ref()
+                .map(|a| a.name.clone())
+                .unwrap_or_else(|| imp.name.name.clone());
+            self.insert_binding(&local, key, scope, bindings, decl.span)?;
+            self.rust_imports.push(ResolvedRustImport {
+                crisp_module: current.to_string(),
+                crate_name: crate_name.clone(),
+                item: imp.name.name.clone(),
+                local_name: local,
+            });
+        }
         Ok(())
     }
 
@@ -667,4 +767,34 @@ impl Resolver {
         }
         Ok(())
     }
+}
+
+fn load_dep_sets(crate_root: &Path) -> Result<(HashSet<String>, HashSet<String>), ResolveError> {
+    let manifest = read_manifest(crate_root).map_err(|e| ResolveError::Manifest {
+        root: crate_root.display().to_string(),
+        message: e.to_string(),
+    })?;
+    let deps = resolve_dependencies(&manifest);
+    let mut rust_deps = HashSet::new();
+    let mut unmarked_deps = HashSet::new();
+    for dep in deps {
+        if dep.rust {
+            rust_deps.insert(dep.name);
+        } else {
+            unmarked_deps.insert(dep.name);
+        }
+    }
+    for (name, spec) in &manifest.dependencies {
+        use crisp_manifest::DependencySpec;
+        match spec {
+            DependencySpec::Version(_) => {
+                unmarked_deps.insert(name.clone());
+            }
+            DependencySpec::Detailed { rust, .. } if !*rust => {
+                unmarked_deps.insert(name.clone());
+            }
+            _ => {}
+        }
+    }
+    Ok((rust_deps, unmarked_deps))
 }

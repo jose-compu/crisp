@@ -9,6 +9,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- Parse/resolve `use rust.<crate> { … }` and `use rust::<crate> { … }` when the crate is a `rust = true` dependency (`E0044`–`E0047`, `ResolvedRustImport`) (#41, epic #51).
+
 ## [1.3.0] — 2026-08-12
 
 ### Added

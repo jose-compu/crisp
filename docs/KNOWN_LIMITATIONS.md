@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.2)
+# Known limitations (Crisp v1.3)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Tracked under publication epic [#1](https://github.com/jose-compu/crisp/issues/1). Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md).
 
@@ -31,6 +31,13 @@ This page documents behaviors that surprise users and are **not** always full la
   - `map` emits coarse CIR alloc/drop notes, not span-accurate annotations on emitted Rust.
   - `traits` only summarizes shape traits known to CIR; full `trait` / `impl Trait for` remains open under [#50](https://github.com/jose-compu/crisp/issues/50).
 - **`crisp-lsp`:** analysis API only (`CrispAnalysis` — hover, inlay hints, call overlays, code lenses, emitted Rust). No stdio/`tower-lsp` host yet; see QUICKSTART §11 ([#18](https://github.com/jose-compu/crisp/issues/18)).
+
+## Rust crate interop (spec §14.2)
+
+- **`crisp.toml` → Cargo.toml** works: `[dependencies]` with `rust = true` are written into `target/rust/Cargo.toml`.
+- **`use rust.<crate> { items }`** (and `use rust::<crate> { … }`) **parses and resolves** when the crate is a `rust = true` dependency (`E0044`–`E0047`). Bindings are recorded as `ResolvedRustImport` / `SymbolKind::RustFn`.
+- **Not yet:** typeck of calls, emit of Rust `use`/calls, `Result`/`?` absorption — tracked in [#41](https://github.com/jose-compu/crisp/issues/41). Until then, prefer `extern "C"` (`examples/ffi`) for foreign symbols.
+- Epic plan: [#51](https://github.com/jose-compu/crisp/issues/51).
 
 ## Stdlib
 

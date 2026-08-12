@@ -10,4 +10,4 @@ pub mod symbols;
 
 pub use error::ResolveError;
 pub use module::{ModuleGraph, find_crate_root, load_module_graph};
-pub use resolve::{ResolvedBinding, ResolvedCrate, ResolvedModule, Resolver};
+pub use resolve::{ResolvedBinding, ResolvedCrate, ResolvedModule, ResolvedRustImport, Resolver};

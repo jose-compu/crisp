@@ -15,6 +15,8 @@ pub enum SymbolKind {
     Shape,
     Const,
     ExternFn,
+    /// Item imported from a Rust crate via `use rust.<crate> { … }` (spec §14.2).
+    RustFn,
     PreludeType,
     PreludeFn,
 }

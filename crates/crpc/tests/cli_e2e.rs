@@ -186,7 +186,7 @@ fn crpc_check_missing_use_prints_snippet_and_help() {
 }
 
 #[test]
-fn crpc_check_shape_def_prints_e0039() {
+fn crpc_check_shape_def_ok() {
     let fixture =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../crisp-resolve/tests/fixtures/shape_def");
     let output = Command::new(bin_path("crpc"))
@@ -195,11 +195,9 @@ fn crpc_check_shape_def_prints_e0039() {
         .expect("spawn crpc");
     let stderr = String::from_utf8_lossy(&output.stderr);
     eprintln!("stderr:\n{stderr}");
-    assert!(!output.status.success());
-    assert!(stderr.contains("E0039"), "{stderr}");
     assert!(
-        stderr.contains("shape") || stderr.contains("HasPosition"),
-        "{stderr}"
+        output.status.success(),
+        "shape_def should check under #61: {stderr}"
     );
 }
 

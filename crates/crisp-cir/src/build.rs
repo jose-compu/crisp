@@ -72,7 +72,24 @@ impl CirBuilder {
         }
         let extern_fns = collect_extern_fns(graph);
         let struct_fields = collect_struct_field_names(&all_structs);
+        // Pre-collect shapes so field access can lower to accessor MethodCalls (§3.5).
         let mut shape_traits = Vec::new();
+        for node in graph.modules.values() {
+            for ast_item in &node.ast.items {
+                if let Item::ShapeDef(shape) = ast_item {
+                    shape_traits.push(synthesize_shape_trait(shape, &all_structs));
+                }
+            }
+        }
+        let shape_fields: BTreeMap<String, Vec<String>> = shape_traits
+            .iter()
+            .map(|s| {
+                (
+                    s.name.clone(),
+                    s.fields.iter().map(|(n, _)| n.clone()).collect(),
+                )
+            })
+            .collect();
         let mut modules = Vec::new();
 
         for node in graph.modules.values() {
@@ -102,8 +119,8 @@ impl CirBuilder {
                             });
                         }
                     },
-                    Item::ShapeDef(shape) => {
-                        shape_traits.push(synthesize_shape_trait(shape, &all_structs));
+                    Item::ShapeDef(_) => {
+                        // Already synthesized into `shape_traits` above.
                     }
                     Item::TraitDef(td) => {
                         items.push(CirItem::Trait(lower_trait_def(td)));
@@ -129,6 +146,7 @@ impl CirBuilder {
                                 &struct_fields,
                                 &fn_modules,
                                 &extern_fns,
+                                &shape_fields,
                             )));
                         }
                     }
@@ -156,6 +174,7 @@ impl CirBuilder {
                                     &struct_fields,
                                     &fn_modules,
                                     &extern_fns,
+                                    &shape_fields,
                                 ));
                             }
                         }
@@ -245,9 +264,47 @@ fn lower_trait_def(td: &crisp_ast::item::TraitDef) -> CirTrait {
                     .as_ref()
                     .map(ast_type_to_cir_ty)
                     .unwrap_or(CirTy::Unit),
+                default_body: m.default_body.as_ref().map(lower_trait_default_expr),
             })
             .collect(),
         span: td.span,
+    }
+}
+
+/// Lower trait default bodies for literal / simple expressions (§3.6 / #59).
+fn lower_trait_default_expr(expr: &Expr) -> CirExpr {
+    match &expr.kind {
+        ExprKind::Str(parts) => {
+            let mut s = String::new();
+            for p in &parts.0 {
+                if let StringPart::Lit(l) = p {
+                    s.push_str(l);
+                }
+            }
+            CirExpr::Str {
+                value: s,
+                span: expr.span,
+            }
+        }
+        ExprKind::Int(n) => CirExpr::Int {
+            value: *n,
+            span: expr.span,
+        },
+        ExprKind::Float(f) => CirExpr::Float {
+            value: *f,
+            span: expr.span,
+        },
+        ExprKind::Bool(b) => CirExpr::Ident {
+            name: if *b { "true" } else { "false" }.into(),
+            ty: CirTy::Bool,
+            span: expr.span,
+        },
+        ExprKind::Block(b) if b.stmts.is_empty() => b
+            .tail
+            .as_ref()
+            .map(|t| lower_trait_default_expr(t))
+            .unwrap_or(CirExpr::Unit { span: expr.span }),
+        _ => CirExpr::Unit { span: expr.span },
     }
 }
 
@@ -297,13 +354,18 @@ fn collect_struct_field_names(structs: &[(String, CirStruct)]) -> BTreeMap<Strin
 struct LowerCtx<'a> {
     propagate_errors: bool,
     extern_fns: &'a std::collections::BTreeSet<String>,
+    shape_fields: &'a BTreeMap<String, Vec<String>>,
 }
 
 impl<'a> LowerCtx<'a> {
-    fn default(extern_fns: &'a std::collections::BTreeSet<String>) -> Self {
+    fn new(
+        extern_fns: &'a std::collections::BTreeSet<String>,
+        shape_fields: &'a BTreeMap<String, Vec<String>>,
+    ) -> Self {
         Self {
             propagate_errors: true,
             extern_fns,
+            shape_fields,
         }
     }
 }
@@ -440,6 +502,7 @@ fn lower_function(
     struct_fields: &BTreeMap<String, Vec<String>>,
     fn_modules: &BTreeMap<String, String>,
     extern_fns: &std::collections::BTreeSet<String>,
+    shape_fields: &BTreeMap<String, Vec<String>>,
 ) -> CirFunction {
     let params: Vec<CirParam> = osig
         .params
@@ -497,6 +560,7 @@ fn lower_function(
         struct_fields,
         fn_modules,
         extern_fns,
+        shape_fields,
     );
 
     CirFunction {
@@ -526,6 +590,7 @@ fn lower_body(
     struct_fields: &BTreeMap<String, Vec<String>>,
     fn_modules: &BTreeMap<String, String>,
     extern_fns: &std::collections::BTreeSet<String>,
+    shape_fields: &BTreeMap<String, Vec<String>>,
 ) -> CirBlock {
     match &expr.kind {
         ExprKind::Block(b) => lower_block(
@@ -540,6 +605,7 @@ fn lower_body(
             struct_fields,
             fn_modules,
             extern_fns,
+            shape_fields,
         ),
         other => {
             let tail = lower_expr(
@@ -555,7 +621,7 @@ fn lower_body(
                 locals,
                 struct_fields,
                 fn_modules,
-                LowerCtx::default(extern_fns),
+                LowerCtx::new(extern_fns, shape_fields),
             );
             CirBlock {
                 stmts: vec![],
@@ -579,6 +645,7 @@ fn lower_block(
     struct_fields: &BTreeMap<String, Vec<String>>,
     fn_modules: &BTreeMap<String, String>,
     extern_fns: &std::collections::BTreeSet<String>,
+    shape_fields: &BTreeMap<String, Vec<String>>,
 ) -> CirBlock {
     let mut stmts = Vec::new();
     for stmt in &block.stmts {
@@ -595,7 +662,7 @@ fn lower_block(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::default(extern_fns),
+                        LowerCtx::new(extern_fns, shape_fields),
                     );
                     if should_clone_at_bind(osig, &name.name, value) {
                         lowered = CirExpr::Clone {
@@ -624,7 +691,7 @@ fn lower_block(
                     locals,
                     struct_fields,
                     fn_modules,
-                    LowerCtx::default(extern_fns),
+                    LowerCtx::new(extern_fns, shape_fields),
                 )));
             }
             Stmt::Assign { target, value, .. } => {
@@ -640,7 +707,7 @@ fn lower_block(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::default(extern_fns),
+                        LowerCtx::new(extern_fns, shape_fields),
                     ),
                     span: value.span,
                 });
@@ -658,7 +725,7 @@ fn lower_block(
             locals,
             struct_fields,
             fn_modules,
-            LowerCtx::default(extern_fns),
+            LowerCtx::new(extern_fns, shape_fields),
         )
     });
     let _ = fn_fallible;
@@ -756,19 +823,32 @@ fn lower_expr(
                     span: expr.span,
                 };
             }
+            let lowered_base = lower_expr(
+                base,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            // Shape-typed receivers: field access → accessor method (§3.5 / #61).
+            if let Some(ty_name) = cir_expr_named_ty(&lowered_base)
+                && ctx.shape_fields.contains_key(&ty_name)
+            {
+                return E::MethodCall {
+                    receiver: Box::new(lowered_base),
+                    method: field.name.clone(),
+                    args: vec![],
+                    ty: CirTy::Error,
+                    span: expr.span,
+                };
+            }
             let lowered = E::Field {
-                base: Box::new(lower_expr(
-                    base,
-                    module,
-                    osig,
-                    typed,
-                    ownership,
-                    errors,
-                    locals,
-                    struct_fields,
-                    fn_modules,
-                    ctx,
-                )),
+                base: Box::new(lowered_base),
                 field: field.name.clone(),
                 ty: CirTy::Error,
                 span: expr.span,
@@ -1098,6 +1178,7 @@ fn lower_expr(
             let catch_ctx = LowerCtx {
                 propagate_errors: false,
                 extern_fns: ctx.extern_fns,
+                shape_fields: ctx.shape_fields,
             };
             let lowered = lower_expr(
                 inner,
@@ -1125,7 +1206,7 @@ fn lower_expr(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::default(ctx.extern_fns),
+                        LowerCtx::new(ctx.extern_fns, ctx.shape_fields),
                     ),
                     span: a.span,
                 })
@@ -1319,6 +1400,7 @@ fn lower_expr(
             struct_fields,
             fn_modules,
             ctx.extern_fns,
+            ctx.shape_fields,
         )),
         _ => E::Unit { span: expr.span },
     }

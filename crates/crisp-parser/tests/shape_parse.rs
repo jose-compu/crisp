@@ -1,4 +1,4 @@
-//! Shape syntax still parses; resolve rejects with E0039 (#21).
+//! Shape syntax parses; resolve accepts shape defs/bounds (#61).
 
 use crisp_ast::item::Item;
 use crisp_parser::Parser;

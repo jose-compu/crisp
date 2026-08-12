@@ -5,6 +5,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "crisp-lsp"
+path = "src/bin/crisp-lsp.rs"
+
 [dependencies]
 crisp-ast.workspace = true
 crisp-parser.workspace = true
@@ -17,6 +21,8 @@ crisp-reveal.workspace = true
 crisp-rust-emit.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
+tower-lsp.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
 insta = { version = "1", features = ["yaml"] }

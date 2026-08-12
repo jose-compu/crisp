@@ -1,0 +1,25 @@
+-- examples/trait_defaults — trait default method bodies (§3.6 / #59)
+
+trait Greeter = {
+    greet(self) -> str = "hello"
+}
+
+type Person = {
+    name: str
+}
+
+impl Greeter for Person = {}
+
+test "default greet" = {
+    p := Person {
+        name: "ada"
+    }
+    assert_eq(p.greet(), "hello")
+}
+
+pub main() = {
+    p := Person {
+        name: "ada"
+    }
+    log(p.greet())
+}

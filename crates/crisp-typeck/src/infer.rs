@@ -9,7 +9,7 @@ use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
 use crisp_resolve::{ResolvedRustImport, Resolver};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use thiserror::Error;
 
@@ -42,12 +42,22 @@ pub struct TypedCrate {
     pub rust_imports: Vec<ResolvedRustImport>,
 }
 
+#[derive(Debug, Clone)]
+struct TraitMethodStub {
+    params: Vec<(String, Option<Ty>)>,
+    ret: Option<Ty>,
+}
+
 pub struct TypeChecker {
     ctx: InferContext,
     env: TypeEnv,
     structs: BTreeMap<String, BTreeMap<String, Ty>>,
+    /// Named `shape` definitions (structural; also present in `structs` for field access).
+    shapes: BTreeSet<String>,
     /// Enum name → variant name → payload field types.
     enums: BTreeMap<String, BTreeMap<String, Vec<Ty>>>,
+    /// Trait name → method stubs (`self` filled at impl site).
+    traits: BTreeMap<String, BTreeMap<String, TraitMethodStub>>,
     signatures: BTreeMap<String, InferredSig>,
     /// `TypeName` → `method` → signature key.
     inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
@@ -83,7 +93,9 @@ impl TypeChecker {
             ctx: InferContext::new(),
             env: TypeEnv::new(),
             structs: BTreeMap::new(),
+            shapes: BTreeSet::new(),
             enums: BTreeMap::new(),
+            traits: BTreeMap::new(),
             signatures: BTreeMap::new(),
             inherent_methods: BTreeMap::new(),
         }
@@ -235,6 +247,59 @@ impl TypeChecker {
                 {
                     self.env.insert(td.name.name.clone(), scheme(t));
                 }
+            } else if let Item::ShapeDef(shape) = item {
+                // Data shapes participate in field access like structs (#61).
+                let mut field_map = BTreeMap::new();
+                for f in &shape.fields {
+                    if let crisp_ast::item::ShapeField::Data { name, ty, .. } = f
+                        && let Ok(field_ty) = self.ast_type(ty)
+                    {
+                        field_map.insert(name.name.clone(), self.ctx.apply(&field_ty));
+                    }
+                }
+                self.shapes.insert(shape.name.name.clone());
+                self.structs.insert(shape.name.name.clone(), field_map);
+                self.env.insert(
+                    shape.name.name.clone(),
+                    scheme(Ty::Named {
+                        name: shape.name.name.clone(),
+                        args: vec![],
+                    }),
+                );
+            } else if let Item::TraitDef(td) = item {
+                let mut methods = BTreeMap::new();
+                for m in &td.items {
+                    let mut params = Vec::new();
+                    let mut ok = true;
+                    for p in &m.params {
+                        let ty = if p.name.name == "self" && p.ty.is_none() {
+                            None
+                        } else if let Some(ast_ty) = &p.ty {
+                            match self.ast_type(ast_ty) {
+                                Ok(t) => Some(t),
+                                Err(_) => {
+                                    ok = false;
+                                    break;
+                                }
+                            }
+                        } else {
+                            Some(self.ctx.fresh())
+                        };
+                        params.push((p.name.name.clone(), ty));
+                    }
+                    if !ok {
+                        continue;
+                    }
+                    let ret = match &m.ret_type {
+                        Some(t) => match self.ast_type(t) {
+                            Ok(t) => Some(t),
+                            Err(_) => continue,
+                        },
+                        None => None,
+                    };
+                    methods.insert(m.name.name.clone(), TraitMethodStub { params, ret });
+                }
+                self.traits.insert(td.name.name.clone(), methods);
             }
         }
         let _ = module;
@@ -332,6 +397,43 @@ impl TypeChecker {
                     span: f.span,
                 },
             );
+        }
+        // Trait impl: register remaining trait methods (including defaults) on the type (#59).
+        if let Some(tn) = &ib.trait_name
+            && let Some(trait_methods) = self.traits.get(&tn.name).cloned()
+        {
+            for (mname, stub) in trait_methods {
+                let methods = self.inherent_methods.entry(ty_name.clone()).or_default();
+                if methods.contains_key(&mname) {
+                    continue;
+                }
+                let key = format!("{module}::{ty_name}::{mname}");
+                methods.insert(mname.clone(), key.clone());
+                let sig_params: Vec<(String, Ty)> = stub
+                    .params
+                    .into_iter()
+                    .map(|(pname, pty)| {
+                        let ty = if pname == "self" {
+                            self_ty.clone()
+                        } else {
+                            pty.unwrap_or_else(|| self.ctx.fresh())
+                        };
+                        (pname, ty)
+                    })
+                    .collect();
+                let sig_ret = stub.ret.unwrap_or_else(|| self.ctx.fresh());
+                self.signatures.insert(
+                    key,
+                    InferredSig {
+                        module: module.to_string(),
+                        name: mname,
+                        impl_ty: Some(ty_name.clone()),
+                        params: sig_params,
+                        ret: sig_ret,
+                        span: ib.span,
+                    },
+                );
+            }
         }
         Ok(())
     }
@@ -676,7 +778,7 @@ impl TypeChecker {
                 }
                 for (arg, pty) in args.iter().zip(params) {
                     let aty = self.infer_expr(env, arg)?;
-                    unify(&mut self.ctx, &aty, &pty)?;
+                    self.unify_or_shape(&aty, &pty)?;
                 }
                 Ok(self.ctx.apply(&ret))
             }
@@ -1121,10 +1223,12 @@ impl TypeChecker {
         }
         // Unannotated params stay as type vars. If exactly one known struct has
         // this field, constrain the var to that struct (issue #12).
+        // Exclude shapes — they are constraints, not concrete constructors.
         if let Ty::Var(v) = base {
             let mut candidates: Vec<(&String, &Ty)> = self
                 .structs
                 .iter()
+                .filter(|(name, _)| !self.shapes.contains(*name))
                 .filter_map(|(name, fields)| fields.get(field).map(|ty| (name, ty)))
                 .collect();
             candidates.sort_by(|a, b| a.0.cmp(b.0));
@@ -1159,6 +1263,57 @@ impl TypeChecker {
             name: field.to_string(),
             span,
         })
+    }
+
+    /// Unify normally, or accept structural match when the expected type is a shape (§3.5).
+    fn unify_or_shape(&mut self, actual: &Ty, expected: &Ty) -> Result<(), TypeError> {
+        let expected = self.ctx.apply(expected);
+        if let Ty::Named { name, .. } = &expected
+            && self.shapes.contains(name)
+        {
+            return self.check_shape_arg(actual, name);
+        }
+        unify(&mut self.ctx, actual, &expected)?;
+        Ok(())
+    }
+
+    fn check_shape_arg(&mut self, actual: &Ty, shape_name: &str) -> Result<(), TypeError> {
+        let actual = self.ctx.apply(actual);
+        let Some(shape_fields) = self.structs.get(shape_name).cloned() else {
+            return Err(TypeError::UnknownType {
+                name: shape_name.to_string(),
+                span: Span::new(0, 0),
+            });
+        };
+        match &actual {
+            Ty::Named { name, .. } if name == shape_name => Ok(()),
+            Ty::Named { name, .. } => {
+                let Some(fields) = self.structs.get(name) else {
+                    return Err(TypeError::Unify(UnifyError::Mismatch {
+                        expected: format!("type satisfying shape `{shape_name}`"),
+                        found: name.clone(),
+                    }));
+                };
+                for (fname, fty) in &shape_fields {
+                    match fields.get(fname) {
+                        Some(aty) if ty_structurally_eq(aty, fty) => {}
+                        _ => {
+                            return Err(TypeError::Unify(UnifyError::Mismatch {
+                                expected: format!(
+                                    "shape `{shape_name}` (field `{fname}: {fty:?}`)"
+                                ),
+                                found: name.clone(),
+                            }));
+                        }
+                    }
+                }
+                Ok(())
+            }
+            other => Err(TypeError::Unify(UnifyError::Mismatch {
+                expected: format!("type satisfying shape `{shape_name}`"),
+                found: format!("{other:?}"),
+            })),
+        }
     }
 
     fn lookup(&mut self, env: &TypeEnv, name: &str, span: Span) -> Result<Ty, TypeError> {
@@ -1225,6 +1380,21 @@ impl TypeChecker {
             }
             TypeKind::Constrained { inner, .. } => self.ast_type(inner),
         }
+    }
+}
+
+fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
+    match (a, b) {
+        (Ty::Named { name: na, .. }, Ty::Named { name: nb, .. }) => na == nb,
+        (Ty::Int, Ty::Int)
+        | (Ty::UInt, Ty::UInt)
+        | (Ty::Float, Ty::Float)
+        | (Ty::Bool, Ty::Bool)
+        | (Ty::Char, Ty::Char)
+        | (Ty::Str, Ty::Str)
+        | (Ty::StrSlice, Ty::StrSlice)
+        | (Ty::Unit, Ty::Unit) => true,
+        _ => false,
     }
 }
 

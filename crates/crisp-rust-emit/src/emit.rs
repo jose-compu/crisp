@@ -198,7 +198,7 @@ fn emit_module_items(
             }
             CirItem::Function(f) => {
                 if include_main || !f.is_main {
-                    emit_function(out, f, &module.path, map, true, None);
+                    emit_function(out, f, &module.path, map, true, None, cir);
                 }
             }
             CirItem::Trait(t) => emit_user_trait(out, t, map),
@@ -218,6 +218,7 @@ fn emit_module_items(
                         map,
                         allow_pub,
                         ib.trait_name.as_deref(),
+                        cir,
                     );
                 }
                 let _ = writeln!(out, "}}");
@@ -253,7 +254,13 @@ fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSour
         } else {
             format!(" -> {}", format_ty(&m.ret))
         };
-        let _ = writeln!(out, "    fn {}({}){};", m.name, params.join(", "), ret);
+        if let Some(body) = &m.default_body {
+            let _ = write!(out, "    fn {}({}){} {{ ", m.name, params.join(", "), ret);
+            emit_expr(out, body, "", map);
+            let _ = writeln!(out, " }}");
+        } else {
+            let _ = writeln!(out, "    fn {}({}){};", m.name, params.join(", "), ret);
+        }
     }
     let _ = writeln!(out, "}}");
 }
@@ -415,12 +422,26 @@ fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
     let _ = writeln!(out, "}}");
     for imp in &shape.impls {
         let _ = writeln!(out, "impl {} for {} {{", shape.name, imp.ty_name);
-        for (name, _) in &shape.fields {
-            let _ = writeln!(out, "    fn {name}(&self) -> _ {{ self.{name}.clone() }}");
+        for (name, ty) in &shape.fields {
+            let body = shape_accessor_body(name, ty);
+            let _ = writeln!(
+                out,
+                "    fn {name}(&self) -> {} {{ {body} }}",
+                format_ty(ty)
+            );
         }
         let _ = writeln!(out, "}}");
     }
     let _ = writeln!(out);
+}
+
+fn shape_accessor_body(name: &str, ty: &CirTy) -> String {
+    match ty {
+        CirTy::Int | CirTy::UInt | CirTy::Float | CirTy::Bool | CirTy::Char => {
+            format!("self.{name}")
+        }
+        _ => format!("self.{name}.clone()"),
+    }
 }
 
 fn emit_function(
@@ -430,6 +451,7 @@ fn emit_function(
     map: &mut EmitSourceMap,
     allow_pub: bool,
     trait_impl: Option<&str>,
+    cir: &CirCrate,
 ) {
     map.record(out.len() as u32, f.span);
     let vis = if allow_pub && f.is_pub { "pub " } else { "" };
@@ -437,23 +459,41 @@ fn emit_function(
         let _ = writeln!(out, "#[tokio::main]");
     }
     let async_kw = if f.is_async { "async " } else { "" };
-    let sig = format_fn_sig(f, trait_impl);
+    let sig = format_fn_sig(f, trait_impl, cir);
     let _ = write!(out, "{vis}{async_kw}fn {}{sig} ", f.name);
     emit_block_body(out, &f.body, f.fallible, &f.ret, current_module, 0, map);
     let _ = writeln!(out);
 }
 
-fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>) -> String {
-    let params: Vec<_> = f
-        .params
-        .iter()
-        .map(|p| format_param(p, trait_impl))
-        .collect();
+fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> String {
+    let shape_names: std::collections::HashSet<&str> =
+        cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
+    let mut type_params = Vec::new();
+    let mut params = Vec::new();
+    let mut shape_i = 0usize;
+    for p in &f.params {
+        if let CirTy::Named { name, .. } = &p.ty
+            && shape_names.contains(name.as_str())
+            && p.name != "self"
+        {
+            let tp = format!("S{shape_i}");
+            shape_i += 1;
+            type_params.push(format!("{tp}: {name}"));
+            params.push(format_param_with_ty(p, &tp, trait_impl));
+        } else {
+            params.push(format_param(p, trait_impl));
+        }
+    }
+    let generics = if type_params.is_empty() {
+        String::new()
+    } else {
+        format!("<{}>", type_params.join(", "))
+    };
     if f.is_async {
-        return format!("({})", params.join(", "));
+        return format!("{generics}({})", params.join(", "));
     }
     let ret = format_ret(&f.ret, f.fallible);
-    format!("({}){}", params.join(", "), ret)
+    format!("{generics}({}){}", params.join(", "), ret)
 }
 
 fn format_extern_param(p: &CirParam) -> String {
@@ -494,6 +534,23 @@ fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
         OwnershipMode::Borrow => format!("&{lt}{}", format_ty(&p.ty)),
         OwnershipMode::MutBorrow => format!("&{lt}mut {}", format_ty(&p.ty)),
         OwnershipMode::Owned => format_ty(&p.ty),
+    };
+    format!("{}: {ty}", p.name)
+}
+
+fn format_param_with_ty(p: &CirParam, ty_name: &str, trait_impl: Option<&str>) -> String {
+    if p.name == "self" {
+        return format_param(p, trait_impl);
+    }
+    let lt = p
+        .lifetime
+        .as_ref()
+        .map(|l| format!("{l} "))
+        .unwrap_or_default();
+    let ty = match p.mode {
+        OwnershipMode::Borrow => format!("&{lt}{ty_name}"),
+        OwnershipMode::MutBorrow => format!("&{lt}mut {ty_name}"),
+        OwnershipMode::Owned => ty_name.to_string(),
     };
     format!("{}: {ty}", p.name)
 }

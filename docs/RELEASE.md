@@ -18,7 +18,7 @@ GitHub milestones: **v1.5.0** (first public release), **v2.0.0** (self-hosting).
 3. `cargo fmt --all --check`
 4. `cargo clippy --workspace --all-targets -- -D warnings`
 5. `cargo test --workspace --verbose`
-6. Spot-check: `crpc check/test/run` on `examples/hello`, `math`, `design_patterns`.
+6. Spot-check: `crpc check/test/run` on `examples/hello`, `shapes`, `trait_defaults`, `design_patterns`.
 7. Create git tag `vX.Y.Z` and `gh release create` with changelog notes.
 
 ## Distribution decision (v1.x)
@@ -31,7 +31,9 @@ cargo install --path crates/crpc --locked
 
 **crates.io:** deferred — revisit under [#60](https://github.com/jose-compu/crisp/issues/60). Prefer not to publish incomplete workspace crates early.
 
-**Prebuilt binaries:** optional later (linux/macOS aarch64/x86_64) via `gh release` assets; not required for v1.4.x.
+**Prebuilt binaries:** optional later (linux/macOS aarch64/x86_64) via `gh release` assets; not required for v1.5.x.
+
+**Editor / LSP:** ship `crisp-lsp` via `cargo install --path crates/crisp-lsp`; package VSIX with `./scripts/package-vsix.sh` (#56 / #57).
 
 ## Public-repo readiness checklist
 

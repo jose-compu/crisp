@@ -1,4 +1,4 @@
--- Function checked before the shape def item; name is already in scope as Shape (#21).
+-- Function may use a shape as a named type (§3.5 / #61).
 distance(a: HasPosition) = 0.0
 
 shape HasPosition = {

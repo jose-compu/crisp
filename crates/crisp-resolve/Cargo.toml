@@ -14,3 +14,4 @@ crisp-manifest.workspace = true
 
 [dev-dependencies]
 insta = "1"
+tempfile = "3"

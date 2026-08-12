@@ -10,6 +10,11 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0037 | resolve | Symbol not exported from module |
 | E0038 | resolve | Ambiguous import — qualify or narrow `use` |
 | E0039 | resolve | Shapes not yet supported — remove `shape` defs/bounds ([#21](https://github.com/jose-compu/crisp/issues/21)) |
+| E0044 | resolve | `use rust…` crate missing from `[dependencies]` — add with `rust = true` ([#41](https://github.com/jose-compu/crisp/issues/41)) |
+| E0045 | resolve | Dependency used via `use rust…` must set `rust = true` |
+| E0046 | resolve | `use rust…` requires `{ item, … }` import list |
+| E0047 | resolve | Invalid `use rust` path — expect `use rust.<crate> { … }` |
+| W0048 | resolve | Warning: bare `use <name>` binds a Crisp module that shares a name with a `rust = true` dep — use `use rust.<name> { … }` for the crate |
 | E0040 | typeck | Unknown type — annotate params/fields or fix struct name |
 | E0041 | typeck | Unknown name |
 | E0042 | typeck | Resolve error wrapped into typeck |

@@ -9,6 +9,13 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- TypeScript-style Rust crate imports: bare `use serde_json { … }` when the crate is a `rust = true` dependency; `use rust.<crate>` / `use rust::<crate>` kept as aliases (`E0044`–`E0047`, `ResolvedRustImport`) (#41, epic #51).
+- **W0048** when a Crisp module and a Rust dep share a name: bare `use` binds the module; `use rust.<name>` selects the crate.
+- Examples: `examples/rust_import` (calls `serde_json::from_str` / `to_string`), `examples/rust_shadow`.
+- Typeck/emit stubs for imported Rust fns (serde_json); Result APIs emit `.expect(...)` pending `?` absorption.
+
 ## [1.3.0] — 2026-08-12
 
 ### Added

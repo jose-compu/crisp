@@ -77,6 +77,8 @@ fn crpc_check_all_examples() {
         "vec2_methods",
         "point_impl",
         "feature_gallery",
+        "rust_import",
+        "rust_shadow",
     ] {
         run_ok(
             "crpc",
@@ -115,6 +117,50 @@ fn crpc_test_feature_gallery() {
             &examples_dir().join("feature_gallery").to_string_lossy(),
         ],
     );
+}
+
+#[test]
+fn crpc_run_rust_import() {
+    let out = run_ok(
+        "crpc",
+        &["run", &examples_dir().join("rust_import").to_string_lossy()],
+    );
+    assert!(
+        out.contains('1') || out.contains("true") || out.contains("\"n\""),
+        "expected JSON round-trip output, got: {out}"
+    );
+}
+
+#[test]
+fn crpc_check_rust_shadow_prints_w0048() {
+    let path = examples_dir()
+        .join("rust_shadow")
+        .to_string_lossy()
+        .to_string();
+    let output = Command::new(bin("crpc"))
+        .args(["check", &path])
+        .output()
+        .expect("run crpc check");
+    eprintln!(
+        "$ crpc check rust_shadow (status={})\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.status.success(), "check failed");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("W0048"),
+        "expected W0048 on stderr, got: {stderr}"
+    );
+}
+
+#[test]
+fn crpc_run_rust_shadow() {
+    let out = run_ok(
+        "crpc",
+        &["run", &examples_dir().join("rust_shadow").to_string_lossy()],
+    );
+    assert!(out.contains("crisp-config:shadow-ok"), "output: {out}");
 }
 
 #[test]

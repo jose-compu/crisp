@@ -48,6 +48,8 @@ const EXAMPLES: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "feature_gallery",
+    "rust_import",
+    "rust_shadow",
 ];
 
 #[test]
@@ -171,6 +173,8 @@ fn runnable_examples_build_and_run() {
         "vec2_methods",
         "point_impl",
         "feature_gallery",
+        "rust_import",
+        "rust_shadow",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -188,6 +192,53 @@ fn runnable_examples_build_and_run() {
             Err(e) => panic!("{name} run failed: {e}"),
         }
     }
+}
+
+#[test]
+fn rust_import_example_wires_serde_json_dep() {
+    let root = example("rust_import");
+    let resolved = Resolver::resolve_crate(&root).expect("resolve rust_import");
+    assert!(resolved.rust_imports.iter().any(|i| i.item == "from_str"));
+    let out = emit_to_target(&root).expect("emit rust_import");
+    let cargo = std::fs::read_to_string(out.out_dir.join("Cargo.toml")).unwrap();
+    assert!(cargo.contains("serde_json"), "{cargo}");
+    let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
+    assert!(
+        main_rs.contains("serde_json::from_str::<serde_json::Value>"),
+        "{main_rs}"
+    );
+    assert!(main_rs.contains("serde_json::to_string"), "{main_rs}");
+    assert!(main_rs.contains(".expect("), "{main_rs}");
+}
+
+#[test]
+fn rust_import_example_runs_json_roundtrip() {
+    let root = example("rust_import");
+    match run_emitted(&root) {
+        Ok(out) => {
+            assert!(out.contains('1'), "stdout: {out:?}");
+            assert!(
+                out.contains("true") || out.contains("crisp"),
+                "stdout: {out:?}"
+            );
+        }
+        Err(PipelineError::ToolchainUnavailable) => eprintln!("SKIP: cargo not on PATH"),
+        Err(e) => panic!("rust_import run: {e}"),
+    }
+}
+
+#[test]
+fn rust_shadow_example_emits_w0048() {
+    let root = example("rust_shadow");
+    let resolved = Resolver::resolve_crate(&root).expect("resolve rust_shadow");
+    assert!(
+        resolved
+            .warnings
+            .iter()
+            .any(|w| w.to_string().contains("W0048")),
+        "{:?}",
+        resolved.warnings
+    );
 }
 
 #[test]
@@ -245,6 +296,8 @@ const BUILDABLE: &[&str] = &[
     "vec2_methods",
     "point_impl",
     "feature_gallery",
+    "rust_import",
+    "rust_shadow",
 ];
 
 #[test]

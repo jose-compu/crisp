@@ -408,7 +408,8 @@ impl Parser {
     fn parse_use_decl(&mut self, is_pub: bool) -> Result<UseDecl, ParseError> {
         let start = self.previous_start();
         let mut path = vec![self.expect_ident()?];
-        while self.match_token(TokenKind::Dot) {
+        // Crisp module paths use `.`; spec §14.2 also writes `use rust::crate` — accept both.
+        while self.match_token(TokenKind::Dot) || self.match_colon_colon() {
             path.push(self.expect_ident()?);
         }
         let imports = if self.match_token(TokenKind::LBrace) {
@@ -1686,6 +1687,17 @@ match (Name { field: value }) { ... }",
 
     fn match_token(&mut self, kind: TokenKind) -> bool {
         if self.check(kind.clone()) {
+            self.advance();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Path separator `::` (two `Colon` tokens), for `use rust::serde_json { … }`.
+    fn match_colon_colon(&mut self) -> bool {
+        if self.check(TokenKind::Colon) && self.peek_kind_at(1) == TokenKind::Colon {
+            self.advance();
             self.advance();
             true
         } else {

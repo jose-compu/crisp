@@ -8,6 +8,7 @@ use crisp_ast::item::{ExternBlock, FunctionDef, ImplBlock, Item, SourceFile, Typ
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
+use crisp_resolve::{ResolvedRustImport, Resolver};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -37,6 +38,8 @@ pub struct TypedCrate {
     pub signatures: BTreeMap<String, InferredSig>,
     /// `TypeName` → `method` → signature key (`module::Type::method`).
     pub inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
+    /// Resolved `use <crate> { … }` / `use rust.<crate> { … }` imports (spec §14.2).
+    pub rust_imports: Vec<ResolvedRustImport>,
 }
 
 pub struct TypeChecker {
@@ -52,11 +55,11 @@ pub struct TypeChecker {
 
 impl TypeChecker {
     pub fn check_crate(crate_root: &Path) -> Result<TypedCrate, TypeError> {
-        let _graph = load_module_graph(crate_root)?;
-        crisp_resolve::Resolver::resolve_crate(crate_root)?;
+        let resolved = Resolver::resolve_crate(crate_root)?;
         let graph = load_module_graph(crate_root)?;
         let mut checker = Self::new();
         checker.register_prelude();
+        checker.register_rust_imports(&resolved.rust_imports);
         for node in graph.modules.values() {
             checker.collect_types(&node.module_path, &node.ast);
         }
@@ -71,6 +74,7 @@ impl TypeChecker {
         Ok(TypedCrate {
             signatures: checker.signatures,
             inherent_methods: checker.inherent_methods,
+            rust_imports: resolved.rust_imports,
         })
     }
 
@@ -82,6 +86,35 @@ impl TypeChecker {
             enums: BTreeMap::new(),
             signatures: BTreeMap::new(),
             inherent_methods: BTreeMap::new(),
+        }
+    }
+
+    /// Bind imported Rust crate items into the type env (opaque / known stubs).
+    fn register_rust_imports(&mut self, imports: &[ResolvedRustImport]) {
+        for imp in imports {
+            let (params, ret) = rust_import_fn_type(&imp.crate_name, &imp.item);
+            let fn_ty = Ty::Fn {
+                params: params.clone(),
+                ret: Box::new(ret.clone()),
+            };
+            self.env.insert(imp.local_name.clone(), scheme(fn_ty));
+            let module = format!("rust.{}", imp.crate_name);
+            let key = format!("{module}::{}", imp.local_name);
+            self.signatures.insert(
+                key,
+                InferredSig {
+                    module,
+                    name: imp.local_name.clone(),
+                    impl_ty: None,
+                    params: params
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, t)| (format!("arg{i}"), t))
+                        .collect(),
+                    ret,
+                    span: Span::new(0, 0),
+                },
+            );
         }
     }
 
@@ -1245,4 +1278,26 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
             },
         ),
     ]
+}
+
+/// Known Rust crate item stubs for typeck (Result Ok types; emit adds `.unwrap()`).
+fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
+    let json_value = Ty::Named {
+        name: "serde_json::Value".into(),
+        args: vec![],
+    };
+    match (crate_name, item) {
+        ("serde_json", "from_str") => (vec![Ty::Str], json_value),
+        ("serde_json", "to_string" | "to_string_pretty" | "to_vec") => (vec![json_value], Ty::Str),
+        ("serde_json", "from_value") => (vec![json_value.clone()], json_value),
+        // Type-like imports (e.g. `Value as JsonValue`) — not callable; placeholder unit fn.
+        ("serde_json", "Value") => (vec![], json_value),
+        _ => (
+            vec![Ty::Str],
+            Ty::Named {
+                name: "RustValue".into(),
+                args: vec![],
+            },
+        ),
+    }
 }

@@ -743,4 +743,6 @@ ResolvedCrate {
         },
     ],
     symbol_count: 31,
+    rust_imports: [],
+    warnings: [],
 }

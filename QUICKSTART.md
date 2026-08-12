@@ -297,6 +297,8 @@ Until a stdio host ships (#18), use `reveal` and `crpc check` from the editor’
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
 | `feature_gallery` | Nested mods + enums + inherent methods together |
+| `rust_import` | Call `serde_json` via bare `use serde_json { from_str, to_string }` (§14.2 / #41) |
+| `rust_shadow` | W0048 when Crisp module name collides with a Rust dep |
 | `float_demo` | `Vec2` geometry, `lerp`, circle metrics, `**` pow |
 | `defaults` | Struct default fields |
 | `fallible` | Error propagation + `catch` |

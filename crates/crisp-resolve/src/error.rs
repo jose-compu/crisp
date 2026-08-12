@@ -47,4 +47,20 @@ pub enum ResolveError {
         "[E0039] shapes are not yet supported (`{name}`); remove the `shape` definition or bound (tracked: #21)"
     )]
     ShapesUnsupported { name: String, span: Span },
+    #[error(
+        "[E0044] Rust crate `{name}` is not a dependency; add it under `[dependencies]` in crisp.toml with `rust = true` (spec §14.2, #41)"
+    )]
+    RustCrateNotFound { name: String, span: Span },
+    #[error(
+        "[E0045] dependency `{name}` must set `rust = true` to import via `use rust…` (spec §14.2, #41)"
+    )]
+    RustCrateNotMarked { name: String, span: Span },
+    #[error(
+        "[E0046] `use rust…` requires an import list, e.g. `use rust.{name} {{ item }}` (spec §14.2)"
+    )]
+    RustImportNeedsList { name: String, span: Span },
+    #[error("[E0047] invalid `use rust` path `{path}`; expected `use rust.<crate> {{ … }}`")]
+    RustUsePathInvalid { path: String, span: Span },
+    #[error("failed to read crisp.toml at {root}: {message}")]
+    Manifest { root: String, message: String },
 }

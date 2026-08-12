@@ -878,6 +878,9 @@ fn emit_call_expr(
                 return;
             }
         }
+    } else if let Some(crate_name) = callee_module.strip_prefix("rust.") {
+        emit_rust_crate_call(out, crate_name, callee, args, current_module, map);
+        return;
     } else {
         if callee_module != current_module && !callee_module.starts_with("std.") {
             // Crisp `math.vector` → Rust `math::vector` (#35).
@@ -895,6 +898,50 @@ fn emit_call_expr(
     }
     if fallible && propagate_error {
         let _ = write!(out, "?");
+    }
+}
+
+/// Emit a call into a `rust = true` Cargo dependency (spec §14.2).
+/// Known Result-returning APIs get `.expect(...)` until Crisp `?` absorbs Rust errors.
+fn emit_rust_crate_call(
+    out: &mut String,
+    crate_name: &str,
+    callee: &str,
+    args: &[crisp_cir::CirCallArg],
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    match (crate_name, callee) {
+        ("serde_json", "from_str") => {
+            let _ = write!(out, "serde_json::from_str::<serde_json::Value>(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+            }
+            let _ = write!(out, ").expect(\"serde_json::from_str\")");
+        }
+        ("serde_json", "to_string" | "to_string_pretty") => {
+            let _ = write!(out, "serde_json::{callee}(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+            }
+            let _ = write!(out, ").expect(\"serde_json::{callee}\")");
+        }
+        _ => {
+            let _ = write!(out, "{crate_name}::{callee}(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+            }
+            let _ = write!(out, ")");
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.2)
+# Known limitations (Crisp v1.3)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Tracked under publication epic [#1](https://github.com/jose-compu/crisp/issues/1). Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md).
 
@@ -31,6 +31,16 @@ This page documents behaviors that surprise users and are **not** always full la
   - `map` emits coarse CIR alloc/drop notes, not span-accurate annotations on emitted Rust.
   - `traits` only summarizes shape traits known to CIR; full `trait` / `impl Trait for` remains open under [#50](https://github.com/jose-compu/crisp/issues/50).
 - **`crisp-lsp`:** analysis API only (`CrispAnalysis` — hover, inlay hints, call overlays, code lenses, emitted Rust). No stdio/`tower-lsp` host yet; see QUICKSTART §11 ([#18](https://github.com/jose-compu/crisp/issues/18)).
+
+## Rust crate interop (spec §14.2)
+
+- **`crisp.toml` → Cargo.toml** works: `[dependencies]` with `rust = true` are written into `target/rust/Cargo.toml`.
+- **Primary import (TS-like):** `use serde_json { from_str }` when `serde_json` is a `rust = true` dependency — no `rust.` prefix required.
+- **Compat alias:** `use rust.serde_json { … }` / `use rust::<crate> { … }` still force the Cargo crate.
+- **Collision:** if a Crisp module and a Rust dep share a name, bare `use <name>` binds the **Crisp module** and emits **W0048**; use `use rust.<name> { … }` for the crate.
+- Resolve codes: `E0044`–`E0047`, `W0048`. Bindings: `ResolvedRustImport` / `SymbolKind::RustFn`.
+- **Calls:** known stubs (e.g. `serde_json::from_str` / `to_string`) typecheck and emit; Result APIs use `.expect(...)` in generated Rust until Crisp `?` absorbs Rust errors ([#41](https://github.com/jose-compu/crisp/issues/41)). See `examples/rust_import`.
+- Epic plan: [#51](https://github.com/jose-compu/crisp/issues/51).
 
 ## Stdlib
 

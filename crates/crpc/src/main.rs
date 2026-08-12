@@ -76,15 +76,19 @@ fn main() -> anyhow::Result<()> {
         Commands::Resolve { path } => {
             let root = find_crate_root(&path).unwrap_or(path);
             let resolved = Resolver::resolve_crate(&root)?;
+            print_resolve_warnings(&resolved.warnings);
             println!("{resolved:#?}");
             Ok(())
         }
         Commands::Check { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())
                 .unwrap_or_else(|| PathBuf::from(&path));
-            if let Err(e) = Resolver::resolve_crate(&root) {
-                print_resolve_diagnostic(&root, &e);
-                return Err(e.into());
+            match Resolver::resolve_crate(&root) {
+                Err(e) => {
+                    print_resolve_diagnostic(&root, &e);
+                    return Err(e.into());
+                }
+                Ok(resolved) => print_resolve_warnings(&resolved.warnings),
             }
             if let Err(e) = TypeChecker::check_crate(&root) {
                 print_type_diagnostic(&root, &e);
@@ -159,6 +163,12 @@ fn main() -> anyhow::Result<()> {
             eprintln!("crpc emit: ok ({})", out.out_dir.display());
             Ok(())
         }
+    }
+}
+
+fn print_resolve_warnings(warnings: &[crisp_resolve::ResolveWarning]) {
+    for w in warnings {
+        eprintln!("warning: {w}");
     }
 }
 

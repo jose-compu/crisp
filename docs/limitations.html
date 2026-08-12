@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Public preview <strong>v1.4.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.5.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -28,7 +28,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the v1.4.x public preview versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.5.x public release versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
@@ -37,7 +37,7 @@
       <ul>
         <li>Not self-hosted — Rust-hosted <code>crpc</code> only (self-hosting → v2.0.0)</li>
         <li><strong>Shapes</strong> reserved; resolve rejects with <code>E0039</code> until full support (#61)</li>
-        <li>Rust <code>Result</code> APIs from <code>rust = true</code> deps currently lower to <code>.expect(...)</code> (#55)</li>
+        <li>Unknown Rust APIs are opaque stubs; known <code>Result</code> imports (<code>serde_json</code>, <code>ureq</code>) use Crisp <code>?</code> (#55)</li>
         <li>Trait defaults / bounds / <code>dyn Trait</code> still incomplete (#59)</li>
         <li>Enums: unit/tuple variants work; recursive enums and full exhaustiveness still gap</li>
         <li>Field access on parameters: inferred when exactly one struct has the field; else annotate (<code>E0043</code>)</li>
@@ -76,7 +76,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public preview v1.4.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

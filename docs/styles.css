@@ -342,10 +342,10 @@ a:hover { color: var(--accent-soft); }
 
 .use-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .use-grid { grid-template-columns: 1fr; }
 }
 .use-card {
@@ -404,7 +404,10 @@ a:hover { color: var(--accent-soft); }
 }
 .use-snippet pre.pipe {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  max-height: 22rem;
+  overflow: auto;
 }
 .example-list {
   list-style: none;

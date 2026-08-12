@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Public preview <strong>v1.4.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.5.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -232,7 +232,7 @@ pub main() = {
     v := from_str("[1, true, \"crisp\"]")
     print(to_string(v))
 }</pre>
-          <p>Compat alias: <code>use rust.serde_json { … }</code>. Sharp edge: Rust <code>Result</code> currently becomes <code>.expect(...)</code> — see <a href="limitations.html">limitations</a>.</p>
+          <p>Compat alias: <code>use rust.serde_json { … }</code>. Known <code>Result</code> APIs become Crisp ambient errors (<code>?</code> / <code>catch</code>) — see <a href="limitations.html">limitations</a>.</p>
           <p>Run: <code>crpc run examples/rust_import</code></p>
         </article>
 
@@ -302,7 +302,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public preview v1.4.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

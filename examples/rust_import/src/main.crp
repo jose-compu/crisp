@@ -1,14 +1,18 @@
--- examples/rust_import — TypeScript-style Rust crate imports (spec §14.2 / #41)
+-- examples/rust_import — call APIs from a Rust crate (spec §14.2 / #41)
 --
 -- Primary surface: bare `use <crate> { … }` when the crate is `rust = true` in crisp.toml.
 -- Compat alias: `use rust.<crate> { … }` / `use rust::<crate> { … }`.
--- Calling imported Rust APIs (typeck/emit of calls) lands in a follow-up PR; this example
--- proves resolve + Cargo dep wiring end-to-end.
+--
+-- Note: Crisp string `{name}` is interpolation, so JSON objects with `{…}` need concatenation
+-- or a non-object payload. This demo uses a JSON array.
+--
+-- `from_str` / `to_string` are typed as returning the Ok payload; emit inserts `.expect`
+-- until Crisp `?` absorbs Rust `Result` errors (follow-up).
 
 use serde_json { from_str, to_string }
-use rust.serde_json { Value as JsonValue }
 
 pub main() = {
-    -- from_str / to_string / JsonValue are resolved into scope (see `crpc resolve`).
-    print("rust-import-ok")
+    v := from_str("[1, true, \"crisp\"]")
+    s := to_string(v)
+    print(s)
 }

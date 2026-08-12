@@ -202,6 +202,29 @@ fn rust_import_example_wires_serde_json_dep() {
     let out = emit_to_target(&root).expect("emit rust_import");
     let cargo = std::fs::read_to_string(out.out_dir.join("Cargo.toml")).unwrap();
     assert!(cargo.contains("serde_json"), "{cargo}");
+    let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
+    assert!(
+        main_rs.contains("serde_json::from_str::<serde_json::Value>"),
+        "{main_rs}"
+    );
+    assert!(main_rs.contains("serde_json::to_string"), "{main_rs}");
+    assert!(main_rs.contains(".expect("), "{main_rs}");
+}
+
+#[test]
+fn rust_import_example_runs_json_roundtrip() {
+    let root = example("rust_import");
+    match run_emitted(&root) {
+        Ok(out) => {
+            assert!(out.contains('1'), "stdout: {out:?}");
+            assert!(
+                out.contains("true") || out.contains("crisp"),
+                "stdout: {out:?}"
+            );
+        }
+        Err(PipelineError::ToolchainUnavailable) => eprintln!("SKIP: cargo not on PATH"),
+        Err(e) => panic!("rust_import run: {e}"),
+    }
 }
 
 #[test]

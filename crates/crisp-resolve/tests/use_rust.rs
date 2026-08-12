@@ -316,9 +316,7 @@ fn example_rust_import_resolves_bare_and_alias() {
         resolved
             .rust_imports
             .iter()
-            .any(|i| i.crate_name == "serde_json"
-                && i.item == "Value"
-                && i.local_name == "JsonValue")
+            .any(|i| i.crate_name == "serde_json" && i.item == "to_string")
     );
     let main = resolved
         .modules
@@ -327,7 +325,6 @@ fn example_rust_import_resolves_bare_and_alias() {
         .unwrap();
     assert!(main.scope.iter().any(|s| s == "from_str"));
     assert!(main.scope.iter().any(|s| s == "to_string"));
-    assert!(main.scope.iter().any(|s| s == "JsonValue"));
 }
 
 #[test]

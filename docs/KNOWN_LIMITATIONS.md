@@ -39,7 +39,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - **Compat alias:** `use rust.serde_json { … }` / `use rust::<crate> { … }` still force the Cargo crate.
 - **Collision:** if a Crisp module and a Rust dep share a name, bare `use <name>` binds the **Crisp module** and emits **W0048**; use `use rust.<name> { … }` for the crate.
 - Resolve codes: `E0044`–`E0047`, `W0048`. Bindings: `ResolvedRustImport` / `SymbolKind::RustFn`.
-- **Not yet:** typeck of calls, emit of Rust `use`/calls, `Result`/`?` absorption — tracked in [#41](https://github.com/jose-compu/crisp/issues/41). Until then, prefer `extern "C"` (`examples/ffi`) for foreign symbols.
+- **Calls:** known stubs (e.g. `serde_json::from_str` / `to_string`) typecheck and emit; Result APIs use `.expect(...)` in generated Rust until Crisp `?` absorbs Rust errors ([#41](https://github.com/jose-compu/crisp/issues/41)). See `examples/rust_import`.
 - Epic plan: [#51](https://github.com/jose-compu/crisp/issues/51).
 
 ## Stdlib

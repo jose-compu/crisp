@@ -67,6 +67,9 @@ impl CirBuilder {
         }
         let mut fn_modules = collect_fn_modules(graph);
         fn_modules.extend(stdlib_fn_modules());
+        for imp in &typed.rust_imports {
+            fn_modules.insert(imp.local_name.clone(), format!("rust.{}", imp.crate_name));
+        }
         let extern_fns = collect_extern_fns(graph);
         let struct_fields = collect_struct_field_names(&all_structs);
         let mut shape_traits = Vec::new();

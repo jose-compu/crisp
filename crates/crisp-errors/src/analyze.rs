@@ -18,9 +18,22 @@ impl ErrorPass {
         let mut fn_defs: BTreeMap<String, (String, FunctionDef)> = BTreeMap::new();
         for node in graph.modules.values() {
             for item in &node.ast.items {
-                if let Item::Function(f) = item {
-                    let key = format!("{}::{}", node.module_path, f.name.name);
-                    fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                match item {
+                    Item::Function(f) => {
+                        let key = format!("{}::{}", node.module_path, f.name.name);
+                        fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                    }
+                    Item::Impl(ib) if ib.trait_name.is_none() => {
+                        let ty_name = match &ib.ty.kind {
+                            crisp_ast::ty::TypeKind::Named(id) => id.name.clone(),
+                            _ => continue,
+                        };
+                        for f in &ib.items {
+                            let key = format!("{}::{ty_name}::{}", node.module_path, f.name.name);
+                            fn_defs.insert(key, (node.module_path.clone(), f.clone()));
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
@@ -278,6 +291,29 @@ fn resolve_callee_key(
                 if m != module && def.is_pub && def.name.name == id.name {
                     return Some(key.clone());
                 }
+            }
+            None
+        }
+        ExprKind::Field { base, field } => {
+            if let ExprKind::Ident(id) = &base.kind {
+                let local = format!("{module}::{}::{}", id.name, field.name);
+                if fn_defs.contains_key(&local) {
+                    return Some(local);
+                }
+                let suffix = format!("::{}::{}", id.name, field.name);
+                for key in fn_defs.keys() {
+                    if key.ends_with(&suffix) {
+                        return Some(key.clone());
+                    }
+                }
+            }
+            let suffix = format!("::{}", field.name);
+            let hits: Vec<&String> = fn_defs
+                .keys()
+                .filter(|k| k.ends_with(&suffix) && k.matches("::").count() >= 2)
+                .collect();
+            if hits.len() == 1 {
+                return Some(hits[0].clone());
             }
             None
         }

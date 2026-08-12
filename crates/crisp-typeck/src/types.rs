@@ -96,6 +96,8 @@ impl InferContext {
 pub struct InferredSig {
     pub module: String,
     pub name: String,
+    /// When set, this signature is an inherent `impl Type` method (§5.4).
+    pub impl_ty: Option<String>,
     pub params: Vec<(String, Ty)>,
     pub ret: Ty,
     pub span: Span,

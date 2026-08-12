@@ -252,6 +252,22 @@ pub enum CirExpr {
         ty: CirTy,
         span: Span,
     },
+    /// Associated inherent fn: `Vec2::new(...)` (spec §5.4).
+    AssocCall {
+        ty_name: String,
+        method: String,
+        args: Vec<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
+    /// Instance method: `recv.magnitude()` / `recv.scale(f)`.
+    MethodCall {
+        receiver: Box<CirExpr>,
+        method: String,
+        args: Vec<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
     Format {
         parts: Vec<CirFormatPart>,
         span: Span,

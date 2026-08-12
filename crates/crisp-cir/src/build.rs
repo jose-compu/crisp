@@ -130,7 +130,7 @@ impl CirBuilder {
                         let ty_name = type_name_from_ast(&ib.ty);
                         let mut fns = Vec::new();
                         for f in &ib.items {
-                            let key = format!("{}::{}", node.module_path, f.name.name);
+                            let key = format!("{}::{ty_name}::{}", node.module_path, f.name.name);
                             if let (Some(o), Some(t), Some(e)) = (
                                 ownership.signatures.get(&key),
                                 typed.signatures.get(&key),
@@ -560,7 +560,8 @@ fn lower_block(
                             span: value.span,
                         };
                     }
-                    let ty = infer_expr_ty(value, locals, typed, module);
+                    let ty = cir_expr_value_ty(&lowered)
+                        .unwrap_or_else(|| infer_expr_ty(value, locals, typed, module));
                     locals.insert(name.name.clone(), ty);
                     stmts.push(CirStmt::Let {
                         name: name.name.clone(),
@@ -785,7 +786,7 @@ fn lower_expr(
             }
         }
         ExprKind::Call { func, args } => {
-            // Tuple enum variant: Color.Custom(r, g, b)
+            // Associated inherent method / enum variant: Type.foo(args)
             if let ExprKind::Field { base, field } = &func.kind
                 && let ExprKind::Ident(id) = &base.kind
                 && looks_like_type_name(&id.name)
@@ -808,6 +809,24 @@ fn lower_expr(
                         )
                     })
                     .collect();
+                if let Some(key) = typed
+                    .inherent_methods
+                    .get(&id.name)
+                    .and_then(|m| m.get(&field.name))
+                {
+                    let ret_ty = typed
+                        .signatures
+                        .get(key)
+                        .map(|s| CirTy::from_ty(&s.ret))
+                        .unwrap_or(CirTy::Error);
+                    return E::AssocCall {
+                        ty_name: id.name.clone(),
+                        method: field.name.clone(),
+                        args: call_args,
+                        ty: ret_ty,
+                        span: expr.span,
+                    };
+                }
                 return E::EnumVariant {
                     ty_name: id.name.clone(),
                     variant: field.name.clone(),
@@ -818,6 +837,57 @@ fn lower_expr(
                     },
                     span: expr.span,
                 };
+            }
+            // Instance method: recv.method(args)
+            if let ExprKind::Field { base, field } = &func.kind {
+                let receiver = lower_expr(
+                    base,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                );
+                if let Some(ty_name) = cir_expr_named_ty(&receiver)
+                    && let Some(key) = typed
+                        .inherent_methods
+                        .get(&ty_name)
+                        .and_then(|m| m.get(&field.name))
+                {
+                    let ret_ty = typed
+                        .signatures
+                        .get(key)
+                        .map(|s| CirTy::from_ty(&s.ret))
+                        .unwrap_or(CirTy::Error);
+                    let call_args: Vec<CirExpr> = args
+                        .iter()
+                        .map(|arg| {
+                            lower_expr(
+                                arg,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
+                            )
+                        })
+                        .collect();
+                    return E::MethodCall {
+                        receiver: Box::new(receiver),
+                        method: field.name.clone(),
+                        args: call_args,
+                        ty: ret_ty,
+                        span: expr.span,
+                    };
+                }
             }
             if let ExprKind::Ident(id) = &func.kind {
                 if (id.name == "print" || id.name == "log") && args.len() == 1 {
@@ -1211,7 +1281,38 @@ fn infer_expr_ty(
         ExprKind::Str(_) => CirTy::Str,
         ExprKind::Int(_) => CirTy::Int,
         ExprKind::Float(_) => CirTy::Float,
+        ExprKind::StructLit { name, .. } => CirTy::Named {
+            name: name.name.clone(),
+            args: vec![],
+        },
         ExprKind::Call { func, .. } => {
+            if let ExprKind::Field { base, field } = &func.kind {
+                if let ExprKind::Ident(id) = &base.kind
+                    && let Some(key) = typed
+                        .inherent_methods
+                        .get(&id.name)
+                        .and_then(|m| m.get(&field.name))
+                {
+                    return typed
+                        .signatures
+                        .get(key)
+                        .map(|s| CirTy::from_ty(&s.ret))
+                        .unwrap_or(CirTy::Error);
+                }
+                if let ExprKind::Ident(recv) = &base.kind
+                    && let Some(CirTy::Named { name, .. }) = locals.get(&recv.name)
+                    && let Some(key) = typed
+                        .inherent_methods
+                        .get(name)
+                        .and_then(|m| m.get(&field.name))
+                {
+                    return typed
+                        .signatures
+                        .get(key)
+                        .map(|s| CirTy::from_ty(&s.ret))
+                        .unwrap_or(CirTy::Error);
+                }
+            }
             if let ExprKind::Ident(id) = &func.kind {
                 let key = format!("{module}::{}", id.name);
                 typed
@@ -1227,8 +1328,61 @@ fn infer_expr_ty(
     }
 }
 
+fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
+    match expr {
+        CirExpr::Ident { ty, .. }
+        | CirExpr::Call { ty, .. }
+        | CirExpr::Field { ty, .. }
+        | CirExpr::AssocCall { ty, .. }
+        | CirExpr::MethodCall { ty, .. }
+        | CirExpr::EnumVariant { ty, .. }
+        | CirExpr::StructLit { ty, .. }
+        | CirExpr::BinOp { ty, .. }
+        | CirExpr::If { ty, .. }
+        | CirExpr::Match { ty, .. } => Some(ty.clone()),
+        CirExpr::Int { .. } => Some(CirTy::Int),
+        CirExpr::Float { .. } => Some(CirTy::Float),
+        CirExpr::Bool { .. } => Some(CirTy::Bool),
+        CirExpr::Str { .. } | CirExpr::Format { .. } => Some(CirTy::Str),
+        CirExpr::Clone { expr, .. } | CirExpr::Borrow { expr, .. } => cir_expr_value_ty(expr),
+        _ => None,
+    }
+}
+
 fn looks_like_type_name(name: &str) -> bool {
     name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+}
+
+fn cir_expr_named_ty(expr: &CirExpr) -> Option<String> {
+    match expr {
+        CirExpr::Ident {
+            ty: CirTy::Named { name, .. },
+            ..
+        }
+        | CirExpr::Field {
+            ty: CirTy::Named { name, .. },
+            ..
+        }
+        | CirExpr::Call {
+            ty: CirTy::Named { name, .. },
+            ..
+        }
+        | CirExpr::AssocCall {
+            ty: CirTy::Named { name, .. },
+            ..
+        }
+        | CirExpr::MethodCall {
+            ty: CirTy::Named { name, .. },
+            ..
+        }
+        | CirExpr::EnumVariant {
+            ty: CirTy::Named { name, .. },
+            ..
+        } => Some(name.clone()),
+        CirExpr::StructLit { name, .. } => Some(name.clone()),
+        CirExpr::Clone { expr, .. } | CirExpr::Borrow { expr, .. } => cir_expr_named_ty(expr),
+        _ => None,
+    }
 }
 
 fn field_access_needs_clone(osig: &crisp_ownership::OwnershipSignature, base: &Expr) -> bool {

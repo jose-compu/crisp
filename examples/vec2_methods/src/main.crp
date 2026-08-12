@@ -1,0 +1,22 @@
+-- examples/vec2_methods — inherent methods + nested modules (v1.2 #35, v1.3 #20)
+-- Spec: §3.6 traits/impl surface, §5.4 method sugar.
+
+use math.vector { Vec2, origin }
+
+test "3-4-5 magnitude" = {
+    assert_eq(Vec2.new(3.0, 4.0).magnitude(), 5.0)
+}
+
+test "scale doubles" = {
+    s := Vec2.new(1.0, 2.0).scale(2.0)
+    assert_eq(s.x, 2.0)
+    assert_eq(s.y, 4.0)
+}
+
+pub main() = {
+    v := Vec2.new(3.0, 4.0)
+    m := v.magnitude()
+    s := v.scale(2.0)
+    o := origin()
+    log("m={m} sx={s.x} ox={o.x}")
+}

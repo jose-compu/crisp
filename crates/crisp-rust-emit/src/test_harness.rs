@@ -3,7 +3,7 @@
 use crate::cargo::{CargoError, cargo_test};
 use crate::emit::emit_crate;
 use crate::pipeline::{PipelineError, analyze_and_build_cir};
-use crate::project::write_cargo_project;
+use crate::project::{with_emit_dir_lock, write_cargo_project_unlocked};
 use crate::seal::verify_sealed_api;
 use anyhow::{Context, Result};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
@@ -167,17 +167,25 @@ fn emit_expr(expr: &Expr) -> String {
         }
         ExprKind::Ident(id) => id.name.clone(),
         ExprKind::Call { func, args } => {
-            // Enum ctor: Color.Custom(r, g, b)
-            if let ExprKind::Field { base, field } = &func.kind
-                && let ExprKind::Ident(ty) = &base.kind
-                && ty
-                    .name
-                    .chars()
-                    .next()
-                    .is_some_and(|c| c.is_ascii_uppercase())
-            {
+            // Associated fn / enum ctor / instance method: Field under Call.
+            if let ExprKind::Field { base, field } = &func.kind {
                 let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
-                return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
+                if let ExprKind::Ident(ty) = &base.kind
+                    && ty
+                        .name
+                        .chars()
+                        .next()
+                        .is_some_and(|c| c.is_ascii_uppercase())
+                {
+                    return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
+                }
+                // Instance: recv.method(args) — including chained AssocCall receivers.
+                return format!(
+                    "{}.{}({})",
+                    emit_expr(base),
+                    field.name,
+                    arg_strs.join(", ")
+                );
             }
             let name = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),
@@ -271,18 +279,19 @@ fn contains_float_literal(expr: &Expr) -> bool {
 
 fn emit_call_arg_for_test(expr: &Expr) -> String {
     match &expr.kind {
-        // Primitive params are emitted as `&T` in CIR/Rust; take references.
-        ExprKind::Int(n) => format!("&{n}"),
+        // Copy scalars emit by value in CIR/Rust (Owned); do not borrow literals.
+        ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
-                format!("&{f}.0")
+                format!("{f}.0")
             } else {
-                format!("&{f}")
+                format!("{f}")
             }
         }
         ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(expr),
+        // Prefer `&ident` for stringish/`&T` params; copy locals still coerce via Copy.
         ExprKind::Ident(id) => format!("&{}", id.name),
-        // Enum values are owned; pass by reference for &T params.
+        // Enum values are owned; pass by reference for `&Color` params.
         ExprKind::Field { base, .. } if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())) =>
         {
             format!("&{}", emit_expr(expr))
@@ -320,28 +329,30 @@ pub fn run_tests(crate_root: &Path) -> Result<TestRunReport, TestHarnessError> {
         });
     }
 
-    let cir = analyze_and_build_cir(crate_root)?;
-    let manifest = read_manifest(crate_root).context("read crisp.toml")?;
-    let deps = resolve_dependencies(&manifest);
-    let emitted = emit_crate(&cir);
-    write_cargo_project(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
-        .context("write target/rust with tests")?;
+    with_emit_dir_lock(crate_root, || {
+        let cir = analyze_and_build_cir(crate_root)?;
+        let manifest = read_manifest(crate_root).context("read crisp.toml")?;
+        let deps = resolve_dependencies(&manifest);
+        let emitted = emit_crate(&cir);
+        write_cargo_project_unlocked(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
+            .context("write target/rust with tests")?;
 
-    match cargo_test(crate_root) {
-        Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(
-            "cargo not on PATH"
-        ))),
-        Err(CargoError::BuildFailed(output)) => Err(TestHarnessError::RuntimeFailed {
-            name: "cargo test".into(),
-            output,
-        }),
-        Err(e) => Err(TestHarnessError::Cargo(e)),
-        Ok(()) => Ok(TestRunReport {
-            runtime_passed: runtime_count,
-            compile_fail_passed: compile_fail.len(),
-            emitted_tests,
-        }),
-    }
+        match cargo_test(crate_root) {
+            Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(
+                "cargo not on PATH"
+            ))),
+            Err(CargoError::BuildFailed(output)) => Err(TestHarnessError::RuntimeFailed {
+                name: "cargo test".into(),
+                output,
+            }),
+            Err(e) => Err(TestHarnessError::Cargo(e)),
+            Ok(()) => Ok(TestRunReport {
+                runtime_passed: runtime_count,
+                compile_fail_passed: compile_fail.len(),
+                emitted_tests,
+            }),
+        }
+    })
 }
 
 fn run_compile_fail_test(test: &CollectedTest) -> Result<(), TestHarnessError> {

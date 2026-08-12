@@ -11,37 +11,37 @@ pub use arith::*;
 mod floats;
 pub use floats::*;
 pub fn main() {
-    println!("{}", format!("sum(2,3)={}", arith::sum(&2, &3)));
-    println!("{}", format!("double(5)={}", arith::double(&5)));
-    println!("{}", format!("add(1.5,2.5)={}", floats::add(&1.5, &2.5)));
-    println!("{}", format!("avg2(1.0,3.0)={}", floats::avg2(&1.0, &3.0)));
-    println!("{}", format!("square(4.0)={}", floats::square(&4.0)));
-    println!("{}", format!("mul(0.5,8.0)={}", floats::mul(&0.5, &8.0)));
+    println!("{}", format!("sum(2,3)={}", arith::sum(2, 3)));
+    println!("{}", format!("double(5)={}", arith::double(5)));
+    println!("{}", format!("add(1.5,2.5)={}", floats::add(1.5, 2.5)));
+    println!("{}", format!("avg2(1.0,3.0)={}", floats::avg2(1.0, 3.0)));
+    println!("{}", format!("square(4.0)={}", floats::square(4.0)));
+    println!("{}", format!("mul(0.5,8.0)={}", floats::mul(0.5, 8.0)));
 }
 // === mod arith ===
-pub fn double(n: &i64) -> i64 {
+pub fn double(n: i64) -> i64 {
     n + n
 }
-pub fn sum(a: &i64, b: &i64) -> i64 {
+pub fn sum(a: i64, b: i64) -> i64 {
     a + b
 }
-pub fn product(a: &i64, b: &i64) -> i64 {
+pub fn product(a: i64, b: i64) -> i64 {
     a * b
 }
 // === mod floats ===
-pub fn add(a: &f64, b: &f64) -> f64 {
+pub fn add(a: f64, b: f64) -> f64 {
     a + b
 }
-pub fn mul(a: &f64, b: &f64) -> f64 {
+pub fn mul(a: f64, b: f64) -> f64 {
     a * b
 }
-pub fn div(a: &f64, b: &f64) -> f64 {
+pub fn div(a: f64, b: f64) -> f64 {
     a / b
 }
-pub fn square(x: &f64) -> f64 {
+pub fn square(x: f64) -> f64 {
     (x).powf(2.0)
 }
-pub fn avg2(a: &f64, b: &f64) -> f64 {
+pub fn avg2(a: f64, b: f64) -> f64 {
     let s = a + b;
     s / 2.0
 }

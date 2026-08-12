@@ -79,22 +79,11 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
         let _ = writeln!(main_rs, "pub use {top}::*;");
     }
 
+    // Emit all main-module items (structs/enums/impls/fns). Previously only
+    // functions were written here, which dropped enums/types next to nested mods.
     for m in &cir.modules {
-        if m.path != "main" {
-            continue;
-        }
-        for item in &m.items {
-            if let CirItem::Function(f) = item
-                && !f.is_main
-            {
-                emit_function(&mut main_rs, f, &m.path, &mut map);
-            }
-        }
-        if let Some(main_fn) = m.items.iter().find_map(|i| match i {
-            CirItem::Function(f) if f.is_main => Some(f),
-            _ => None,
-        }) {
-            emit_function(&mut main_rs, main_fn, &m.path, &mut map);
+        if m.path == "main" {
+            emit_module_items(&mut main_rs, m, cir, &mut map, true);
         }
     }
 
@@ -347,6 +336,13 @@ fn format_extern_ty(ty: &CirTy) -> String {
 }
 
 fn format_param(p: &CirParam) -> String {
+    if p.name == "self" {
+        return match p.mode {
+            OwnershipMode::Borrow => "&self".into(),
+            OwnershipMode::MutBorrow => "&mut self".into(),
+            OwnershipMode::Owned => "self".into(),
+        };
+    }
     let lt = p
         .lifetime
         .as_ref()
@@ -621,6 +617,41 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 }
                 let _ = write!(out, ")");
             }
+        }
+        CirExpr::AssocCall {
+            ty_name,
+            method,
+            args,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "{ty_name}::{method}(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_expr(out, arg, current_module, map);
+            }
+            let _ = write!(out, ")");
+        }
+        CirExpr::MethodCall {
+            receiver,
+            method,
+            args,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, receiver, current_module, map);
+            let _ = write!(out, ".{method}(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_expr(out, arg, current_module, map);
+            }
+            let _ = write!(out, ")");
         }
         CirExpr::Format { parts, span } => {
             map.record(out.len() as u32, *span);

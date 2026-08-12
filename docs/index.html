@@ -171,6 +171,22 @@ pub main() = {
           </div>
         </div>
         <div class="code-panel">
+          <div class="caption"><span>Shapes</span><span>examples/shapes</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>shape HasPosition = {
+    x: float
+    y: float
+}
+
+distance(a: HasPosition, b: HasPosition) -> float = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
           <div class="caption"><span>Rust crate import</span><span>examples/rust_import</span></div>
           <div class="code-window">
             <div class="code-chrome"><span></span><span></span><span></span></div>

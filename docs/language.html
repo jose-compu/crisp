@@ -42,7 +42,8 @@
         <li><strong>Structs</strong> — <code>type T = { … }</code> with field defaults</li>
         <li><strong>Enums</strong> — <code>type Color = | Red | Custom(int, int, int)</code> + <code>match</code></li>
         <li><strong>Methods</strong> — <code>impl Type = { … }</code></li>
-        <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code> (shapes deferred)</li>
+        <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code>; literal/simple default bodies</li>
+        <li><strong>Shapes</strong> — data <code>shape</code> → generated traits + structural calls (<code>examples/shapes</code>)</li>
         <li><strong>Rust crates</strong> — <code>rust = true</code> deps; <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
         <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
         <li><strong>Modules</strong> — one file = one module; <code>use m { f }</code></li>
@@ -95,6 +96,22 @@ describe(c) = match c {
 
 impl Show for Point = {
     show(self) = "({self.x},{self.y})"
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Data shape</span><span>examples/shapes</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>shape HasPosition = {
+    x: float
+    y: float
+}
+
+distance(a: HasPosition, b: HasPosition) -> float = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
 }</pre>
           </div>
         </div>

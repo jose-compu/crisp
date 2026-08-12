@@ -216,13 +216,15 @@ pub main() = {
           </div>
         </article>
                 <article class="use-card" id="traits">
-          <h3>Traits &amp; methods</h3>
-          <p>Nominal <code>trait</code> / <code>impl Trait for</code>, inherent <code>impl Type</code>, and prelude Show / Eq / Ord shims.</p>
+          <h3>Traits, shapes &amp; methods</h3>
+          <p>Nominal <code>trait</code> / <code>impl Trait for</code>, data <code>shape</code>s, inherent <code>impl Type</code>, and prelude Show / Eq / Ord shims.</p>
           <div class="tag-row">
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/show_trait">examples/show_trait</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/trait_defaults">trait_defaults</a>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/shapes">shapes</a>
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/std_traits">std_traits</a>
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/vec2_methods">vec2_methods</a>
-            <a href="https://github.com/jose-compu/crisp/blob/main/examples/show_trait/src/main.crp">main.crp</a>
+            <a href="https://github.com/jose-compu/crisp/blob/main/examples/shapes/src/main.crp">shapes main.crp</a>
           </div>
           <div class="use-snippet">
             <pre class="pipe">-- examples/show_trait/src/main.crp
@@ -298,6 +300,7 @@ pub main() = {
         <pre class="pipe">crpc run examples/hello
 crpc run examples/enums
 crpc run examples/show_trait
+crpc run examples/shapes
 crpc run examples/rust_import
 crpc test examples/math
 crpc check examples/design_patterns</pre>
@@ -313,6 +316,14 @@ crpc check examples/design_patterns</pre>
           <li>
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/show_trait">show_trait</a>
             <span>trait / impl Trait for</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/trait_defaults">trait_defaults</a>
+            <span>trait default method bodies</span>
+          </li>
+          <li>
+            <a href="https://github.com/jose-compu/crisp/tree/main/examples/shapes">shapes</a>
+            <span>data shape → generated trait</span>
           </li>
           <li>
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/std_traits">std_traits</a>
@@ -404,6 +415,22 @@ pub main() = {
 
 impl Show for Point = {
     show(self) = "({self.x},{self.y})"
+}</pre>
+            </div>
+          </div>
+          <div class="code-panel">
+            <div class="caption"><span>Shapes</span><span>examples/shapes</span></div>
+            <div class="code-window">
+              <div class="code-chrome"><span></span><span></span><span></span></div>
+              <pre>shape HasPosition = {
+    x: float
+    y: float
+}
+
+distance(a: HasPosition, b: HasPosition) -> float = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
 }</pre>
             </div>
           </div>

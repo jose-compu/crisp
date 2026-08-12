@@ -51,6 +51,9 @@ export PATH="$PWD/target/release:$PATH"</pre>
         <p>Or install into your Cargo bin directory:</p>
         <pre class="pipe">cargo install --path crates/crpc --locked
 # ensure ~/.cargo/bin is on PATH</pre>
+        <p>Optional language server + editor package:</p>
+        <pre class="pipe">cargo install --path crates/crisp-lsp --locked
+./scripts/package-vsix.sh   # then: Extensions → Install from VSIX…</pre>
         <p>Verify:</p>
         <pre class="pipe">crpc --version</pre>
 

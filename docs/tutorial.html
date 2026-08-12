@@ -215,11 +215,39 @@ pub main() = {
     p := Point { x: 1, y: 2 }
     log("p={p.show()}")
 }</pre>
-          <p>Run: <code>crpc run examples/show_trait</code> · also <code>examples/std_traits</code>.</p>
+          <p>Run: <code>crpc run examples/show_trait</code> · also <code>examples/std_traits</code>, <code>examples/trait_defaults</code>.</p>
+        </article>
+
+        <article class="tutorial-step" id="shapes">
+          <div class="step-label">Step 12</div>
+          <h2>Shapes</h2>
+          <p>Structural constraints: any matching struct satisfies a data <code>shape</code> without an explicit <code>impl</code>. Lowers to a generated Rust trait + accessors.</p>
+          <pre class="pipe">shape HasPosition = {
+    x: float
+    y: float
+}
+
+type Point = {
+    x: float
+    y: float
+}
+
+distance(a: HasPosition, b: HasPosition) -> float = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+
+pub main() = {
+    p := Point { x: 0.0, y: 0.0 }
+    q := Point { x: 3.0, y: 4.0 }
+    log("d={distance(p, q)}")
+}</pre>
+          <p>Run: <code>crpc run examples/shapes</code> · <code>crpc test examples/shapes</code>.</p>
         </article>
 
         <article class="tutorial-step" id="rust-import">
-          <div class="step-label">Step 12</div>
+          <div class="step-label">Step 13</div>
           <h2>Import a Rust crate</h2>
           <p>Declare the dependency with <code>rust = true</code> in <code>crisp.toml</code>, then import like TypeScript.</p>
           <pre class="pipe">-- crisp.toml
@@ -237,7 +265,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="async">
-          <div class="step-label">Step 13</div>
+          <div class="step-label">Step 14</div>
           <h2>Async</h2>
           <pre class="pipe">pub main() = async {
     sleep_ms(1)
@@ -247,7 +275,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="next">
-          <div class="step-label">Next</div>
+          <div class="step-label">Step 15</div>
           <h2>Where to go</h2>
           <ul>
             <li><a href="index.html">Home</a> — feature snippet gallery</li>
@@ -271,9 +299,10 @@ pub main() = {
           <li><a href="#enums"><span class="num">09</span> Enums</a></li>
           <li><a href="#methods"><span class="num">10</span> Methods</a></li>
           <li><a href="#traits"><span class="num">11</span> Traits</a></li>
-          <li><a href="#rust-import"><span class="num">12</span> Rust import</a></li>
-          <li><a href="#async"><span class="num">13</span> Async</a></li>
-          <li><a href="#next"><span class="num">14</span> Next</a></li>
+          <li><a href="#shapes"><span class="num">12</span> Shapes</a></li>
+          <li><a href="#rust-import"><span class="num">13</span> Rust import</a></li>
+          <li><a href="#async"><span class="num">14</span> Async</a></li>
+          <li><a href="#next"><span class="num">15</span> Next</a></li>
         </ol>
       </nav>
     </div>

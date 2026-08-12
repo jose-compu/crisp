@@ -28,19 +28,69 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>CLI</h1>
-      <p class="lede"><code>crpc</code> drives analyze → emit → Cargo. Pass a project directory (with <code>crisp.toml</code>).</p>
+      <p class="lede"><code>crpc</code> analyzes Crisp, emits Rust, and drives Cargo. Pass a project directory (with <code>crisp.toml</code>); <code>.</code> is the default.</p>
     </div>
   </section>
 
   <section class="band-light">
     <div class="wrap content">
-      <pre class="pipe">crpc check  &lt;path&gt;   # resolve + typecheck (fast)
-crpc emit   &lt;path&gt;   # write Rust under &lt;path&gt;/target/rust/
-crpc build  &lt;path&gt;   # emit + cargo build
-crpc run    &lt;path&gt;   # build + run
-crpc test   &lt;path&gt;   # run Crisp tests via emitted Rust</pre>
-      <p>Also: <code>reveal</code> for inferred signatures and ownership overlays (see the repo).</p>
-      <p><a href="install.html">Install crpc →</a></p>
+      <h2>Everyday commands</h2>
+      <pre class="pipe">crpc check  &lt;path&gt;
+crpc emit   &lt;path&gt;
+crpc build  &lt;path&gt;
+crpc run    &lt;path&gt;
+crpc test   &lt;path&gt;</pre>
+
+      <h3 id="check"><code>crpc check</code></h3>
+      <p>Fast analyze-only pass: resolve modules/imports, typecheck, ownership probe (and related frontend passes). Does <strong>not</strong> write a full Cargo project or run the binary. Use this while editing to catch errors quickly.</p>
+      <pre class="pipe">crpc check examples/hello
+crpc check .</pre>
+
+      <h3 id="emit"><code>crpc emit</code></h3>
+      <p>Runs the full frontend → CIR → Rust pipeline and writes a generated Cargo crate under <code>&lt;path&gt;/target/rust/</code> (<code>Cargo.toml</code>, <code>src/…</code>). Stops there — no <code>cargo build</code>. Useful when you want to inspect or hand-tweak the emitted Rust.</p>
+      <pre class="pipe">crpc emit examples/hello
+# → examples/hello/target/rust/</pre>
+
+      <h3 id="build"><code>crpc build</code></h3>
+      <p>Same as <code>emit</code>, then runs <code>cargo build</code> on the generated project. Produces a native binary via <code>rustc</code>. Prefer this when you need a built artifact without running it yet.</p>
+      <pre class="pipe">crpc build examples/hello</pre>
+
+      <h3 id="run"><code>crpc run</code></h3>
+      <p>Build (emit + <code>cargo build</code>) and execute the crate’s binary. Prints program stdout/stderr. Typical day-to-day command for examples and small apps.</p>
+      <pre class="pipe">crpc run examples/hello
+# → "hello world"</pre>
+
+      <h3 id="test"><code>crpc test</code></h3>
+      <p>Emits Rust, then runs Crisp <code>test "…"</code> / <code>test_compile_fail</code> items via <code>cargo test</code> on the generated crate. Runtime tests become <code>#[test]</code> functions; compile-fail tests assert that bad snippets stay rejected.</p>
+      <pre class="pipe">crpc test examples/shapes
+crpc test examples/with_tests</pre>
+
+      <h2>Debug / inspect (crpc)</h2>
+      <h3 id="resolve"><code>crpc resolve</code></h3>
+      <p>Prints the resolved module graph and name bindings for a crate. Compiler/debug aid when imports or modules look wrong.</p>
+      <pre class="pipe">crpc resolve examples/nested_math</pre>
+
+      <h3 id="parse"><code>crpc parse</code></h3>
+      <p>Parses a single <code>.crp</code> file and prints the AST. Takes a <strong>file</strong> path, not a project root.</p>
+      <pre class="pipe">crpc parse examples/hello/src/main.crp</pre>
+
+      <h2>Companion: <code>reveal</code></h2>
+      <p><code>crpc</code> answers “does it compile and run?” <code>reveal</code> answers “what did inference decide?” (types, ownership, errors, traits, emitted Rust). Same install as <code>crpc</code>.</p>
+      <pre class="pipe">reveal types examples/hello       # inferred signatures
+reveal ownership examples/hello   # &amp; / &amp;mut / owned
+reveal errors examples/fallible   # ambient error sets
+reveal traits examples/shapes     # user + shape traits
+reveal rust examples/hello        # generated Rust entry
+reveal --help</pre>
+      <p>Full walkthrough: <a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal">QUICKSTART §10</a>.</p>
+
+      <h2>Language server</h2>
+      <p><code>crisp-lsp</code> speaks LSP on stdin/stdout (hover, inlay hints, crate diagnostics). Editors spawn it; you rarely run it by hand.</p>
+      <pre class="pipe">cargo install --path crates/crisp-lsp --locked
+crisp-lsp</pre>
+      <p>VS Code / Cursor: <code>./scripts/package-vsix.sh</code> then <em>Extensions → Install from VSIX…</em> (<code>editors/vscode-crisp</code>). Settings: <code>crisp.lsp.path</code>, <code>crisp.lsp.enabled</code>.</p>
+
+      <p><a href="install.html">Install crpc →</a> · <a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md →</a></p>
     </div>
   </section>
 

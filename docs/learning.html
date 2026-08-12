@@ -79,7 +79,8 @@
           <li><code>examples/hello</code> — minimal program</li>
           <li><code>examples/math</code>, <code>examples/float_demo</code> — numbers and modules</li>
           <li><code>examples/fallible</code> — ambient errors with <code>!</code>, <code>throw</code>, <code>catch</code></li>
-          <li><code>examples/show_trait</code>, <code>examples/std_traits</code> — traits and Show/Eq/Ord</li>
+          <li><code>examples/show_trait</code>, <code>examples/trait_defaults</code>, <code>examples/std_traits</code> — traits, defaults, Show/Eq/Ord</li>
+          <li><code>examples/shapes</code> — data shapes → generated traits</li>
           <li><code>examples/rust_import</code>, <code>examples/net_http</code> — Rust crate interop</li>
           <li><code>examples/async_hello</code> — async / Tokio</li>
           <li><code>examples/ffi</code> — <code>extern "C"</code></li>
@@ -89,7 +90,7 @@
 
       <div id="limits" class="content" style="margin-top:2.5rem">
         <h2>Honest limits</h2>
-        <p>This is a Rust-hosted bootstrap (<strong>v1.5.0</strong> public release) — not self-hosted yet. Sharp edges today: shapes unsupported (<code>E0039</code>), no stdio LSP yet. Known Rust <code>Result</code> imports use Crisp <code>?</code>. See <a href="limitations.html">limitations</a>.</p>
+        <p>This is a Rust-hosted bootstrap (<strong>v1.5.0</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes and <code>dyn Trait</code> still limited; crates.io deferred. Data shapes, stdio <code>crisp-lsp</code>, and trait defaults are in. See <a href="limitations.html">limitations</a>.</p>
       </div>
     </div>
   </section>

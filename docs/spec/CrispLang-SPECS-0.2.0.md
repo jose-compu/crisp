@@ -96,7 +96,7 @@ All Crisp source files are UTF-8 encoded.
 
 ### 2.2 Comments
 
-```
+```rust
 -- single-line comment
 
 {- block comment -}
@@ -109,7 +109,7 @@ All Crisp source files are UTF-8 encoded.
 Letters, digits, underscores; must begin with a letter or underscore. A leading `_`
 suppresses unused-variable warnings.
 
-```
+```rust
 valid_name
 _private
 Point3D
@@ -121,7 +121,7 @@ mapping; the programmer never sees it.
 
 ### 2.4 Keywords
 
-```
+```rust
 if then else match with for in while do loop
 return break continue
 type trait shape impl
@@ -139,7 +139,7 @@ complicated IR lowering.)
 
 ### 2.5 Operators
 
-```
+```rust
 Arithmetic:    +  -  *  /  %  **
 Comparison:    == != < > <= >=
 Logical:       && || !
@@ -162,7 +162,7 @@ spelling removes a class of parser hacks. `**` is exponentiation and lowers to
 
 ### 2.6 Delimiters
 
-```
+```rust
 { }    -- blocks, struct literals, trait/shape bodies
 ( )    -- grouping, tuples, arguments
 [ ]    -- array/slice literals, indexing
@@ -171,7 +171,7 @@ spelling removes a class of parser hacks. `**` is exponentiation and lowers to
 
 ### 2.7 Literals
 
-```
+```rust
 42      1_000_000      0xFF      0b1010      0o77
 3.14    1.0e-10        1_000.5
 "hello"                "interp: {name} is {age}"
@@ -213,7 +213,7 @@ integers use `isize`/`usize` (now exposed directly).
 
 ### 3.2 Compound Types
 
-```
+```rust
 pair:  (int, str)        = (42, "hello")     -- tuple        -> (i64, String)
 arr:   [int; 5]          = [1,2,3,4,5]        -- array        -> [i64; 5]
 slice: [int]             = arr[1..4]          -- slice view   -> &[i64]
@@ -232,7 +232,7 @@ written by users for the *common* fallible path — that is the ambient error sy
 
 #### 3.3.1 Structs
 
-```
+```rust
 type Point = { x: float, y: float }
 p := Point { x: 1.0, y: 2.0 }
 
@@ -251,7 +251,7 @@ it. (v0.1.0 left this mechanism unspecified.)
 
 #### 3.3.2 Enums
 
-```
+```rust
 type Color = | Red | Green | Blue | Custom(u8, u8, u8)
 
 type List<T> = | Nil | Cons(T, List<T>)
@@ -267,7 +267,7 @@ point (`Cons(T, Box<List<T>>)`), since Rust requires indirection for recursive e
 
 #### 3.3.3 Type Aliases
 
-```
+```rust
 type Name     = str
 type Callback = (int) -> bool
 type Matrix   = vec<vec<float>>
@@ -281,7 +281,7 @@ Crisp uses **HM-style inference with constraint solving** for types, run *before
 ownership pass (§0.6). Inference covers local bindings, parameter types, return types,
 generic parameters, and trait bounds.
 
-```
+```rust
 add(x, y) = x + y
 -- reveal types:  add<T: Add<Output = T>>(x: T, y: T) -> T
 ```
@@ -305,7 +305,7 @@ choice is observable in the generated Rust.
 
 Shapes are structural constraints satisfied automatically by any matching type.
 
-```
+```rust
 shape HasPosition = { x: float, y: float }
 
 distance(a: HasPosition, b: HasPosition) -> float = {
@@ -331,7 +331,7 @@ generated shape impls.
 
 Method-requiring shapes:
 
-```
+```rust
 shape Measurable = { len(self) -> uint }
 ```
 
@@ -342,7 +342,7 @@ trait.
 
 Traits are explicit semantic contracts and map directly to Rust traits.
 
-```
+```rust
 trait Show = { show(self) -> str }
 
 trait Comparable = {
@@ -357,14 +357,14 @@ default trait method bodies.
 
 #### 3.6.1 Implementation
 
-```
+```rust
 type Point = { x: float, y: float }
 impl Show for Point = { show(self) = "({self.x}, {self.y})" }
 ```
 
 Body-less shorthand opt-in (type already has the methods as free functions):
 
-```
+```rust
 serialize(self: Point) -> bytes = encode_json(self)
 deserialize(b: bytes) -> Point  = decode_json(b)
 impl Serializable for Point      -- compiler verifies signatures, emits the impl
@@ -393,7 +393,7 @@ impl Serializable for Point      -- compiler verifies signatures, emits the impl
 
 ### 3.7 Combined Constraints
 
-```
+```rust
 save_named(item: { name: str } + Serializable) = {
     log("saving {item.name}")
     fs.write("{item.name}.bin", item.serialize())
@@ -407,7 +407,7 @@ Lowers to a generic bound combining the generated shape trait and the nominal tr
 
 Inferred from usage; explicit `<>` when needed.
 
-```
+```rust
 identity(x) = x
 -- reveal: identity<T>(x: T) -> T
 
@@ -422,7 +422,7 @@ convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 
 ### 4.1 Immutable Bindings
 
-```
+```rust
 x := 42
 name := "crisp"
 ```
@@ -431,7 +431,7 @@ Lowers to `let x = 42;`. Immutable by default (Rust's default).
 
 ### 4.2 Mutable Bindings
 
-```
+```rust
 counter mut:= 0
 counter = counter + 1
 list mut:= vec![1,2,3]
@@ -443,7 +443,7 @@ would also be a `rustc` error — Crisp reports it first for a better message.
 
 ### 4.3 Destructuring
 
-```
+```rust
 (a, b)            := (1, 2)
 { x, y }          := Point { x: 1.0, y: 2.0 }
 { name, ..rest }  := config
@@ -455,7 +455,7 @@ to Rust slice patterns where the binding is owned/borrowed per the ownership pas
 
 ### 4.4 Constants
 
-```
+```rust
 MAX_SIZE = 1024
 PI       = 3.14159265358979
 APP_NAME = "crisp-app"
@@ -470,7 +470,7 @@ static. The transpiler chooses; `reveal expand` shows which.
 
 ### 5.1 Definition
 
-```
+```rust
 add(x, y) = x + y
 
 sort(list, cmp) = {
@@ -486,7 +486,7 @@ is available for early exit and lowers to Rust `return`.
 
 ### 5.2 Visibility
 
-```
+```rust
 pub add(x, y) = x + y     -- pub fn
 helper(x)     = x * 2     -- private fn
 ```
@@ -497,7 +497,7 @@ inference at every downstream build.
 
 ### 5.3 Closures / Lambdas
 
-```
+```rust
 f := |x| x + 1
 transform := |data| { cleaned := data.trim(); parse(cleaned) }
 list.map(|x| x * 2)
@@ -510,7 +510,7 @@ shows capture modes.
 
 ### 5.4 Methods
 
-```
+```rust
 type Vec2 = { x: float, y: float }
 
 impl Vec2 = {
@@ -529,7 +529,7 @@ with the receiver mode chosen by §7.
 
 ### 5.5 Pipe Operator
 
-```
+```rust
 result := data |> parse |> validate |> transform |> serialize
 ```
 
@@ -543,7 +543,7 @@ pipe exactly as the desugared call chain.
 
 ### 6.1 If Expressions
 
-```
+```rust
 max := if a > b then a else b
 result := if cond { compute_a() } else { compute_b() }
 ```
@@ -554,7 +554,7 @@ have an `else` (Rust requires both arms), enforced at the Crisp level.
 
 ### 6.2 Match Expressions
 
-```
+```rust
 describe(color) = match color {
     Color.Red             -> "red"
     Color.Custom(r, g, b) -> "rgb({r}, {g}, {b})"
@@ -567,7 +567,7 @@ Lowers to Rust `match`. Exhaustiveness is checked by Crisp for early errors and 
 
 ### 6.3 Loops
 
-```
+```rust
 for item in collection { process(item) }
 for (i, item) in collection.enumerate() { log("{i}: {item}") }
 while cond { step() }
@@ -582,7 +582,7 @@ value-producing `loop`. The ownership pass decides whether `for` iterates by val
 
 ### 6.4 Early Return
 
-```
+```rust
 find(list, pred) = {
     for item in list { if pred(item) then return some(item) }
     none
@@ -643,7 +643,7 @@ priority list — this is what removes the Rule 2/4 contradiction:
   afterward, the transpiler inserts `.clone()` **only if** the value is used again after
   the move; otherwise the move stands.
 
-```
+```rust
 greet(name) = "hello " ++ name
 -- only read -> greet(name: &str) -> String
 
@@ -672,7 +672,7 @@ but a *reported* clone of a `Clone` type is permitted because it is observable i
 
 ### 7.5 Explicit Annotations
 
-```
+```rust
 read_only(data: &Vec<int>)      = data.len()
 modify(data: &mut Vec<int>)     = data.push(0)
 consume(data: own Vec<int>)     = drop(data)
@@ -696,7 +696,7 @@ The user is never shown a raw `rustc` borrow error against generated code (§17.
 
 ### 7.7 Copy Semantics
 
-```
+```rust
 type Point = { x: float, y: float } : Copy
 a := Point { x: 1.0, y: 2.0 }
 b := a        -- copy; both valid
@@ -724,7 +724,7 @@ Crisp emits lifetimes only where Rust cannot elide them. The pass:
 
 ### 8.2 Inferred, Common Case
 
-```
+```rust
 first(data) = data[0]
 -- emitted: fn first<T>(data: &[T]) -> &T   (elided lifetime, rustc infers)
 ```
@@ -733,7 +733,7 @@ first(data) = data[0]
 
 The v0.1.0 tick syntax is retained but its meaning is pinned to Rust lifetimes:
 
-```
+```rust
 longest('a: x, 'a: y) = if x.len() > y.len() then x else y
 -- emitted: fn longest<'a>(x: &'a str, y: &'a str) -> &'a str
 ```
@@ -743,7 +743,7 @@ Rust lifetime parameter.
 
 ### 8.4 Structs Holding References
 
-```
+```rust
 type Slice = { data: &[int] }
 -- emitted: struct Slice<'a> { data: &'a [i64] }
 ```
@@ -760,7 +760,7 @@ is exactly Rust's.*
 
 ### 8.6 Explicit Reference Counting
 
-```
+```rust
 node       := rc(TreeNode { value: 1, children: [] })   -- Rc<TreeNode>
 shared_ref := node.clone()                                -- Rc::clone
 counter    := arc(Mutex.new(0))                           -- Arc<Mutex<i64>>
@@ -780,7 +780,7 @@ key v0.2.0 decision (§0.3): **all fallible functions lower to
 by the transpiler, with one variant per distinct error type produced anywhere in the
 program.
 
-```
+```rust
 read_config(path) = {
     text   := fs.read(path)     -- IoError
     config := parse(text)       -- ParseError
@@ -824,7 +824,7 @@ errors over a global enum; the enum is the default because it allows exhaustive 
 
 ### 9.3 Handling with `catch`
 
-```
+```rust
 main() = {
     cfg := read_config("app.toml") catch err -> {
         log("config error: {err}")
@@ -847,7 +847,7 @@ The recovery block must produce the success type (checked at Crisp level and by 
 
 ### 9.4 Selective Catching
 
-```
+```rust
 cfg := read_config("app.toml")
     catch IoError    -> Config {}
     catch ParseError(e) -> panic("bad config: {e}")
@@ -860,7 +860,7 @@ function's inferred error set and warn on unreachable or missing arms — a capa
 
 ### 9.5 Explicit Error Declaration
 
-```
+```rust
 read_config(path) -> Config ! IoError | ParseError = { ... }
 ```
 
@@ -871,7 +871,7 @@ debug-assert that no other variant escapes (the assert is compiled out in releas
 
 ### 9.6 `throw`
 
-```
+```rust
 validate(config) = {
     if config.port == 0 then throw ValidationError("port cannot be 0")
     config
@@ -886,7 +886,7 @@ lowers to the `Thrown(String)` variant.
 For interop with Rust APIs that return `Result<T, E>` directly, the postfix `?` operator
 is available and lowers to Rust `?`:
 
-```
+```rust
 parse_num(s) = s.trim().parse::<int>()?      -- explicit try on a Rust Result
 ```
 
@@ -895,7 +895,7 @@ into hand-written Rust (§14).
 
 ### 9.8 Non-Fallible Assertion
 
-```
+```rust
 add(x, y) -> int !never = x + y
 ```
 
@@ -906,7 +906,7 @@ wrapper), which is what keeps hot paths free of error plumbing.
 
 ### 9.9 Panic
 
-```
+```rust
 critical_init() = {
     db := connect_db() catch _ -> panic("cannot start without database")
     db
@@ -923,7 +923,7 @@ identical to Rust semantics.
 Unchanged in semantics from v0.1.0; all forms lower to Rust patterns and are
 exhaustiveness-checked twice (Crisp then `rustc`).
 
-```
+```rust
 eval(expr) = match expr {
     Expr.Literal(n) -> n
     Expr.Add(a, b)  -> eval(a) + eval(b)
@@ -934,7 +934,7 @@ eval(expr) = match expr {
 Supported pattern forms (literal, tuple, struct, nested, or-patterns, guards, `@`
 bindings, slice patterns) map one-to-one onto Rust. `if-let` lowers to Rust `if let`:
 
-```
+```rust
 if some(value) := maybe { process(value) }
 ```
 
@@ -948,7 +948,7 @@ if some(value) := maybe { process(value) }
 
 ### 11.1 Async / Await
 
-```
+```rust
 fetch_data(url) = async {
     response := http.get(url).await
     body     := response.text().await
@@ -962,7 +962,7 @@ matching attributes (`#[tokio::main]` on an async `main`).
 
 ### 11.2 Spawn
 
-```
+```rust
 main() = async {
     t1 := spawn fetch_data("https://a.com")
     t2 := spawn fetch_data("https://b.com")
@@ -982,7 +982,7 @@ error mirroring Rust's `Send` requirement.
   it.
 - Data races are rejected by `rustc` via `Send`/`Sync`; Crisp pre-checks for diagnostics.
 
-```
+```rust
 counter := arc(Mutex.new(0))
 tasks := (0..10).map(|_| {
     c := counter.clone()
@@ -993,7 +993,7 @@ await_all(tasks)
 
 ### 11.4 Channels
 
-```
+```rust
 (tx, rx) := channel<int>()
 spawn async { for i in 0..10 { tx.send(i).await }; tx.close() }
 for value in rx { log("received: {value}") }
@@ -1010,7 +1010,7 @@ Lowers to the runtime's channel type.
 File structure maps to Rust modules. No `mod` declarations in source; the transpiler
 generates the `mod` tree (and `mod.rs`/inline `mod` items) from the directory layout.
 
-```
+```rust
 project/
   main.crp
   math/ vector.crp  matrix.crp
@@ -1021,7 +1021,7 @@ project/
 
 Private by default; `pub` exports. (The v0.1.0 duplicate `type Vec3` example is removed.)
 
-```
+```rust
 -- math/vector.crp
 pub type Vec3 = { x: float, y: float, z: float }
 pub add(a: Vec3, b: Vec3) = Vec3 { x: a.x+b.x, y: a.y+b.y, z: a.z+b.z }
@@ -1033,7 +1033,7 @@ sealed crate but not re-exported.
 
 ### 12.3 Imports
 
-```
+```rust
 use math.vector { Vec3, add }
 use math.matrix { Mat4, multiply as mat_mul }
 use std.collections { HashMap, HashSet }
@@ -1044,7 +1044,7 @@ linted).
 
 ### 12.4 Re-exports
 
-```
+```rust
 pub use math.vector { Vec3, add }
 ```
 
@@ -1085,7 +1085,7 @@ inherited verbatim (§8.5). Crisp adds nothing here.
 
 ### 13.3 Custom Destructors
 
-```
+```rust
 type Connection = { handle: RawHandle, name: str }
 impl Drop for Connection = {
     drop(self) = { log("closing {self.name}"); raw_close(self.handle) }
@@ -1096,14 +1096,14 @@ Lowers to `impl Drop`.
 
 ### 13.4 Move Semantics
 
-```
+```rust
 a := make_large_struct()
 b := a              -- moved; using `a` after is a Crisp error (and a rustc error)
 ```
 
 ### 13.5 Clone
 
-```
+```rust
 a := vec![1,2,3]
 b := a.clone()       -- explicit deep copy
 ```
@@ -1133,7 +1133,7 @@ practice.
 
 ### 14.1 Calling C
 
-```
+```rust
 extern "C" {
     malloc(size: uint) -> &mut u8
     free(ptr: &mut u8)
@@ -1143,7 +1143,7 @@ extern "C" {
 
 Lowers to a Rust `extern "C"` block. Calls require `unsafe`:
 
-```
+```rust
 allocate(n) = unsafe {
     ptr := malloc(n)
     if ptr.is_null() then panic("allocation failed")
@@ -1156,7 +1156,7 @@ allocate(n) = unsafe {
 Because Crisp emits Rust, calling existing Rust is **not FFI** — it is direct module use.
 A hand-written Rust crate is added as a dependency and imported:
 
-```
+```rust
 use rust::serde_json { from_str, to_string }    -- a real Rust crate
 data := from_str(text)?                           -- explicit ? on Rust's Result
 ```
@@ -1169,7 +1169,7 @@ The v0.1.0 `extern "rust"` block is **removed** as redundant.
 
 ### 14.3 Exporting from Crisp
 
-```
+```rust
 pub extern "C" crisp_add(a: i32, b: i32) -> i32 = a + b
 ```
 
@@ -1190,7 +1190,7 @@ The prelude maps onto Rust's `std` plus a thin Crisp shim.
 
 ### 15.1 Core Types
 
-```
+```rust
 std.option   -- ?T              -> Option<T>
 std.result   -- Result<T, E>    -> Result<T, E>   (interop/explicit only; §9.7, §14)
 std.string   -- str/&str        -> String / &str
@@ -1204,7 +1204,7 @@ std.set      -- set<T>          -> HashSet / BTreeSet
 
 ### 15.2 IO / Net
 
-```
+```rust
 std.io   std.fs   std.net   std.http
 ```
 
@@ -1213,7 +1213,7 @@ named in the manifest).
 
 ### 15.3 Concurrency
 
-```
+```rust
 std.async  -> runtime (tokio default)
 std.sync   -> Mutex, RwLock, Arc, channels
 std.atomic -> atomics
@@ -1221,7 +1221,7 @@ std.atomic -> atomics
 
 ### 15.4 Traits
 
-```
+```rust
 Show Eq Ord Hash Clone Copy Drop Default Into From Iterator
 Add Sub Mul Div   -- operator overloading -> std::ops
 ```
@@ -1256,7 +1256,7 @@ because drop is Rust's, it now annotates against the emitted Rust spans.
 
 Source:
 
-```
+```rust
 read_config(path) = {
     text   := fs.read(path)
     config := parse(text)
@@ -1268,7 +1268,7 @@ greet(name) = "hello " ++ name
 
 `reveal types`:
 
-```
+```rust
 read_config(path: &str) -> Config ! IoError | ParseError | ValidationError
 greet(name: &str) -> String
 ```
@@ -1296,7 +1296,7 @@ the reachable-error-set on each call, and a "show emitted Rust" code lens.
 
 ### 17.1 Pipeline (revised: targets Rust via CIR)
 
-```
+```rust
 Source (.crp)
    |  Lexer            tokenization
    v
@@ -1352,7 +1352,7 @@ When `rustc` rejects emitted Rust:
 
 ### 17.4 Example Crisp-Level Error
 
-```
+```rust
 ERROR [E0042]: ownership contradicts annotation in `transfer`
   --> lib.crp:15:5
    |
@@ -1369,7 +1369,7 @@ ERROR [E0042]: ownership contradicts annotation in `transfer`
 
 ### 18.1 Structure
 
-```
+```rust
 my_project/
     crisp.toml        -- manifest
     crisp.lock        -- resolved deps + sealed signatures (§12.5)
@@ -1399,7 +1399,7 @@ serde_json = { rust = true, version = "1" }
 
 ### 18.3 Commands
 
-```
+```rust
 crpc build      -- analyze -> emit Rust -> invoke rustc
 crpc run        -- build + run
 crpc test       -- run tests
@@ -1416,7 +1416,7 @@ project under `target/rust/`, so the generated output is itself buildable and au
 
 ## 19. Testing
 
-```
+```rust
 test "addition works" = { assert_eq(add(2, 3), 5) }
 
 test "vector magnitude" = {
@@ -1435,7 +1435,7 @@ expectations (the v0.1.0 "ownership transfer" example, which asserted a *non*-co
 program) move to a dedicated form, since a `#[test]` cannot contain code that fails to
 compile:
 
-```
+```rust
 test_compile_fail "use after move" = {
     data := vec![1,2,3]
     consume(data)
@@ -1450,7 +1450,7 @@ compile-time and run-time tests in one `test` form; this separates them.)
 
 ## 20. Complete Example
 
-```
+```rust
 -- src/main.crp
 use std.fs
 use std.http { Server, Request, Response }

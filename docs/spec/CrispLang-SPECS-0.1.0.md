@@ -43,7 +43,7 @@ All Crisp source files are UTF-8 encoded.
 
 ### 2.2 Comments
 
-```
+```rust
 -- This is a single-line comment
 
 {- This is a
@@ -56,7 +56,7 @@ All Crisp source files are UTF-8 encoded.
 
 Identifiers consist of letters, digits, and underscores. They must begin with a letter or underscore.
 
-```
+```rust
 valid_name
 _private
 Point3D
@@ -66,7 +66,7 @@ Identifiers beginning with `_` suppress unused-variable warnings.
 
 ### 2.4 Keywords
 
-```
+```rust
 if then else match with for in while do
 return break continue
 type trait shape impl
@@ -80,7 +80,7 @@ pub
 
 ### 2.5 Operators
 
-```
+```rust
 Arithmetic:    +  -  *  /  %  **
 Comparison:    == != < > <= >=
 Logical:       && || !
@@ -96,7 +96,7 @@ Access:        .
 
 ### 2.6 Delimiters
 
-```
+```rust
 { }    -- blocks, struct literals, trait bodies
 ( )    -- grouping, tuples, function arguments
 [ ]    -- array/slice literals, indexing
@@ -105,7 +105,7 @@ Access:        .
 
 ### 2.7 Literals
 
-```
+```rust
 -- Integers
 42
 1_000_000
@@ -162,7 +162,7 @@ false
 
 ### 3.2 Compound Types
 
-```
+```rust
 -- Tuples
 pair: (int, str) = (42, "hello")
 
@@ -190,7 +190,7 @@ f: (int, int) -> int
 
 #### 3.3.1 Structs
 
-```
+```rust
 type Point = { x: float, y: float }
 
 -- Construction
@@ -208,7 +208,7 @@ cfg := Config { debug: true }   -- host and port use defaults
 
 #### 3.3.2 Enums
 
-```
+```rust
 type Color =
     | Red
     | Green
@@ -226,7 +226,7 @@ type List<T> =
 
 #### 3.3.3 Type Aliases
 
-```
+```rust
 type Name = str
 type Callback = (int) -> bool
 type Matrix = vec<vec<float>>
@@ -242,7 +242,7 @@ Crisp performs full Hindley-Milner type inference extended with ownership and re
 - Generic type parameters (from usage)
 - Trait bounds (from operations used in body)
 
-```
+```rust
 -- All types inferred
 add(x, y) = x + y
 
@@ -252,7 +252,7 @@ add(x, y) = x + y
 
 Explicit annotations are accepted anywhere and act as constraints:
 
-```
+```rust
 -- Partially annotated
 add(x: int, y) = x + y
 
@@ -266,7 +266,7 @@ The compiler requests explicit annotation only when inference is genuinely ambig
 
 Shapes define structural constraints that are automatically satisfied by any type with matching structure. They are used for ad-hoc polymorphism in function arguments.
 
-```
+```rust
 shape HasPosition = { x: float, y: float }
 shape HasName = { name: str }
 
@@ -280,7 +280,7 @@ distance(a: HasPosition, b: HasPosition) -> float = {
 
 Shapes can also require methods:
 
-```
+```rust
 shape Measurable = {
     len(self) -> uint
 }
@@ -290,7 +290,7 @@ Shapes are purely structural. No opt-in or declaration is needed. If the structu
 
 Anonymous structural types are also valid:
 
-```
+```rust
 distance(a: { x: float, y: float }, b: { x: float, y: float }) = ...
 ```
 
@@ -298,7 +298,7 @@ distance(a: { x: float, y: float }, b: { x: float, y: float }) = ...
 
 Traits define semantic contracts. A type must explicitly declare that it implements a trait, because structural match alone does not guarantee semantic correctness.
 
-```
+```rust
 trait Serializable = {
     serialize(self) -> bytes
     deserialize(bytes) -> self
@@ -321,7 +321,7 @@ trait Comparable = {
 
 Full implementation:
 
-```
+```rust
 type Point = { x: float, y: float }
 
 impl Show for Point = {
@@ -331,7 +331,7 @@ impl Show for Point = {
 
 Shorthand implementation — when the type already has all required methods defined as free functions, a body-less `impl` opts the type in:
 
-```
+```rust
 -- Free functions already exist
 serialize(self: Point) -> bytes = encode_json(self)
 deserialize(b: bytes) -> Point = decode_json(b)
@@ -362,7 +362,7 @@ If the methods don't match, the compiler reports exactly what's missing or misma
 
 Structural and nominal constraints can be composed with `+`:
 
-```
+```rust
 save_named(item: { name: str } + Serializable) = {
     log("saving {item.name}")
     fs.write("{item.name}.bin", item.serialize())
@@ -373,7 +373,7 @@ save_named(item: { name: str } + Serializable) = {
 
 Generic type parameters are inferred from usage. Explicit parameters use `<>` syntax when needed:
 
-```
+```rust
 -- Inferred generics
 identity(x) = x
 -- reveal: identity<T>(x: T) -> T
@@ -391,7 +391,7 @@ convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 
 ### 4.1 Immutable Bindings
 
-```
+```rust
 x := 42
 name := "crisp"
 point := Point { x: 1.0, y: 2.0 }
@@ -401,7 +401,7 @@ Immutable bindings cannot be reassigned. The bound value cannot be mutated.
 
 ### 4.2 Mutable Bindings
 
-```
+```rust
 counter mut:= 0
 counter = counter + 1
 
@@ -413,7 +413,7 @@ list.push(4)
 
 ### 4.3 Destructuring
 
-```
+```rust
 (a, b) := (1, 2)
 { x, y } := Point { x: 1.0, y: 2.0 }
 { name, ..rest } := config
@@ -425,7 +425,7 @@ list.push(4)
 
 Top-level constants use `=` and must have a value known at compile time:
 
-```
+```rust
 MAX_SIZE = 1024
 PI = 3.14159265358979
 APP_NAME = "crisp-app"
@@ -439,7 +439,7 @@ APP_NAME = "crisp-app"
 
 Functions are defined with `name(params) = body`:
 
-```
+```rust
 -- Single expression
 add(x, y) = x + y
 
@@ -458,14 +458,14 @@ The last expression in a block is the return value. No `return` keyword needed f
 
 Functions are private by default. Prefix with `pub` to export:
 
-```
+```rust
 pub add(x, y) = x + y        -- public
 helper(x) = x * 2             -- private to module
 ```
 
 ### 5.3 Closures / Lambdas
 
-```
+```rust
 -- Closure syntax
 f := |x| x + 1
 g := |x, y| x * y
@@ -487,7 +487,7 @@ list.fold(0, |acc, x| acc + x)
 
 Methods are functions defined within a type's namespace using `impl` blocks:
 
-```
+```rust
 type Vec2 = { x: float, y: float }
 
 impl Vec2 = {
@@ -511,7 +511,7 @@ m := v.magnitude()       -- 5.0
 
 The pipe operator passes the left-hand value as the first argument to the right-hand function:
 
-```
+```rust
 result := data
     |> parse
     |> validate
@@ -530,7 +530,7 @@ result := serialize(transform(validate(parse(data))))
 
 `if` is an expression and always returns a value:
 
-```
+```rust
 max := if a > b then a else b
 
 message := if status == 200 then "ok"
@@ -540,7 +540,7 @@ message := if status == 200 then "ok"
 
 Block form:
 
-```
+```rust
 result := if condition {
     compute_a()
     finalize_a()
@@ -554,7 +554,7 @@ result := if condition {
 
 Pattern matching with exhaustiveness checking:
 
-```
+```rust
 describe(color) = match color {
     Color.Red -> "red"
     Color.Green -> "green"
@@ -565,7 +565,7 @@ describe(color) = match color {
 
 Guards:
 
-```
+```rust
 classify(n) = match n {
     0 -> "zero"
     x if x > 0 -> "positive"
@@ -575,7 +575,7 @@ classify(n) = match n {
 
 Destructuring in match:
 
-```
+```rust
 process(msg) = match msg {
     { kind: "text", body } -> handle_text(body)
     { kind: "image", url, .. } -> handle_image(url)
@@ -585,7 +585,7 @@ process(msg) = match msg {
 
 ### 6.3 Loops
 
-```
+```rust
 -- For loop (iterates over anything iterable)
 for item in collection {
     process(item)
@@ -616,7 +616,7 @@ found := loop {
 
 ### 6.4 Early Return
 
-```
+```rust
 find(list, pred) = {
     for item in list {
         if pred(item) then return some(item)
@@ -648,7 +648,7 @@ Primitives (`int`, `float`, `bool`, `char`) and small value types are implicitly
 
 **Rule 2: If a value is only read, it is auto-borrowed.**
 
-```
+```rust
 greet(name) = "hello " ++ name
 -- Inferred: greet(name: &str) -> str
 -- `name` is only read, so it's borrowed.
@@ -656,7 +656,7 @@ greet(name) = "hello " ++ name
 
 **Rule 3: If a value is mutated, it is auto-mut-borrowed.**
 
-```
+```rust
 push_value(data, v) = data.push(v)
 -- Inferred: push_value(data: &mut Vec<T>, v: T)
 -- `data` is mutated, so it's mutably borrowed.
@@ -664,7 +664,7 @@ push_value(data, v) = data.push(v)
 
 **Rule 4: If a value is consumed (moved into another structure, returned by value, or passed to a consuming function), it is auto-moved.**
 
-```
+```rust
 into_boxed(value) = Box.new(value)
 -- Inferred: into_boxed(value: own T) -> Box<T>
 -- `value` is consumed by Box.new, so it's moved.
@@ -672,7 +672,7 @@ into_boxed(value) = Box.new(value)
 
 **Rule 5: If the compiler cannot determine a unique ownership strategy, it reports an error and requests annotation.**
 
-```
+```rust
 -- ERROR: `x` could be borrowed or moved here. Annotate with `&x` or `own x`.
 ambiguous(x) = {
     store(x)     -- consumes x?
@@ -684,7 +684,7 @@ ambiguous(x) = {
 
 When needed, ownership can be stated explicitly:
 
-```
+```rust
 -- Explicit borrow
 read_only(data: &Vec<int>) = data.len()
 
@@ -699,7 +699,7 @@ consume(data: own Vec<int>) = drop(data)
 
 Types can be marked as `Copy` to always be copied rather than moved:
 
-```
+```rust
 type Point = { x: float, y: float } : Copy
 
 -- Now Point is always copied on assignment
@@ -729,7 +729,7 @@ Lifetimes in Crisp are inferred through region analysis. The compiler assigns ea
 
 Every value is tied to its lexical scope. When the scope ends, the value is dropped and memory is freed. This is deterministic — every allocation has exactly one deallocation point known at compile time.
 
-```
+```rust
 process() = {
     data := make_vec()      -- allocated here
     transform(data)
@@ -741,7 +741,7 @@ process() = {
 
 For values that move between scopes, the compiler tracks the unique owner through the call graph:
 
-```
+```rust
 build() = {
     data := make_vec()
     result := transform(data)   -- ownership moves to result
@@ -754,7 +754,7 @@ build() = {
 
 For references, the compiler builds a borrow graph and checks that all regions are properly nested:
 
-```
+```rust
 first(data) = {
     ref := data[0]      -- ref borrows from data
     ref                  -- compiler ensures data outlives ref
@@ -765,7 +765,7 @@ first(data) = {
 
 In the rare case where the compiler cannot resolve lifetimes (typically when multiple input references compete for the output lifetime), explicit annotation is required using tick syntax:
 
-```
+```rust
 -- Compiler cannot determine which input the return borrows from
 -- ERROR: ambiguous lifetime. Annotate with tick syntax.
 
@@ -783,7 +783,7 @@ If a Crisp program compiles, every heap allocation has a statically known deallo
 
 For data structures that genuinely require shared ownership (graphs, observer patterns, complex self-referential structures), explicit reference counting is available:
 
-```
+```rust
 node := rc(TreeNode { value: 1, children: [] })
 shared_ref := node.clone()   -- increments reference count
 ```
@@ -792,7 +792,7 @@ shared_ref := node.clone()   -- increments reference count
 
 For concurrent shared ownership:
 
-```
+```rust
 counter := arc(Mutex.new(0))
 ```
 
@@ -804,7 +804,7 @@ counter := arc(Mutex.new(0))
 
 Functions do not declare their error types. The compiler infers fallibility from the function body. If a function calls any operation that can fail, the function itself becomes fallible, and errors propagate automatically to the caller.
 
-```
+```rust
 read_config(path) = {
     text := fs.read(path)        -- can fail (IoError)
     config := parse(text)        -- can fail (ParseError)
@@ -822,7 +822,7 @@ The `!` in the revealed signature means "can fail with." Error types are automat
 
 Callers can handle errors explicitly using `catch`:
 
-```
+```rust
 main() = {
     cfg := read_config("app.toml") catch err -> {
         log("config error: {err}")
@@ -838,7 +838,7 @@ main() = {
 
 Catch specific error types:
 
-```
+```rust
 cfg := read_config("app.toml")
     catch IoError -> Config.default()
     catch ParseError(e) -> panic("bad config: {e}")
@@ -848,7 +848,7 @@ cfg := read_config("app.toml")
 
 You can explicitly constrain which errors a function may produce:
 
-```
+```rust
 read_config(path) -> Config ! IoError | ParseError = {
     ...
     -- If the body can produce an error not in the declared set,
@@ -860,7 +860,7 @@ read_config(path) -> Config ! IoError | ParseError = {
 
 Create errors explicitly:
 
-```
+```rust
 validate(config) = {
     if config.port == 0 then throw ValidationError("port cannot be 0")
     if config.host.is_empty() then throw ValidationError("host required")
@@ -872,7 +872,7 @@ validate(config) = {
 
 A function that makes no fallible calls is inferred as non-fallible. You can assert this explicitly:
 
-```
+```rust
 -- The `!never` annotation asserts this function cannot fail.
 -- If the body contains a fallible call, the compiler errors.
 add(x, y) -> int !never = x + y
@@ -882,7 +882,7 @@ add(x, y) -> int !never = x + y
 
 For unrecoverable errors, `panic` terminates the program:
 
-```
+```rust
 critical_init() = {
     db := connect_db() catch _ -> panic("cannot start without database")
     db
@@ -897,7 +897,7 @@ Panics are not catchable. They are not part of the error type system.
 
 ### 10.1 Match Expressions
 
-```
+```rust
 eval(expr) = match expr {
     Expr.Literal(n) -> n
     Expr.Add(a, b) -> eval(a) + eval(b)
@@ -912,7 +912,7 @@ The compiler verifies that match expressions are exhaustive. Missing cases produ
 
 ### 10.3 Pattern Types
 
-```
+```rust
 -- Literal patterns
 match x {
     0 -> "zero"
@@ -964,7 +964,7 @@ match list {
 
 ### 10.4 If-Let
 
-```
+```rust
 if some(value) := maybe_result {
     process(value)
 }
@@ -982,7 +982,7 @@ if Ok(data) := fetch() {
 
 ### 11.1 Async / Await
 
-```
+```rust
 fetch_data(url) = async {
     response := http.get(url).await
     body := response.text().await
@@ -999,7 +999,7 @@ main() = async {
 
 Launch concurrent tasks:
 
-```
+```rust
 main() = async {
     task1 := spawn fetch_data("https://a.com")
     task2 := spawn fetch_data("https://b.com")
@@ -1017,7 +1017,7 @@ The ownership inference extends to concurrent contexts:
 - Shared access across tasks requires explicit `shared()` or `arc()`.
 - The compiler rejects data races at compile time.
 
-```
+```rust
 -- Moved into task (inferred)
 data := make_data()
 spawn async {
@@ -1037,7 +1037,7 @@ await_all(tasks)
 
 ### 11.4 Channels
 
-```
+```rust
 (tx, rx) := channel<int>()
 
 spawn async {
@@ -1060,7 +1060,7 @@ for value in rx {
 
 Module structure mirrors file structure. No `mod` declarations needed:
 
-```
+```rust
 project/
   main.crp
   math/
@@ -1076,7 +1076,7 @@ Each file is a module. The directory is a namespace.
 
 Everything is private by default. Use `pub` to export:
 
-```
+```rust
 -- file: math/vector.crp
 
 type Vec3 = { x: float, y: float, z: float }   -- private type
@@ -1094,7 +1094,7 @@ helper(v) = ...   -- private to this module
 
 ### 12.3 Imports
 
-```
+```rust
 use math.vector { Vec3, add }
 use math.matrix { Mat4, multiply as mat_mul }
 use io.reader { * }           -- import all public items (discouraged)
@@ -1103,7 +1103,7 @@ use std.collections { HashMap, HashSet }
 
 ### 12.4 Re-exports
 
-```
+```rust
 -- file: math/mod.crp (or math.crp)
 pub use math.vector { Vec3, add }
 pub use math.matrix { Mat4 }
@@ -1127,7 +1127,7 @@ Drop order within a scope is reverse declaration order (last declared, first dro
 
 ### 13.3 Custom Destructors
 
-```
+```rust
 type Connection = { handle: RawHandle, name: str }
 
 impl Drop for Connection = {
@@ -1142,7 +1142,7 @@ impl Drop for Connection = {
 
 When a value is moved, the source binding becomes invalid:
 
-```
+```rust
 a := make_large_struct()
 b := a                     -- a is moved to b
 -- a is no longer valid here. Using a is a compile error.
@@ -1152,7 +1152,7 @@ b := a                     -- a is moved to b
 
 For explicit duplication of heap data:
 
-```
+```rust
 a := vec![1, 2, 3]
 b := a.clone()       -- deep copy, both a and b are valid
 ```
@@ -1175,7 +1175,7 @@ If a Crisp program compiles, the following are guaranteed:
 
 ### 14.1 Calling C
 
-```
+```rust
 extern "C" {
     malloc(size: uint) -> &mut u8
     free(ptr: &mut u8)
@@ -1185,7 +1185,7 @@ extern "C" {
 
 C functions are inherently unsafe. Calls must be wrapped in `unsafe` blocks:
 
-```
+```rust
 allocate(n) = unsafe {
     ptr := malloc(n)
     if ptr.is_null() then panic("allocation failed")
@@ -1197,7 +1197,7 @@ allocate(n) = unsafe {
 
 Since Crisp targets LLVM, Rust interop is direct:
 
-```
+```rust
 extern "rust" {
     -- Import a Rust function
     rust_lib.compute_hash(data: &[u8]) -> u64
@@ -1206,7 +1206,7 @@ extern "rust" {
 
 ### 14.3 Exporting from Crisp
 
-```
+```rust
 -- Export a C-compatible function
 pub extern "C" crisp_add(a: i32, b: i32) -> i32 = a + b
 ```
@@ -1219,7 +1219,7 @@ Certain operations require `unsafe`:
 - Dereferencing raw pointers.
 - Accessing mutable global state.
 
-```
+```rust
 unsafe {
     ptr := raw_pointer_cast(data)
     *ptr = 42
@@ -1234,7 +1234,7 @@ Unsafe blocks are a code smell. They should be minimal, well-documented, and enc
 
 ### 15.1 Core Types
 
-```
+```rust
 std.option    -- ?T (Option: some / none)
 std.result    -- Result<T, E> (Ok / Err) — used for explicit error typing
 std.string    -- str, string builder, formatting
@@ -1245,7 +1245,7 @@ std.set       -- HashSet<T>, BTreeSet<T>
 
 ### 15.2 IO
 
-```
+```rust
 std.io        -- read, write, stdin, stdout, stderr
 std.fs        -- file system operations
 std.net       -- TCP, UDP, DNS
@@ -1254,7 +1254,7 @@ std.http      -- HTTP client/server (async)
 
 ### 15.3 Concurrency
 
-```
+```rust
 std.async     -- async runtime, spawn, await_all
 std.sync      -- Mutex, RwLock, Arc, channels
 std.atomic    -- atomic types and operations
@@ -1262,7 +1262,7 @@ std.atomic    -- atomic types and operations
 
 ### 15.4 Traits
 
-```
+```rust
 std.traits.Show          -- string representation
 std.traits.Eq            -- equality comparison
 std.traits.Ord           -- ordering
@@ -1301,7 +1301,7 @@ std.traits.Add / Sub / Mul / Div  -- operator overloading
 
 Source (`app.crp`):
 
-```
+```rust
 read_config(path) = {
     text := fs.read(path)
     config := parse(text)
@@ -1314,14 +1314,14 @@ greet(name) = "hello " ++ name
 
 `reveal types app.crp`:
 
-```
+```rust
 read_config(path: &str) -> Config ! IoError | ParseError | ValidationError
 greet(name: &str) -> str
 ```
 
 `reveal ownership app.crp`:
 
-```
+```rust
 read_config:
     path: &str            [borrow — read only]
     text: own str         [move from fs.read, consumed by parse]
@@ -1333,7 +1333,7 @@ greet:
 
 `reveal memory app.crp`:
 
-```
+```rust
 read_config:
     text:   str      [alloc line 2, move line 3]
     config: Config   [alloc line 3, return line 5]
@@ -1358,7 +1358,7 @@ greet:
 
 ### 17.1 Compilation Pipeline
 
-```
+```rust
 Source (.crp)
     │
     ▼
@@ -1423,7 +1423,7 @@ When inference fails, the compiler provides:
 
 Example:
 
-```
+```rust
 ERROR [E0042]: ownership ambiguity in `transfer`
   --> lib.crp:15:5
    |
@@ -1442,7 +1442,7 @@ ERROR [E0042]: ownership ambiguity in `transfer`
 
 ### 18.1 Project Structure
 
-```
+```rust
 my_project/
     crisp.toml        -- project manifest
     src/
@@ -1475,7 +1475,7 @@ test_utils = "0.3"
 
 ### 18.3 Build Commands
 
-```
+```rust
 crispc build             -- compile project
 crispc run               -- compile and run
 crispc test              -- run tests
@@ -1488,7 +1488,7 @@ reveal expand src/       -- show fully-annotated source for entire project
 
 ## 19. Testing
 
-```
+```rust
 -- In tests/test_math.crp or inline with #[test]
 
 test "addition works" = {
@@ -1518,7 +1518,7 @@ test "ownership transfer" = {
 
 ## 20. Complete Example
 
-```
+```rust
 -- file: src/main.crp
 
 use std.fs

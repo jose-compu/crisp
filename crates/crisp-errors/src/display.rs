@@ -41,7 +41,10 @@ pub fn format_crisp_error_enum(en: &CrispErrorEnum) -> String {
     if en.variants.is_empty() {
         return "// CrispError: (no fallible functions)".into();
     }
-    let mut lines = vec!["enum CrispError {".to_string()];
+    let mut lines = vec![
+        "#[derive(Debug)]".to_string(),
+        "enum CrispError {".to_string(),
+    ];
     for v in &en.variants {
         if v.name == "Thrown" {
             lines.push("    Thrown(String),".into());

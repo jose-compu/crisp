@@ -963,11 +963,17 @@ fn lower_expr(
                     .cloned()
                     .unwrap_or_else(|| module.to_string());
                 let key = format!("{callee_module}::{}", id.name);
-                let fallible = errors
-                    .signatures
-                    .get(&key)
-                    .map(|s| s.fallible)
-                    .unwrap_or(false);
+                let rust_result = callee_module
+                    .strip_prefix("rust.")
+                    .is_some_and(|crate_name| {
+                        crisp_typeck::rust_import_returns_result(crate_name, &id.name)
+                    });
+                let fallible = rust_result
+                    || errors
+                        .signatures
+                        .get(&key)
+                        .map(|s| s.fallible)
+                        .unwrap_or(false);
                 let ret_ty = typed
                     .signatures
                     .get(&key)

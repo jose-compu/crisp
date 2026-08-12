@@ -1,4 +1,4 @@
--- examples/rust_import — call APIs from a Rust crate (spec §14.2 / #41)
+-- examples/rust_import — call APIs from a Rust crate (spec §14.2 / #41 / #55)
 --
 -- Primary surface: bare `use <crate> { … }` when the crate is `rust = true` in crisp.toml.
 -- Compat alias: `use rust.<crate> { … }` / `use rust::<crate> { … }`.
@@ -6,8 +6,7 @@
 -- Note: Crisp string `{name}` is interpolation, so JSON objects with `{…}` need concatenation
 -- or a non-object payload. This demo uses a JSON array.
 --
--- `from_str` / `to_string` are typed as returning the Ok payload; emit inserts `.expect`
--- until Crisp `?` absorbs Rust `Result` errors (follow-up).
+-- Known Result-returning Rust APIs lower to Crisp ambient errors (`CrispError::Thrown` + `?`).
 
 use serde_json { from_str, to_string }
 

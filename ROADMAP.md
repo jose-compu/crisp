@@ -308,27 +308,26 @@ Not committed to dates; tracked for direction only.
 
 ---
 
-## Publication readiness (public preview)
+## Publication readiness (first public release)
 
-**v1.4.1** is the public-preview hygiene release. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
+**v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.4.1**. Active milestones:
+Current compiler: **v1.5.0**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
-| **v1.4.0** | minor | Rust interop, traits, Show/Eq/Ord, net/http (shipped) | [milestone](https://github.com/jose-compu/crisp/milestone/5) |
-| **v1.4.1** | patch | Public preview docs/badge/homepage honesty | [milestone](https://github.com/jose-compu/crisp/milestone/7) · label `release:v1.4.1` |
-| **v1.5.0** | minor | Result `?`, stdio LSP, editor package, trait polish | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
+| **v1.4.x** | patch/minor | Interop, traits, Show/Eq/Ord, net/http, preview hygiene (shipped) | [v1.4.0](https://github.com/jose-compu/crisp/milestone/5) · [v1.4.1](https://github.com/jose-compu/crisp/milestone/7) |
+| **v1.5.0** | minor | Public launch: Result `?` (#55 landed), LSP, shapes, editor, trait polish | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
 |----------|--------|----------|
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
-| **P1** | Result `?`, LSP host, shapes, trait defaults/`dyn` | [#55](https://github.com/jose-compu/crisp/issues/55), [#56](https://github.com/jose-compu/crisp/issues/56), [#61](https://github.com/jose-compu/crisp/issues/61), [#59](https://github.com/jose-compu/crisp/issues/59) |
+| **P1** | LSP host, shapes, trait defaults/`dyn` | [#56](https://github.com/jose-compu/crisp/issues/56), [#61](https://github.com/jose-compu/crisp/issues/61), [#59](https://github.com/jose-compu/crisp/issues/59) |
 | **P2** | Editor Marketplace, crates.io revisit, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57), [#60](https://github.com/jose-compu/crisp/issues/60), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-*Last updated: 2026-08-12 — v1.4.1 public-preview hygiene; active work → v1.5.0.*
+*Last updated: 2026-08-12 — v1.5.0 first public release track (Result `?` landed).*

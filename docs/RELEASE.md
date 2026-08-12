@@ -4,12 +4,12 @@
 
 | Artifact | Policy |
 |----------|--------|
-| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.4.1` today) |
+| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.5.0` today) |
 | Language `edition` in `crisp.toml` | `2026` for spec v0.2; breaking language changes bump edition |
 | `crisp.lock` | Regenerate when `pub` API signatures change |
 | MSRV | Rust **1.85** (`rust-version`); CI MSRV job + multi-OS (see `ci.yml`) |
 
-GitHub milestones: **v1.4.1** (public preview hygiene), **v1.5.0** (LSP / Result `?` / editor publish), **v2.0.0** (self-hosting).
+GitHub milestones: **v1.5.0** (first public release), **v2.0.0** (self-hosting).
 
 ## Checklist before tagging
 
@@ -39,9 +39,9 @@ cargo install --path crates/crpc --locked
 |------|--------|
 | Repo description + topics | Done (GitHub settings) |
 | Homepage → GitHub Pages | Done — https://jose-compu.github.io/crisp/ |
-| CI status badge on README | Done (v1.4.1) |
+| CI status badge on README | Done |
 | LICENSE dual files + SECURITY + CONTRIBUTING linked | Done |
-| Known limitations honest for current version | Done (v1.4.1) |
+| Known limitations honest for current version | Done (v1.5.0) |
 | Web docs on `docs` branch / Pages | Done (#39) |
 | Branch protection on `main` | Maintainer action (Settings → Branches) if plan allows |
 | Flip visibility to **public** | Maintainer action — [#58](https://github.com/jose-compu/crisp/issues/58) |

@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.4)
+# Known limitations (Crisp v1.5)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Publication backlog: [milestone v1.5.0](https://github.com/jose-compu/crisp/milestone/6).
 
@@ -39,7 +39,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - **Compat alias:** `use rust.serde_json { … }` / `use rust::<crate> { … }` still force the Cargo crate.
 - **Collision:** if a Crisp module and a Rust dep share a name, bare `use <name>` binds the **Crisp module** and emits **W0048**; use `use rust.<name> { … }` for the crate.
 - Resolve codes: `E0044`–`E0047`, `W0048`. Bindings: `ResolvedRustImport` / `SymbolKind::RustFn`.
-- **Sharp edge — Result:** known stubs (e.g. `serde_json::from_str`, `ureq::get`) typecheck and emit, but Rust `Result` failures become **`.expect(...)` panics** in generated code until Crisp `?` absorbs them ([#55](https://github.com/jose-compu/crisp/issues/55)). See `examples/rust_import`, `examples/net_http`.
+- **Result absorption (#55):** known stubs (`serde_json::from_str` / `to_string`, `ureq::get`) lower to `.map_err(|e| CrispError::Thrown(...))?` and mark the enclosing function fallible. Absorb with `catch`, or let `main` return `Result<(), CrispError>`. Unknown Rust APIs are still opaque stubs without automatic `Result` mapping.
 
 ## Stdlib
 

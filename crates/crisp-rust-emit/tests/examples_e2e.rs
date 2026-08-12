@@ -231,6 +231,14 @@ fn net_http_example_wires_ureq_and_parse_ip() {
     let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
     assert!(main_rs.contains("ureq::get("), "{main_rs}");
     assert!(main_rs.contains("parse::<std::net::IpAddr>()"), "{main_rs}");
+    assert!(
+        main_rs.contains("map_err(|e| CrispError::Thrown"),
+        "{main_rs}"
+    );
+    assert!(
+        !main_rs.contains(".expect(\"ureq"),
+        "should absorb ureq Result via ? — {main_rs}"
+    );
 }
 
 #[test]
@@ -247,7 +255,15 @@ fn rust_import_example_wires_serde_json_dep() {
         "{main_rs}"
     );
     assert!(main_rs.contains("serde_json::to_string"), "{main_rs}");
-    assert!(main_rs.contains(".expect("), "{main_rs}");
+    assert!(
+        main_rs.contains("map_err(|e| CrispError::Thrown"),
+        "{main_rs}"
+    );
+    assert!(main_rs.contains('?'), "{main_rs}");
+    assert!(
+        !main_rs.contains(".expect(\"serde_json"),
+        "should absorb Result via ? — {main_rs}"
+    );
 }
 
 #[test]

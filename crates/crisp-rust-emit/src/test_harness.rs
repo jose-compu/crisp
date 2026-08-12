@@ -3,7 +3,7 @@
 use crate::cargo::{CargoError, cargo_test};
 use crate::emit::emit_crate;
 use crate::pipeline::{PipelineError, analyze_and_build_cir};
-use crate::project::write_cargo_project;
+use crate::project::{with_emit_dir_lock, write_cargo_project_unlocked};
 use crate::seal::verify_sealed_api;
 use anyhow::{Context, Result};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
@@ -329,28 +329,30 @@ pub fn run_tests(crate_root: &Path) -> Result<TestRunReport, TestHarnessError> {
         });
     }
 
-    let cir = analyze_and_build_cir(crate_root)?;
-    let manifest = read_manifest(crate_root).context("read crisp.toml")?;
-    let deps = resolve_dependencies(&manifest);
-    let emitted = emit_crate(&cir);
-    write_cargo_project(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
-        .context("write target/rust with tests")?;
+    with_emit_dir_lock(crate_root, || {
+        let cir = analyze_and_build_cir(crate_root)?;
+        let manifest = read_manifest(crate_root).context("read crisp.toml")?;
+        let deps = resolve_dependencies(&manifest);
+        let emitted = emit_crate(&cir);
+        write_cargo_project_unlocked(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
+            .context("write target/rust with tests")?;
 
-    match cargo_test(crate_root) {
-        Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(
-            "cargo not on PATH"
-        ))),
-        Err(CargoError::BuildFailed(output)) => Err(TestHarnessError::RuntimeFailed {
-            name: "cargo test".into(),
-            output,
-        }),
-        Err(e) => Err(TestHarnessError::Cargo(e)),
-        Ok(()) => Ok(TestRunReport {
-            runtime_passed: runtime_count,
-            compile_fail_passed: compile_fail.len(),
-            emitted_tests,
-        }),
-    }
+        match cargo_test(crate_root) {
+            Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(
+                "cargo not on PATH"
+            ))),
+            Err(CargoError::BuildFailed(output)) => Err(TestHarnessError::RuntimeFailed {
+                name: "cargo test".into(),
+                output,
+            }),
+            Err(e) => Err(TestHarnessError::Cargo(e)),
+            Ok(()) => Ok(TestRunReport {
+                runtime_passed: runtime_count,
+                compile_fail_passed: compile_fail.len(),
+                emitted_tests,
+            }),
+        }
+    })
 }
 
 fn run_compile_fail_test(test: &CollectedTest) -> Result<(), TestHarnessError> {

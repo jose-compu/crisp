@@ -2,7 +2,7 @@
 
 use crate::cargo::{CargoError, cargo_build, cargo_check, cargo_run};
 use crate::emit::emit_crate;
-use crate::project::{emit_dir, write_cargo_project};
+use crate::project::{emit_dir, with_emit_dir_lock, write_cargo_project_unlocked};
 use crate::resolve::resolve_rustc_fallbacks;
 use crate::seal::verify_sealed_api;
 use crate::source_map::EmitSourceMap;
@@ -39,12 +39,12 @@ pub fn analyze_and_build_cir(crate_root: &Path) -> Result<CirCrate, PipelineErro
     Ok(CirBuilder::build_crate(crate_root)?)
 }
 
-pub fn emit_to_target(crate_root: &Path) -> Result<EmitOutput, PipelineError> {
+fn emit_to_target_unlocked(crate_root: &Path) -> Result<EmitOutput, PipelineError> {
     let cir = analyze_and_build_cir(crate_root)?;
     let manifest = read_manifest(crate_root).context("read crisp.toml")?;
     let deps = resolve_dependencies(&manifest);
     let emitted = emit_crate(&cir);
-    let out_dir = write_cargo_project(crate_root, &emitted, &manifest, &deps, None)
+    let out_dir = write_cargo_project_unlocked(crate_root, &emitted, &manifest, &deps, None)
         .context("write target/rust")?;
     Ok(EmitOutput {
         cir,
@@ -54,28 +54,43 @@ pub fn emit_to_target(crate_root: &Path) -> Result<EmitOutput, PipelineError> {
     })
 }
 
+pub fn emit_to_target(crate_root: &Path) -> Result<EmitOutput, PipelineError> {
+    with_emit_dir_lock(crate_root, || emit_to_target_unlocked(crate_root))
+}
+
 pub fn check_emitted(crate_root: &Path) -> Result<(), PipelineError> {
-    let out = emit_to_target(crate_root)?;
-    match cargo_check(crate_root, &out.main_rs, &out.source_map) {
-        Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
-        other => other.map_err(PipelineError::from),
-    }
+    with_emit_dir_lock(crate_root, || {
+        let out = emit_to_target_unlocked(crate_root)?;
+        match cargo_check(crate_root, &out.main_rs, &out.source_map) {
+            Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
+            other => other.map_err(PipelineError::from),
+        }
+    })
 }
 
 pub fn build_emitted(crate_root: &Path) -> Result<std::path::PathBuf, PipelineError> {
-    let out = emit_to_target(crate_root)?;
-    match cargo_build(crate_root, &out.main_rs, &out.source_map) {
-        Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
-        Ok(()) => Ok(emit_dir(crate_root)),
-        Err(e) => Err(PipelineError::from(e)),
-    }
+    with_emit_dir_lock(crate_root, || {
+        let out = emit_to_target_unlocked(crate_root)?;
+        match cargo_build(crate_root, &out.main_rs, &out.source_map) {
+            Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
+            Ok(()) => Ok(emit_dir(crate_root)),
+            Err(e) => Err(PipelineError::from(e)),
+        }
+    })
 }
 
 pub fn run_emitted(crate_root: &Path) -> Result<String, PipelineError> {
-    build_emitted(crate_root)?;
-    match cargo_run(crate_root) {
-        Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
-        Ok(output) => Ok(String::from_utf8_lossy(&output.stdout).into_owned()),
-        Err(e) => Err(PipelineError::from(e)),
-    }
+    with_emit_dir_lock(crate_root, || {
+        let out = emit_to_target_unlocked(crate_root)?;
+        match cargo_build(crate_root, &out.main_rs, &out.source_map) {
+            Err(CargoError::NotFound) => return Err(PipelineError::ToolchainUnavailable),
+            Err(e) => return Err(PipelineError::from(e)),
+            Ok(()) => {}
+        }
+        match cargo_run(crate_root) {
+            Err(CargoError::NotFound) => Err(PipelineError::ToolchainUnavailable),
+            Ok(output) => Ok(String::from_utf8_lossy(&output.stdout).into_owned()),
+            Err(e) => Err(PipelineError::from(e)),
+        }
+    })
 }

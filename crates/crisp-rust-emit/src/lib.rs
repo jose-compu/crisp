@@ -21,7 +21,7 @@ pub use pipeline::{
     run_emitted,
 };
 pub use probe::emit_probe_crate;
-pub use project::{emit_dir, write_cargo_project};
+pub use project::{emit_dir, with_emit_dir_lock, write_cargo_project};
 pub use resolve::{FallbackResolveError, resolve_rustc_fallbacks};
 pub use rustc::{RustcError, check_rust_source, is_borrow_check_failure};
 pub use seal::{

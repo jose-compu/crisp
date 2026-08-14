@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.5.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -172,8 +172,33 @@ describe(color) = match color {
           <p>Run: <code>crpc run examples/enums</code></p>
         </article>
 
-        <article class="tutorial-step" id="methods">
+        <article class="tutorial-step" id="loops">
           <div class="step-label">Step 10</div>
+          <h2>Loops</h2>
+          <p><code>while</code>, <code>for … in</code> (over <code>vec</code> today), and value-producing <code>loop</code> with <code>break</code> / <code>continue</code>. Use <code>mut:=</code> for counters.</p>
+          <pre class="pipe">sum_to(n) = {
+    total mut:= 0
+    i mut:= 0
+    while i < n {
+        i = i + 1
+        total = total + i
+    }
+    total
+}
+
+countdown_stop(start, stop) = {
+    n mut:= start
+    loop {
+        if n == stop then break n
+        if n <= 0 then break 0
+        n = n - 1
+    }
+}</pre>
+          <p>Run: <code>crpc test examples/loops</code></p>
+        </article>
+
+        <article class="tutorial-step" id="methods">
+          <div class="step-label">Step 11</div>
           <h2>Inherent methods</h2>
           <pre class="pipe">type Vec2 = {
     x: float
@@ -197,7 +222,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="traits">
-          <div class="step-label">Step 11</div>
+          <div class="step-label">Step 12</div>
           <h2>Traits</h2>
           <p>Nominal contracts with explicit <code>impl</code>. Prelude also ships Show / Eq / Ord shims.</p>
           <pre class="pipe">trait Show = { show(self) -> str }
@@ -219,7 +244,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="shapes">
-          <div class="step-label">Step 12</div>
+          <div class="step-label">Step 13</div>
           <h2>Shapes</h2>
           <p>Structural constraints: any matching struct satisfies a data <code>shape</code> without an explicit <code>impl</code>. Lowers to a generated Rust trait + accessors.</p>
           <pre class="pipe">shape HasPosition = {
@@ -247,7 +272,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="rust-import">
-          <div class="step-label">Step 13</div>
+          <div class="step-label">Step 14</div>
           <h2>Import a Rust crate</h2>
           <p>Declare the dependency with <code>rust = true</code> in <code>crisp.toml</code>, then import like TypeScript.</p>
           <pre class="pipe">-- crisp.toml
@@ -265,7 +290,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="async">
-          <div class="step-label">Step 14</div>
+          <div class="step-label">Step 15</div>
           <h2>Async</h2>
           <pre class="pipe">pub main() = async {
     sleep_ms(1)
@@ -275,7 +300,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="next">
-          <div class="step-label">Step 15</div>
+          <div class="step-label">Step 16</div>
           <h2>Where to go</h2>
           <ul>
             <li><a href="index.html">Home</a> — feature snippet gallery</li>
@@ -297,12 +322,13 @@ pub main() = {
           <li><a href="#tests"><span class="num">07</span> Tests</a></li>
           <li><a href="#errors"><span class="num">08</span> Errors</a></li>
           <li><a href="#enums"><span class="num">09</span> Enums</a></li>
-          <li><a href="#methods"><span class="num">10</span> Methods</a></li>
-          <li><a href="#traits"><span class="num">11</span> Traits</a></li>
-          <li><a href="#shapes"><span class="num">12</span> Shapes</a></li>
-          <li><a href="#rust-import"><span class="num">13</span> Rust import</a></li>
-          <li><a href="#async"><span class="num">14</span> Async</a></li>
-          <li><a href="#next"><span class="num">15</span> Next</a></li>
+          <li><a href="#loops"><span class="num">10</span> Loops</a></li>
+          <li><a href="#methods"><span class="num">11</span> Methods</a></li>
+          <li><a href="#traits"><span class="num">12</span> Traits</a></li>
+          <li><a href="#shapes"><span class="num">13</span> Shapes</a></li>
+          <li><a href="#rust-import"><span class="num">14</span> Rust import</a></li>
+          <li><a href="#async"><span class="num">15</span> Async</a></li>
+          <li><a href="#next"><span class="num">16</span> Next</a></li>
         </ol>
       </nav>
     </div>
@@ -331,7 +357,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

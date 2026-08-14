@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.5.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -40,12 +40,13 @@
         <li>Unknown Rust APIs are opaque stubs; known <code>Result</code> imports (<code>serde_json</code>, <code>ureq</code>) use Crisp <code>?</code> (#55)</li>
         <li>Trait defaults for literal/simple bodies shipped (<code>examples/trait_defaults</code>); bounds / <code>dyn Trait</code> still incomplete (#59)</li>
         <li>Enums: unit/tuple variants work; recursive enums and full exhaustiveness still gap</li>
+        <li><strong>Loops</strong> — <code>while</code> / <code>for</code> / <code>loop</code> work (<code>examples/loops</code>); <code>for</code> is vec-only MVP (no <code>enumerate</code> / labels yet)</li>
         <li>Field access on parameters: inferred when exactly one struct has the field; else annotate (<code>E0043</code>)</li>
         <li><code>crisp-lsp</code> stdio host ships (hover, inlays, diagnostics); install with <code>cargo install --path crates/crisp-lsp</code> (#56)</li>
         <li>Editor VSIX via <code>./scripts/package-vsix.sh</code>; Marketplace listing optional (#57)</li>
         <li>crates.io publish deferred; install from source (#60)</li>
       </ul>
-      <p><strong>Shipped in v1.5:</strong> Result <code>?</code>, data shapes, stdio LSP, VSIX packaging, trait default bodies — on top of v1.4 interop / Show/Eq/Ord / net+HTTP.</p>
+      <p><strong>Shipped in v1.5.x:</strong> loops (§6.3), Result <code>?</code>, data shapes, stdio LSP, VSIX packaging, trait default bodies — on top of v1.4 interop / Show/Eq/Ord / net+HTTP.</p>
       <p>
         <a href="https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md →</a>
         ·
@@ -77,7 +78,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

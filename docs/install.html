@@ -32,11 +32,11 @@
     <div class="wrap hero-split">
       <div>
         <h1>Install Crisp</h1>
-        <p class="lede">One <code>cargo install</code>, then <code>crpc run</code>. Crisp emits a Cargo project, so you need Rust <strong>1.85+</strong> with <code>cargo</code> / <code>rustc</code> on your <code>PATH</code>.</p>
+        <p class="lede">One <code>cargo install</code>, then <code>crisp run</code>. Crisp emits a Cargo project, so you need Rust <strong>1.85+</strong> with <code>cargo</code> / <code>rustc</code> on your <code>PATH</code>.</p>
       </div>
       <aside class="callout">
         <strong>Requirements</strong>
-        Rust via <a href="https://rustup.rs/">rustup</a>. Installer package: <a href="https://crates.io/crates/crisp-crpc"><code>crisp-crpc</code> on crates.io</a>. Site: <a href="https://crisp-lang.org/">crisp-lang.org</a>.
+        Rust via <a href="https://rustup.rs/">rustup</a>. Installer package: <a href="https://crates.io/crates/crisp-lang"><code>crisp-lang</code> on crates.io</a>. Site: <a href="https://crisp-lang.org/">crisp-lang.org</a>.
       </aside>
     </div>
   </section>
@@ -45,9 +45,9 @@
     <div class="wrap layout-docs">
       <div class="content">
         <h2 id="crates-io">Install from crates.io</h2>
-        <p>Puts <code>crpc</code> and <code>reveal</code> in <code>~/.cargo/bin</code>:</p>
-        <pre class="pipe">cargo install crisp-crpc --locked
-crpc --version</pre>
+        <p>Puts <code>crisp</code> and <code>reveal</code> in <code>~/.cargo/bin</code>:</p>
+        <pre class="pipe">cargo install crisp-lang --locked
+crisp --version</pre>
         <p>Optional language server:</p>
         <pre class="pipe">cargo install crisp-lsp --locked</pre>
 
@@ -76,13 +76,13 @@ pub main() = {
 }
 EOF
 
-crpc run .</pre>
+crisp run .</pre>
         <p>Expected output:</p>
         <pre class="pipe">"hello world"</pre>
         <p>Useful companions:</p>
-        <pre class="pipe">crpc check .
-crpc emit .
-crpc build .</pre>
+        <pre class="pipe">crisp check .
+crisp emit .
+crisp build .</pre>
 
         <h2 id="from-source">Install from source</h2>
         <p>For contributors or unreleased commits:</p>
@@ -90,7 +90,7 @@ crpc build .</pre>
 cd crisp
 cargo install --path crates/crpc --locked
 # ensure ~/.cargo/bin is on PATH
-crpc run examples/hello</pre>
+crisp run examples/hello</pre>
         <p>Editor VSIX (optional): <code>./scripts/package-vsix.sh</code> then Extensions → Install from VSIX…</p>
 
         <h2 id="next">Next steps</h2>

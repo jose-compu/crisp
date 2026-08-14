@@ -79,7 +79,8 @@ pub enum ExprKind {
         right: Box<Expr>,
     },
     Return(Option<Box<Expr>>),
-    Break,
+    /// Bare `break` or `break <expr>` (value-producing `loop`, spec §6.3).
+    Break(Option<Box<Expr>>),
     Continue,
     Throw(Box<Expr>),
     Catch {

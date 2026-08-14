@@ -255,10 +255,16 @@ fn emit_stmt(
             emit_expr(out, e, osig, ownership);
             let _ = writeln!(out, ";");
         }
-        Stmt::Bind { pat, value, .. } => {
+        Stmt::Bind {
+            pat,
+            mutable,
+            value,
+            ..
+        } => {
             if let PatKind::Ident(name) = &pat.kind {
                 let clone = should_clone_at_bind(osig, &name.name, value);
-                let _ = write!(out, "{pad}let {} = ", name.name);
+                let mut_kw = if *mutable { "mut " } else { "" };
+                let _ = write!(out, "{pad}let {mut_kw}{} = ", name.name);
                 if clone {
                     emit_expr(out, value, osig, ownership);
                     let _ = write!(out, ".clone()");
@@ -530,6 +536,44 @@ fn emit_expr_inner(
                 emit_expr(out, e, osig, ownership);
                 let _ = write!(out, " }}");
             }
+        }
+        ExprKind::While { cond, body } => {
+            let _ = write!(out, "while ");
+            emit_expr(out, cond, osig, ownership);
+            let _ = write!(out, " {{ ");
+            emit_expr(out, body, osig, ownership);
+            let _ = write!(out, " }}");
+        }
+        ExprKind::For { pat, iter, body } => {
+            let _ = write!(out, "for ");
+            match &pat.kind {
+                crisp_ast::pat::PatKind::Ident(id) => {
+                    let _ = write!(out, "{}", id.name);
+                }
+                _ => {
+                    let _ = write!(out, "_");
+                }
+            }
+            let _ = write!(out, " in ");
+            emit_expr(out, iter, osig, ownership);
+            let _ = write!(out, " {{ ");
+            emit_expr(out, body, osig, ownership);
+            let _ = write!(out, " }}");
+        }
+        ExprKind::Loop(body) => {
+            let _ = write!(out, "loop {{ ");
+            emit_expr(out, body, osig, ownership);
+            let _ = write!(out, " }}");
+        }
+        ExprKind::Break(value) => {
+            let _ = write!(out, "break");
+            if let Some(v) = value {
+                let _ = write!(out, " ");
+                emit_expr(out, v, osig, ownership);
+            }
+        }
+        ExprKind::Continue => {
+            let _ = write!(out, "continue");
         }
         // Keep both sides in the probe so arg ownership is still checked.
         ExprKind::Catch { body, arms } => {

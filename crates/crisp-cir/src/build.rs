@@ -650,7 +650,12 @@ fn lower_block(
     let mut stmts = Vec::new();
     for stmt in &block.stmts {
         match stmt {
-            Stmt::Bind { pat, value, .. } => {
+            Stmt::Bind {
+                pat,
+                mutable,
+                value,
+                ..
+            } => {
                 if let PatKind::Ident(name) = &pat.kind {
                     let mut lowered = lower_expr(
                         value,
@@ -675,6 +680,7 @@ fn lower_block(
                     locals.insert(name.name.clone(), ty);
                     stmts.push(CirStmt::Let {
                         name: name.name.clone(),
+                        mutable: *mutable,
                         value: lowered,
                         span: value.span,
                     });
@@ -1327,6 +1333,100 @@ fn lower_expr(
                 span: expr.span,
             }
         }
+        ExprKind::While { cond, body } => E::While {
+            cond: Box::new(lower_expr(
+                cond,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            body: Box::new(lower_expr(
+                body,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            span: expr.span,
+        },
+        ExprKind::For { pat, iter, body } => {
+            let mut for_locals = locals.clone();
+            if let PatKind::Ident(id) = &pat.kind {
+                for_locals.insert(id.name.clone(), CirTy::Int);
+            }
+            E::For {
+                pat: lower_pat(pat),
+                iter: Box::new(lower_expr(
+                    iter,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                body: Box::new(lower_expr(
+                    body,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    &for_locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                span: expr.span,
+            }
+        }
+        ExprKind::Loop(body) => E::Loop {
+            body: Box::new(lower_expr(
+                body,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            span: expr.span,
+        },
+        ExprKind::Break(value) => E::Break {
+            value: value.as_ref().map(|v| {
+                Box::new(lower_expr(
+                    v,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                ))
+            }),
+            span: expr.span,
+        },
+        ExprKind::Continue => E::Continue { span: expr.span },
         ExprKind::Unsafe(inner) => E::Unsafe {
             body: Box::new(lower_expr(
                 inner,

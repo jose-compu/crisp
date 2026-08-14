@@ -721,6 +721,7 @@ impl Resolver {
             | ExprKind::Spawn(body)
             | ExprKind::Unsafe(body)
             | ExprKind::Try(body) => self.check_expr(scope, body),
+            ExprKind::Break(Some(v)) => self.check_expr(scope, v),
             ExprKind::Lambda { params, body } => {
                 let mut local = scope.clone();
                 for p in params {
@@ -801,7 +802,7 @@ impl Resolver {
             | ExprKind::Bool(_)
             | ExprKind::Char(_)
             | ExprKind::Unit
-            | ExprKind::Break
+            | ExprKind::Break(None)
             | ExprKind::Continue
             | ExprKind::Return(None) => Ok(()),
         }

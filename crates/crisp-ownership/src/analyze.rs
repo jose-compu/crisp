@@ -498,6 +498,17 @@ impl<'a> Collector<'a> {
                     }
                 }
             }
+            ExprKind::While { cond, body } => {
+                self.walk_expr(cond);
+                self.walk_expr(body);
+            }
+            ExprKind::For { iter, body, .. } => {
+                self.walk_expr(iter);
+                self.walk_expr(body);
+            }
+            ExprKind::Loop(body) => self.walk_expr(body),
+            ExprKind::Break(Some(v)) => self.walk_expr(v),
+            ExprKind::Break(None) | ExprKind::Continue => {}
             _ => {}
         }
     }

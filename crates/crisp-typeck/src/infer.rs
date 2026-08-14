@@ -61,6 +61,8 @@ pub struct TypeChecker {
     signatures: BTreeMap<String, InferredSig>,
     /// `TypeName` → `method` → signature key.
     inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
+    /// Stack of expected `break` value types for nested `loop` expressions (§6.3).
+    loop_break_tys: Vec<Ty>,
 }
 
 impl TypeChecker {
@@ -98,6 +100,7 @@ impl TypeChecker {
             traits: BTreeMap::new(),
             signatures: BTreeMap::new(),
             inherent_methods: BTreeMap::new(),
+            loop_break_tys: Vec::new(),
         }
     }
 
@@ -926,6 +929,51 @@ impl TypeChecker {
                     args: vec![],
                 })
             }
+            ExprKind::While { cond, body } => {
+                let cty = self.infer_expr(env, cond)?;
+                unify(&mut self.ctx, &cty, &Ty::Bool)?;
+                self.infer_expr(env, body)?;
+                Ok(Ty::Unit)
+            }
+            ExprKind::For { pat, iter, body } => {
+                let iter_ty = self.infer_expr(env, iter)?;
+                let vec_ty = Ty::Named {
+                    name: "vec".into(),
+                    args: vec![],
+                };
+                // MVP: `for` iterates `vec` (emits `Vec<i64>`). Unify unconstrained
+                // iterators with `vec`; element type is `int`.
+                let item_ty = match self.ctx.apply(&iter_ty) {
+                    Ty::Named { name, .. } if name == "vec" => Ty::Int,
+                    other => {
+                        unify(&mut self.ctx, &other, &vec_ty)?;
+                        Ty::Int
+                    }
+                };
+                let mut local = env.clone();
+                self.infer_pat(&mut local, pat, &item_ty)?;
+                self.infer_expr(&mut local, body)?;
+                Ok(Ty::Unit)
+            }
+            ExprKind::Loop(body) => {
+                let break_ty = self.ctx.fresh();
+                self.loop_break_tys.push(break_ty.clone());
+                let _ = self.infer_expr(env, body)?;
+                self.loop_break_tys.pop();
+                Ok(self.ctx.apply(&break_ty))
+            }
+            ExprKind::Break(value) => {
+                let vt = if let Some(v) = value {
+                    self.infer_expr(env, v)?
+                } else {
+                    Ty::Unit
+                };
+                if let Some(expected) = self.loop_break_tys.last().cloned() {
+                    unify(&mut self.ctx, &vt, &expected)?;
+                }
+                Ok(Ty::Never)
+            }
+            ExprKind::Continue => Ok(Ty::Never),
             _ => Ok(self.ctx.fresh()),
         }
     }

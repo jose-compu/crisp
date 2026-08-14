@@ -356,6 +356,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `point_impl` | Flat inherent `impl Point` methods |
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
 | `shapes` | Data `shape` → generated trait + structural calls (§3.5 / #61) |
+| `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |
 | `net_http` | `parse_ip` + `ureq` GET via `rust = true` (§15.2 / #28) |

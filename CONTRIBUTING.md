@@ -14,7 +14,7 @@ Thank you for contributing. Crisp is a **Rust-hosted bootstrap** compiler that t
 git clone https://github.com/jose-compu/crisp.git
 cd crisp
 ./scripts/install-git-hooks.sh   # pre-commit / pre-push: cargo fmt --check
-cargo build --release -p crpc
+cargo build --release -p crisp-crpc
 # binaries: target/release/crpc and target/release/reveal
 export PATH="$PWD/target/release:$PATH"
 crpc --version
@@ -70,7 +70,7 @@ crpc run examples/float_demo
 
 ## Public preview notes
 
-- Install: `cargo install crpc --locked` (crates.io — [#66](https://github.com/jose-compu/crisp/issues/66); see [docs/CRATES_IO.md](docs/CRATES_IO.md)). Contributors: `cargo install --path crates/crpc --locked`.
+- Install: `cargo install crisp-crpc --locked` (crates.io — [#66](https://github.com/jose-compu/crisp/issues/66); see [docs/CRATES_IO.md](docs/CRATES_IO.md)). Contributors: `cargo install --path crates/crpc --locked`.
 - Site: https://crisp-lang.org/
 - Maintainers: enable branch protection on `main` (require CI) when the GitHub plan allows; flip visibility via [#58](https://github.com/jose-compu/crisp/issues/58).
 - Release checklist: [docs/RELEASE.md](docs/RELEASE.md).

@@ -1,7 +1,7 @@
 //! `reveal` CLI — inspect inferred Crisp precision (spec §16).
 //!
-//! Built as a second binary of the `crpc` package:
-//! `cargo build -p crpc` → `target/debug/reveal`.
+//! Built as a second binary of the `crisp-crpc` package:
+//! `cargo build -p crisp-crpc` → `target/debug/reveal`.
 
 use clap::{Parser, Subcommand};
 use crisp_reveal::{

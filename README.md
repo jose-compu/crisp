@@ -110,7 +110,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 Install the compiler from crates.io (puts `crpc` and `reveal` on your `PATH` via `~/.cargo/bin`):
 
 ```bash
-cargo install crpc --locked
+cargo install crisp-crpc --locked
 crpc --version
 ```
 
@@ -156,7 +156,7 @@ Expected output:
 ```bash
 git clone https://github.com/jose-compu/crisp.git
 cd crisp
-# already installed via cargo install crpc, or:
+# already installed via cargo install crisp-crpc, or:
 # cargo install --path crates/crpc --locked
 crpc run examples/hello
 ```
@@ -209,7 +209,7 @@ tests/           Integration placeholders (fixtures live under crates/)
 ## Contributing / building
 
 ```bash
-cargo build --release -p crpc
+cargo build --release -p crisp-crpc
 cargo test --workspace --verbose
 cargo fmt --all --check
 cargo clippy --workspace -- -D warnings

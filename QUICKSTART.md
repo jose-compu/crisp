@@ -14,7 +14,7 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 From crates.io (recommended — ships `crpc` and `reveal`):
 
 ```bash
-cargo install crpc --locked
+cargo install crisp-crpc --locked
 crpc --version
 reveal --version
 ```
@@ -22,7 +22,7 @@ reveal --version
 From a clone of this repo (contributors / unreleased commits):
 
 ```bash
-cargo build --release -p crpc
+cargo build --release -p crisp-crpc
 export PATH="$PWD/target/release:$PATH"
 # or: cargo install --path crates/crpc --locked
 ```
@@ -295,7 +295,7 @@ Crisp source often omits types, borrows (`&` / `&mut`), lifetimes, and error set
 | `reveal <subcommand>` | “What did inference emit / decide?” |
 | `crpc emit` | Write the full generated Rust crate under `target/rust/` |
 
-`reveal` ships next to `crpc` (same `cargo build -p crpc` / `cargo install --path crates/crpc`). Spec reference: §16.
+`reveal` ships next to `crpc` (same `cargo build -p crisp-crpc` / `cargo install --path crates/crpc`). Spec reference: §16.
 
 ### Try it (hello)
 

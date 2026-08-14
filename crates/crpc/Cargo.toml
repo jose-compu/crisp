@@ -1,6 +1,6 @@
 [package]
-name = "crpc"
-description = "Crisp transpiler CLI — source (.crp) to Rust to native binary"
+name = "crisp-crpc"
+description = "Crisp transpiler CLI — source (.crp) to Rust to native binary (bins: crpc, reveal)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

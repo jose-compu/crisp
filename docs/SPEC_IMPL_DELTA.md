@@ -56,7 +56,7 @@ Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compil
 | `reveal map` | Partial — coarse CIR notes |
 | §16.3 LSP host | Stdio `crisp-lsp` binary (hover, inlays, diagnostics) + `CrispAnalysis` library (#56) |
 
-CLI: `crates/crpc/src/reveal.rs` (binary from `-p crpc`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
+CLI: `crates/crpc/src/reveal.rs` (binary from `-p crisp-crpc`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
 
 ## Ownership probe (§7.6)
 

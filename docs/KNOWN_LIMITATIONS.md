@@ -6,7 +6,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 - The compiler is a **Rust-hosted bootstrap** (`crpc`). Self-hosting (Crisp compiling Crisp) is ROADMAP Phase 2 / milestone **v2.0.0**, not shipped.
 - Spec document remains **v0.2.0-draft**. Do not treat every spec paragraph as implemented.
-- **Install:** `cargo install crpc --locked` (also installs `reveal`). LSP: `cargo install crisp-lsp --locked`. From a clone: `cargo install --path crates/crpc --locked`. See [CRATES_IO.md](CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
+- **Install:** `cargo install crisp-crpc --locked` (also installs `reveal`). LSP: `cargo install crisp-lsp --locked`. From a clone: `cargo install --path crates/crpc --locked`. See [CRATES_IO.md](CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
 
 ## Modules
 

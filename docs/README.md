@@ -1,6 +1,6 @@
 # Crisp documentation site
 
-Static site for GitHub Pages (branch `docs`, folder `/docs`). Content tracks compiler **v1.5.1** public release.
+Static site for **https://crisp-lang.org/** (GitHub Pages branch `docs`, folder `/docs`, `CNAME` → `crisp-lang.org`). Content tracks compiler **v1.5.1** public release.
 
 ## Pages
 

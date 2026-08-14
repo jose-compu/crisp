@@ -24,7 +24,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0052 | ownership | Resolve error during ownership |
 | E0053 | ownership | Type error during ownership |
 | E0054–E0056 | emit/resolve | Ownership/type/resolve errors during rustc fallback resolution |
-| E0057 | emit | Could not produce borrow-checking probe Rust — often a **compiler bug** or incomplete probe; file an issue with `crpc check` output |
+| E0057 | emit | Could not produce borrow-checking probe Rust — often a **compiler bug** or incomplete probe; file an issue with `crisp check` output |
 | E0058 | emit | rustc unavailable; fallback skipped |
 | E0060–E0062 | regions | Region assignment failures / wrapped ownership or type errors |
 | E0070–E0073 | errors / CIR / LSP | Fallibility set mismatches, or pipeline wrap of resolve/type/region/error |
@@ -37,4 +37,4 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 ## Notes
 
 - Spec §17.4 examples may disagree on a few code numbers; see [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md).
-- A `rustc` error on **emitted** project code after a successful Crisp analysis is defined as a **`crpc` bug**, not a user error (spec §0.4).
+- A `rustc` error on **emitted** project code after a successful Crisp analysis is defined as a **`crisp` bug**, not a user error (spec §0.4).

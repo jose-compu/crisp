@@ -11,4 +11,4 @@
 - [ ] `cargo fmt --all --check`
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings`
 - [ ] `cargo test --workspace` (or targeted crate tests)
-- [ ] `crpc check` / `crpc test` on affected examples (if any)
+- [ ] `crisp check` / `crisp test` on affected examples (if any)

@@ -138,7 +138,7 @@ fn examples_with_tests_pass_crpc_test() {
         "loops",
     ] {
         let root = example(name);
-        eprintln!("crpc test: {name}");
+        eprintln!("crisp test: {name}");
         match run_tests(&root) {
             Ok(r) => {
                 eprintln!(

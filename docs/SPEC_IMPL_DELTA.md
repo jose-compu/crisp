@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crpc 1.5.x)
+# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.5.x)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -16,9 +16,9 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Ownership contradiction | §17.4 examples may show `E0042` | Ownership pass uses **`E0050`** (`crisp-ownership`) |
 | Unknown name | May cite resolve codes | Resolve **`E0035`**; typeck often wraps as **`E0041`** / **`E0042`** |
 
-## Analysis surface of `crpc check` / `test_compile_fail`
+## Analysis surface of `crisp check` / `test_compile_fail`
 
-- `crpc check` runs resolve, typeck, ownership (+ rustc probe fallbacks), regions, error pass, sealed verify.
+- `crisp check` runs resolve, typeck, ownership (+ rustc probe fallbacks), regions, error pass, sealed verify.
 - `test_compile_fail` harness typically runs **typecheck-oriented** failure (not always full ownership/error passes). See `crates/crisp-rust-emit/src/test_harness.rs`.
 
 ## Language features (high level)
@@ -40,7 +40,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)
 
-Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal) (`crpc` = build/run; `reveal` = inspect inference).
+Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal) (`crisp` = build/run; `reveal` = inspect inference).
 
 | Spec command | Implementation |
 |--------------|----------------|
@@ -56,7 +56,7 @@ Beginner overview: [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compil
 | `reveal map` | Partial — coarse CIR notes |
 | §16.3 LSP host | Stdio `crisp-lsp` binary (hover, inlays, diagnostics) + `CrispAnalysis` library (#56) |
 
-CLI: `crates/crpc/src/reveal.rs` (binary from `-p crisp-crpc`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
+CLI: `crates/crpc/src/reveal.rs` (binary from `-p crisp-lang`). Docs: QUICKSTART §10–§11, KNOWN_LIMITATIONS.
 
 ## Ownership probe (§7.6)
 

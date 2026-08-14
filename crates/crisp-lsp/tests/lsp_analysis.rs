@@ -65,7 +65,7 @@ fn code_lenses_hello_show_rust() {
     let lenses = a.code_lenses(&file).unwrap();
     eprintln!("lenses: {lenses:?}");
     assert!(lenses.iter().any(|l| l.title == "Show emitted Rust"));
-    assert!(lenses.iter().any(|l| l.title == "Run crpc test"));
+    assert!(lenses.iter().any(|l| l.title == "Run crisp test"));
 }
 
 #[test]

@@ -30,7 +30,7 @@ pub struct Diagnostic {
 pub enum CompilerError {
     #[error("[{code}] {message}")]
     User { code: String, message: String },
-    #[error("internal compiler error: generated Rust failed to compile — crpc bug")]
+    #[error("internal compiler error: generated Rust failed to compile — crisp bug")]
     InternalIce,
 }
 

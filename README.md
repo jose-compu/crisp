@@ -14,7 +14,7 @@
 
 > **Explicit on demand, implicit by default.**
 
-Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
+Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crisp` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
 **This is a Rust-hosted bootstrap compiler (v1.5.1) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
@@ -39,9 +39,9 @@ In practice that means:
 
 - Types, borrows, lifetimes, and error sets are **inferred globally** when the source stays silent.
 - When you need precision — public APIs, performance-sensitive paths, or ambiguous usage — you annotate, and the compiler treats those annotations as hard constraints.
-- **`reveal`** is the “show your work” companion to `crpc`: it prints inferred types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and the emitted Rust that compact `.crp` source leaves implicit. See [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
+- **`reveal`** is the “show your work” companion to `crisp`: it prints inferred types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and the emitted Rust that compact `.crp` source leaves implicit. See [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
 
-Crisp is a **front end that produces Rust**. Rust remains the authority on memory safety and data races. Crisp’s own borrow/region passes exist to drive good diagnostics and to decide what to emit (`&`, `&mut`, owned, `.clone()` fallbacks); they are not claimed as an independent soundness boundary. If generated Rust fails to compile, that is a **`crpc` bug**, not a user error.
+Crisp is a **front end that produces Rust**. Rust remains the authority on memory safety and data races. Crisp’s own borrow/region passes exist to drive good diagnostics and to decide what to emit (`&`, `&mut`, owned, `.clone()` fallbacks); they are not claimed as an independent soundness boundary. If generated Rust fails to compile, that is a **`crisp` bug**, not a user error.
 
 **Design goals:** native code via `rustc`; HM-style type inference; deterministic global ownership dataflow; ambient fallible functions lowered to a uniform `Result<T, CrispError>`; compact syntax; tooling-first ergonomics.
 
@@ -75,7 +75,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | Regions / errors | `crisp-regions`, `crisp-errors` | Lifetimes, ambient `!` → `CrispError` |
 | IR | `crisp-cir` | Typed CIR consumed by emit |
 | Emit | `crisp-rust-emit` | Rust project under `target/rust/`, tests, `crisp.lock` |
-| CLI | `crpc` | `check`, `emit`, `build`, `run`, `test` |
+| CLI | `crisp` | `check`, `emit`, `build`, `run`, `test` |
 | Inspect | `reveal` | Companion CLI: inferred types/ownership/errors, traits, emitted Rust (QUICKSTART §10) |
 | IDE | `crisp-lsp` | Stdio LSP host (hover, inlay hints, diagnostics) + `CrispAnalysis` API (#56) |
 
@@ -107,11 +107,11 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Quick start
 
-Install the compiler from crates.io (puts `crpc` and `reveal` on your `PATH` via `~/.cargo/bin`):
+Install the compiler from crates.io (puts `crisp` and `reveal` on your `PATH` via `~/.cargo/bin`):
 
 ```bash
-cargo install crisp-crpc --locked
-crpc --version
+cargo install crisp-lang --locked
+crisp --version
 ```
 
 You still need a Rust toolchain (**1.85+**) with `cargo` / `rustc` — Crisp lowers to a Cargo project and builds with `rustc`.
@@ -142,7 +142,7 @@ pub main() = {
 }
 EOF
 
-crpc run .
+crisp run .
 ```
 
 Expected output:
@@ -156,17 +156,17 @@ Expected output:
 ```bash
 git clone https://github.com/jose-compu/crisp.git
 cd crisp
-# already installed via cargo install crisp-crpc, or:
+# already installed via cargo install crisp-lang, or:
 # cargo install --path crates/crpc --locked
-crpc run examples/hello
+crisp run examples/hello
 ```
 
 Other commands on a project:
 
 ```bash
-crpc check .                 # resolve + typecheck
-crpc emit .                  # write Rust under target/rust/
-crpc build .                 # emit + cargo build
+crisp check .                 # resolve + typecheck
+crisp emit .                  # write Rust under target/rust/
+crisp build .                 # emit + cargo build
 ```
 
 Optional LSP:
@@ -181,8 +181,8 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 
 | Example | Topics | Notes |
 |---------|--------|--------|
-| `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crpc test` |
-| `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crpc test` |
+| `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crisp test` |
+| `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crisp test` |
 | `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |
@@ -192,14 +192,14 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 | `ffi`, `unsafe_math` | C FFI, `unsafe` | |
 | `sealed` | `crisp.lock` sealed public API | |
 | `kitchen_sink`, `ownership_demo` | Combined features | |
-| `workshop` | Small multi-file workshop | `crpc test` |
-| `design_patterns` | GoF-style multi-module patterns | `crpc test` / `check` |
+| `workshop` | Small multi-file workshop | `crisp test` |
+| `design_patterns` | GoF-style multi-module patterns | `crisp test` / `check` |
 | `abnormal_suite` | Compile-fail edge cases | typecheck / fail tests |
 
 ## Repository layout
 
 ```
-crates/          Rust compiler workspace (lexer → emit, crpc, lsp, reveal)
+crates/          Rust compiler workspace (lexer → emit, crisp, lsp, reveal)
 docs/            Spec, limitations, error catalog, web site scaffold
 examples/        Sample .crp projects
 std/             Standard library (Crisp prelude and modules)
@@ -209,7 +209,7 @@ tests/           Integration placeholders (fixtures live under crates/)
 ## Contributing / building
 
 ```bash
-cargo build --release -p crisp-crpc
+cargo build --release -p crisp-lang
 cargo test --workspace --verbose
 cargo fmt --all --check
 cargo clippy --workspace -- -D warnings

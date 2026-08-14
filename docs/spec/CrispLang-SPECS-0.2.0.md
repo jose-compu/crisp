@@ -3,7 +3,7 @@
 **Version:** 0.2.0-draft
 **Status:** Abstract Design Specification
 **File Extension:** `.crp`
-**Compiler / Transpiler:** `crpc`
+**Compiler / Transpiler:** `crisp`
 **Toolchain:** `reveal`
 **Target:** Rust (source-to-IR-to-Rust); `rustc` is the final source of truth.
 
@@ -1346,7 +1346,7 @@ When `rustc` rejects emitted Rust:
 2. Failing that, it maps the `rustc` span back to the originating Crisp span via the CIR
    source map and emits:
    `internal compiler error: generated Rust failed to compile at <crisp-span>. This is
-   a crpc bug; please report it. (rustc said: <summary>)`
+   a Crisp compiler bug; please report it. (rustc said: <summary>)`
 3. The build fails. No binary is produced. The user never debugs raw generated Rust
    unless they explicitly run `reveal rust`.
 
@@ -1400,16 +1400,16 @@ serde_json = { rust = true, version = "1" }
 ### 18.3 Commands
 
 ```rust
-crpc build      -- analyze -> emit Rust -> invoke rustc
-crpc run        -- build + run
-crpc test       -- run tests
-crpc check      -- analyze + emit; typecheck emitted Rust via cargo check (fast)
-crpc emit       -- (new) emit Rust to target/rust/ and stop
+crisp build      -- analyze -> emit Rust -> invoke rustc
+crisp run        -- build + run
+crisp test       -- run tests
+crisp check      -- analyze + emit; typecheck emitted Rust via cargo check (fast)
+crisp emit       -- (new) emit Rust to target/rust/ and stop
 reveal expand src/-- annotated Crisp for the project
 reveal rust src/  -- (new) emitted Rust for the project
 ```
 
-`crpc` invokes the system `rustc`/`cargo`; the emitted crate is an ordinary Cargo
+`crisp` invokes the system `rustc`/`cargo`; the emitted crate is an ordinary Cargo
 project under `target/rust/`, so the generated output is itself buildable and auditable.
 
 ---

@@ -28,7 +28,7 @@ pub fn code_lenses_for_file(file: &SourceFile, crate_root: &Path) -> Vec<CodeLen
     if let Some(main) = functions.iter().find(|f| f.name.name == "main") {
         lenses.push(CodeLens {
             span: main.span,
-            title: "Run crpc test".into(),
+            title: "Run crisp test".into(),
             command: "crisp.runTests".into(),
             arguments: vec![root],
         });

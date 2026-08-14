@@ -19,7 +19,7 @@ Prefer one of:
 
 Include:
 
-- Crisp / `crpc` version (`crpc --version`)
+- Crisp / `crisp` version (`crisp --version`)
 - Minimal `.crp` repro if applicable
 - Impact (wrong code gen, sandbox escape in emitted Rust tooling, etc.)
 
@@ -27,4 +27,4 @@ We aim to acknowledge reports within 7 days.
 
 ## Scope notes
 
-Crisp lowers to Rust and relies on **`rustc` as the soundness boundary**. Issues that are pure Rust/borrow-checker failures on *correctly* emitted code are treated as compiler bugs (`crpc`), not as “Crisp is memory-unsafe by design.” Generated `unsafe` / FFI examples are intentional and require the same care as Rust `unsafe`.
+Crisp lowers to Rust and relies on **`rustc` as the soundness boundary**. Issues that are pure Rust/borrow-checker failures on *correctly* emitted code are treated as compiler bugs (`crisp`), not as “Crisp is memory-unsafe by design.” Generated `unsafe` / FFI examples are intentional and require the same care as Rust `unsafe`.

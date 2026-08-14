@@ -4,9 +4,9 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Bootstrap status
 
-- The compiler is a **Rust-hosted bootstrap** (`crpc`). Self-hosting (Crisp compiling Crisp) is ROADMAP Phase 2 / milestone **v2.0.0**, not shipped.
+- The compiler is a **Rust-hosted bootstrap** (`crisp`). Self-hosting (Crisp compiling Crisp) is ROADMAP Phase 2 / milestone **v2.0.0**, not shipped.
 - Spec document remains **v0.2.0-draft**. Do not treat every spec paragraph as implemented.
-- **Install:** `cargo install crisp-crpc --locked` (also installs `reveal`). LSP: `cargo install crisp-lsp --locked`. From a clone: `cargo install --path crates/crpc --locked`. See [CRATES_IO.md](CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
+- **Install:** `cargo install crisp-lang --locked` (also installs `reveal`). LSP: `cargo install crisp-lsp --locked`. From a clone: `cargo install --path crates/crpc --locked`. See [CRATES_IO.md](CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
 
 ## Modules
 
@@ -26,8 +26,8 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Tooling
 
-- **`crpc check`** runs ownership probe emit + rustc (floats, `format!` interpolation, type defs). Remaining gaps may still yield non-borrow probe failures that are ignored rather than `E0057` ([#14](https://github.com/jose-compu/crisp/issues/14)).
-- **Diagnostics:** resolve/typeck errors from `crpc check` render source snippets and hints when spans resolve (E0035 names the defining module when known) ([#22](https://github.com/jose-compu/crisp/issues/22)).
+- **`crisp check`** runs ownership probe emit + rustc (floats, `format!` interpolation, type defs). Remaining gaps may still yield non-borrow probe failures that are ignored rather than `E0057` ([#14](https://github.com/jose-compu/crisp/issues/14)).
+- **Diagnostics:** resolve/typeck errors from `crisp check` render source snippets and hints when spans resolve (E0035 names the defining module when known) ([#22](https://github.com/jose-compu/crisp/issues/22)).
 - **`test "name"`** becomes `fn test_<sanitized>` so it does not shadow crate items. Float `assert_eq` uses a small epsilon. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
 - **`reveal` (spec §16):** beginner walkthrough in [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal). Deep overlays today: `types` / `ownership` / `lifetimes` / `errors` / `rust` / `seal` / user `traits`. Gaps ([#19](https://github.com/jose-compu/crisp/issues/19)): `expand` / `diff` / `map` remain shallow.
 - **`crisp-lsp`:** stdio LSP binary (`cargo install --path crates/crisp-lsp`) — hover, inlay hints, crate diagnostics on open/save ([#56](https://github.com/jose-compu/crisp/issues/56)). Library API: `CrispAnalysis`.

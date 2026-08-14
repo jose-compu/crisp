@@ -1,6 +1,6 @@
 # Crisp Quickstart
 
-Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
+Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crisp` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)
 
@@ -11,18 +11,18 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 
 ## 1. Install the toolchain
 
-From crates.io (recommended — ships `crpc` and `reveal`):
+From crates.io (recommended — ships `crisp` and `reveal`):
 
 ```bash
-cargo install crisp-crpc --locked
-crpc --version
+cargo install crisp-lang --locked
+crisp --version
 reveal --version
 ```
 
 From a clone of this repo (contributors / unreleased commits):
 
 ```bash
-cargo build --release -p crisp-crpc
+cargo build --release -p crisp-lang
 export PATH="$PWD/target/release:$PATH"
 # or: cargo install --path crates/crpc --locked
 ```
@@ -65,7 +65,7 @@ pub main() = {
 ```
 
 ```bash
-crpc run .
+crisp run .
 ```
 
 Expected:
@@ -77,16 +77,16 @@ Expected:
 Or, from a clone of this repository:
 
 ```bash
-crpc run examples/hello
+crisp run examples/hello
 ```
 
 Other useful commands:
 
 ```bash
 reveal types examples/hello  # see inferred signatures (see §10)
-crpc check .                 # resolve + typecheck (fast)
-crpc emit .                  # write Rust under target/rust/
-crpc build .                 # emit + cargo build
+crisp check .                 # resolve + typecheck (fast)
+crisp emit .                  # write Rust under target/rust/
+crisp build .                 # emit + cargo build
 ```
 
 ## 3. Create a new project
@@ -128,7 +128,7 @@ pub main() = {
 Run from the project directory:
 
 ```bash
-crpc run .
+crisp run .
 ```
 
 ## 4. Language basics
@@ -240,7 +240,7 @@ test_compile_fail "unknown name" = {
 ```
 
 ```bash
-crpc test .
+crisp test .
 ```
 
 Runtime tests run via emitted Rust `#[test]` functions. `test_compile_fail` asserts that a fragment fails typechecking.
@@ -266,36 +266,36 @@ Fallible calls lower to `Result<T, CrispError>`. Use `catch` for recovery.
 
 See `examples/fallible`, `examples/fallible_chain`.
 
-## 9. `crpc` commands
+## 9. `crisp` commands
 
 `<path>` defaults to `.` (searches upward for `crisp.toml`).
 
 | Command | What it does |
 |---------|----------------|
-| `crpc check <path>` | Fast analyze: resolve, typecheck, ownership probe — **no** Cargo build |
-| `crpc emit <path>` | Write generated Rust crate to `<path>/target/rust/` and stop |
-| `crpc build <path>` | Emit + `cargo build` (native binary via `rustc`) |
-| `crpc run <path>` | Build and run the binary (day-to-day for apps/examples) |
-| `crpc test <path>` | Emit + run Crisp `test` / `test_compile_fail` via `cargo test` |
-| `crpc resolve <path>` | Print resolved module graph (debug) |
-| `crpc parse <file.crp>` | Print AST for one file (debug) |
+| `crisp check <path>` | Fast analyze: resolve, typecheck, ownership probe — **no** Cargo build |
+| `crisp emit <path>` | Write generated Rust crate to `<path>/target/rust/` and stop |
+| `crisp build <path>` | Emit + `cargo build` (native binary via `rustc`) |
+| `crisp run <path>` | Build and run the binary (day-to-day for apps/examples) |
+| `crisp test <path>` | Emit + run Crisp `test` / `test_compile_fail` via `cargo test` |
+| `crisp resolve <path>` | Print resolved module graph (debug) |
+| `crisp parse <file.crp>` | Print AST for one file (debug) |
 
 Pipeline order for a successful `run`/`test`: analyze → emit Rust under `target/rust/` → Cargo/`rustc`. Use `check` while editing; use `emit` when you want to read the generated Rust.
 ## 10. Inspect what the compiler inferred (`reveal`)
 
 ### What is `reveal`?
 
-`crpc` **builds and runs** your project. `reveal` **explains** what the compiler decided behind the scenes.
+`crisp` **builds and runs** your project. `reveal` **explains** what the compiler decided behind the scenes.
 
 Crisp source often omits types, borrows (`&` / `&mut`), lifetimes, and error sets — the compiler infers them. `reveal` prints those decisions so you can learn the language and debug surprises without opening `target/rust/` by hand.
 
 | Tool | Job |
 |------|-----|
-| `crpc check` / `run` / `test` | “Does this compile and work?” |
+| `crisp check` / `run` / `test` | “Does this compile and work?” |
 | `reveal <subcommand>` | “What did inference emit / decide?” |
-| `crpc emit` | Write the full generated Rust crate under `target/rust/` |
+| `crisp emit` | Write the full generated Rust crate under `target/rust/` |
 
-`reveal` ships next to `crpc` (same `cargo build -p crisp-crpc` / `cargo install --path crates/crpc`). Spec reference: §16.
+`reveal` ships next to `crisp` (same `cargo build -p crisp-lang` / `cargo install --path crates/crpc`). Spec reference: §16.
 
 ### Try it (hello)
 
@@ -322,7 +322,7 @@ Your Crisp may only say `greet(name) = …`; `reveal` shows that `name` became `
 | I want to… | Run |
 |------------|-----|
 | See function signatures (types / `&`) | `reveal types <path>` or `reveal ownership <path>` |
-| See the Rust `crpc` would generate | `reveal rust <path>` |
+| See the Rust `crisp` would generate | `reveal rust <path>` |
 | See which errors a fallible fn can throw | `reveal errors <path>` |
 | List `trait` / `impl Trait for` in a crate | `reveal traits <path>` (try `examples/show_trait`) |
 | See lifetimes on parameters | `reveal lifetimes <path>` |
@@ -412,14 +412,14 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 Run any example:
 
 ```bash
-crpc run examples/<name>
-crpc test examples/<name>
+crisp run examples/<name>
+crisp test examples/<name>
 ```
 
 ## 13. Project layout reference
 
 ```
-crates/                 Compiler workspace (`crpc`, emit, typeck, …)
+crates/                 Compiler workspace (`crisp`, emit, typeck, …)
 docs/spec/              Language specification
 editors/vscode-crisp/   `.crp` syntax highlighting (VS Code / Cursor)
 examples/               Sample `.crp` projects
@@ -431,7 +431,7 @@ tests/                  Integration fixtures
 
 > Explicit on demand, implicit by default.
 
-Crisp lowers to a typed IR (CIR), emits explicit Rust, and delegates memory safety to `rustc`. When something is unclear, use `reveal` or `crpc emit` to see the generated code.
+Crisp lowers to a typed IR (CIR), emits explicit Rust, and delegates memory safety to `rustc`. When something is unclear, use `reveal` or `crisp emit` to see the generated code.
 
 ## Next steps
 

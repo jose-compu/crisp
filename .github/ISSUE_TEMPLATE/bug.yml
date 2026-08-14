@@ -1,5 +1,5 @@
 name: Bug report
-description: Incorrect behavior in crpc / reveal / emit
+description: Incorrect behavior in crisp / reveal / emit
 labels: ["bug"]
 body:
   - type: markdown
@@ -9,8 +9,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Crisp / crpc version
-      placeholder: "crpc --version → 1.2.0"
+      label: Crisp / crisp version
+      placeholder: "crisp --version → 1.2.0"
     validations:
       required: true
   - type: textarea
@@ -25,7 +25,7 @@ body:
     id: commands
     attributes:
       label: Commands run
-      description: e.g. crpc check ., crpc test examples/foo
+      description: e.g. crisp check ., crisp test examples/foo
     validations:
       required: true
   - type: textarea

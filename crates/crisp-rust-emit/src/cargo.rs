@@ -15,7 +15,7 @@ pub enum CargoError {
     #[error("{0}")]
     BuildFailed(String),
     #[error(
-        "internal compiler error: generated Rust failed to compile at crisp span {span:?} — crpc bug (rustc: {summary})"
+        "internal compiler error: generated Rust failed to compile at crisp span {span:?} — crisp bug (rustc: {summary})"
     )]
     Ice {
         span: Option<crisp_ast::Span>,

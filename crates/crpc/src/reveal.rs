@@ -1,7 +1,7 @@
 //! `reveal` CLI — inspect inferred Crisp precision (spec §16).
 //!
-//! Built as a second binary of the `crisp-crpc` package:
-//! `cargo build -p crisp-crpc` → `target/debug/reveal`.
+//! Built as a second binary of the `crisp-lang` package:
+//! `cargo build -p crisp-lang` → `target/debug/reveal`.
 
 use clap::{Parser, Subcommand};
 use crisp_reveal::{
@@ -17,9 +17,9 @@ use std::process::ExitCode;
     version,
     about = "Inspect inferred Crisp precision (spec §16)",
     long_about = "Inspect what the Crisp compiler inferred (spec §16).\n\n\
-                  `crpc` builds and runs your project. `reveal` explains the hidden precision:\n\
+                  `crisp` builds and runs your project. `reveal` explains the hidden precision:\n\
                   types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and emitted Rust.\n\n\
-                  Install (ships both `crpc` and `reveal`):\n\
+                  Install (ships both `crisp` and `reveal`):\n\
                   \x20 cargo install --path crates/crpc --locked\n\n\
                   Start here:\n\
                   \x20 reveal types examples/hello\n\

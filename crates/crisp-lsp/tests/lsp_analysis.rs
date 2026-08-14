@@ -120,3 +120,27 @@ fn analyze_all_examples() {
         CrispAnalysis::analyze(&root).unwrap_or_else(|e| panic!("{name}: {e}"));
     }
 }
+
+#[test]
+fn kitchen_sink_hints_and_lenses() {
+    let root = example("kitchen_sink");
+    let file = main_crp(&root);
+    let a = CrispAnalysis::analyze(&root).expect("analyze");
+    let hints = a.inlay_hints(&file).unwrap();
+    let lenses = a.code_lenses(&file).unwrap();
+    eprintln!("kitchen_sink hints={} lenses={}", hints.len(), lenses.len());
+    assert!(lenses.iter().any(|l| l.title == "Show emitted Rust"));
+}
+
+#[test]
+fn inventory_fallible_overlays() {
+    let root = example("inventory");
+    let file = main_crp(&root);
+    let a = CrispAnalysis::analyze(&root).expect("analyze");
+    let overlays = a.call_overlays(&file).unwrap();
+    assert!(
+        overlays
+            .iter()
+            .any(|o| o.callee == "try_reserve" || o.callee == "lookup_item")
+    );
+}

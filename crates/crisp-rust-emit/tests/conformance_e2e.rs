@@ -5,7 +5,6 @@
 use crisp_cir::CirBuilder;
 use crisp_diagnostics::{format_ownership_contradiction, format_type_mismatch};
 use crisp_lexer::lex;
-use crisp_lsp::CrispAnalysis;
 use crisp_parser::Parser;
 use crisp_resolve::Resolver;
 use crisp_rust_emit::{PipelineError, emit_crate, run_emitted};
@@ -52,7 +51,7 @@ fn spec_s4_expressions_patterns() {
 fn spec_s7_ownership_demo() {
     let root = example("ownership_demo");
     eprintln!("§7 ownership_demo");
-    CrispAnalysis::analyze(&root).expect("analyze");
+    TypeChecker::check_crate(&root).expect("typeck/ownership pipeline");
 }
 
 /// §8–§9 — Regions + reachable errors
@@ -60,11 +59,8 @@ fn spec_s7_ownership_demo() {
 fn spec_s8_s9_fallible_errors() {
     let root = example("fallible");
     eprintln!("§8–§9 fallible");
-    let a = CrispAnalysis::analyze(&root).expect("analyze");
-    let overlays = a
-        .call_overlays(&root.join("src/main.crp"))
-        .expect("overlays");
-    assert!(overlays.iter().any(|o| o.fallible));
+    // Full fallible overlay assertions live in crisp-lsp tests (avoids publish cycle).
+    TypeChecker::check_crate(&root).expect("typeck fallible");
 }
 
 /// §12 — Name resolution + modules
@@ -85,17 +81,13 @@ fn spec_s12_5_sealed_lock() {
     crisp_rust_emit::verify_sealed_api(&root).expect("lock");
 }
 
-/// §16.3 — LSP analysis layer
+/// §16.3 — LSP analysis layer (coverage in `crisp-lsp` tests; emit stays publishable)
 #[test]
-fn spec_s16_3_lsp_hover_and_lenses() {
+fn spec_s16_3_emit_still_builds_hello() {
     let root = example("hello");
-    let file = root.join("src/main.crp");
-    let a = CrispAnalysis::analyze(&root).expect("analyze");
-    let hints = a.inlay_hints(&file).expect("hints");
-    let lenses = a.code_lenses(&file).expect("lenses");
-    eprintln!("§16.3 hints={} lenses={}", hints.len(), lenses.len());
-    assert!(!hints.is_empty());
-    assert!(lenses.iter().any(|l| l.title == "Show emitted Rust"));
+    let cir = CirBuilder::build_crate(&root).expect("cir");
+    let out = emit_crate(&cir);
+    assert!(out.lib_rs.contains("fn main"));
 }
 
 /// §17.1 — CIR + Rust emission (in-memory; avoids shared target/rust races)

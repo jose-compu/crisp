@@ -206,7 +206,7 @@ publish_with_retry() {
   while true; do
     echo "    publish attempt ${attempt}…"
     set +e
-    out="$(cargo publish -p "$name" 2>&1)"
+    out="$(cargo publish -p "$name" --allow-dirty 2>&1)"
     status=$?
     set -e
     printf '%s\n' "$out"

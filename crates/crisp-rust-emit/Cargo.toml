@@ -30,7 +30,6 @@ tempfile = "3"
 crisp-resolve.workspace = true
 crisp-typeck.workspace = true
 crisp-manifest.workspace = true
-crisp-lsp.workspace = true
 crisp-lexer.workspace = true
 crisp-parser.workspace = true
 crisp-diagnostics.workspace = true

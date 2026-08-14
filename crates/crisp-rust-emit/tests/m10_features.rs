@@ -1,8 +1,9 @@
-//! Milestone 1.0 feature tests: LSP examples, patterns, kitchen_sink.
+//! Milestone 1.0 feature tests: patterns, kitchen_sink, ownership (emit side).
+//! LSP overlay / hint coverage lives in `crisp-lsp` (avoids crates.io publish cycle).
 
 use crisp_cir::CirBuilder;
-use crisp_lsp::CrispAnalysis;
 use crisp_rust_emit::{PipelineError, emit_crate, run_emitted, run_tests};
+use crisp_typeck::TypeChecker;
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
@@ -40,11 +41,7 @@ fn m10_patterns_match_guards_and_tuples() {
 #[test]
 fn m10_kitchen_sink_integrated() {
     let root = example("kitchen_sink");
-    let a = CrispAnalysis::analyze(&root).expect("lsp analyze");
-    let hints = a.inlay_hints(&root.join("src/main.crp")).unwrap();
-    let lenses = a.code_lenses(&root.join("src/main.crp")).unwrap();
-    eprintln!("kitchen_sink hints={hints:?} lenses={lenses:?}");
-    assert!(lenses.iter().any(|l| l.title == "Show emitted Rust"));
+    TypeChecker::check_crate(&root).expect("typeck kitchen_sink");
     match run_emitted(&root) {
         Ok(out) => assert!(out.contains("port=3000")),
         Err(PipelineError::ToolchainUnavailable) => eprintln!("SKIP kitchen_sink run"),
@@ -55,7 +52,7 @@ fn m10_kitchen_sink_integrated() {
 #[test]
 fn m10_ownership_demo_analyze_and_run() {
     let root = example("ownership_demo");
-    CrispAnalysis::analyze(&root).expect("analyze");
+    TypeChecker::check_crate(&root).expect("typeck ownership_demo");
     match run_emitted(&root) {
         Ok(out) => {
             eprintln!("ownership run: {out:?}");
@@ -67,15 +64,7 @@ fn m10_ownership_demo_analyze_and_run() {
 }
 
 #[test]
-fn m10_lsp_fallible_call_overlay() {
+fn m10_fallible_typechecks() {
     let root = example("fallible");
-    let a = CrispAnalysis::analyze(&root).unwrap();
-    let overlays = a.call_overlays(&root.join("src/main.crp")).unwrap();
-    eprintln!("overlays: {overlays:?}");
-    let read = overlays
-        .iter()
-        .find(|o| o.callee == "read_config")
-        .expect("read_config");
-    assert!(read.fallible);
-    assert!(!read.error_set.is_empty());
+    TypeChecker::check_crate(&root).expect("typeck fallible");
 }

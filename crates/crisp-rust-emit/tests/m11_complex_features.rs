@@ -1,7 +1,6 @@
 //! Complex feature matrix — examples + runtime tests for all advanced Crisp features.
 
 use crisp_cir::CirBuilder;
-use crisp_lsp::CrispAnalysis;
 use crisp_rust_emit::{
     PipelineError, build_emitted, collect_tests, emit_crate, run_emitted, run_tests,
     verify_sealed_api,
@@ -95,15 +94,9 @@ fn complex_workshop_multimodule_tests() {
 }
 
 #[test]
-fn complex_inventory_lsp_and_fallible() {
+fn complex_inventory_fallible_typechecks() {
     let root = example("inventory");
-    let a = CrispAnalysis::analyze(&root).expect("analyze");
-    let overlays = a.call_overlays(&root.join("src/main.crp")).unwrap();
-    assert!(
-        overlays
-            .iter()
-            .any(|o| o.callee == "try_reserve" || o.callee == "lookup_item")
-    );
+    TypeChecker::check_crate(&root).expect("typeck inventory");
 }
 
 #[test]

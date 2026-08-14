@@ -20,6 +20,11 @@ crisp --version
 
 Do **not** publish example crates under `examples/`.
 
+**Publish cycle note:** `crisp-rust-emit` must not depend on `crisp-lsp` (even as a
+dev-dependency with a version). `crisp-lsp` depends on `crisp-rust-emit`, so a
+versioned `crisp-lsp` dep would block packaging until `crisp-lsp` already existed
+on crates.io. LSP analysis tests live under `crates/crisp-lsp/tests/`.
+
 ## Publish order
 
 Bottom-up so path deps resolve to registry versions (must match `scripts/publish-crates.sh`):

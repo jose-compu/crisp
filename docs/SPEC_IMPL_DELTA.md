@@ -31,7 +31,9 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
 | Traits / `impl Trait for` | §3.6 | Method traits + literal/simple defaults (`examples/show_trait`, `trait_defaults`); bounds / dyn still limited — [#59](https://github.com/jose-compu/crisp/issues/59) |
 | Rust crate imports | §14.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; stubs for `serde_json` / `ureq`; known Result APIs → `CrispError::Thrown` + `?` (#55) |
-| Shapes | §3.5 | Data shapes: resolve/typeck/emit + `examples/shapes`; method/anonymous shapes still limited |
+| Closures / lambdas | §5.3 | Parse + partial typeck; **no CIR/emit** — first-class values + lexical capture planned [#72](https://github.com/jose-compu/crisp/issues/72) (v1.6.0) |
+| Shapes | §3.5 | Data shapes: resolve/typeck/emit + `examples/shapes`; method/anonymous shapes still limited; parametric shapes [#70](https://github.com/jose-compu/crisp/issues/70) |
+| User generics | §3 / §5 | Incomplete (type params partially parsed; function generics not wired) — [#71](https://github.com/jose-compu/crisp/issues/71) |
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord | §15.4 | Prelude shims + Display/PartialEq/Ord bridges (`examples/std_traits`) — [#27](https://github.com/jose-compu/crisp/issues/27) |
 | Std net/http | §15.2 | `std.net.parse_ip` + thin `ureq` GET (`examples/net_http`); full `std.http` server API deferred — [#28](https://github.com/jose-compu/crisp/issues/28) |

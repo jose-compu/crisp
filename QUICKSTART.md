@@ -6,54 +6,87 @@ Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact 
 
 ## Prerequisites
 
-- [Rust](https://rustup.rs/) **1.85+** (MSRV; see workspace `rust-version` and `rust-toolchain.toml`) with `cargo` and `rustc` on `PATH`
-- Clone this repository
+- [Rust](https://rustup.rs/) **1.85+** (MSRV) with `cargo` and `rustc` on `PATH`
+- Optional: this repository (examples and contributing)
 
-## 1. Build / install the toolchain
+## 1. Install the toolchain
+
+From crates.io (recommended — ships `crpc` and `reveal`):
+
+```bash
+cargo install crpc --locked
+crpc --version
+reveal --version
+```
+
+From a clone of this repo (contributors / unreleased commits):
 
 ```bash
 cargo build --release -p crpc
-export PATH="$PWD/target/release:$PATH"   # optional, for this shell
-```
-
-Or install into your Cargo bin directory (ships both `crpc` and `reveal`):
-
-```bash
-cargo install --path crates/crpc --locked
-# ensure ~/.cargo/bin is on PATH
-```
-
-Verify:
-
-```bash
-crpc --version
-reveal --version
+export PATH="$PWD/target/release:$PATH"
+# or: cargo install --path crates/crpc --locked
 ```
 
 Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site: [crisp-lang.org](https://crisp-lang.org/) (source on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch).
 
 **Interop note:** known Rust `Result` APIs (`serde_json`, `ureq`) lower to Crisp ambient errors (`?` / `CrispError::Thrown`). Use `catch` or let the function stay fallible.
 
-## 2. Run the hello example
+## 2. Run hello immediately
+
+Create a tiny project (no repo clone required):
 
 ```bash
-crpc run examples/hello
+mkdir -p hello/src && cd hello
 ```
 
-Expected output:
+`crisp.toml`:
+
+```toml
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+```
+
+`src/main.crp`:
+
+```crisp
+greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("world")
+    print(msg)
+}
+```
+
+```bash
+crpc run .
+```
+
+Expected:
 
 ```
 "hello world"
+```
+
+Or, from a clone of this repository:
+
+```bash
+crpc run examples/hello
 ```
 
 Other useful commands:
 
 ```bash
 reveal types examples/hello  # see inferred signatures (see §10)
-crpc check examples/hello    # resolve + typecheck (fast)
-crpc emit examples/hello     # write Rust to examples/hello/target/rust/
-crpc build examples/hello    # emit + cargo build
-crpc test examples/with_tests
+crpc check .                 # resolve + typecheck (fast)
+crpc emit .                  # write Rust under target/rust/
+crpc build .                 # emit + cargo build
 ```
 
 ## 3. Create a new project

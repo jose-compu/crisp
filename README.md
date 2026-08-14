@@ -101,39 +101,48 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 **v1.5.1** — loops (`while` / `for` / `loop`, `examples/loops`); builds on v1.5.0 (Result absorption, shapes, LSP, VSIX, trait defaults) and v1.4.x interop / Show/Eq/Ord / net/http.
 
-**Still open:** crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
+**Still open:** first crates.io publish track ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 
 ## Quick start
 
-Build the toolchain:
+Install the compiler from crates.io (puts `crpc` and `reveal` on your `PATH` via `~/.cargo/bin`):
 
 ```bash
-cargo build --release -p crpc
-export PATH="$PWD/target/release:$PATH"
-# or: cargo install --path crates/crpc --locked
+cargo install crpc --locked
+crpc --version
 ```
 
-### Hello world
+You still need a Rust toolchain (**1.85+**) with `cargo` / `rustc` — Crisp lowers to a Cargo project and builds with `rustc`.
 
-[`examples/hello/src/main.crp`](examples/hello/src/main.crp):
+### Hello world (no clone)
 
-```crisp
--- examples/hello — minimal Crisp program (spec §5)
+```bash
+mkdir -p hello/src && cd hello
 
+cat > crisp.toml <<'EOF'
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+EOF
+
+cat > src/main.crp <<'EOF'
 greet(name) = "hello " ++ name
 
 pub main() = {
     msg := greet("world")
     print(msg)
 }
-```
+EOF
 
-Run it:
-
-```bash
-crpc run examples/hello
+crpc run .
 ```
 
 Expected output:
@@ -142,15 +151,31 @@ Expected output:
 "hello world"
 ```
 
-Other commands on the same project:
+### From this repository
 
 ```bash
-crpc check examples/hello    # resolve + typecheck
-crpc emit examples/hello     # write Rust under examples/hello/target/rust/
-crpc build examples/hello    # emit + cargo build
+git clone https://github.com/jose-compu/crisp.git
+cd crisp
+# already installed via cargo install crpc, or:
+# cargo install --path crates/crpc --locked
+crpc run examples/hello
 ```
 
-See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and fallible functions. Install details: [docs/RELEASE.md](docs/RELEASE.md).
+Other commands on a project:
+
+```bash
+crpc check .                 # resolve + typecheck
+crpc emit .                  # write Rust under target/rust/
+crpc build .                 # emit + cargo build
+```
+
+Optional LSP:
+
+```bash
+cargo install crisp-lsp --locked
+```
+
+See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and fallible functions. crates.io notes: [docs/CRATES_IO.md](docs/CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
 
 ## Examples
 

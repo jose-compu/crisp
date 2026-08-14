@@ -32,13 +32,11 @@
     <div class="wrap hero-split">
       <div>
         <h1>Install Crisp</h1>
-        <p class="lede">Build <code>crpc</code> from source with a recent Rust toolchain (public release — crates.io deferred). Crisp emits Cargo projects, so <code>cargo</code> and <code>rustc</code> must be on your <code>PATH</code>.</p>
+        <p class="lede">One <code>cargo install</code>, then <code>crpc run</code>. Crisp emits a Cargo project, so you need Rust <strong>1.85+</strong> with <code>cargo</code> / <code>rustc</code> on your <code>PATH</code>.</p>
       </div>
       <aside class="callout">
         <strong>Requirements</strong>
-        Rust <strong>1.85+</strong> (see workspace <code>rust-version</code>) via
-        <a href="https://rustup.rs/">rustup</a>. Prefer tag <strong>v1.5.1</strong> or <code>main</code> from
-        <a href="https://github.com/jose-compu/crisp">jose-compu/crisp</a>.
+        Rust via <a href="https://rustup.rs/">rustup</a>. Installer package: <a href="https://crates.io/crates/crisp-crpc"><code>crisp-crpc</code> on crates.io</a>. Site: <a href="https://crisp-lang.org/">crisp-lang.org</a>.
       </aside>
     </div>
   </section>
@@ -46,29 +44,54 @@
   <section class="band-light">
     <div class="wrap layout-docs">
       <div class="content">
-        <h2 id="from-source">Install from source</h2>
-        <pre class="pipe">git clone https://github.com/jose-compu/crisp.git
-cd crisp
-cargo build --release -p crpc
-export PATH="$PWD/target/release:$PATH"</pre>
-        <p>Or install into your Cargo bin directory:</p>
-        <pre class="pipe">cargo install --path crates/crpc --locked
-# ensure ~/.cargo/bin is on PATH</pre>
-        <p>Optional language server + editor package:</p>
-        <pre class="pipe">cargo install --path crates/crisp-lsp --locked
-./scripts/package-vsix.sh   # then: Extensions → Install from VSIX…</pre>
-        <p>Verify:</p>
-        <pre class="pipe">crpc --version</pre>
+        <h2 id="crates-io">Install from crates.io</h2>
+        <p>Puts <code>crpc</code> and <code>reveal</code> in <code>~/.cargo/bin</code>:</p>
+        <pre class="pipe">cargo install crisp-crpc --locked
+crpc --version</pre>
+        <p>Optional language server:</p>
+        <pre class="pipe">cargo install crisp-lsp --locked</pre>
 
-        <h2 id="hello">Run hello world</h2>
-        <p>From the repository root:</p>
-        <pre class="pipe">crpc run examples/hello</pre>
+        <h2 id="hello">Run hello immediately</h2>
+        <p>No need to clone the repo — create a tiny project and run it:</p>
+        <pre class="pipe">mkdir -p hello/src && cd hello
+
+cat > crisp.toml <<'EOF'
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+EOF
+
+cat > src/main.crp <<'EOF'
+greet(name) = "hello " ++ name
+
+pub main() = {
+    msg := greet("world")
+    print(msg)
+}
+EOF
+
+crpc run .</pre>
         <p>Expected output:</p>
         <pre class="pipe">"hello world"</pre>
         <p>Useful companions:</p>
-        <pre class="pipe">crpc check examples/hello
-crpc emit examples/hello
-crpc build examples/hello</pre>
+        <pre class="pipe">crpc check .
+crpc emit .
+crpc build .</pre>
+
+        <h2 id="from-source">Install from source</h2>
+        <p>For contributors or unreleased commits:</p>
+        <pre class="pipe">git clone https://github.com/jose-compu/crisp.git
+cd crisp
+cargo install --path crates/crpc --locked
+# ensure ~/.cargo/bin is on PATH
+crpc run examples/hello</pre>
+        <p>Editor VSIX (optional): <code>./scripts/package-vsix.sh</code> then Extensions → Install from VSIX…</p>
 
         <h2 id="next">Next steps</h2>
         <ul>
@@ -79,9 +102,10 @@ crpc build examples/hello</pre>
       </div>
       <nav class="side-toc" aria-label="On this page">
         <ol>
-          <li><a class="active" href="#from-source"><span class="num">01</span> From source</a></li>
+          <li><a class="active" href="#crates-io"><span class="num">01</span> crates.io</a></li>
           <li><a href="#hello"><span class="num">02</span> Hello world</a></li>
-          <li><a href="#next"><span class="num">03</span> Next steps</a></li>
+          <li><a href="#from-source"><span class="num">03</span> From source</a></li>
+          <li><a href="#next"><span class="num">04</span> Next steps</a></li>
         </ol>
       </nav>
     </div>

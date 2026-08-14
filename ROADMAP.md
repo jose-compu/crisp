@@ -338,11 +338,11 @@ Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/iss
 
 Closures and explicit generics deepen the “compact source → explicit Rust” story without changing the soundness model (`rustc` remains truth).
 
-- [ ] **First-class closures** (spec §5.3) — `|x| …` as values; lexical capture; ownership decides borrow/`move`; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
+- [ ] **Function values / closures** (spec §5.2–§5.3) — **one** callable kind; naming optional (`|x| …` or `f := …` / top-level sugar); lexical capture; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
 - [ ] **User-facing generics** — types / functions / traits end-to-end — [#71](https://github.com/jose-compu/crisp/issues/71)
 - [ ] **Parametric shapes** — `shape Name<T> = { … }` — [#70](https://github.com/jose-compu/crisp/issues/70)
 
-**Design note (closures):** functions are first-class (assignable, passable). Capture follows syntactic scope; not an anonymous-inner-class escape hatch. Inference stays default; annotations when APIs need them. Emit ordinary Rust closures; `reveal ownership` shows capture modes.
+**Design note (#72, thanks [@aurelianito](https://github.com/aurelianito)):** Crisp should have **only closures** (first-class function values). Named “functions” are the same values bound to a name when useful — not a Ruby-style function-vs-closure split, and not a Java anonymous-inner-class escape hatch. Capture is lexical; ownership decides borrow/`move`. Emit may lower top-level named bindings to Rust `fn` and locals to Rust closures as a specialization, not as two language concepts.
 
 ---
 

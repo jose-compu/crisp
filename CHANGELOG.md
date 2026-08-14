@@ -9,13 +9,16 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.5.2] — 2026-08-14
+
 ### Changed
 
 - CLI binary **`crpc` → `crisp`**; crates.io package **`crisp-crpc` → `crisp-lang`**. Docs, scripts, and tests updated (#68).
+- Workspace version **1.5.1 → 1.5.2** so crates.io can republish after the rename (1.5.1 already occupied the index for early crates) (#66).
 
 ### Added
 
-- crates.io publish prep for v1.5.1: workspace `homepage` / `repository` inheritance, [CRATES_IO.md](docs/CRATES_IO.md), `scripts/publish-crates.sh` (#66).
+- crates.io publish prep: workspace `homepage` / `repository` inheritance, [CRATES_IO.md](docs/CRATES_IO.md), `scripts/publish-crates.sh` (#66).
 
 ## [1.5.1] — 2026-08-13
 

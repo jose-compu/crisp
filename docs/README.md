@@ -15,7 +15,7 @@ Static site for GitHub Pages (branch `docs`, folder `/docs`). Content tracks com
 | `language.html`, `cli.html`, `limitations.html` | Doc detail pages (+ language snippets) |
 | `index.html` “Language features” | Snippet gallery (enums, traits, rust import, …) |
 
-Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). Structure inspired by [elixir-lang.org](https://elixir-lang.org/).
+Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). Favicon assets (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`) are derived from `assets/crisp-logo-square.jpg` on `main`. Structure inspired by [elixir-lang.org](https://elixir-lang.org/).
 
 ## Syntax highlighting
 

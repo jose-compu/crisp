@@ -14,14 +14,14 @@ Thank you for contributing. Crisp is a **Rust-hosted bootstrap** compiler that t
 git clone https://github.com/jose-compu/crisp.git
 cd crisp
 ./scripts/install-git-hooks.sh   # pre-commit / pre-push: cargo fmt --check
-cargo build --release -p crisp-crpc
-# binaries: target/release/crpc and target/release/reveal
+cargo build --release -p crisp-lang
+# binaries: target/release/crisp and target/release/reveal
 export PATH="$PWD/target/release:$PATH"
-crpc --version
+crisp --version
 reveal --version
 ```
 
-`crpc` builds/runs Crisp crates. `reveal` prints what inference decided (types, ownership, emitted Rust, …). Beginner guide: [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
+`crisp` builds/runs Crisp crates. `reveal` prints what inference decided (types, ownership, emitted Rust, …). Beginner guide: [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
 
 Git hooks live in [`.githooks/`](.githooks/) (`core.hooksPath`). They mirror CI: `cargo fmt --all -- --check`.
 
@@ -29,7 +29,7 @@ Alternatively:
 
 ```bash
 cargo install --path crates/crpc --locked
-# installs both `crpc` and `reveal` (do not `cargo install` crates/crisp-reveal — library only)
+# installs both `crisp` and `reveal` (do not `cargo install` crates/crisp-reveal — library only)
 ```
 
 ## Development loop
@@ -55,9 +55,9 @@ Review the `.snap` diffs before committing.
 Exercise examples:
 
 ```bash
-crpc check examples/hello
-crpc test examples/math
-crpc run examples/float_demo
+crisp check examples/hello
+crisp test examples/math
+crisp run examples/float_demo
 ```
 
 ## Pull requests
@@ -70,7 +70,7 @@ crpc run examples/float_demo
 
 ## Public preview notes
 
-- Install: `cargo install crisp-crpc --locked` (crates.io — [#66](https://github.com/jose-compu/crisp/issues/66); see [docs/CRATES_IO.md](docs/CRATES_IO.md)). Contributors: `cargo install --path crates/crpc --locked`.
+- Install: `cargo install crisp-lang --locked` (crates.io — [#66](https://github.com/jose-compu/crisp/issues/66); see [docs/CRATES_IO.md](docs/CRATES_IO.md)). Contributors: `cargo install --path crates/crpc --locked`.
 - Site: https://crisp-lang.org/
 - Maintainers: enable branch protection on `main` (require CI) when the GitHub plan allows; flip visibility via [#58](https://github.com/jose-compu/crisp/issues/58).
 - Release checklist: [docs/RELEASE.md](docs/RELEASE.md).

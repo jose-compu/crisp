@@ -1,7 +1,7 @@
 -- examples/rust_shadow — W0048 when a Crisp module and a Rust dep share a name (#41)
 --
 -- Bare `use config { report }` binds this crate's Crisp `config` module (module wins).
--- `crpc check` / `crpc resolve` print W0048. Prefer `use rust.config { … }` for the crate.
+-- `crisp check` / `crisp resolve` print W0048. Prefer `use rust.config { … }` for the crate.
 
 use config { report }
 

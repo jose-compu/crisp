@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Crisp toolchain (`crpc`, `reveal`, and workspace crates) are documented here.
+All notable changes to the Crisp toolchain (`crisp`, `reveal`, and workspace crates) are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
@@ -9,9 +9,13 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Changed
+
+- CLI binary **`crpc` → `crisp`**; crates.io package **`crisp-crpc` → `crisp-lang`**. Docs, scripts, and tests updated (#68).
+
 ### Added
 
-- crates.io publish prep for v1.5.1: package CLI as `crisp-crpc` (bins `crpc`/`reveal`; name `crpc` taken), workspace `homepage` / `repository` inheritance, [CRATES_IO.md](docs/CRATES_IO.md), `scripts/publish-crates.sh` (#66).
+- crates.io publish prep for v1.5.1: workspace `homepage` / `repository` inheritance, [CRATES_IO.md](docs/CRATES_IO.md), `scripts/publish-crates.sh` (#66).
 
 ## [1.5.1] — 2026-08-13
 
@@ -89,7 +93,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Changed
 
 - Document `crisp-lsp` as analysis-API-only until a stdio host ships (#18).
-- CONTRIBUTING: install `reveal` via `-p crpc` only (library `crisp-reveal` is not installable as a binary).
+- CONTRIBUTING: install `reveal` via `-p crisp-lang` only (library `crisp-reveal` is not installable as a binary).
 - Multi-module emit writes main-module structs/enums/impls (not only functions).
 - Test harness emits instance/associated method calls (no more `unknown()`).
 
@@ -116,7 +120,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Changed
 
 - Shapes: parse remains, resolve rejects with **E0039** (unsupported) for defs, bounds, and named shape types (#21).
-- Ownership probe emit hardened so `inventory` and related examples pass `crpc check` (#14).
+- Ownership probe emit hardened so `inventory` and related examples pass `crisp check` (#14).
 
 ## [1.1.0] — 2026-06
 
@@ -130,7 +134,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Fixed
 
 - `Vec::push` / `Vec::len` / `let mut` emit for `new()`.
-- Ownership probe: `Ty::Var` → `_`; tighter borrow-check detection for `crpc check`.
+- Ownership probe: `Ty::Var` → `_`; tighter borrow-check detection for `crisp check`.
 - Clippy / rustfmt CI cleanliness (`-D warnings`).
 
 ## [1.0.0] — 2026-06

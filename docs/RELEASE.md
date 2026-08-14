@@ -4,7 +4,7 @@
 
 | Artifact | Policy |
 |----------|--------|
-| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.5.1` today) |
+| Workspace crates / `crisp` | Semver in root `Cargo.toml` (`1.5.1` today) |
 | Language `edition` in `crisp.toml` | `2026` for spec v0.2; breaking language changes bump edition |
 | `crisp.lock` | Regenerate when `pub` API signatures change |
 | MSRV | Rust **1.85** (`rust-version`); CI MSRV job + multi-OS (see `ci.yml`) |
@@ -18,7 +18,7 @@ GitHub milestones: **v1.5.0** (first public release), **v2.0.0** (self-hosting).
 3. `cargo fmt --all --check`
 4. `cargo clippy --workspace --all-targets -- -D warnings`
 5. `cargo test --workspace --verbose`
-6. Spot-check: `crpc check/test/run` on `examples/hello`, `shapes`, `trait_defaults`, `design_patterns`.
+6. Spot-check: `crisp check/test/run` on `examples/hello`, `shapes`, `trait_defaults`, `design_patterns`.
 7. Create git tag `vX.Y.Z` and `gh release create` with changelog notes.
 
 ## Distribution decision (v1.x)

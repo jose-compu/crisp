@@ -37,7 +37,7 @@ CRATES=(
   crisp-cir
   crisp-rust-emit
   crisp-reveal
-  crisp-crpc
+  crisp-lang
   crisp-lsp
 )
 

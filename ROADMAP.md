@@ -7,7 +7,7 @@
 
 ## Vision
 
-Crisp is a transpiler front end: `.crp` → CIR → Rust → native binary via `rustc`. The compiler infers HM types, global ownership modes, lifetimes, and ambient errors; emits explicit Rust; and treats any `rustc` failure on generated code as a `crpc` bug.
+Crisp is a transpiler front end: `.crp` → CIR → Rust → native binary via `rustc`. The compiler infers HM types, global ownership modes, lifetimes, and ambient errors; emits explicit Rust; and treats any `rustc` failure on generated code as a `crisp` bug.
 
 Two deliverables define success:
 
@@ -84,7 +84,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 
 **Deliverable:** `reveal types` on hello example; inference tests.
 
-**CLI rename:** transpiler binary is now **`crpc`** (was `crispc`).
+**CLI rename:** transpiler binary is now **`crisp`** (was `crispc`).
 
 ### Milestone 0.5 — Ownership & regions *(done — v0.5.0)*
 
@@ -132,11 +132,11 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [x] Map `rustc` spans back to Crisp ICE diagnostics
 - [x] §7.6 fallback rewrites (reborrow, clone, widen-mut) via probe emit
 
-**Deliverable:** `crpc emit` + `crpc build` on `examples/hello`; runnable binary.
+**Deliverable:** `crisp emit` + `crisp build` on `examples/hello`; runnable binary.
 
 ### Milestone 0.8 — Tooling & package management *(done — v0.8.0)*
 
-**crpc commands** (§18.3)
+**crisp commands** (§18.3)
 
 - [x] `build`, `run`, `check`, `emit`, `test`
 
@@ -151,7 +151,7 @@ Supporting systems: `reveal` (§16), sealed crates / `crisp.lock` (§12.5), `cri
 - [x] Dependency resolution (tokio + manifest deps → Cargo.toml)
 - [x] Sealed-crate `crisp.lock` + signature drift detection (§12.5)
 
-**Deliverable:** `examples/with_tests` runs `crpc test` (runtime + compile-fail); sealed API lockfile verified on build.
+**Deliverable:** `examples/with_tests` runs `crisp test` (runtime + compile-fail); sealed API lockfile verified on build.
 
 ### Milestone 0.9 — Standard library & advanced features *(shipped in v0.9.0)*
 
@@ -288,13 +288,13 @@ Not committed to dates; tracked for direction only.
 | `crisp-manifest` | `crisp.toml` / `crisp.lock` | §12.5, §18 |
 | `crisp-reveal` | reveal toolchain | §16 |
 | `crisp-lsp` | LSP | §16.3 |
-| `crpc` | CLI (`crpc`, `reveal`) | §18.3 |
+| `crisp` | CLI (`crisp`, `reveal`) | §18.3 |
 
 ---
 
 ## Versioning policy
 
-- **Compiler** (`crpc`): `0.x` until v1.0 spec conformance; then semver.
+- **Compiler** (`crisp`): `0.x` until v1.0 spec conformance; then semver.
 - **Language** (`edition` in `crisp.toml`): `2026` for v0.2.0 spec; breaking changes bump edition.
 - **Lockfile** (`crisp.lock`): regenerated on any `pub` API signature change (§12.5).
 

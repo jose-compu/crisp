@@ -1,4 +1,4 @@
-//! CLI end-to-end tests for `crpc` and `reveal` binaries.
+//! CLI end-to-end tests for `crisp` and `reveal` binaries.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -46,7 +46,7 @@ fn bin_path(name: &str) -> PathBuf {
 }
 
 #[test]
-fn crpc_check_all_examples() {
+fn crisp_check_all_examples() {
     for ex in [
         "hello",
         "server",
@@ -81,25 +81,25 @@ fn crpc_check_all_examples() {
         "rust_shadow",
     ] {
         run_ok(
-            "crpc",
+            "crisp",
             &["check", &examples_dir().join(ex).to_string_lossy()],
         );
     }
 }
 
 #[test]
-fn crpc_run_nested_math() {
+fn crisp_run_nested_math() {
     let out = run_ok(
-        "crpc",
+        "crisp",
         &["run", &examples_dir().join("nested_math").to_string_lossy()],
     );
     assert!(out.contains("sum=3"), "output: {out}");
 }
 
 #[test]
-fn crpc_run_vec2_methods() {
+fn crisp_run_vec2_methods() {
     let out = run_ok(
-        "crpc",
+        "crisp",
         &[
             "run",
             &examples_dir().join("vec2_methods").to_string_lossy(),
@@ -109,9 +109,9 @@ fn crpc_run_vec2_methods() {
 }
 
 #[test]
-fn crpc_test_feature_gallery() {
+fn crisp_test_feature_gallery() {
     run_ok(
-        "crpc",
+        "crisp",
         &[
             "test",
             &examples_dir().join("feature_gallery").to_string_lossy(),
@@ -120,9 +120,9 @@ fn crpc_test_feature_gallery() {
 }
 
 #[test]
-fn crpc_run_rust_import() {
+fn crisp_run_rust_import() {
     let out = run_ok(
-        "crpc",
+        "crisp",
         &["run", &examples_dir().join("rust_import").to_string_lossy()],
     );
     assert!(
@@ -132,17 +132,17 @@ fn crpc_run_rust_import() {
 }
 
 #[test]
-fn crpc_check_rust_shadow_prints_w0048() {
+fn crisp_check_rust_shadow_prints_w0048() {
     let path = examples_dir()
         .join("rust_shadow")
         .to_string_lossy()
         .to_string();
-    let output = Command::new(bin("crpc"))
+    let output = Command::new(bin("crisp"))
         .args(["check", &path])
         .output()
-        .expect("run crpc check");
+        .expect("run crisp check");
     eprintln!(
-        "$ crpc check rust_shadow (status={})\nstderr:\n{}",
+        "$ crisp check rust_shadow (status={})\nstderr:\n{}",
         output.status,
         String::from_utf8_lossy(&output.stderr)
     );
@@ -155,22 +155,22 @@ fn crpc_check_rust_shadow_prints_w0048() {
 }
 
 #[test]
-fn crpc_run_rust_shadow() {
+fn crisp_run_rust_shadow() {
     let out = run_ok(
-        "crpc",
+        "crisp",
         &["run", &examples_dir().join("rust_shadow").to_string_lossy()],
     );
     assert!(out.contains("crisp-config:shadow-ok"), "output: {out}");
 }
 
 #[test]
-fn crpc_check_missing_use_prints_snippet_and_help() {
+fn crisp_check_missing_use_prints_snippet_and_help() {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../crisp-resolve/tests/fixtures/missing_use");
-    let output = Command::new(bin_path("crpc"))
+    let output = Command::new(bin_path("crisp"))
         .args(["check", &fixture.to_string_lossy()])
         .output()
-        .expect("spawn crpc");
+        .expect("spawn crisp");
     let stderr = String::from_utf8_lossy(&output.stderr);
     eprintln!("stderr:\n{stderr}");
     assert!(!output.status.success());
@@ -186,13 +186,13 @@ fn crpc_check_missing_use_prints_snippet_and_help() {
 }
 
 #[test]
-fn crpc_check_shape_def_ok() {
+fn crisp_check_shape_def_ok() {
     let fixture =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../crisp-resolve/tests/fixtures/shape_def");
-    let output = Command::new(bin_path("crpc"))
+    let output = Command::new(bin_path("crisp"))
         .args(["check", &fixture.to_string_lossy()])
         .output()
-        .expect("spawn crpc");
+        .expect("spawn crisp");
     let stderr = String::from_utf8_lossy(&output.stderr);
     eprintln!("stderr:\n{stderr}");
     assert!(
@@ -202,34 +202,34 @@ fn crpc_check_shape_def_ok() {
 }
 
 #[test]
-fn crpc_emit_hello() {
+fn crisp_emit_hello() {
     run_ok(
-        "crpc",
+        "crisp",
         &["emit", &examples_dir().join("hello").to_string_lossy()],
     );
     assert!(examples_dir().join("hello/target/rust/Cargo.toml").exists());
 }
 
 #[test]
-fn crpc_build_and_run_hello() {
+fn crisp_build_and_run_hello() {
     let hello = examples_dir().join("hello").to_string_lossy().to_string();
-    run_ok("crpc", &["build", &hello]);
-    let out = run_ok("crpc", &["run", &hello]);
+    run_ok("crisp", &["build", &hello]);
+    let out = run_ok("crisp", &["run", &hello]);
     assert!(out.contains("hello world"), "output: {out}");
 }
 
 #[test]
-fn crpc_test_math() {
+fn crisp_test_math() {
     run_ok(
-        "crpc",
+        "crisp",
         &["test", &examples_dir().join("math").to_string_lossy()],
     );
 }
 
 #[test]
-fn crpc_test_with_tests() {
+fn crisp_test_with_tests() {
     run_ok(
-        "crpc",
+        "crisp",
         &["test", &examples_dir().join("with_tests").to_string_lossy()],
     );
 }
@@ -295,13 +295,13 @@ fn reveal_expand_defaults() {
 }
 
 #[test]
-fn crpc_build_and_run_patterns() {
+fn crisp_build_and_run_patterns() {
     let root = examples_dir()
         .join("patterns")
         .to_string_lossy()
         .to_string();
-    run_ok("crpc", &["build", &root]);
-    let out = run_ok("crpc", &["run", &root]);
+    run_ok("crisp", &["build", &root]);
+    let out = run_ok("crisp", &["run", &root]);
     assert!(
         out.contains("small") || out.contains("tagged"),
         "output: {out}"
@@ -309,21 +309,21 @@ fn crpc_build_and_run_patterns() {
 }
 
 #[test]
-fn crpc_test_patterns() {
+fn crisp_test_patterns() {
     run_ok(
-        "crpc",
+        "crisp",
         &["test", &examples_dir().join("patterns").to_string_lossy()],
     );
 }
 
 #[test]
-fn crpc_build_and_run_kitchen_sink() {
+fn crisp_build_and_run_kitchen_sink() {
     let root = examples_dir()
         .join("kitchen_sink")
         .to_string_lossy()
         .to_string();
-    run_ok("crpc", &["build", &root]);
-    let out = run_ok("crpc", &["run", &root]);
+    run_ok("crisp", &["build", &root]);
+    let out = run_ok("crisp", &["run", &root]);
     assert!(out.contains("port=3000"), "output: {out}");
 }
 
@@ -427,7 +427,7 @@ fn sealed_drift_fails_check() {
     let mut raw = std::fs::read_to_string(&lock_path).unwrap();
     raw = raw.replace("greet(name: &str)", "greet(name: &str) DRIFT");
     std::fs::write(&lock_path, raw).unwrap();
-    run_fail("crpc", &["check", &dir.path().to_string_lossy()]);
+    run_fail("crisp", &["check", &dir.path().to_string_lossy()]);
 }
 
 fn copy_dir(src: &std::path::Path, dst: &std::path::Path) {

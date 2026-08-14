@@ -16,9 +16,9 @@ use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(
-    name = "crpc",
+    name = "crisp",
     version,
-    about = "Crisp transpiler — .crp to Rust to native"
+    about = "Crisp language toolchain — .crp to Rust to native"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -104,7 +104,7 @@ fn main() -> anyhow::Result<()> {
             RegionPass::assign_crate(&root)?;
             ErrorPass::analyze_crate(&root)?;
             verify_sealed_api(&root)?;
-            eprintln!("crpc check: ok ({})", root.display());
+            eprintln!("crisp check: ok ({})", root.display());
             Ok(())
         }
         Commands::Build { path } => {
@@ -112,11 +112,11 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|| PathBuf::from(&path));
             match build_emitted(&root) {
                 Ok(out_dir) => {
-                    eprintln!("crpc build: ok ({})", out_dir.display());
+                    eprintln!("crisp build: ok ({})", out_dir.display());
                     Ok(())
                 }
                 Err(PipelineError::ToolchainUnavailable) => {
-                    eprintln!("crpc build: emitted to target/rust/ (cargo not on PATH)");
+                    eprintln!("crisp build: emitted to target/rust/ (cargo not on PATH)");
                     emit_to_target(&root)?;
                     std::process::exit(1);
                 }
@@ -132,7 +132,7 @@ fn main() -> anyhow::Result<()> {
                     Ok(())
                 }
                 Err(PipelineError::ToolchainUnavailable) => {
-                    eprintln!("crpc run: cargo not on PATH");
+                    eprintln!("crisp run: cargo not on PATH");
                     std::process::exit(1);
                 }
                 Err(e) => Err(e.into()),
@@ -144,13 +144,13 @@ fn main() -> anyhow::Result<()> {
             match run_tests(&root) {
                 Ok(report) => {
                     eprintln!(
-                        "crpc test: ok ({} runtime, {} compile-fail)",
+                        "crisp test: ok ({} runtime, {} compile-fail)",
                         report.runtime_passed, report.compile_fail_passed
                     );
                     Ok(())
                 }
                 Err(TestHarnessError::Other(e)) if e.to_string().contains("cargo not on PATH") => {
-                    eprintln!("crpc test: cargo not on PATH");
+                    eprintln!("crisp test: cargo not on PATH");
                     std::process::exit(1);
                 }
                 Err(e) => Err(e.into()),
@@ -160,7 +160,7 @@ fn main() -> anyhow::Result<()> {
             let root = find_crate_root(PathBuf::from(&path).as_path())
                 .unwrap_or_else(|| PathBuf::from(&path));
             let out = emit_to_target(&root)?;
-            eprintln!("crpc emit: ok ({})", out.out_dir.display());
+            eprintln!("crisp emit: ok ({})", out.out_dir.display());
             Ok(())
         }
     }

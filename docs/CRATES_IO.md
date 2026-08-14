@@ -45,11 +45,12 @@ The script validates this list against `cargo metadata` so a new workspace membe
 Helper (dry-run by default):
 
 ```bash
-./scripts/publish-crates.sh          # dry-run (first crate fully; later need prior on registry)
+./scripts/publish-crates.sh          # dry-run; skips crate@version already on crates.io
 ./scripts/publish-crates.sh --execute  # real publish in order (requires cargo login)
+PUBLISH_SLEEP=60 ./scripts/publish-crates.sh --execute  # slower uploads (default 30s)
 ```
 
-Dry-run for crates after `crisp-ast` fails until their Crisp deps exist on crates.io — that is normal. Use `--execute` for the ordered live publish.
+Already-published versions are skipped with a console message. After each successful upload the script sleeps (`PUBLISH_SLEEP`, default 30s) to reduce crates.io 429 / new-crate burst limits. If rate-limited, wait for the time in the error and re-run — skips resume where you left off.
 
 ## Preconditions
 

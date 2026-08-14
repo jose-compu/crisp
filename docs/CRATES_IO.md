@@ -22,17 +22,25 @@ Do **not** publish example crates under `examples/`.
 
 ## Publish order
 
-Bottom-up so path deps resolve to registry versions:
+Bottom-up so path deps resolve to registry versions (must match `scripts/publish-crates.sh`):
 
 1. `crisp-ast`
-2. `crisp-lexer`, `crisp-manifest`, `crisp-diagnostics`
-3. `crisp-parser`
-4. `crisp-resolve`, `crisp-typeck`
-5. `crisp-ownership`, `crisp-errors`, `crisp-regions`
-6. `crisp-cir`
-7. `crisp-rust-emit`
-8. `crisp-reveal`
-9. `crisp-lang`, `crisp-lsp`
+2. `crisp-lexer`
+3. `crisp-manifest`
+4. `crisp-diagnostics`
+5. `crisp-parser`
+6. `crisp-resolve`
+7. `crisp-typeck`
+8. `crisp-ownership`
+9. `crisp-errors`
+10. `crisp-regions`
+11. `crisp-cir`
+12. `crisp-rust-emit`
+13. `crisp-reveal`
+14. `crisp-lang` (bins `crisp`, `reveal`)
+15. `crisp-lsp`
+
+The script validates this list against `cargo metadata` so a new workspace member cannot be forgotten. Dev-only edges (e.g. `crisp-rust-emit` → `crisp-lsp`) do not affect order.
 
 Helper (dry-run by default):
 

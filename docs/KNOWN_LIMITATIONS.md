@@ -1,12 +1,12 @@
 # Known limitations (Crisp v1.5)
 
-This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
+This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
 ## Bootstrap status
 
 - The compiler is a **Rust-hosted bootstrap** (`crpc`). Self-hosting (Crisp compiling Crisp) is ROADMAP Phase 2 / milestone **v2.0.0**, not shipped.
 - Spec document remains **v0.2.0-draft**. Do not treat every spec paragraph as implemented.
-- **Public preview:** install from source (`cargo install --path crates/crpc --locked`). crates.io publish is deferred ([#60](https://github.com/jose-compu/crisp/issues/60)).
+- **Public preview / install:** prefer source until crates.io lands (`cargo install --path crates/crpc --locked`). Registry publish for **v1.5.1** is [#66](https://github.com/jose-compu/crisp/issues/66) (see [CRATES_IO.md](CRATES_IO.md); prior deferral [#60](https://github.com/jose-compu/crisp/issues/60)).
 
 ## Modules
 

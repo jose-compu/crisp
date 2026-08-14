@@ -9,6 +9,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- crates.io publish prep for v1.5.1: workspace `homepage` / `repository` inheritance, [CRATES_IO.md](docs/CRATES_IO.md), `scripts/publish-crates.sh` (#66).
+
 ## [1.5.1] — 2026-08-13
 
 ### Added
@@ -20,7 +24,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Notes
 
 - `for` MVP iterates Crisp `vec` (`Vec<i64>`) via `.iter().copied()`. `enumerate`, labeled breaks, and non-vec iterators remain future work.
-- Still open: crates.io (#60), repo visibility (#58); trait bounds/`dyn` remain partial (#59).
+- Still open: crates.io (#66), repo visibility (#58); trait bounds/`dyn` remain partial (#59).
 
 ## [1.5.0] — 2026-08-12
 

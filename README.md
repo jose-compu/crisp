@@ -101,7 +101,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 **v1.5.1** — loops (`while` / `for` / `loop`, `examples/loops`); builds on v1.5.0 (Result absorption, shapes, LSP, VSIX, trait defaults) and v1.4.x interop / Show/Eq/Ord / net/http.
 
-**Still open:** crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
+**Still open:** crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 

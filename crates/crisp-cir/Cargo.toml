@@ -4,6 +4,9 @@ description = "Typed, ownership-resolved intermediate representation (spec §17.
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 crisp-ast.workspace = true

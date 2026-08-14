@@ -4,6 +4,9 @@ description = "crisp.toml parser, dependency resolution, crisp.lock (spec §12.5
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 serde.workspace = true

@@ -23,24 +23,25 @@ version = "1.5.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jose-compu/crisp"
+homepage = "https://jose-compu.github.io/crisp/"
 rust-version = "1.85"
 
 [workspace.dependencies]
-# Internal crates
-crisp-ast = { path = "crates/crisp-ast" }
-crisp-lexer = { path = "crates/crisp-lexer" }
-crisp-parser = { path = "crates/crisp-parser" }
-crisp-resolve = { path = "crates/crisp-resolve" }
-crisp-typeck = { path = "crates/crisp-typeck" }
-crisp-ownership = { path = "crates/crisp-ownership" }
-crisp-regions = { path = "crates/crisp-regions" }
-crisp-errors = { path = "crates/crisp-errors" }
-crisp-cir = { path = "crates/crisp-cir" }
-crisp-rust-emit = { path = "crates/crisp-rust-emit" }
-crisp-diagnostics = { path = "crates/crisp-diagnostics" }
-crisp-reveal = { path = "crates/crisp-reveal" }
-crisp-lsp = { path = "crates/crisp-lsp" }
-crisp-manifest = { path = "crates/crisp-manifest" }
+# Internal crates (version + path so `cargo publish` can rewrite to registry deps)
+crisp-ast = { path = "crates/crisp-ast", version = "1.5.1" }
+crisp-lexer = { path = "crates/crisp-lexer", version = "1.5.1" }
+crisp-parser = { path = "crates/crisp-parser", version = "1.5.1" }
+crisp-resolve = { path = "crates/crisp-resolve", version = "1.5.1" }
+crisp-typeck = { path = "crates/crisp-typeck", version = "1.5.1" }
+crisp-ownership = { path = "crates/crisp-ownership", version = "1.5.1" }
+crisp-regions = { path = "crates/crisp-regions", version = "1.5.1" }
+crisp-errors = { path = "crates/crisp-errors", version = "1.5.1" }
+crisp-cir = { path = "crates/crisp-cir", version = "1.5.1" }
+crisp-rust-emit = { path = "crates/crisp-rust-emit", version = "1.5.1" }
+crisp-diagnostics = { path = "crates/crisp-diagnostics", version = "1.5.1" }
+crisp-reveal = { path = "crates/crisp-reveal", version = "1.5.1" }
+crisp-lsp = { path = "crates/crisp-lsp", version = "1.5.1" }
+crisp-manifest = { path = "crates/crisp-manifest", version = "1.5.1" }
 
 # External
 thiserror = "2"

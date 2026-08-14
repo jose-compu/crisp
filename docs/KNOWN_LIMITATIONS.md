@@ -20,6 +20,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - **`shape`** data shapes work end-to-end for field accessors (`examples/shapes`): generated trait + structural call sites (§3.5). Remaining gaps: method shapes, anonymous `{ x: float }` params, full bound/`dyn`-style use ([#61](https://github.com/jose-compu/crisp/issues/61)).
 - **Inherent `impl Type` methods** work end-to-end (`Vec2.new`, `v.magnitude()`, nested modules); see `examples/vec2_methods`, `point_impl`, `feature_gallery` ([#20](https://github.com/jose-compu/crisp/issues/20)).
 - **`trait` / `impl Trait for Type`** work for method traits (`examples/show_trait`). Literal/simple **default method bodies** emit (`examples/trait_defaults`). Remaining gaps: complex default bodies, full bound enforcement, `dyn Trait` ([#59](https://github.com/jose-compu/crisp/issues/59)).
+- **Loops (`while` / `for` / `loop`):** work end-to-end (`examples/loops`), including `break` / `continue` and value-producing `break <expr>` on `loop`. `for` currently iterates Crisp `vec` only (emits `.iter().copied()`); no `enumerate`, labels, or general `IntoIterator` yet. `if`/`while`/`for` heads disallow bare struct literals so `{` starts the body (parenthesize struct lits in conditions when needed).
 - **Std Show / Eq / Ord** are prelude shims (`show` / `equal` / `compare`) with Rust `Display` / `PartialEq`+`Eq` / `Ord` bridges (`examples/std_traits`) ([#27](https://github.com/jose-compu/crisp/issues/27)).
 - Multi-module crates emit main-module enums/structs alongside nested `mod` trees.
 

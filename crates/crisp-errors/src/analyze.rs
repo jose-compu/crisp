@@ -277,6 +277,23 @@ fn walk_expr(
                 }
             }
         }
+        ExprKind::While { cond, body } => {
+            walk_expr(module, cond, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, body, fn_defs, callee_sigs, rust_imports, out);
+        }
+        ExprKind::For { iter, body, .. } => {
+            walk_expr(module, iter, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, body, fn_defs, callee_sigs, rust_imports, out);
+        }
+        ExprKind::Loop(body)
+        | ExprKind::Async(body)
+        | ExprKind::Await(body)
+        | ExprKind::Spawn(body)
+        | ExprKind::Unsafe(body) => {
+            walk_expr(module, body, fn_defs, callee_sigs, rust_imports, out)
+        }
+        ExprKind::Break(Some(v)) => walk_expr(module, v, fn_defs, callee_sigs, rust_imports, out),
+        ExprKind::Break(None) | ExprKind::Continue => {}
         _ => {}
     }
 }

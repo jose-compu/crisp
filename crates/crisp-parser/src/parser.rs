@@ -50,6 +50,9 @@ fn format_unexpected(
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    /// When false, `Name { … }` is not parsed as a struct literal (Rust-style
+    /// restriction for `if`/`while`/`for` conditions so `{` can start the body).
+    allow_struct_lit: bool,
 }
 
 impl Parser {
@@ -57,7 +60,19 @@ impl Parser {
         Ok(Self {
             tokens: lex(source)?,
             pos: 0,
+            allow_struct_lit: true,
         })
+    }
+
+    fn with_no_struct_lit<T>(
+        &mut self,
+        f: impl FnOnce(&mut Self) -> Result<T, ParseError>,
+    ) -> Result<T, ParseError> {
+        let prev = self.allow_struct_lit;
+        self.allow_struct_lit = false;
+        let result = f(self);
+        self.allow_struct_lit = prev;
+        result
     }
 
     pub fn parse_file(&mut self) -> Result<SourceFile, ParseError> {
@@ -930,9 +945,18 @@ impl Parser {
             });
         }
         if self.match_kw(Kw::Break) {
+            let value = if self.check_expr_start() {
+                Some(Box::new(self.parse_expr()?))
+            } else {
+                None
+            };
+            let end = value
+                .as_ref()
+                .map(|v| v.span.end)
+                .unwrap_or(self.previous_end());
             return Ok(Expr {
-                kind: ExprKind::Break,
-                span: Span::new(start, self.previous_end()),
+                kind: ExprKind::Break(value),
+                span: Span::new(start, end),
             });
         }
         if self.match_kw(Kw::Continue) {
@@ -1083,8 +1107,8 @@ impl Parser {
                 }
                 let id = self.expect_ident_or_kw_as_ident()?;
                 let span = id.span;
-                // struct literal: Name { ... }
-                if self.check(TokenKind::LBrace) {
+                // struct literal: Name { ... } (disabled in if/while/for heads)
+                if self.allow_struct_lit && self.check(TokenKind::LBrace) {
                     return self.parse_struct_lit(id);
                 }
                 Ok(Expr {
@@ -1158,7 +1182,7 @@ impl Parser {
     }
 
     fn parse_if_expr(&mut self, start: u32) -> Result<Expr, ParseError> {
-        let cond = self.parse_expr()?;
+        let cond = self.with_no_struct_lit(|p| p.parse_expr())?;
         let then_branch = if self.match_kw(Kw::Then) {
             Box::new(self.parse_expr()?)
         } else {
@@ -1259,7 +1283,7 @@ match (Name { field: value }) { ... }",
     fn parse_for_expr(&mut self, start: u32) -> Result<Expr, ParseError> {
         let pat = self.parse_pat()?;
         self.expect_kw(Kw::In)?;
-        let iter = self.parse_expr()?;
+        let iter = self.with_no_struct_lit(|p| p.parse_expr())?;
         let body = Expr {
             kind: ExprKind::Block(self.parse_block()?),
             span: Span::new(self.current_start(), self.previous_end()),
@@ -1276,7 +1300,7 @@ match (Name { field: value }) { ... }",
     }
 
     fn parse_while_expr(&mut self, start: u32) -> Result<Expr, ParseError> {
-        let cond = self.parse_expr()?;
+        let cond = self.with_no_struct_lit(|p| p.parse_expr())?;
         let body = Expr {
             kind: ExprKind::Block(self.parse_block()?),
             span: Span::new(self.current_start(), self.previous_end()),

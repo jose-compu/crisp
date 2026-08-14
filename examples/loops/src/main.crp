@@ -1,0 +1,98 @@
+-- loops — while / for / loop + break / continue (spec §6.3)
+
+sum_to(n) = {
+    total mut:= 0
+    i mut:= 0
+    while i < n {
+        i = i + 1
+        total = total + i
+    }
+    total
+}
+
+sum_vec(xs) = {
+    total mut:= 0
+    for x in xs {
+        total = total + x
+    }
+    total
+}
+
+skip_threes(n) = {
+    total mut:= 0
+    i mut:= 0
+    while i < n {
+        i = i + 1
+        if i == 3 then continue
+        total = total + i
+    }
+    total
+}
+
+find_in(xs, target) = {
+    result mut:= 0
+    for x in xs {
+        if x == target then {
+            result = x
+            break
+        }
+    }
+    result
+}
+
+-- Value-producing `loop` + `break <expr>` (Rust loop expression).
+countdown_stop(start, stop) = {
+    n mut:= start
+    loop {
+        if n == stop then break n
+        if n <= 0 then break 0
+        n = n - 1
+    }
+}
+
+sample_vec() = {
+    xs := new()
+    push(xs, 1)
+    push(xs, 2)
+    push(xs, 3)
+    xs
+}
+
+sample_find() = {
+    xs := new()
+    push(xs, 1)
+    push(xs, 3)
+    push(xs, 4)
+    push(xs, 5)
+    xs
+}
+
+test "while sum 1..=4" = {
+    assert_eq(sum_to(4), 10)
+}
+
+test "for sum vec" = {
+    xs := sample_vec()
+    assert_eq(sum_vec(xs), 6)
+}
+
+test "continue skips 3" = {
+    -- 1+2+4 = 7 when n = 4
+    assert_eq(skip_threes(4), 7)
+}
+
+test "for break" = {
+    xs := sample_find()
+    assert_eq(find_in(xs, 4), 4)
+}
+
+test "loop break value" = {
+    assert_eq(countdown_stop(5, 3), 3)
+    assert_eq(countdown_stop(2, 9), 0)
+}
+
+pub main() = {
+    print("sum_to(4)={sum_to(4)}")
+    print("sum_vec={sum_vec(sample_vec())}")
+    print("countdown={countdown_stop(5, 3)}")
+}

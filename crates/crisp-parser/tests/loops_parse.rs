@@ -1,0 +1,98 @@
+//! Parser coverage for loop constructs (spec §6.3).
+
+use crisp_ast::expr::{ExprKind, Stmt};
+use crisp_ast::item::Item;
+use crisp_parser::Parser;
+
+fn parse_fn_body(src: &str) -> crisp_ast::expr::Expr {
+    let file = format!("f() = {src}");
+    let mut p = Parser::new(&file).unwrap_or_else(|e| panic!("parser: {e}"));
+    let ast = p.parse_file().unwrap_or_else(|e| panic!("parse: {e}"));
+    let Item::Function(f) = &ast.items[0] else {
+        panic!("expected function");
+    };
+    f.body.clone()
+}
+
+#[test]
+fn parse_while_no_struct_lit_in_cond() {
+    let e = parse_fn_body("{ while i < n { i = i + 1 } }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let w = match b.stmts.first() {
+        Some(Stmt::Expr(w)) => w,
+        _ => b.tail.as_ref().expect("while"),
+    };
+    assert!(matches!(w.kind, ExprKind::While { .. }));
+}
+
+#[test]
+fn parse_for() {
+    let e = parse_fn_body("{ for x in xs { total = total + x } }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let f = match b.stmts.first() {
+        Some(Stmt::Expr(f)) => f,
+        _ => b.tail.as_ref().expect("for"),
+    };
+    assert!(matches!(f.kind, ExprKind::For { .. }));
+}
+
+#[test]
+fn parse_loop_break_value() {
+    let e = parse_fn_body("{ loop { if done then break 42 } }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let l = match b.stmts.first() {
+        Some(Stmt::Expr(l)) => l,
+        _ => b.tail.as_ref().expect("loop"),
+    };
+    let ExprKind::Loop(body) = &l.kind else {
+        panic!("{:?}", l.kind);
+    };
+    let ExprKind::Block(lb) = &body.kind else {
+        panic!("{:?}", body.kind);
+    };
+    let iff = match lb.stmts.first() {
+        Some(Stmt::Expr(e)) => e,
+        _ => lb.tail.as_ref().expect("if"),
+    };
+    let ExprKind::If {
+        then_branch,
+        else_branch: None,
+        ..
+    } = &iff.kind
+    else {
+        panic!("{:?}", iff.kind);
+    };
+    assert!(matches!(then_branch.kind, ExprKind::Break(Some(_))));
+}
+
+#[test]
+fn parse_continue() {
+    let e = parse_fn_body("{ while true { continue } }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let w = match b.stmts.first() {
+        Some(Stmt::Expr(w)) => w,
+        _ => b.tail.as_ref().expect("while"),
+    };
+    let ExprKind::While { body, .. } = &w.kind else {
+        panic!("{:?}", w.kind);
+    };
+    let ExprKind::Block(wb) = &body.kind else {
+        panic!("{:?}", body.kind);
+    };
+    let c_kind = if let Some(t) = &wb.tail {
+        &t.kind
+    } else if let Some(Stmt::Expr(e)) = wb.stmts.first() {
+        &e.kind
+    } else {
+        panic!("expected continue in while body: {:?}", wb);
+    };
+    assert!(matches!(c_kind, ExprKind::Continue));
+}

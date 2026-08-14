@@ -617,9 +617,18 @@ fn emit_stmt(
 ) {
     let pad = "    ".repeat(indent);
     match stmt {
-        CirStmt::Let { name, value, span } => {
+        CirStmt::Let {
+            name,
+            mutable,
+            value,
+            span,
+        } => {
             map.record(out.len() as u32, *span);
-            let mut_kw = if is_vec_new_expr(value) { "mut " } else { "" };
+            let mut_kw = if *mutable || is_vec_new_expr(value) {
+                "mut "
+            } else {
+                ""
+            };
             let _ = write!(out, "{pad}let {mut_kw}{name} = ");
             emit_expr(out, value, current_module, map);
             let _ = writeln!(out, ";");
@@ -930,6 +939,46 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 emit_match_arm(out, arm, current_module, map);
             }
             let _ = write!(out, " }}");
+        }
+        CirExpr::While { cond, body, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "while ");
+            emit_expr(out, cond, current_module, map);
+            let _ = write!(out, " ");
+            emit_expr_block(out, body, current_module, map);
+        }
+        CirExpr::For {
+            pat,
+            iter,
+            body,
+            span,
+        } => {
+            map.record(out.len() as u32, *span);
+            // MVP: Crisp `vec` is `Vec<i64>`; iterate by copied values so `&Vec`
+            // and owned `Vec` both yield `i64` (ownership may borrow the param).
+            let _ = write!(out, "for ");
+            emit_pat(out, pat);
+            let _ = write!(out, " in (");
+            emit_expr(out, iter, current_module, map);
+            let _ = write!(out, ").iter().copied() ");
+            emit_expr_block(out, body, current_module, map);
+        }
+        CirExpr::Loop { body, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "loop ");
+            emit_expr_block(out, body, current_module, map);
+        }
+        CirExpr::Break { value, span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "break");
+            if let Some(v) = value {
+                let _ = write!(out, " ");
+                emit_expr(out, v, current_module, map);
+            }
+        }
+        CirExpr::Continue { span } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "continue");
         }
         CirExpr::Unsafe { body, span } => {
             map.record(out.len() as u32, *span);

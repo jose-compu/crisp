@@ -9,20 +9,18 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.5.1] — 2026-08-13
+
 ### Added
 
-- Data `shape` support end-to-end (`examples/shapes`): resolve/typeck structural match, generated traits + accessors (#61).
-- Stdio `crisp-lsp` binary — hover, inlay hints, crate diagnostics (#56).
-- VS Code/Cursor VSIX packaging script (`scripts/package-vsix.sh`) + optional LSP client hook (#57).
-- Trait default method bodies for literal/simple expressions (`examples/trait_defaults`) (#59).
-
-### Fixed
-
-- Test harness struct literals emit as `Type { fields }` (not invalid `Type::with(...)`).
+- Loop constructs end-to-end (spec §6.3): `while`, `for … in`, `loop`, `break` / `break <expr>`, `continue` — typeck, CIR, Rust emit, probe emit (`examples/loops`).
+- Parser: disable struct-literal greed in `if` / `while` / `for` heads so `while i < n { … }` parses (Rust-style restriction).
+- `mut:=` bindings now emit `let mut` in CIR/Rust (needed for loop counters).
 
 ### Notes
 
-- Still open for v1.5.0: crates.io (#60), repo visibility (#58); trait bounds/`dyn` remain partial (#59).
+- `for` MVP iterates Crisp `vec` (`Vec<i64>`) via `.iter().copied()`. `enumerate`, labeled breaks, and non-vec iterators remain future work.
+- Still open: crates.io (#60), repo visibility (#58); trait bounds/`dyn` remain partial (#59).
 
 ## [1.5.0] — 2026-08-12
 

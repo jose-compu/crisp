@@ -55,6 +55,7 @@ const EXAMPLES: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "loops",
 ];
 
 #[test]
@@ -134,6 +135,7 @@ fn examples_with_tests_pass_crpc_test() {
         "trait_defaults",
         "std_traits",
         "feature_gallery",
+        "loops",
     ] {
         let root = example(name);
         eprintln!("crpc test: {name}");
@@ -364,6 +366,7 @@ const BUILDABLE: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "loops",
 ];
 
 #[test]

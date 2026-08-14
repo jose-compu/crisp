@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/jose-compu/crisp/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/crisp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.0-0A66C2.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.1-0A66C2.svg)](CHANGELOG.md)
 [![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
-[![Tests](https://img.shields.io/badge/tests-267-brightgreen.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-271-brightgreen.svg)](.github/workflows/ci.yml)
 [![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
 [![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://jose-compu.github.io/crisp/)
 
@@ -16,7 +16,7 @@
 
 Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crpc` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
-**This is a Rust-hosted bootstrap compiler (v1.5.0) — first public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+**This is a Rust-hosted bootstrap compiler (v1.5.1) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
 Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (`CrispError::Thrown` + `?`) — see `examples/rust_import`, `examples/net_http` (#55).
 
@@ -99,7 +99,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.5.0** — first public release track: Rust `Result` → Crisp `?` (#55), data shapes (#61), stdio LSP (#56), VSIX packaging (#57), trait default bodies (#59); plus v1.4.x interop, Show/Eq/Ord, net/http, docs site.
+**v1.5.1** — loops (`while` / `for` / `loop`, `examples/loops`); builds on v1.5.0 (Result absorption, shapes, LSP, VSIX, trait defaults) and v1.4.x interop / Show/Eq/Ord / net/http.
 
 **Still open:** crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 

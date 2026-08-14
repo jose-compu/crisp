@@ -163,6 +163,7 @@ pub struct CirBlock {
 pub enum CirStmt {
     Let {
         name: String,
+        mutable: bool,
         value: CirExpr,
         span: Span,
     },
@@ -298,6 +299,28 @@ pub enum CirExpr {
         scrutinee: Box<CirExpr>,
         arms: Vec<CirMatchArm>,
         ty: CirTy,
+        span: Span,
+    },
+    For {
+        pat: CirPat,
+        iter: Box<CirExpr>,
+        body: Box<CirExpr>,
+        span: Span,
+    },
+    While {
+        cond: Box<CirExpr>,
+        body: Box<CirExpr>,
+        span: Span,
+    },
+    Loop {
+        body: Box<CirExpr>,
+        span: Span,
+    },
+    Break {
+        value: Option<Box<CirExpr>>,
+        span: Span,
+    },
+    Continue {
         span: Span,
     },
     Unsafe {

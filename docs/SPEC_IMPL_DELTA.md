@@ -36,6 +36,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Std Show/Eq/Ord | §15.4 | Prelude shims + Display/PartialEq/Ord bridges (`examples/std_traits`) — [#27](https://github.com/jose-compu/crisp/issues/27) |
 | Std net/http | §15.2 | `std.net.parse_ip` + thin `ureq` GET (`examples/net_http`); full `std.http` server API deferred — [#28](https://github.com/jose-compu/crisp/issues/28) |
 | Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs` (`examples/nested_math`) |
+| Loops | §6.3 | `while` / `for` / `loop` + `break`/`continue` / value `break` (`examples/loops`); `for` MVP over `vec` only; no labels / `enumerate` yet |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)
 

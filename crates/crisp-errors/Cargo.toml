@@ -4,6 +4,9 @@ description = "Fallibility analysis and CrispError enum synthesis (spec §9)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 crisp-ast.workspace = true

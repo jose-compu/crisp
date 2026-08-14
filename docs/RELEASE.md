@@ -4,7 +4,7 @@
 
 | Artifact | Policy |
 |----------|--------|
-| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.5.0` today) |
+| Workspace crates / `crpc` | Semver in root `Cargo.toml` (`1.5.1` today) |
 | Language `edition` in `crisp.toml` | `2026` for spec v0.2; breaking language changes bump edition |
 | `crisp.lock` | Regenerate when `pub` API signatures change |
 | MSRV | Rust **1.85** (`rust-version`); CI MSRV job + multi-OS (see `ci.yml`) |
@@ -29,7 +29,7 @@ GitHub milestones: **v1.5.0** (first public release), **v2.0.0** (self-hosting).
 cargo install --path crates/crpc --locked
 ```
 
-**crates.io:** deferred — revisit under [#60](https://github.com/jose-compu/crisp/issues/60). Prefer not to publish incomplete workspace crates early.
+**crates.io:** first public registry publish tracked in [#66](https://github.com/jose-compu/crisp/issues/66) (v1.5.1). Procedure and publish order: [CRATES_IO.md](CRATES_IO.md). Prior deferral: [#60](https://github.com/jose-compu/crisp/issues/60).
 
 **Prebuilt binaries:** optional later (linux/macOS aarch64/x86_64) via `gh release` assets; not required for v1.5.x.
 
@@ -40,7 +40,7 @@ cargo install --path crates/crpc --locked
 | Item | Status |
 |------|--------|
 | Repo description + topics | Done (GitHub settings) |
-| Homepage → GitHub Pages | Done — https://jose-compu.github.io/crisp/ |
+| Homepage → https://crisp-lang.org/ (GitHub Pages + custom domain) | Done |
 | CI status badge on README | Done |
 | LICENSE dual files + SECURITY + CONTRIBUTING linked | Done |
 | Known limitations honest for current version | Done (v1.5.0) |
@@ -52,7 +52,7 @@ cargo install --path crates/crpc --locked
 
 The documentation **website** lives on branch **`docs`**, under folder **`docs/`**. Spec and markdown guides stay on `main` under `docs/spec/`, `docs/KNOWN_LIMITATIONS.md`, etc.
 
-Live site: https://jose-compu.github.io/crisp/
+Live site: https://crisp-lang.org/ (`CNAME` → `crisp-lang.org` on the `docs` branch)
 
 ```bash
 git fetch origin docs

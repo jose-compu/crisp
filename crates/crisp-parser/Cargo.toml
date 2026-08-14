@@ -4,6 +4,9 @@ description = "Crisp parser — tokens to AST (spec Appendix A)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 crisp-ast.workspace = true

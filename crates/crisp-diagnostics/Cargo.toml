@@ -4,6 +4,9 @@ description = "Crisp-level diagnostics and CIR→Crisp span mapping (spec §17.2
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 crisp-ast.workspace = true

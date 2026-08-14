@@ -6,7 +6,7 @@
 [![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
 [![Tests](https://img.shields.io/badge/tests-271-brightgreen.svg)](.github/workflows/ci.yml)
 [![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
-[![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://jose-compu.github.io/crisp/)
+[![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://crisp-lang.org/)
 
 <p align="center">
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
@@ -22,7 +22,7 @@ Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
-**Web docs:** [jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
+**Web docs:** [crisp-lang.org](https://crisp-lang.org/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
 **Roadmap:** [ROADMAP.md](ROADMAP.md)  
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  
@@ -101,39 +101,48 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 **v1.5.1** — loops (`while` / `for` / `loop`, `examples/loops`); builds on v1.5.0 (Result absorption, shapes, LSP, VSIX, trait defaults) and v1.4.x interop / Show/Eq/Ord / net/http.
 
-**Still open:** crates.io ([#60](https://github.com/jose-compu/crisp/issues/60)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
+**Still open:** first crates.io publish track ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 
 **MSRV:** Rust **1.85** (`rust-version` in root `Cargo.toml`). CI runs Ubuntu + macOS on stable, plus an MSRV job.
 
 ## Quick start
 
-Build the toolchain:
+Install the compiler from crates.io (puts `crpc` and `reveal` on your `PATH` via `~/.cargo/bin`):
 
 ```bash
-cargo build --release -p crpc
-export PATH="$PWD/target/release:$PATH"
-# or: cargo install --path crates/crpc --locked
+cargo install crisp-crpc --locked
+crpc --version
 ```
 
-### Hello world
+You still need a Rust toolchain (**1.85+**) with `cargo` / `rustc` — Crisp lowers to a Cargo project and builds with `rustc`.
 
-[`examples/hello/src/main.crp`](examples/hello/src/main.crp):
+### Hello world (no clone)
 
-```crisp
--- examples/hello — minimal Crisp program (spec §5)
+```bash
+mkdir -p hello/src && cd hello
 
+cat > crisp.toml <<'EOF'
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"
+EOF
+
+cat > src/main.crp <<'EOF'
 greet(name) = "hello " ++ name
 
 pub main() = {
     msg := greet("world")
     print(msg)
 }
-```
+EOF
 
-Run it:
-
-```bash
-crpc run examples/hello
+crpc run .
 ```
 
 Expected output:
@@ -142,15 +151,31 @@ Expected output:
 "hello world"
 ```
 
-Other commands on the same project:
+### From this repository
 
 ```bash
-crpc check examples/hello    # resolve + typecheck
-crpc emit examples/hello     # write Rust under examples/hello/target/rust/
-crpc build examples/hello    # emit + cargo build
+git clone https://github.com/jose-compu/crisp.git
+cd crisp
+# already installed via cargo install crisp-crpc, or:
+# cargo install --path crates/crpc --locked
+crpc run examples/hello
 ```
 
-See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and fallible functions. Install details: [docs/RELEASE.md](docs/RELEASE.md).
+Other commands on a project:
+
+```bash
+crpc check .                 # resolve + typecheck
+crpc emit .                  # write Rust under target/rust/
+crpc build .                 # emit + cargo build
+```
+
+Optional LSP:
+
+```bash
+cargo install crisp-lsp --locked
+```
+
+See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and fallible functions. crates.io notes: [docs/CRATES_IO.md](docs/CRATES_IO.md) ([#66](https://github.com/jose-compu/crisp/issues/66)).
 
 ## Examples
 
@@ -184,7 +209,7 @@ tests/           Integration placeholders (fixtures live under crates/)
 ## Contributing / building
 
 ```bash
-cargo build --release -p crpc
+cargo build --release -p crisp-crpc
 cargo test --workspace --verbose
 cargo fmt --all --check
 cargo clippy --workspace -- -D warnings

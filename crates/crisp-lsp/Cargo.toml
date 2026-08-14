@@ -4,6 +4,10 @@ description = "Language Server Protocol — powered by reveal (spec §16.3)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "../../README.md"
+rust-version.workspace = true
 
 [[bin]]
 name = "crisp-lsp"

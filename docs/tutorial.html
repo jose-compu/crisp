@@ -54,11 +54,11 @@
     <div class="wrap hero-split">
       <div>
         <h1>Tutorial</h1>
-        <p class="lede">A beginner tour of Crisp language features. Install <code>crpc</code> first, then try each snippet in a project or against the repo examples.</p>
+        <p class="lede">A guided tour of Crisp: each step explains the idea for beginners, shows a short snippet, then notes what happens under the hood for people who already know Rust (or compilers).</p>
       </div>
       <aside class="callout">
         <strong>Before you start</strong>
-        Follow <a href="install.html">Install</a> until <code>crpc run examples/hello</code> prints <code>"hello world"</code>.
+        Follow <a href="install.html">Install</a> until <code>crisp run examples/hello</code> prints <code>"hello world"</code>. You need Rust <strong>1.85+</strong> and <code>cargo install crisp-lang</code>.
       </aside>
     </div>
   </section>
@@ -69,19 +69,26 @@
         <article class="tutorial-step" id="hello">
           <div class="step-label">Step 01</div>
           <h2>Hello world</h2>
-          <p>Functions use <code>=</code>. Locals use <code>:=</code>. <code>pub main</code> is the entry point.</p>
+          <p>Start here. A Crisp program is a few functions in a <code>.crp</code> file. You define work with <code>name(args) = …</code>, bind locals with <code>:=</code>, and mark the process entry as <code>pub main</code>.</p>
           <pre class="pipe">greet(name) = "hello " ++ name
 
 pub main() = {
     msg := greet("world")
     print(msg)
 }</pre>
-          <p>Run: <code>crpc run examples/hello</code></p>
+          <ul>
+            <li><code>++</code> concatenates strings — think of it as “append,” not numeric plus.</li>
+            <li>No semicolons; the last expression in a block is the value (here <code>print</code> returns unit).</li>
+            <li>You did not write types: Crisp infers <code>name</code> and <code>msg</code> as strings from use.</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/hello</code></p>
+          <p class="tech"><strong>Under the hood:</strong> <code>crisp</code> analyzes the crate, emits a normal Cargo project under <code>target/rust/</code>, then <code>cargo run</code>. <code>rustc</code> remains the soundness boundary — if emitted Rust fails to compile, that is treated as a compiler bug, not a user debt.</p>
         </article>
 
         <article class="tutorial-step" id="bindings">
           <div class="step-label">Step 02</div>
           <h2>Functions and bindings</h2>
+          <p>Most Crisp looks like “small math and logging.” Functions are expressions. Locals are introduced once with <code>:=</code>; later assignment uses <code>=</code> (and needs <code>mut:=</code> if you will reassign — see loops).</p>
           <pre class="pipe">double(n) = n + n
 
 pub main() = {
@@ -89,15 +96,17 @@ pub main() = {
     log("x={x}")
 }</pre>
           <ul>
-            <li><code>pub</code> exports an item from the module</li>
-            <li><code>print</code> / <code>log</code> write to stdout (via Rust <code>println!</code>)</li>
-            <li>Types are inferred unless you annotate</li>
+            <li><code>pub</code> exports the item from the module (needed for <code>main</code> and for other files to <code>use</code> it).</li>
+            <li><code>print</code> / <code>log</code> both write to stdout; prefer <code>log</code> when interpolating.</li>
+            <li>Omit types while the shape of the program is clear; add them when APIs should be stable.</li>
           </ul>
+          <p class="tech"><strong>Under the hood:</strong> HM-style type inference plus a separate ownership pass. Silence means “infer”; an annotation is a hard constraint the solver must satisfy.</p>
         </article>
 
         <article class="tutorial-step" id="strings">
           <div class="step-label">Step 03</div>
           <h2>Strings and comments</h2>
+          <p>Text is a first-class string type (<code>str</code>). Comments use <code>--</code> (line) or nested <code>{- … -}</code> (block). Interpolation embeds expressions inside string literals.</p>
           <pre class="pipe">-- single-line comment
 {- block comment -}
 
@@ -107,20 +116,29 @@ pub main() = {
     who := "world"
     log("greet={greet(who)}")
 }</pre>
-          <p>Concatenate with <code>++</code>. Interpolate with <code>"{expr}"</code>.</p>
+          <ul>
+            <li><code>"{expr}"</code> interpolates — here the call <code>greet(who)</code> is evaluated inside the string.</li>
+            <li>You can annotate early (<code>name: str</code>) to document an API even when inference would succeed.</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> Interpolation lowers toward Rust <code>format!</code>-style formatting in the emitted project. String values are owned <code>String</code> (or borrowed where the ownership pass proves it safe).</p>
         </article>
 
         <article class="tutorial-step" id="types">
           <div class="step-label">Step 04</div>
           <h2>Types when you need them</h2>
-          <p>Annotate parameters or fields when inference is ambiguous.</p>
+          <p>Inference is the default, not a limitation. Annotate when two interpretations are possible, when you design a public boundary, or when you want the compiler to reject silent widening.</p>
           <pre class="pipe">port(host: str, n: int) = n</pre>
-          <p>Primitives include <code>int</code>, <code>uint</code>, <code>float</code>, <code>bool</code>, <code>char</code>, <code>str</code>.</p>
+          <ul>
+            <li>Common primitives: <code>int</code>, <code>uint</code>, <code>float</code>, <code>bool</code>, <code>char</code>, <code>str</code>.</li>
+            <li>Return types can be written <code>-&gt; T</code> on functions when you want them explicit.</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> <code>int</code>/<code>uint</code>/<code>float</code> map to Rust <code>i64</code>/<code>u64</code>/<code>f64</code> in the current bootstrap. Annotations feed the same constraint solver as inferred uses — they are not a second type system.</p>
         </article>
 
         <article class="tutorial-step" id="structs">
           <div class="step-label">Step 05</div>
           <h2>Structs and defaults</h2>
+          <p>Group related fields with <code>type Name = { … }</code>. Defaults on fields mean callers only pass what they care about — useful for config-shaped data.</p>
           <pre class="pipe">type ServerConfig = {
     host: str  = "127.0.0.1"
     port: uint = 9000
@@ -131,13 +149,18 @@ pub main() = {
     cfg := ServerConfig { port: 3000 }
     log("port={cfg.port}")
 }</pre>
-          <p>Omitted fields use defaults. Field access on parameters is inferred when exactly one known struct has the field; otherwise annotate the param (see <a href="limitations.html">limitations</a>).</p>
+          <ul>
+            <li>Omitted fields fill from defaults (<code>host</code> and <code>debug</code> above).</li>
+            <li>Read fields with <code>cfg.port</code> — same idea as other systems languages.</li>
+            <li>If field access on a parameter is ambiguous across several structs, annotate the parameter (see <a href="limitations.html">limitations</a>).</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> Struct types become Rust structs; defaults are applied at construction in the emit layer. Field projection participates in ownership inference (<code>&amp;</code> vs owned) like other places.</p>
         </article>
 
         <article class="tutorial-step" id="modules">
           <div class="step-label">Step 06</div>
           <h2>Modules</h2>
-          <p>One file per module under <code>src/</code>. Import with <code>use</code>.</p>
+          <p>One <code>.crp</code> file under <code>src/</code> is one module. Share helpers by marking them <code>pub</code> and importing with <code>use</code> — similar in spirit to Rust modules or TypeScript imports, with lighter syntax.</p>
           <pre class="pipe">-- src/arith.crp
 pub sum(a, b) = a + b
 
@@ -147,12 +170,17 @@ use arith { sum }
 pub main() = {
     log("sum={sum(2, 3)}")
 }</pre>
-          <p>Flat <code>src/*.crp</code> modules may import each other regardless of filename order. Nested paths (e.g. <code>src/math/vector.crp</code>) emit a Rust module tree.</p>
+          <ul>
+            <li>Flat <code>src/*.crp</code> modules can import each other without worrying about file order.</li>
+            <li>Nested paths such as <code>src/math/vector.crp</code> become a nested Rust module tree when emitted.</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> Resolve builds a module graph from the crate root (<code>crisp.toml</code> + <code>src/</code>). Visibility and <code>use</code> are checked before typeck; emit then writes a conventional <code>mod</code> tree for Cargo.</p>
         </article>
 
         <article class="tutorial-step" id="tests">
           <div class="step-label">Step 07</div>
           <h2>Tests</h2>
+          <p>Write checks next to the code. <code>test "…"</code> is a positive assertion. <code>test_compile_fail</code> expects analysis to reject the body — useful for guarding error messages and “this must not typecheck” cases.</p>
           <pre class="pipe">test "greet works" = {
     assert_eq(greet("world"), "hello world")
 }
@@ -160,13 +188,18 @@ pub main() = {
 test_compile_fail "unknown name" = {
     definitely_not_a_builtin()
 }</pre>
-          <pre class="pipe">crpc test .</pre>
+          <pre class="pipe">crisp test .</pre>
+          <ul>
+            <li>Keep tests in the same crate as the code under exercise unless you outgrow that.</li>
+            <li>Prefer small named cases over one giant script.</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> Positive tests become Rust <code>#[test]</code> functions in the emitted crate. Compile-fail tests are run by the Crisp harness (expect diagnostics), not by hoping <code>rustc</code> fails on bad user code.</p>
         </article>
 
         <article class="tutorial-step" id="errors">
           <div class="step-label">Step 08</div>
           <h2>Fallible functions</h2>
-          <p>Ambient errors use <code>!</code>, <code>throw</code>, and <code>catch</code> — lowered to <code>Result&lt;T, CrispError&gt;</code>.</p>
+          <p>When a function can fail, mark it with ambient <code>!</code>. Use <code>throw</code> to fail and <code>catch</code> to recover. Beginners can think “this returns a value or an error,” without writing Rust <code>Result</code> by hand.</p>
           <pre class="pipe">parse_port(s) ! = {
     if s == "" then throw "empty"
     -- …
@@ -176,12 +209,18 @@ pub main() = {
     p := parse_port("8080") catch { e => 0 }
     log("port={p}")
 }</pre>
-          <p>See <code>examples/fallible</code> for fuller patterns.</p>
+          <ul>
+            <li><code>!</code> on the function means callers must handle failure (or themselves be fallible).</li>
+            <li><code>catch { e =&gt; … }</code> turns an error into a normal value at that site.</li>
+            <li>See <code>examples/fallible</code> for chaining and richer error sets.</li>
+          </ul>
+          <p class="tech"><strong>Under the hood:</strong> Ambient errors lower to <code>Result&lt;T, CrispError&gt;</code> (and related plumbing) in emitted Rust. The error pass tracks which error variants a function may produce; sealed crates freeze those signatures at publish time.</p>
         </article>
 
         <article class="tutorial-step" id="enums">
           <div class="step-label">Step 09</div>
           <h2>Enums and match</h2>
+          <p>Enums name a closed set of cases — plain tags or payloads. <code>match</code> is how you branch on them exhaustively. If you know Rust enums or TypeScript discriminated unions, this will feel familiar.</p>
           <pre class="pipe">type Color =
     | Red
     | Green
@@ -194,13 +233,18 @@ describe(color) = match color {
     Color.Blue -> "blue"
     Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
 }</pre>
-          <p>Run: <code>crpc run examples/enums</code></p>
+          <ul>
+            <li>Write variants as <code>Color.Red</code> when constructing or matching.</li>
+            <li>Payloads bind names in the arm (<code>r, g, b</code> above).</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/enums</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Enums become Rust <code>enum</code>s; <code>match</code> becomes a Rust <code>match</code>. Exhaustiveness is enforced in analysis so emit does not rely on “hope the arms cover it.”</p>
         </article>
 
         <article class="tutorial-step" id="loops">
           <div class="step-label">Step 10</div>
           <h2>Loops</h2>
-          <p><code>while</code>, <code>for … in</code> (over <code>vec</code> today), and value-producing <code>loop</code> with <code>break</code> / <code>continue</code>. Use <code>mut:=</code> for counters.</p>
+          <p>Crisp has <code>while</code>, <code>for … in</code> (over <code>vec</code> today), and a value-producing <code>loop</code> with <code>break</code> / <code>continue</code>. Counters that change need <code>mut:=</code> so reassignment is allowed.</p>
           <pre class="pipe">sum_to(n) = {
     total mut:= 0
     i mut:= 0
@@ -219,12 +263,19 @@ countdown_stop(start, stop) = {
         n = n - 1
     }
 }</pre>
-          <p>Run: <code>crpc test examples/loops</code></p>
+          <ul>
+            <li><code>mut:=</code> introduces a mutable binding; later updates use plain <code>=</code>.</li>
+            <li><code>break expr</code> exits a <code>loop</code> with a value — the whole <code>loop</code> expression yields that value.</li>
+            <li><code>for</code> MVP iterates Crisp <code>vec</code>; richer iterators are still growing (see limitations).</li>
+          </ul>
+          <p class="try">Try: <code>crisp test examples/loops</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Loops lower to Rust <code>while</code> / <code>loop</code> / <code>for</code> with mutable locals. Parser disables struct-literal greed in <code>if</code>/<code>while</code>/<code>for</code> heads (Rust-style) so <code>while i &lt; n { … }</code> parses cleanly.</p>
         </article>
 
         <article class="tutorial-step" id="methods">
           <div class="step-label">Step 11</div>
           <h2>Inherent methods</h2>
+          <p>Attach functions to a type with <code>impl Type = { … }</code>. Use <code>self</code> for instance methods and <code>Type.name(…)</code> for associated constructors — same mental model as Rust inherent impls, with less ceremony.</p>
           <pre class="pipe">type Vec2 = {
     x: float
     y: float
@@ -243,13 +294,18 @@ pub main() = {
     v := Vec2.new(3.0, 4.0)
     log("mag={v.magnitude()}")
 }</pre>
-          <p>See <code>examples/vec2_methods</code> (also nested modules).</p>
+          <ul>
+            <li><code>**</code> is exponentiation (lowers to a float power call).</li>
+            <li>Call associated items as <code>Vec2.new(…)</code>; call methods as <code>v.magnitude()</code>.</li>
+          </ul>
+          <p class="try">See also: <code>examples/vec2_methods</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Inherent methods become Rust <code>impl Type { … }</code>. Receiver mode (<code>&amp;self</code> vs owned) is chosen by the ownership pass from how <code>self</code> is used.</p>
         </article>
 
         <article class="tutorial-step" id="traits">
           <div class="step-label">Step 12</div>
           <h2>Traits</h2>
-          <p>Nominal contracts with explicit <code>impl</code>. Prelude also ships Show / Eq / Ord shims.</p>
+          <p>Traits are named contracts: “this type can <code>show</code> itself.” You declare the trait, then write an explicit <code>impl Trait for Type</code>. The prelude also offers Show / Eq / Ord-style helpers for common cases.</p>
           <pre class="pipe">trait Show = { show(self) -> str }
 
 type Point = {
@@ -265,13 +321,18 @@ pub main() = {
     p := Point { x: 1, y: 2 }
     log("p={p.show()}")
 }</pre>
-          <p>Run: <code>crpc run examples/show_trait</code> · also <code>examples/std_traits</code>, <code>examples/trait_defaults</code>.</p>
+          <ul>
+            <li>Prefer traits when several types share a behavior you want to name.</li>
+            <li>Defaults and tighter bound enforcement are still maturing — see <a href="limitations.html">limitations</a> and <code>examples/trait_defaults</code>.</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/show_trait</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Traits lower toward Rust traits / impls. Full Rust-style bound / <code>dyn Trait</code> fidelity is partial in the bootstrap; nominal <code>impl</code> is the stable path today.</p>
         </article>
 
         <article class="tutorial-step" id="shapes">
           <div class="step-label">Step 13</div>
           <h2>Shapes</h2>
-          <p>Structural constraints: any matching struct satisfies a data <code>shape</code> without an explicit <code>impl</code>. Lowers to a generated Rust trait + accessors.</p>
+          <p>Shapes are structural: “anything with <code>x</code> and <code>y</code> floats.” Unlike traits, matching structs do not need an explicit <code>impl</code> — useful when you care about fields, not a named protocol.</p>
           <pre class="pipe">shape HasPosition = {
     x: float
     y: float
@@ -293,13 +354,18 @@ pub main() = {
     q := Point { x: 3.0, y: 4.0 }
     log("d={distance(p, q)}")
 }</pre>
-          <p>Run: <code>crpc run examples/shapes</code> · <code>crpc test examples/shapes</code>.</p>
+          <ul>
+            <li>Use a <code>shape</code> for “duck” field requirements; use a <code>trait</code> for named behavior.</li>
+            <li><code>Point</code> satisfies <code>HasPosition</code> automatically because the fields match.</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/shapes</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Shapes lower to a generated Rust trait plus accessors so emit stays coherent. Method/anonymous shape edges are still limited — prefer named data shapes as in the example.</p>
         </article>
 
         <article class="tutorial-step" id="rust-import">
           <div class="step-label">Step 14</div>
           <h2>Import a Rust crate</h2>
-          <p>Declare the dependency with <code>rust = true</code> in <code>crisp.toml</code>, then import like TypeScript.</p>
+          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package.</p>
           <pre class="pipe">-- crisp.toml
 -- [dependencies]
 -- serde_json = { version = "1", rust = true }
@@ -310,29 +376,43 @@ pub main() = {
     v := from_str("[1, true, \"crisp\"]")
     print(to_string(v))
 }</pre>
-          <p>Compat alias: <code>use rust.serde_json { … }</code>. Known <code>Result</code> APIs become Crisp ambient errors (<code>?</code> / <code>catch</code>) — see <a href="limitations.html">limitations</a>.</p>
-          <p>Run: <code>crpc run examples/rust_import</code></p>
+          <ul>
+            <li>Compat path: <code>use rust.serde_json { … }</code> if you prefer an explicit namespace.</li>
+            <li>Known <code>Result</code>-returning APIs can surface as Crisp ambient errors (<code>?</code> / <code>catch</code>) — see <a href="limitations.html">limitations</a>.</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/rust_import</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Dependencies with <code>rust = true</code> are forwarded into the emitted <code>Cargo.toml</code>. Crisp does not reimplement those crates — it generates ordinary Rust uses against them.</p>
         </article>
 
         <article class="tutorial-step" id="async">
           <div class="step-label">Step 15</div>
           <h2>Async</h2>
+          <p>Mark entrypoints or blocks <code>async</code> when you need concurrency or timers. Start with a tiny sleep to prove the runtime is wired; then grow toward spawn/join patterns in the examples.</p>
           <pre class="pipe">pub main() = async {
     sleep_ms(1)
     print("async-ok")
 }</pre>
-          <p>Run: <code>crpc run examples/async_hello</code> · also <code>examples/async_spawn</code>.</p>
+          <ul>
+            <li>You still write Crisp — the bootstrap selects a Tokio-oriented emit for async crates.</li>
+            <li>Prefer the examples before inventing large async graphs by hand.</li>
+          </ul>
+          <p class="try">Try: <code>crisp run examples/async_hello</code> · also <code>examples/async_spawn</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Async lowers toward Tokio in the emitted Cargo project (<code>runtime = "tokio"</code> in manifests). This is a Rust-hosted async story, not a separate Crisp scheduler.</p>
         </article>
 
         <article class="tutorial-step" id="next">
           <div class="step-label">Step 16</div>
           <h2>Where to go</h2>
+          <p>You now have the core surface: values, modules, tests, errors, data, traits/shapes, Rust interop, and async. Next, read for depth or scan for fit.</p>
           <ul>
-            <li><a href="index.html">Home</a> — feature snippet gallery</li>
-            <li><a href="use-cases.html">Use cases</a> — Rust domains Crisp targets</li>
-            <li><a href="docs.html">Docs</a> — CLI, limitations, draft spec</li>
+            <li><a href="language.html">Language</a> — compact reference for the same topics</li>
+            <li><a href="cli.html">CLI</a> — <code>check</code>, <code>emit</code>, <code>build</code>, <code>run</code>, <code>test</code>, and <code>reveal</code></li>
+            <li><a href="use-cases.html">Use cases</a> — where Crisp is aimed</li>
+            <li><a href="limitations.html">Limitations</a> — honest gaps vs the draft spec</li>
             <li><a href="https://github.com/jose-compu/crisp/blob/main/QUICKSTART.md">QUICKSTART.md</a> — project layout end to end</li>
+            <li><a href="https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md">Draft spec</a> — normative design text</li>
           </ul>
+          <p class="tech"><strong>Tip:</strong> When inference surprises you, run <code>reveal</code> on the same path — it prints inferred types, ownership, and emitted Rust so you can see what silence meant.</p>
         </article>
       </div>
 

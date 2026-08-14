@@ -24,7 +24,7 @@
 
   function looksLikeShell(text) {
     return (
-      /(?:^|\n)\s*(?:git|cargo|crpc|export|cd|#)\b/.test(text) ||
+      /(?:^|\n)\s*(?:git|cargo|crisp|export|cd|#)\b/.test(text) ||
       /\$[A-Z_]/.test(text)
     );
   }

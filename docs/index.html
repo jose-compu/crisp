@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crisp — systems language → Rust</title>
+  <title>The Crisp Programming Language</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="css/prism-crisp.css" />
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.5.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -29,7 +29,7 @@
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <img class="hero-brand" src="crisp-logo.jpg" alt="Crisp" width="168" height="185" />
-        <p class="badge">Crisp v1.5.0 · public release</p>
+        <p class="badge">Crisp v1.5.1 · public release</p>
         <h1>Explicit on demand, implicit by default</h1>
         <ul class="hero-points">
           <li>Compact <code>.crp</code> source; <code>crpc</code> infers types, ownership, and errors</li>
@@ -215,6 +215,30 @@ pub main() = {
           </div>
         </div>
         <div class="code-panel">
+          <div class="caption"><span>Loops</span><span>examples/loops</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>sum_to(n) = {
+    total mut:= 0
+    i mut:= 0
+    while i < n {
+        i = i + 1
+        total = total + i
+    }
+    total
+}
+
+countdown_stop(start, stop) = {
+    n mut:= start
+    loop {
+        if n == stop then break n
+        if n <= 0 then break 0
+        n = n - 1
+    }
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
           <div class="caption"><span>Async</span><span>examples/async_hello</span></div>
           <div class="code-window">
             <div class="code-chrome"><span></span><span></span><span></span></div>
@@ -266,7 +290,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

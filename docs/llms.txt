@@ -1,0 +1,39 @@
+# Crisp
+
+> Crisp is a systems programming language that transpiles compact `.crp` source to Rust. The `crisp` toolchain infers types, ownership, and errors; `rustc` remains the soundness boundary.
+
+Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.5.2. Repository: https://github.com/jose-compu/crisp
+
+## Docs
+
+- [Home](https://crisp-lang.org/): Language overview and positioning
+- [Install](https://crisp-lang.org/install.html): Install `crisp-lang` / `crisp-lsp` from crates.io or from source
+- [Tutorial](https://crisp-lang.org/tutorial.html): Guided introduction to Crisp syntax and toolchain
+- [Learning path](https://crisp-lang.org/learning.html): Ordered path through docs and examples
+- [Language](https://crisp-lang.org/language.html): Language surface — bindings, types, errors, modules
+- [Docs hub](https://crisp-lang.org/docs.html): Spec, limitations, and documentation index
+- [CLI](https://crisp-lang.org/cli.html): `crisp` and `reveal` command reference
+- [Use cases](https://crisp-lang.org/use-cases.html): Where Crisp fits (CLI tools, services, interop with Rust)
+- [Limitations](https://crisp-lang.org/limitations.html): Honest known gaps vs the draft spec
+
+## Install (agents)
+
+```bash
+cargo install crisp-lang --locked
+crisp --version
+crisp run .
+```
+
+Requires Rust 1.85+ (`rustup`). Optional LSP: `cargo install crisp-lsp --locked`.
+
+## Source & package
+
+- GitHub: https://github.com/jose-compu/crisp
+- crates.io package: https://crates.io/crates/crisp-lang (bins: `crisp`, `reveal`)
+- Spec (repo): https://github.com/jose-compu/crisp/blob/main/docs/spec/CrispLang-SPECS-0.2.0.md
+- Changelog: https://github.com/jose-compu/crisp/blob/main/CHANGELOG.md
+
+## Optional
+
+- [Full site map](https://crisp-lang.org/sitemap.xml)
+- [robots.txt](https://crisp-lang.org/robots.txt)

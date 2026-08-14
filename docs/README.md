@@ -17,6 +17,18 @@ Static site for **https://crisp-lang.org/** (GitHub Pages branch `docs`, folder 
 
 Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). Favicon assets (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`) are derived from `assets/crisp-logo-square.jpg` on `main`. Structure inspired by [elixir-lang.org](https://elixir-lang.org/).
 
+## SEO / discoverability
+
+| Asset | Role |
+|-------|------|
+| Per-page `<meta>` + Open Graph / Twitter | Titles, descriptions, canonical URLs |
+| JSON-LD on `index.html` | `WebSite`, `Organization`, `SoftwareApplication`, `SoftwareSourceCode` |
+| `robots.txt` | Allow search + major AI crawlers; points at sitemap |
+| `sitemap.xml` | Index of primary pages for search engines |
+| `llms.txt` | LLM-oriented site summary ([llmstxt.org](https://llmstxt.org/)) |
+
+Keep page titles/descriptions in sync when shipping major releases.
+
 ## Syntax highlighting
 
 Web snippets use **Prism.js**:

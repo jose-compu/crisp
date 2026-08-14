@@ -23,7 +23,7 @@ version = "1.5.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jose-compu/crisp"
-homepage = "https://jose-compu.github.io/crisp/"
+homepage = "https://crisp-lang.org/"
 rust-version = "1.85"
 
 [workspace.dependencies]

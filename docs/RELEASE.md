@@ -40,7 +40,7 @@ cargo install --path crates/crpc --locked
 | Item | Status |
 |------|--------|
 | Repo description + topics | Done (GitHub settings) |
-| Homepage → GitHub Pages | Done — https://jose-compu.github.io/crisp/ |
+| Homepage → https://crisp-lang.org/ (GitHub Pages + custom domain) | Done |
 | CI status badge on README | Done |
 | LICENSE dual files + SECURITY + CONTRIBUTING linked | Done |
 | Known limitations honest for current version | Done (v1.5.0) |
@@ -52,7 +52,7 @@ cargo install --path crates/crpc --locked
 
 The documentation **website** lives on branch **`docs`**, under folder **`docs/`**. Spec and markdown guides stay on `main` under `docs/spec/`, `docs/KNOWN_LIMITATIONS.md`, etc.
 
-Live site: https://jose-compu.github.io/crisp/
+Live site: https://crisp-lang.org/ (`CNAME` → `crisp-lang.org` on the `docs` branch)
 
 ```bash
 git fetch origin docs

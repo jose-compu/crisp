@@ -30,7 +30,7 @@ crpc --version
 reveal --version
 ```
 
-Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site: [jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/) (source on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch).
+Also useful: [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md), [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md). Web site: [crisp-lang.org](https://crisp-lang.org/) (source on the [`docs`](https://github.com/jose-compu/crisp/tree/docs) branch).
 
 **Interop note:** known Rust `Result` APIs (`serde_json`, `ureq`) lower to Crisp ambient errors (`?` / `CrispError::Thrown`). Use `catch` or let the function stay fallible.
 

@@ -71,7 +71,7 @@ crpc run examples/float_demo
 ## Public preview notes
 
 - Install: `cargo install --path crates/crpc --locked` until crates.io ([#66](https://github.com/jose-compu/crisp/issues/66); see [docs/CRATES_IO.md](docs/CRATES_IO.md)).
-- Site: https://jose-compu.github.io/crisp/
+- Site: https://crisp-lang.org/
 - Maintainers: enable branch protection on `main` (require CI) when the GitHub plan allows; flip visibility via [#58](https://github.com/jose-compu/crisp/issues/58).
 - Release checklist: [docs/RELEASE.md](docs/RELEASE.md).
 

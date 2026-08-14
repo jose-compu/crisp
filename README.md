@@ -6,7 +6,7 @@
 [![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
 [![Tests](https://img.shields.io/badge/tests-271-brightgreen.svg)](.github/workflows/ci.yml)
 [![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
-[![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://jose-compu.github.io/crisp/)
+[![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://crisp-lang.org/)
 
 <p align="center">
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
@@ -22,7 +22,7 @@ Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
-**Web docs:** [jose-compu.github.io/crisp](https://jose-compu.github.io/crisp/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
+**Web docs:** [crisp-lang.org](https://crisp-lang.org/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
 **Roadmap:** [ROADMAP.md](ROADMAP.md)  
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  

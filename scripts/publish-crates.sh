@@ -10,7 +10,9 @@
 #
 # crates.io new-crate limits: burst of 5, then 1 every 10 minutes.
 # New versions of existing crates: burst of 30, then 1 per minute.
-# Defaults: NEW_CRATE_SLEEP=620, VERSION_SLEEP=65 (seconds). Override via env.
+# We do NOT sleep the full 10 minutes proactively — short post-upload
+# cushion only; rate limits are handled by wait-and-retry on 429.
+# Defaults: NEW_CRATE_SLEEP=15, VERSION_SLEEP=5. Override via env.
 #
 # Dev-dependencies are ignored for ordering (e.g. crisp-rust-emit → crisp-lsp).
 set -euo pipefail
@@ -20,9 +22,11 @@ cd "$ROOT"
 
 EXECUTE=0
 # Prefer explicit PUBLISH_SLEEP if set; else per-kind defaults below.
-NEW_CRATE_SLEEP="${NEW_CRATE_SLEEP:-620}"
-VERSION_SLEEP="${VERSION_SLEEP:-65}"
+NEW_CRATE_SLEEP="${NEW_CRATE_SLEEP:-15}"
+VERSION_SLEEP="${VERSION_SLEEP:-5}"
 PUBLISH_SLEEP="${PUBLISH_SLEEP:-}"
+# Fallback wait if a 429 does not include a parseable retry-after date.
+RATE_LIMIT_FALLBACK="${RATE_LIMIT_FALLBACK:-620}"
 
 if [[ "${1:-}" == "--execute" ]]; then
   EXECUTE=1
@@ -33,10 +37,11 @@ elif [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo
   echo "Already-published crate@version pairs are skipped."
   echo "On 429 rate limits: wait until crates.io retry-after, then retry."
-  echo "Pace after success:"
-  echo "  new crate name:  ${NEW_CRATE_SLEEP}s  (NEW_CRATE_SLEEP; crates.io = 10 min)"
-  echo "  new version:     ${VERSION_SLEEP}s   (VERSION_SLEEP; crates.io = 1 min)"
+  echo "Short pause after success (index cushion; not the full rate-limit window):"
+  echo "  new crate name:  ${NEW_CRATE_SLEEP}s  (NEW_CRATE_SLEEP)"
+  echo "  new version:     ${VERSION_SLEEP}s   (VERSION_SLEEP)"
   echo "  override both:   PUBLISH_SLEEP=<seconds>"
+  echo "  429 fallback:    ${RATE_LIMIT_FALLBACK}s (RATE_LIMIT_FALLBACK)"
   echo
   echo "After publish, end users install:"
   echo "  cargo install crisp-lang --locked   # bins: crisp, reveal"
@@ -188,7 +193,7 @@ sleep_after_success() {
   else
     secs="$VERSION_SLEEP"
   fi
-  echo "    sleeping ${secs}s before next upload (crates.io pace)…"
+  echo "    sleeping ${secs}s (index cushion)…"
   sleep "$secs"
 }
 
@@ -222,7 +227,7 @@ publish_with_retry() {
 
     if printf '%s\n' "$out" | grep -qi '429 Too Many Requests\|too many new crates\|rate.limit'; then
       echo "    rate limited on ${name}@${VERSION} — will wait and retry (not exiting)"
-      wait_for_rate_limit "$out" "$NEW_CRATE_SLEEP"
+      wait_for_rate_limit "$out" "$RATE_LIMIT_FALLBACK"
       attempt=$((attempt + 1))
       continue
     fi
@@ -237,7 +242,7 @@ if [[ "$EXECUTE" -eq 0 ]]; then
   echo "==> workspace version ${VERSION}; skip if already on crates.io"
 else
   echo "==> PUBLISHING to crates.io (${#CRATES[@]} packages @ ${VERSION})"
-  echo "==> new-crate pace ${NEW_CRATE_SLEEP}s · version pace ${VERSION_SLEEP}s"
+  echo "==> post-upload cushion ${NEW_CRATE_SLEEP}s (new) / ${VERSION_SLEEP}s (version); 429 waits use retry-after"
   echo "==> on 429: wait for crates.io retry-after, then retry automatically"
 fi
 

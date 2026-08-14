@@ -47,10 +47,9 @@ Helper (dry-run by default):
 ```bash
 ./scripts/publish-crates.sh          # dry-run; skips crate@version already on crates.io
 ./scripts/publish-crates.sh --execute  # real publish; waits/retries on 429
-NEW_CRATE_SLEEP=620 VERSION_SLEEP=65 ./scripts/publish-crates.sh --execute
 ```
 
-Already-published versions are skipped. crates.io limits **new crate names** to a burst of 5, then **1 every 10 minutes** (new versions: burst 30, then 1/min). The script paces accordingly and, on 429, parses `try again after … GMT`, waits, and retries until the upload succeeds.
+Already-published versions are skipped. After each success the script only pauses briefly (default 15s / 5s) for index lag. crates.io still enforces **new crate** limits (burst of 5, then ~1 / 10 min); on 429 the script parses `try again after … GMT`, waits that long, and retries — so you do not sit through a full 10 minutes when the server would allow sooner, and you do not exit the run.
 
 ## Preconditions
 

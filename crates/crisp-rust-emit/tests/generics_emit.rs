@@ -85,6 +85,27 @@ fn shapes_generic_emits_and_runs() {
 }
 
 #[test]
+fn shapes_user_emits_and_runs() {
+    let cir = CirBuilder::build_crate(&example("shapes_user")).expect("cir");
+    let src = emit_crate(&cir).lib_rs;
+    eprintln!("emitted shapes_user:\n{src}");
+    assert!(src.contains("trait Measure"), "Measure trait:\n{src}");
+    assert!(
+        src.contains("T: Clone + Measure") && src.contains("fn distance"),
+        "inferred Measure bound:\n{src}"
+    );
+    assert!(
+        !src.contains("std::ops::Add"),
+        "must not use native Add:\n{src}"
+    );
+    let run = run_emitted(&example("shapes_user")).expect("run");
+    assert!(run.contains("len=25"), "stdout: {run}");
+    assert!(run.contains("ticks=100"), "stdout: {run}");
+    let r = run_tests(&example("shapes_user")).expect("test");
+    assert!(r.runtime_passed >= 2);
+}
+
+#[test]
 fn generics_implicit_emits_and_runs() {
     let cir = CirBuilder::build_crate(&example("generics_implicit")).expect("cir");
     let src = emit_crate(&cir).lib_rs;

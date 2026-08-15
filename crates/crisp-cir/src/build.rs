@@ -261,7 +261,7 @@ fn lower_trait_def(td: &crisp_ast::item::TraitDef) -> CirTrait {
                     .params
                     .iter()
                     .map(|p: &Param| {
-                        let ty = if p.name.name == "self" && p.ty.is_none() {
+                        let ty = if p.ty.is_none() {
                             CirTy::Named {
                                 name: "Self".into(),
                                 args: vec![],
@@ -278,7 +278,10 @@ fn lower_trait_def(td: &crisp_ast::item::TraitDef) -> CirTrait {
                     .ret_type
                     .as_ref()
                     .map(ast_type_to_cir_ty)
-                    .unwrap_or(CirTy::Unit),
+                    .unwrap_or(CirTy::Named {
+                        name: "Self".into(),
+                        args: vec![],
+                    }),
                 default_body: m.default_body.as_ref().map(lower_trait_default_expr),
             })
             .collect(),
@@ -570,7 +573,7 @@ fn lower_function(
             CirParam {
                 name: name.clone(),
                 ty: ty.clone(),
-                mode: if sig_param_is_copy_generic(tsig, i) {
+                mode: if sig_param_is_copy_generic(tsig, i) || sig_param_is_impl_self(tsig, i) {
                     OwnershipMode::Owned
                 } else {
                     *mode
@@ -1757,6 +1760,19 @@ fn sig_param_is_copy_generic(sig: &InferredSig, i: usize) -> bool {
         return false;
     };
     ty_is_copy_generic(ty, sig)
+}
+
+fn sig_param_is_impl_self(sig: &InferredSig, i: usize) -> bool {
+    let Some(impl_ty) = &sig.impl_ty else {
+        return false;
+    };
+    let Some((name, ty)) = sig.params.get(i) else {
+        return false;
+    };
+    if name == "self" {
+        return false;
+    }
+    matches!(ty, Ty::Named { name, args } if args.is_empty() && name == impl_ty)
 }
 
 fn callee_param_is_copy_generic(typed: &TypedCrate, fname: &str, i: usize) -> bool {

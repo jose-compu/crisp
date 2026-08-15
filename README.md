@@ -194,7 +194,7 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 |---------|--------|--------|
 | `hello`, `math`, `float_demo`, `enums` | Shapes, implicit generics, integers, floats, enum + match | `crisp test` |
 | `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crisp test` |
-| `generics_implicit`, `generics`, `generics_pub`, `shapes_generic` | Implicit binders (preferred), pins, pub schemes, `shape Boxy` / `HasPosition` | `crisp test` |
+| `generics_implicit`, `generics`, `generics_pub`, `shapes_generic`, `shapes_user` | Implicit binders (preferred), pins, pub schemes, `HasPosition` + native ops / user `Measure` | `crisp test` |
 | `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |

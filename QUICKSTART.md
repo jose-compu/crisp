@@ -224,7 +224,7 @@ A name that is already a type (`int`, `Pair`, …) is that type, not a parameter
 
 Unannotated `id(x) = x` is a scheme when the body leaves type variables free. Crate-internal items used at one concrete type emit monomorphic Rust; `pub` items stay schemes and are sealed in `crisp.lock`. `reveal types` shows the emitted bound (`id<T: Clone>(x: T) -> T`). Locals and `mut` bindings are not generalized.
 
-Start with `examples/generics_implicit`. Also `examples/generics` (explicit pins), `examples/generics_pub`, and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
+Start with `examples/generics_implicit`. Also `examples/generics` (explicit pins), `examples/generics_pub`, `examples/shapes_generic`, and `examples/shapes_user` (user `Measure` on `T`). `where` clauses and rich written `T: Show` bounds are still limited.
 
 ## 5. Structs
 
@@ -440,6 +440,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `generics` | Explicit `<>` pins + parametric shapes (#70 / #71) |
 | `generics_pub` | Unannotated `id(x)=x` — internal mono vs `pub` scheme (#76) |
 | `shapes_generic` | `shape Boxy`, `shape HasPosition` + squared Euclidean distance (#70) |
+| `shapes_user` | `HasPosition<T>` + inferred user `Measure` bound (not int/float `+`) (#84) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |

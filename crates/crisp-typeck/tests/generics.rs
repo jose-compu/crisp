@@ -11,6 +11,10 @@ fn shapes_generic_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_generic")
 }
 
+fn shapes_user_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_user")
+}
+
 fn generics_implicit_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics_implicit")
 }
@@ -87,6 +91,28 @@ fn shapes_generic_example_typechecks() {
         format_sig(sig_named(&typed, "distance")),
         "distance<T: Clone + Copy + Add + Mul + Sub>(a: HasPosition<T>, b: HasPosition<T>) -> T"
     );
+}
+
+#[test]
+fn shapes_user_example_typechecks() {
+    let typed = TypeChecker::check_crate(&shapes_user_root()).expect("typecheck shapes_user");
+    assert_eq!(
+        format_sig(sig_named(&typed, "distance")),
+        "distance<T: Clone + Measure>(a: HasPosition<T>, b: HasPosition<T>) -> T"
+    );
+}
+
+#[test]
+fn measure_instantiation_rejects_missing_impl() {
+    let err = TypeChecker::check_crate(&fixture("measure_bound_mismatch"))
+        .expect_err("distance on Label coordinates must fail in typeck");
+    let msg = err.to_string();
+    eprintln!("measure bound: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsatisfiedBound { .. }) || msg.contains("E0084"),
+        "{msg}"
+    );
+    assert!(msg.contains("Measure"), "{msg}");
 }
 
 #[test]

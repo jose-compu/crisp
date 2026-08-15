@@ -1,0 +1,138 @@
+-- examples/shapes_user — parametric shape + inferred user-trait bound (#84)
+-- T is a user type (Length / Tick), not int/float. Ops are user methods, not +.
+
+trait Measure = {
+    minus(self, other)
+    square(self)
+    plus(self, other)
+}
+
+type Length = {
+    n: int
+}
+
+type Tick = {
+    n: int
+}
+
+type Spot = {
+    x: Length
+    y: Length
+}
+
+type Cell = {
+    x: Tick
+    y: Tick
+}
+
+impl Measure for Length = {
+    minus(self, other: Length) = Length {
+        n: self.n - other.n
+    }
+    square(self) = Length {
+        n: self.n * self.n
+    }
+    plus(self, other: Length) = Length {
+        n: self.n + other.n
+    }
+}
+
+impl Measure for Tick = {
+    minus(self, other: Tick) = Tick {
+        n: self.n - other.n
+    }
+    square(self) = Tick {
+        n: self.n * self.n
+    }
+    plus(self, other: Tick) = Tick {
+        n: self.n + other.n
+    }
+}
+
+shape HasPosition = {
+    x: T
+    y: T
+}
+
+-- Squared distance in T's units. T: Measure is inferred from minus/square/plus.
+distance(a: HasPosition<T>, b: HasPosition<T>) = {
+    dx := a.x.minus(b.x)
+    dy := a.y.minus(b.y)
+    dx.square().plus(dy.square())
+}
+
+test "length spots" = {
+    p := Spot {
+        x: Length {
+            n: 0
+        }
+        y: Length {
+            n: 0
+        }
+    }
+    q := Spot {
+        x: Length {
+            n: 3
+        }
+        y: Length {
+            n: 4
+        }
+    }
+    assert_eq(distance(p, q).n, 25)
+}
+
+test "tick cells" = {
+    a := Cell {
+        x: Tick {
+            n: 0
+        }
+        y: Tick {
+            n: 0
+        }
+    }
+    b := Cell {
+        x: Tick {
+            n: 6
+        }
+        y: Tick {
+            n: 8
+        }
+    }
+    assert_eq(distance(a, b).n, 100)
+}
+
+pub main() = {
+    p := Spot {
+        x: Length {
+            n: 0
+        }
+        y: Length {
+            n: 0
+        }
+    }
+    q := Spot {
+        x: Length {
+            n: 3
+        }
+        y: Length {
+            n: 4
+        }
+    }
+    a := Cell {
+        x: Tick {
+            n: 0
+        }
+        y: Tick {
+            n: 0
+        }
+    }
+    b := Cell {
+        x: Tick {
+            n: 6
+        }
+        y: Tick {
+            n: 8
+        }
+    }
+    log("len={distance(p, q).n} ticks={distance(a, b).n}")
+}

@@ -116,6 +116,7 @@ fn analyze_all_examples() {
         "float_demo",
         "generics",
         "shapes_generic",
+        "shapes_user",
         "generics_implicit",
         "generics_pub",
     ] {

@@ -1799,7 +1799,7 @@ impl TypeChecker {
                     let aty = self.infer_expr(env, arg)?;
                     unify(&mut self.ctx, &aty, pty)?;
                 }
-                Ok(Some(stub.ret.unwrap_or_else(|| self.ctx.fresh())))
+                Ok(Some(stub.ret.unwrap_or_else(|| base_ty.clone())))
             }
             many => Err(TypeError::Unify(UnifyError::Mismatch {
                 expected: format!("unique trait providing `{}`", field.name),

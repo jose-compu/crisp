@@ -13,6 +13,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 - Prelude **Add / Sub / Mul / Div** inferred from `+` `-` `*` `/` on generic `T` (emit `std::ops::*`, spec §15.4). `distance(a: HasPosition<T>, …)` works for int and float (`examples/shapes_generic`).
 - Keep `T`, infer the constraint, reject the instantiation (#84, [@aurelianito](https://github.com/aurelianito)): typeck **E0084** when a concrete call site does not satisfy inferred bounds (`HasPosition<str>`, `add("a","b")`). Unique method use on generic `T` infers a nullary trait bound (`label(x: T) = x.show()` → `T: Show`; `examples/show_trait`). Parametric `HasPosition<T>` with user `Measure` methods (`examples/shapes_user`).
+- `crisp test` accepts several crate paths; a pasted `and` (or a repeated `crisp test`) is ignored.
 
 ## [1.6.0] — 2026-08-15
 

@@ -46,8 +46,9 @@ enum Commands {
     },
     /// Run tests
     Test {
+        /// Crate root(s). Several paths may be given; a pasted `and` is ignored.
         #[arg(default_value = ".")]
-        path: String,
+        paths: Vec<String>,
     },
     /// Resolve + typecheck (fast)
     Check {
@@ -138,23 +139,29 @@ fn main() -> anyhow::Result<()> {
                 Err(e) => Err(e.into()),
             }
         }
-        Commands::Test { path } => {
-            let root = find_crate_root(PathBuf::from(&path).as_path())
-                .unwrap_or_else(|| PathBuf::from(&path));
-            match run_tests(&root) {
-                Ok(report) => {
-                    eprintln!(
-                        "crisp test: ok ({} runtime, {} compile-fail)",
-                        report.runtime_passed, report.compile_fail_passed
-                    );
-                    Ok(())
+        Commands::Test { paths } => {
+            for path in normalize_crate_paths(paths) {
+                let root = find_crate_root(PathBuf::from(&path).as_path())
+                    .unwrap_or_else(|| PathBuf::from(&path));
+                match run_tests(&root) {
+                    Ok(report) => {
+                        eprintln!(
+                            "crisp test: ok {} ({} runtime, {} compile-fail)",
+                            root.display(),
+                            report.runtime_passed,
+                            report.compile_fail_passed
+                        );
+                    }
+                    Err(TestHarnessError::Other(e))
+                        if e.to_string().contains("cargo not on PATH") =>
+                    {
+                        eprintln!("crisp test: cargo not on PATH");
+                        std::process::exit(1);
+                    }
+                    Err(e) => return Err(e.into()),
                 }
-                Err(TestHarnessError::Other(e)) if e.to_string().contains("cargo not on PATH") => {
-                    eprintln!("crisp test: cargo not on PATH");
-                    std::process::exit(1);
-                }
-                Err(e) => Err(e.into()),
             }
+            Ok(())
         }
         Commands::Emit { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())
@@ -258,6 +265,22 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
         _ => {}
     }
     eprintln!("{err}");
+}
+
+/// Drop copy-pasted command glue (`and`, `crisp test`, …) when those tokens are not paths.
+fn normalize_crate_paths(raw: Vec<String>) -> Vec<String> {
+    const GLUE: &[&str] = &[
+        "and", "&&", "crisp", "test", "check", "run", "build", "emit",
+    ];
+    let out: Vec<String> = raw
+        .into_iter()
+        .filter(|p| !(GLUE.contains(&p.as_str()) && !Path::new(p).exists()))
+        .collect();
+    if out.is_empty() {
+        vec![".".into()]
+    } else {
+        out
+    }
 }
 
 /// Best-effort: find a module source whose length covers `span.end`.

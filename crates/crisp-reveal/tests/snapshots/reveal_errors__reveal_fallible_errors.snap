@@ -3,9 +3,9 @@ source: crates/crisp-reveal/tests/reveal_errors.rs
 expression: out
 ---
 main() -> ()
-parse_config(text: ?6) -> Config ! ParseError
-read_config(path: ?5) -> Config ! IoError | ParseError
-read_file(path: ?5) -> str ! IoError
+parse_config(text: T) -> Config ! ParseError
+read_config(path: T) -> Config ! IoError | ParseError
+read_file(path: T) -> str ! IoError
 
 #[derive(Debug)]
 enum CrispError {

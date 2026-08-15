@@ -166,7 +166,7 @@ spelling removes a class of parser hacks. `**` is exponentiation and lowers to
 { }    -- blocks, struct literals, trait/shape bodies
 ( )    -- grouping, tuples, arguments
 [ ]    -- array/slice literals, indexing
-< >    -- explicit generic parameters (rare)
+< >    -- generic applications and optional pins (implicit binders preferred)
 ```
 
 ### 2.7 Literals
@@ -417,12 +417,13 @@ Lowers to a generic bound combining the generated shape trait and the nominal tr
 
 ### 3.8 Generics
 
-Inferred from usage; explicit `<>` when needed. The same brackets are used on
-`type`, functions, `trait`, and `shape` (see §3.5 for parametric shapes).
+**Prefer implicit binders.** Unbound names in type position are parameters.
+Write `<>` to pin a definition or to apply arguments. The same brackets are used
+on `type`, functions, `trait`, and `shape` (see §3.5 for parametric shapes).
 
-Unbound names in type position are parameters. A name that is already a type
-(prelude, `type` / `shape` / `trait` in scope) is that type. An explicit binder
-that shadows a type is an error. `<>` on a definition is a pin.
+A name that is already a type (prelude, `type` / `shape` / `trait` in scope) is
+that type. An explicit binder that shadows a type is an error. `<>` on a
+definition is a pin.
 
 ```rust
 identity(x) = x
@@ -563,7 +564,7 @@ shows capture modes.
 
 A local `|x| x` follows the same scheme rule as a named item: it generalizes only
 if the closure **escapes** (is returned or stored where callers can instantiate it);
-otherwise it is monomorphized at its use sites. First-class closure emit is [#72](https://github.com/jose-compu/crisp/issues/72).
+otherwise it is monomorphized at its use sites. First-class closure emit is [#72](https://github.com/jose-compu/crisp/issues/72) (v1.7.0).
 
 ### 5.4 Methods
 

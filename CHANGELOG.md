@@ -9,18 +9,20 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-08-15
+
 ### Added
 
-- User-facing generics end-to-end: `type Pair<A, B>`, `id<T>(x: T) = x`, `trait Wrapper<T>`, and type applications (`Pair<int, str>`) (#71).
-- Parametric shapes: `shape Boxy<T> = { value: T }` with applications `Boxy<int>` (#70).
-- Examples: `examples/generics`, `examples/shapes_generic`.
-- Implicit generic binders: unbound type names (`id(x: T)`, `type Pair = { left: A, right: B }`, `shape Boxy = { value: T }`) become parameters; `<>` remains a pin. Explicit `<T>` that shadows a type is E0049 (#75, #77, #78).
-- Example: `examples/generics_implicit`.
-- Infer omitted `impl Trait for Type` args from method bodies (`impl Wrapper for IntBox` → `Wrapper<int>`) (#77).
-- `+` constraint lists on params emit as extra Rust bounds (`HasName + HasId`). Anonymous `{ value: T }` params still deferred (#61).
+- Generics end-to-end. **Prefer implicit binders:** unbound type names become parameters (`id(x: T)`, `type Pair = { left: A, right: B }`, `shape Boxy = { value: T }`). `<>` is a pin (`id<T>(x: T)`). Applications still use `<>` (`Pair<int, str>`, `Boxy<int>`). Explicit `<T>` that shadows a type is E0049 (#70, #71, #75, #78).
+- Infer omitted `impl Trait for Type` args (`impl Wrapper for IntBox` → `Wrapper<int>`) and emit `+` constraint lists (`HasName + HasId`) (#77).
 - Polymorphism is a publication artifact: unannotated `id(x) = x` generalizes when free vars remain; crate-internal single-use items monomorphize; `pub` schemes freeze in `crisp.lock` (E0080 on drift) (#76).
-- Generics defaults: value restriction (no generalizing `mut` / locals), `reveal types` shows `id<T: Clone>(x: T) -> T`, hidden `T: Clone` is an emit/lock contract, closures follow the same scheme rule when they land (#78).
-- Example: `examples/generics_pub`.
+- Generics defaults: value restriction (no generalizing `mut` / locals); `reveal types` shows `id<T: Clone>(x: T) -> T`; hidden `T: Clone` is the emit/lock contract (#78).
+- Examples: `examples/generics_implicit` (preferred), `examples/generics`, `examples/shapes_generic`, `examples/generics_pub`.
+
+### Notes
+
+- First-class closures (#72) move to **v1.7.0**.
+- Remaining generics gaps: anonymous `{ value: T }` params, `where` / HRTB/GATs, nested `>>` lexer.
 
 ## [1.5.2] — 2026-08-14
 
@@ -184,7 +186,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/jose-compu/crisp/compare/v1.5.2...v1.6.0
+[1.5.2]: https://github.com/jose-compu/crisp/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/jose-compu/crisp/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/jose-compu/crisp/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/jose-compu/crisp/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/jose-compu/crisp/compare/v1.3.0...v1.4.0

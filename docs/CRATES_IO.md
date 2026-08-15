@@ -1,4 +1,4 @@
-# crates.io publish (v1.5.2)
+# crates.io publish (v1.6.0)
 
 First registry publication for the Crisp toolchain. Tracking issue: [#66](https://github.com/jose-compu/crisp/issues/66).
 
@@ -58,7 +58,7 @@ Already-published versions are skipped. After each success the script only pause
 
 ## Preconditions
 
-1. `[workspace.package] version` is **1.5.2** (or the tag you are shipping). Internal `[workspace.dependencies]` entries must include matching `version = "…"` alongside `path` so publish can rewrite to crates.io.
+1. `[workspace.package] version` is **1.6.0** (or the tag you are shipping). Internal `[workspace.dependencies]` entries must include matching `version = "…"` alongside `path` so publish can rewrite to crates.io.
 2. `cargo fmt` / `clippy -D warnings` / `cargo test --workspace` green.
 3. Each package has `description`, `license`, `repository` (inherited from workspace).
 4. Name availability: `crisp` / `crpc` / `crisp-cli` are **taken**; publish CLI as **`crisp-lang`** (bins `crisp` / `reveal`). Library `crisp-*` names checked available (2026-08-14). See [#68](https://github.com/jose-compu/crisp/issues/68).
@@ -66,7 +66,7 @@ Already-published versions are skipped. After each success the script only pause
 
 ## After publish
 
-- Tag `v1.5.2` and GitHub Release notes.
+- Tag `v1.6.0` and GitHub Release notes.
 - README / QUICKSTART / docs site: prefer
 
 ```bash

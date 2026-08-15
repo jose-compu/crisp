@@ -87,7 +87,10 @@ fn ast_type_to_cir(ty: &Type) -> CirTy {
         },
         TypeKind::Generic { base, args } => {
             let mut cir = ast_type_to_cir(base);
-            if let CirTy::Named { args: ref mut a, .. } = cir {
+            if let CirTy::Named {
+                args: ref mut a, ..
+            } = cir
+            {
                 *a = args.iter().map(ast_type_to_cir).collect();
             }
             cir
@@ -266,16 +269,11 @@ fn bind_or_check(
 
 fn types_compatible(a: &CirTy, b: &CirTy) -> bool {
     match (a, b) {
-        (
-            CirTy::Named {
-                name: na,
-                args: aa,
-            },
-            CirTy::Named {
-                name: nb,
-                args: ab,
-            },
-        ) => na == nb && aa.len() == ab.len() && aa.iter().zip(ab).all(|(x, y)| types_compatible(x, y)),
+        (CirTy::Named { name: na, args: aa }, CirTy::Named { name: nb, args: ab }) => {
+            na == nb
+                && aa.len() == ab.len()
+                && aa.iter().zip(ab).all(|(x, y)| types_compatible(x, y))
+        }
         (CirTy::Int, CirTy::Int)
         | (CirTy::UInt, CirTy::UInt)
         | (CirTy::Float, CirTy::Float)

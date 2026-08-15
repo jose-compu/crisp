@@ -84,7 +84,11 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
             } else {
                 format!(
                     "<{}>",
-                    imp.args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+                    imp.args
+                        .iter()
+                        .map(format_ty)
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 )
             };
             let _ = writeln!(out, "impl {}{args} for {}", shape.name, imp.ty_name);

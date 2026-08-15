@@ -432,11 +432,7 @@ fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
         } else {
             format!("{}<{}>", imp.ty_name, imp.ty_generics.join(", "))
         };
-        let _ = writeln!(
-            out,
-            "impl{impl_gens} {}{args} for {ty} {{",
-            shape.name
-        );
+        let _ = writeln!(out, "impl{impl_gens} {}{args} for {ty} {{", shape.name);
         for (name, ty) in &shape.fields {
             let field_ty = subst_shape_field_ty(ty, &shape.generics, &imp.args);
             let body = shape_accessor_body(name, &field_ty);
@@ -484,11 +480,7 @@ fn emit_function(
 fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> String {
     let shape_names: std::collections::HashSet<&str> =
         cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
-    let mut type_params: Vec<String> = f
-        .generics
-        .iter()
-        .map(|g| format!("{g}: Clone"))
-        .collect();
+    let mut type_params: Vec<String> = f.generics.iter().map(|g| format!("{g}: Clone")).collect();
     let mut params = Vec::new();
     let mut shape_i = 0usize;
     for p in &f.params {

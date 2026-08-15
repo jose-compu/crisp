@@ -130,9 +130,12 @@ fn ast_type_rust(ty: &crisp_ast::ty::Type) -> String {
             let head = ast_type_rust(base);
             format!(
                 "{head}<{}>",
-                args.iter().map(ast_type_rust).collect::<Vec<_>>().join(", ")
+                args.iter()
+                    .map(ast_type_rust)
+                    .collect::<Vec<_>>()
+                    .join(", ")
             )
-        },
+        }
         TypeKind::Unit | TypeKind::Never => "()".into(),
         TypeKind::Option(inner) => format!("Option<{}>", ast_type_rust(inner)),
         TypeKind::Tuple(ts) => format!(

@@ -327,7 +327,10 @@ fn ast_type_to_cir_ty(ty: &crisp_ast::ty::Type) -> CirTy {
         },
         TypeKind::Generic { base, args } => {
             let mut cir = ast_type_to_cir_ty(base);
-            if let CirTy::Named { args: ref mut a, .. } = cir {
+            if let CirTy::Named {
+                args: ref mut a, ..
+            } = cir
+            {
                 *a = args.iter().map(ast_type_to_cir_ty).collect();
             }
             cir

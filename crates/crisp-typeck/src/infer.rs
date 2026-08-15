@@ -477,10 +477,8 @@ impl TypeChecker {
                         (pname, ty)
                     })
                     .collect();
-                let sig_ret = subst_named_params(
-                    &stub.ret.unwrap_or_else(|| self.ctx.fresh()),
-                    &trait_subst,
-                );
+                let sig_ret =
+                    subst_named_params(&stub.ret.unwrap_or_else(|| self.ctx.fresh()), &trait_subst);
                 self.signatures.insert(
                     key,
                     InferredSig {
@@ -1184,23 +1182,21 @@ impl TypeChecker {
         name: &Ident,
         fields: &[FieldInit],
     ) -> Result<Ty, TypeError> {
-        let schema = self
-            .structs
-            .get(&name.name)
-            .cloned()
-            .ok_or_else(|| TypeError::UnknownType {
-                name: name.name.clone(),
-                span: name.span,
-            })?;
+        let schema =
+            self.structs
+                .get(&name.name)
+                .cloned()
+                .ok_or_else(|| TypeError::UnknownType {
+                    name: name.name.clone(),
+                    span: name.span,
+                })?;
         let gens = self
             .type_params
             .get(&name.name)
             .cloned()
             .unwrap_or_default();
-        let subst: BTreeMap<String, Ty> = gens
-            .iter()
-            .map(|g| (g.clone(), self.ctx.fresh()))
-            .collect();
+        let subst: BTreeMap<String, Ty> =
+            gens.iter().map(|g| (g.clone(), self.ctx.fresh())).collect();
         let schema: BTreeMap<String, Ty> = schema
             .iter()
             .map(|(k, v)| (k.clone(), subst_named_params(v, &subst)))
@@ -1582,16 +1578,11 @@ impl TypeChecker {
 
 fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
     match (a, b) {
-        (
-            Ty::Named {
-                name: na,
-                args: aa,
-            },
-            Ty::Named {
-                name: nb,
-                args: ab,
-            },
-        ) => na == nb && aa.len() == ab.len() && aa.iter().zip(ab).all(|(x, y)| ty_structurally_eq(x, y)),
+        (Ty::Named { name: na, args: aa }, Ty::Named { name: nb, args: ab }) => {
+            na == nb
+                && aa.len() == ab.len()
+                && aa.iter().zip(ab).all(|(x, y)| ty_structurally_eq(x, y))
+        }
         (Ty::Int, Ty::Int)
         | (Ty::UInt, Ty::UInt)
         | (Ty::Float, Ty::Float)
@@ -1607,10 +1598,9 @@ fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
 
 fn subst_named_params(ty: &Ty, subst: &BTreeMap<String, Ty>) -> Ty {
     match ty {
-        Ty::Named { name, args } if args.is_empty() => subst
-            .get(name)
-            .cloned()
-            .unwrap_or_else(|| ty.clone()),
+        Ty::Named { name, args } if args.is_empty() => {
+            subst.get(name).cloned().unwrap_or_else(|| ty.clone())
+        }
         Ty::Named { name, args } => Ty::Named {
             name: name.clone(),
             args: args.iter().map(|a| subst_named_params(a, subst)).collect(),

@@ -136,6 +136,34 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Add",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Add",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Sub",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Sub",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Mul",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Mul",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Div",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Div",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -260,6 +288,10 @@ ResolvedCrate {
                 "Show",
                 "Eq",
                 "Ord",
+                "Add",
+                "Sub",
+                "Mul",
+                "Div",
                 "new",
                 "push",
                 "len",
@@ -408,6 +440,34 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Add",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Add",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Sub",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Sub",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Mul",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Mul",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Div",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Div",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -532,6 +592,10 @@ ResolvedCrate {
                 "Show",
                 "Eq",
                 "Ord",
+                "Add",
+                "Sub",
+                "Mul",
+                "Div",
                 "new",
                 "push",
                 "len",
@@ -680,6 +744,34 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "Add",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Add",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Sub",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Sub",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Mul",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Mul",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "Div",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "Div",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "new",
                     symbol: SymbolKey {
                         module: "std.vec",
@@ -818,6 +910,10 @@ ResolvedCrate {
                 "Show",
                 "Eq",
                 "Ord",
+                "Add",
+                "Sub",
+                "Mul",
+                "Div",
                 "new",
                 "push",
                 "len",
@@ -838,7 +934,7 @@ ResolvedCrate {
             ],
         },
     ],
-    symbol_count: 35,
+    symbol_count: 39,
     rust_imports: [],
     warnings: [],
 }

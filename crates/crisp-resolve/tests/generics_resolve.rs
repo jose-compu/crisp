@@ -19,6 +19,11 @@ fn shapes_generic_example_resolves() {
 }
 
 #[test]
+fn shapes_user_example_resolves() {
+    Resolver::resolve_crate(&example("shapes_user")).expect("examples/shapes_user must resolve");
+}
+
+#[test]
 fn generics_implicit_example_resolves() {
     Resolver::resolve_crate(&example("generics_implicit"))
         .expect("examples/generics_implicit must resolve");

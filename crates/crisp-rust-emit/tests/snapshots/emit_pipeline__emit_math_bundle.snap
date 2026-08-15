@@ -29,13 +29,13 @@ pub fn main() {
     println!("{}", format!("mul(0.5,8.0)={}", floats::mul(0.5, 8.0)));
 }
 // === mod arith ===
-pub fn double(n: i64) -> i64 {
+pub fn double<T: Clone + Copy + std::ops::Add<Output = T>>(n: T) -> T {
     n + n
 }
-pub fn sum(a: i64, b: i64) -> i64 {
+pub fn sum<T: Clone + Copy + std::ops::Add<Output = T>>(a: T, b: T) -> T {
     a + b
 }
-pub fn product(a: i64, b: i64) -> i64 {
+pub fn product<T: Clone + Copy + std::ops::Mul<Output = T>>(a: T, b: T) -> T {
     a * b
 }
 // === mod floats ===

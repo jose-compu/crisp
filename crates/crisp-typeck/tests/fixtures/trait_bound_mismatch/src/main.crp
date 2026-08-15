@@ -1,0 +1,17 @@
+-- label infers T: Show from x.show(); Box has no impl (#84).
+trait Show = {
+    show(self) -> str
+}
+
+type Item = {
+    value: int
+}
+
+label(x: T) = x.show()
+
+pub main() = {
+    b := Item {
+        value: 1
+    }
+    label(b)
+}

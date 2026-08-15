@@ -11,6 +11,10 @@ fn shapes_generic_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_generic")
 }
 
+fn shapes_user_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_user")
+}
+
 fn generics_implicit_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics_implicit")
 }
@@ -87,6 +91,85 @@ fn shapes_generic_example_typechecks() {
         format_sig(sig_named(&typed, "distance")),
         "distance<T: Clone + Copy + Add + Mul + Sub>(a: HasPosition<T>, b: HasPosition<T>) -> T"
     );
+}
+
+#[test]
+fn shapes_user_example_typechecks() {
+    let typed = TypeChecker::check_crate(&shapes_user_root()).expect("typecheck shapes_user");
+    assert_eq!(
+        format_sig(sig_named(&typed, "distance")),
+        "distance<T: Clone + Measure>(a: HasPosition<T>, b: HasPosition<T>) -> T"
+    );
+}
+
+#[test]
+fn measure_instantiation_rejects_missing_impl() {
+    let err = TypeChecker::check_crate(&fixture("measure_bound_mismatch"))
+        .expect_err("distance on Label coordinates must fail in typeck");
+    let msg = err.to_string();
+    eprintln!("measure bound: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsatisfiedBound { .. }) || msg.contains("E0084"),
+        "{msg}"
+    );
+    assert!(msg.contains("Measure"), "{msg}");
+}
+
+#[test]
+fn arith_instantiation_rejects_non_numeric_t() {
+    let err = TypeChecker::check_crate(&fixture("arith_bound_mismatch"))
+        .expect_err("distance on str coordinates must fail in typeck");
+    let msg = err.to_string();
+    eprintln!("arith bound: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsatisfiedBound { .. }) || msg.contains("E0084"),
+        "{msg}"
+    );
+    assert!(msg.contains("distance"), "{msg}");
+    assert!(msg.contains("str"), "{msg}");
+}
+
+#[test]
+fn unannotated_arith_infers_add_bound() {
+    let math = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/math");
+    let typed = TypeChecker::check_crate(&math).expect("typecheck math");
+    assert_eq!(
+        format_sig(sig_named(&typed, "double")),
+        "double<T: Clone + Copy + Add>(n: T) -> T"
+    );
+    assert_eq!(
+        format_sig(sig_named(&typed, "sum")),
+        "sum<T: Clone + Copy + Add>(a: T, b: T) -> T"
+    );
+    assert_eq!(
+        format_sig(sig_named(&typed, "product")),
+        "product<T: Clone + Copy + Mul>(a: T, b: T) -> T"
+    );
+}
+
+#[test]
+fn add_instantiation_rejects_str() {
+    let err = TypeChecker::check_crate(&fixture("arith_add_str"))
+        .expect_err("add(\"a\", \"b\") must fail in typeck");
+    let msg = err.to_string();
+    eprintln!("add str: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsatisfiedBound { .. }) || msg.contains("E0084"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn trait_instantiation_rejects_missing_impl() {
+    let err = TypeChecker::check_crate(&fixture("trait_bound_mismatch"))
+        .expect_err("label(Item) must fail without impl Show");
+    let msg = err.to_string();
+    eprintln!("trait bound: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsatisfiedBound { .. }) || msg.contains("E0084"),
+        "{msg}"
+    );
+    assert!(msg.contains("Show"), "{msg}");
 }
 
 #[test]

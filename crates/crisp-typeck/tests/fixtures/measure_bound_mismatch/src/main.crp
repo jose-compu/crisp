@@ -1,0 +1,46 @@
+-- Label matches HasPosition but has no Measure impl (#84).
+trait Measure = {
+    minus(self, other)
+    square(self)
+    plus(self, other)
+}
+
+type Label = {
+    n: str
+}
+
+type Tag = {
+    x: Label
+    y: Label
+}
+
+shape HasPosition = {
+    x: T
+    y: T
+}
+
+distance(a: HasPosition<T>, b: HasPosition<T>) = {
+    dx := a.x.minus(b.x)
+    dy := a.y.minus(b.y)
+    dx.square().plus(dy.square())
+}
+
+pub main() = {
+    p := Tag {
+        x: Label {
+            n: "a"
+        }
+        y: Label {
+            n: "b"
+        }
+    }
+    q := Tag {
+        x: Label {
+            n: "c"
+        }
+        y: Label {
+            n: "d"
+        }
+    }
+    distance(p, q)
+}

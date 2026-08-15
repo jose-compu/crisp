@@ -173,6 +173,7 @@ fn spec_s20_all_examples_typecheck() {
         "rust_shadow",
         "generics",
         "shapes_generic",
+        "shapes_user",
         "generics_implicit",
         "generics_pub",
     ] {

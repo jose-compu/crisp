@@ -1,6 +1,6 @@
 use crate::display::format_ty;
 use crate::env::{TypeEnv, collect_free_vars, generalize, instantiate, scheme, substitute_var};
-use crate::types::{InferContext, InferredSig, Scheme, Ty};
+use crate::types::{InferContext, InferredSig, Scheme, Ty, is_arith_bound};
 use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
@@ -32,6 +32,13 @@ pub enum TypeError {
         candidates: String,
         span: Span,
     },
+    #[error("[E0084] cannot instantiate `{func}` with `{ty}`: `{ty}` does not implement `{bound}`")]
+    UnsatisfiedBound {
+        func: String,
+        ty: String,
+        bound: String,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +56,12 @@ pub struct TypedCrate {
 struct TraitMethodStub {
     params: Vec<(String, Option<Ty>)>,
     ret: Option<Ty>,
+}
+
+#[derive(Debug, Clone)]
+struct CallInst {
+    args: Vec<Ty>,
+    span: Span,
 }
 
 pub struct TypeChecker {
@@ -77,11 +90,13 @@ pub struct TypeChecker {
     /// Finalized inferred impl trait args.
     impl_trait_args: BTreeMap<String, Vec<Ty>>,
     /// Call-site argument types for crate-internal specialization (#76).
-    fn_instantiations: BTreeMap<String, Vec<Vec<Ty>>>,
-    /// Named generics used in arithmetic (`T` → `Add` / `Sub` / …).
+    fn_instantiations: BTreeMap<String, Vec<CallInst>>,
+    /// Named generics used in operators / unique trait methods (`T` → `Add` / `Show`).
     arith_named: BTreeMap<String, BTreeSet<String>>,
-    /// Unannotated type vars used in arithmetic (mapped to names after generalization).
+    /// Unannotated type vars used as bound subjects (mapped to names after generalization).
     arith_vars: BTreeMap<u32, BTreeSet<String>>,
+    /// `TypeName` → traits implemented in this crate (`Point` → `Show`).
+    trait_impls: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl TypeChecker {
@@ -102,7 +117,7 @@ impl TypeChecker {
         for node in graph.modules.values() {
             checker.check_module(&node.module_path, &node.ast)?;
         }
-        checker.specialize_internal_functions();
+        checker.specialize_internal_functions()?;
         Ok(TypedCrate {
             signatures: checker.signatures,
             inherent_methods: checker.inherent_methods,
@@ -130,6 +145,7 @@ impl TypeChecker {
             fn_instantiations: BTreeMap::new(),
             arith_named: BTreeMap::new(),
             arith_vars: BTreeMap::new(),
+            trait_impls: BTreeMap::new(),
         }
     }
 
@@ -241,6 +257,37 @@ impl TypeChecker {
         for (name, ty) in stdlib_fn_types() {
             self.env.insert(name, scheme(ty));
         }
+        self.register_prelude_traits();
+    }
+
+    fn register_prelude_traits(&mut self) {
+        self.traits.entry("Show".into()).or_insert_with(|| {
+            BTreeMap::from([(
+                "show".into(),
+                TraitMethodStub {
+                    params: vec![("self".into(), None)],
+                    ret: Some(Ty::Str),
+                },
+            )])
+        });
+        self.traits.entry("Eq".into()).or_insert_with(|| {
+            BTreeMap::from([(
+                "equal".into(),
+                TraitMethodStub {
+                    params: vec![("self".into(), None), ("other".into(), None)],
+                    ret: Some(Ty::Bool),
+                },
+            )])
+        });
+        self.traits.entry("Ord".into()).or_insert_with(|| {
+            BTreeMap::from([(
+                "compare".into(),
+                TraitMethodStub {
+                    params: vec![("self".into(), None), ("other".into(), None)],
+                    ret: Some(Ty::Int),
+                },
+            )])
+        });
     }
 
     fn collect_types(&mut self, module: &str, file: &SourceFile) {
@@ -420,6 +467,12 @@ impl TypeChecker {
             name: ty_name.clone(),
             args: vec![],
         };
+        if let Some(tn) = &ib.trait_name {
+            self.trait_impls
+                .entry(ty_name.clone())
+                .or_default()
+                .insert(tn.name.clone());
+        }
         let trait_subst = self.impl_trait_subst(module, ib, &ty_name)?;
         for f in &ib.items {
             let mut params = Vec::new();
@@ -834,8 +887,10 @@ impl TypeChecker {
 
     /// Record call-site instantiations. Internal single-use schemes set `mono_args`
     /// for emit; the typeck scheme stays generic so ownership still sees `T` (#76).
-    fn specialize_internal_functions(&mut self) {
+    /// Concrete instantiations must satisfy inferred bounds (#84).
+    fn specialize_internal_functions(&mut self) -> Result<(), TypeError> {
         let insts = std::mem::take(&mut self.fn_instantiations);
+        self.check_instantiation_bounds(&insts)?;
         let keys: Vec<String> = self.signatures.keys().cloned().collect();
         for key in keys {
             let Some(sig) = self.signatures.get(&key) else {
@@ -844,7 +899,7 @@ impl TypeChecker {
             if let Some(uses) = insts.get(&sig.name) {
                 let mut labels: Vec<String> = uses
                     .iter()
-                    .map(|u| u.iter().map(format_ty).collect::<Vec<_>>().join(", "))
+                    .map(|u| u.args.iter().map(format_ty).collect::<Vec<_>>().join(", "))
                     .collect();
                 labels.sort();
                 labels.dedup();
@@ -868,17 +923,18 @@ impl TypeChecker {
             if uses.is_empty() {
                 continue;
             }
-            let first = &uses[0];
+            let first = &uses[0].args;
             if !first.iter().all(ty_is_ground) {
                 continue;
             }
-            if !uses.iter().all(|u| u == first) {
+            if !uses.iter().all(|u| &u.args == first) {
                 continue;
             }
             if let Some(sig) = self.signatures.get_mut(&key) {
                 sig.mono_args = Some(first.clone());
             }
         }
+        Ok(())
     }
 
     fn infer_expr(&mut self, env: &mut TypeEnv, expr: &Expr) -> Result<Ty, TypeError> {
@@ -988,10 +1044,14 @@ impl TypeChecker {
                 if let ExprKind::Ident(id) = &func.kind {
                     let applied: Vec<Ty> = params.iter().map(|p| self.ctx.apply(p)).collect();
                     if applied.iter().all(ty_is_ground) {
+                        self.propagate_callee_bounds(&id.name, &applied);
                         self.fn_instantiations
                             .entry(id.name.clone())
                             .or_default()
-                            .push(applied);
+                            .push(CallInst {
+                                args: applied,
+                                span: expr.span,
+                            });
                     }
                 }
                 Ok(self.ctx.apply(&ret))
@@ -1425,8 +1485,15 @@ impl TypeChecker {
             return Ok(Some(self.ctx.apply(&sig.ret)));
         }
 
-        // Instance: `v.magnitude()` / `v.scale(2.0)`
-        // Peek: only attempt when some inherent method with this name exists.
+        // Instance: `v.magnitude()` / `v.scale(2.0)` / generic `x.show()` → `T: Show` (#84).
+        let base_ty = self.infer_expr(env, base)?;
+        let base_ty = self.ctx.apply(&base_ty);
+        if self.is_bound_subject(&base_ty)
+            && let Some(ret) = self.try_infer_bound_method(env, &base_ty, field, args)?
+        {
+            return Ok(Some(ret));
+        }
+
         let candidate_tys: Vec<String> = self
             .inherent_methods
             .iter()
@@ -1442,8 +1509,6 @@ impl TypeChecker {
             return Ok(None);
         }
 
-        let base_ty = self.infer_expr(env, base)?;
-        let base_ty = self.ctx.apply(&base_ty);
         let ty_name = match &base_ty {
             Ty::Named { name, .. } => name.clone(),
             Ty::Var(v) if candidate_tys.len() == 1 => {
@@ -1619,12 +1684,19 @@ impl TypeChecker {
     }
 
     fn record_arith(&mut self, ty: &Ty, op: &str) {
+        self.record_bound(ty, op);
+    }
+
+    fn record_bound(&mut self, ty: &Ty, bound: &str) {
         match self.ctx.apply(ty) {
             Ty::Named { name, args } if args.is_empty() => {
-                self.arith_named.entry(name).or_default().insert(op.into());
+                self.arith_named
+                    .entry(name)
+                    .or_default()
+                    .insert(bound.into());
             }
             Ty::Var(v) => {
-                self.arith_vars.entry(v).or_default().insert(op.into());
+                self.arith_vars.entry(v).or_default().insert(bound.into());
             }
             _ => {}
         }
@@ -1633,12 +1705,25 @@ impl TypeChecker {
     fn take_op_bounds(&mut self, pre_ty: &Ty, gens: &[String]) -> BTreeMap<String, Vec<String>> {
         let mut named = std::mem::take(&mut self.arith_named);
         let vars = std::mem::take(&mut self.arith_vars);
+        let mut applied_vars: BTreeMap<u32, BTreeSet<String>> = BTreeMap::new();
+        // Body recording may key a var that later unified with the stub ret (#84).
+        for (v, ops) in vars {
+            match self.ctx.apply(&Ty::Var(v)) {
+                Ty::Named { name, args } if args.is_empty() => {
+                    named.entry(name).or_default().extend(ops);
+                }
+                Ty::Var(w) => {
+                    applied_vars.entry(w).or_default().extend(ops);
+                }
+                _ => {}
+            }
+        }
         let mut free = Vec::new();
         collect_free_vars(pre_ty, &mut free);
         free.sort_unstable();
         free.dedup();
         for (i, v) in free.iter().enumerate() {
-            if let Some(ops) = vars.get(v) {
+            if let Some(ops) = applied_vars.get(v) {
                 named
                     .entry(generic_name(i))
                     .or_default()
@@ -1654,6 +1739,181 @@ impl TypeChecker {
             }
         }
         out
+    }
+
+    fn is_bound_subject(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Var(_) => true,
+            Ty::Named { name, args } if args.is_empty() => self.generic_params.contains_key(name),
+            _ => false,
+        }
+    }
+
+    fn try_infer_bound_method(
+        &mut self,
+        env: &mut TypeEnv,
+        base_ty: &Ty,
+        field: &Ident,
+        args: &[Expr],
+    ) -> Result<Option<Ty>, TypeError> {
+        let mut candidates: Vec<String> = self
+            .traits
+            .iter()
+            .filter(|(name, methods)| {
+                methods.contains_key(&field.name)
+                    && self
+                        .trait_generics
+                        .get(*name)
+                        .map(|g| g.is_empty())
+                        .unwrap_or(true)
+            })
+            .map(|(name, _)| name.clone())
+            .collect();
+        candidates.sort();
+        match candidates.as_slice() {
+            [] => Ok(None),
+            [trait_name] => {
+                let stub = self
+                    .traits
+                    .get(trait_name)
+                    .and_then(|m| m.get(&field.name))
+                    .cloned()
+                    .ok_or_else(|| TypeError::UnknownName {
+                        name: field.name.clone(),
+                        span: field.span,
+                    })?;
+                self.record_bound(base_ty, trait_name);
+                let param_tys: Vec<Ty> = stub
+                    .params
+                    .iter()
+                    .skip(1)
+                    .map(|(_, t)| t.clone().unwrap_or_else(|| base_ty.clone()))
+                    .collect();
+                if args.len() != param_tys.len() {
+                    return Err(TypeError::Unify(UnifyError::Mismatch {
+                        expected: format!("{} arguments", param_tys.len()),
+                        found: format!("{} arguments", args.len()),
+                    }));
+                }
+                for (arg, pty) in args.iter().zip(param_tys.iter()) {
+                    let aty = self.infer_expr(env, arg)?;
+                    unify(&mut self.ctx, &aty, pty)?;
+                }
+                Ok(Some(stub.ret.unwrap_or_else(|| base_ty.clone())))
+            }
+            many => Err(TypeError::Unify(UnifyError::Mismatch {
+                expected: format!("unique trait providing `{}`", field.name),
+                found: many.join(", "),
+            })),
+        }
+    }
+
+    fn free_fn_sig(&self, name: &str) -> Option<&InferredSig> {
+        self.signatures
+            .values()
+            .find(|s| s.name == name && s.impl_ty.is_none())
+    }
+
+    fn propagate_callee_bounds(&mut self, fname: &str, applied: &[Ty]) {
+        let Some(sig) = self.free_fn_sig(fname) else {
+            return;
+        };
+        if sig.op_bounds.is_empty() {
+            return;
+        }
+        let bounds = sig.op_bounds.clone();
+        let gens = sig.generics.clone();
+        let params = sig.params.clone();
+        let mut subst = BTreeMap::new();
+        for ((_, scheme_ty), inst_ty) in params.iter().zip(applied.iter()) {
+            collect_generic_subst(scheme_ty, inst_ty, &gens, &mut subst);
+        }
+        for (g, bs) in &bounds {
+            if let Some(ty) = subst.get(g) {
+                for b in bs {
+                    self.record_bound(ty, b);
+                }
+            }
+        }
+    }
+
+    fn check_instantiation_bounds(
+        &self,
+        insts: &BTreeMap<String, Vec<CallInst>>,
+    ) -> Result<(), TypeError> {
+        for (fname, uses) in insts {
+            let Some(sig) = self.free_fn_sig(fname) else {
+                continue;
+            };
+            if sig.op_bounds.is_empty() || sig.generics.is_empty() {
+                continue;
+            }
+            for use_site in uses {
+                let mut subst = BTreeMap::new();
+                for ((_, scheme_ty), inst_ty) in sig.params.iter().zip(use_site.args.iter()) {
+                    collect_generic_subst(scheme_ty, inst_ty, &sig.generics, &mut subst);
+                }
+                for g in &sig.generics {
+                    let Some(bounds) = sig.op_bounds.get(g) else {
+                        continue;
+                    };
+                    let Some(ty) = subst.get(g) else {
+                        continue;
+                    };
+                    if !self.ty_is_checkable(ty) {
+                        continue;
+                    }
+                    for bound in bounds {
+                        if !self.ty_implements(ty, bound) {
+                            return Err(TypeError::UnsatisfiedBound {
+                                func: fname.clone(),
+                                ty: format_ty(ty),
+                                bound: bound.clone(),
+                                span: use_site.span,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn ty_is_checkable(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Int
+            | Ty::UInt
+            | Ty::Float
+            | Ty::Bool
+            | Ty::Char
+            | Ty::Str
+            | Ty::StrSlice
+            | Ty::Unit
+            | Ty::Never => true,
+            Ty::Named { name, args } => {
+                (self.structs.contains_key(name) || self.enums.contains_key(name))
+                    && !self.shapes.contains(name)
+                    && args.iter().all(|a| self.ty_is_checkable(a))
+            }
+            Ty::Option(inner) | Ty::Slice(inner) | Ty::Ref { inner, .. } => {
+                self.ty_is_checkable(inner)
+            }
+            Ty::Tuple(ts) => ts.iter().all(|t| self.ty_is_checkable(t)),
+            _ => false,
+        }
+    }
+
+    fn ty_implements(&self, ty: &Ty, bound: &str) -> bool {
+        if is_arith_bound(bound) {
+            return matches!(ty, Ty::Int | Ty::UInt | Ty::Float);
+        }
+        match ty {
+            Ty::Named { name, args } if args.is_empty() => self
+                .trait_impls
+                .get(name)
+                .is_some_and(|s| s.contains(bound)),
+            _ => false,
+        }
     }
 
     fn bind_rigid_generics(&mut self, gens: &[String]) -> BTreeMap<String, Ty> {
@@ -1881,6 +2141,51 @@ fn ty_is_ground(ty: &Ty) -> bool {
     let mut vars = Vec::new();
     collect_free_vars(ty, &mut vars);
     vars.is_empty()
+}
+
+fn collect_generic_subst(scheme: &Ty, inst: &Ty, gens: &[String], out: &mut BTreeMap<String, Ty>) {
+    match (scheme, inst) {
+        (Ty::Named { name, args }, inst) if args.is_empty() && gens.iter().any(|g| g == name) => {
+            out.entry(name.clone()).or_insert_with(|| inst.clone());
+        }
+        (Ty::Named { name: n1, args: a1 }, Ty::Named { name: n2, args: a2 })
+            if n1 == n2 && a1.len() == a2.len() =>
+        {
+            for (s, i) in a1.iter().zip(a2.iter()) {
+                collect_generic_subst(s, i, gens, out);
+            }
+        }
+        (
+            Ty::Fn {
+                params: p1,
+                ret: r1,
+            },
+            Ty::Fn {
+                params: p2,
+                ret: r2,
+            },
+        ) if p1.len() == p2.len() => {
+            for (s, i) in p1.iter().zip(p2.iter()) {
+                collect_generic_subst(s, i, gens, out);
+            }
+            collect_generic_subst(r1, r2, gens, out);
+        }
+        (Ty::Option(a), Ty::Option(b)) | (Ty::Slice(a), Ty::Slice(b)) => {
+            collect_generic_subst(a, b, gens, out);
+        }
+        (Ty::Array { elem: a, .. }, Ty::Array { elem: b, .. }) => {
+            collect_generic_subst(a, b, gens, out);
+        }
+        (Ty::Ref { inner: a, .. }, Ty::Ref { inner: b, .. }) => {
+            collect_generic_subst(a, b, gens, out);
+        }
+        (Ty::Tuple(a), Ty::Tuple(b)) if a.len() == b.len() => {
+            for (s, i) in a.iter().zip(b.iter()) {
+                collect_generic_subst(s, i, gens, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn generic_name(i: usize) -> String {

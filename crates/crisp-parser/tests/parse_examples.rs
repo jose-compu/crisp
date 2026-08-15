@@ -56,6 +56,7 @@ fn parse_all_examples() {
         "rust_shadow",
         "generics",
         "shapes_generic",
+        "shapes_user",
         "generics_implicit",
         "generics_pub",
     ] {

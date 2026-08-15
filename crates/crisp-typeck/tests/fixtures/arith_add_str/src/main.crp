@@ -1,0 +1,3 @@
+add(x: T, y: T) = x + y
+
+pub main() = add("a", "b")

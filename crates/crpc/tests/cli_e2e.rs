@@ -227,6 +227,16 @@ fn crisp_test_math() {
 }
 
 #[test]
+fn crisp_test_multiple_paths_ignores_and_glue() {
+    let math = examples_dir().join("math").to_string_lossy().to_string();
+    let show = examples_dir()
+        .join("show_trait")
+        .to_string_lossy()
+        .to_string();
+    run_ok("crisp", &["test", &math, "and", "crisp", "test", &show]);
+}
+
+#[test]
 fn crisp_test_with_tests() {
     run_ok(
         "crisp",

@@ -54,7 +54,7 @@
     <div class="wrap hero-split">
       <div>
         <h1>Tutorial</h1>
-        <p class="lede">A guided tour of Crisp: each step explains the idea for beginners, shows a short snippet, then notes what happens under the hood for people who already know Rust (or compilers).</p>
+        <p class="lede">A guided tour of Crisp. Early steps cover everyday syntax. Steps 11–16 are the advanced stretch: methods, traits, shapes, generics, Rust crates, and async. Each step starts with a beginner intro, then a short snippet, then what happens under the hood.</p>
       </div>
       <aside class="callout">
         <strong>Before you start</strong>
@@ -70,6 +70,7 @@
           <div class="step-label">Step 01</div>
           <h2>Hello world</h2>
           <p>Start here. A Crisp program is a few items in a <code>.crp</code> file. You define work with <code>name(args) = …</code>, bind locals with <code>:=</code>, and mark the process entry as <code>pub main</code>.</p>
+          <p class="why">You do not need to understand every line on the first pass. This example already uses a shape, a defaulted struct, string interpolation, and an implicit generic <code>id</code>. Treat those as “names you will meet again”; the goal now is to run something.</p>
           <pre class="pipe">shape Named = {
     name: str
 }
@@ -99,7 +100,8 @@ pub main() = {
         <article class="tutorial-step" id="bindings">
           <div class="step-label">Step 02</div>
           <h2>Functions and bindings</h2>
-          <p>Most Crisp looks like “small math and logging.” Functions are expressions. Locals are introduced once with <code>:=</code>; later assignment uses <code>=</code> (and needs <code>mut:=</code> if you will reassign — see loops).</p>
+          <p>Most Crisp looks like small math and logging. A function is <code>name(args) = body</code>. Inside a block, <code>x := value</code> creates a local; later <code>x = …</code> assigns only if the binding was introduced with <code>mut:=</code> (see loops).</p>
+          <p class="why">If you know JavaScript <code>const</code> / <code>let</code>, think <code>:=</code> as “introduce” and <code>=</code> as “update.” If you know Python, there is no silent rebind of an immutable name — mutability is marked.</p>
           <pre class="pipe">double(n) = n + n
 
 pub main() = {
@@ -117,7 +119,8 @@ pub main() = {
         <article class="tutorial-step" id="strings">
           <div class="step-label">Step 03</div>
           <h2>Strings and comments</h2>
-          <p>Text is a first-class string type (<code>str</code>). Comments use <code>--</code> (line) or nested <code>{- … -}</code> (block). Interpolation embeds expressions inside string literals.</p>
+          <p>Text is the <code>str</code> type. Line comments are <code>--</code>; block comments are nested <code>{- … -}</code>. A string can interpolate an expression: <code>"hello {name}"</code>.</p>
+          <p class="why"><code>++</code> concatenates two strings. Interpolation is usually clearer when you mix text and values. Quotes in the snippet below are ordinary string literals, not a special template language.</p>
           <pre class="pipe">-- single-line comment
 {- block comment -}
 
@@ -137,7 +140,8 @@ pub main() = {
         <article class="tutorial-step" id="types">
           <div class="step-label">Step 04</div>
           <h2>Types when you need them</h2>
-          <p>Inference is the default, not a limitation. Annotate when two interpretations are possible, when you design a public boundary, or when you want the compiler to reject silent widening.</p>
+          <p>Inference is the default, not a limitation. You can leave parameters untyped while a function is used in one obvious way. Annotate when two interpretations are possible, when you design a public boundary, or when you want the compiler to reject a silent mix-up.</p>
+          <p class="why">Beginners often annotate too early or never. A practical rule: skip types in a 10-line script; write them on anything other files will <code>use</code>. Primitives below are the everyday set.</p>
           <pre class="pipe">port(host: str, n: int) = n</pre>
           <ul>
             <li>Common primitives: <code>int</code>, <code>uint</code>, <code>float</code>, <code>bool</code>, <code>char</code>, <code>str</code>.</li>
@@ -149,7 +153,8 @@ pub main() = {
         <article class="tutorial-step" id="structs">
           <div class="step-label">Step 05</div>
           <h2>Structs and defaults</h2>
-          <p>Group related fields with <code>type Name = { … }</code>. Defaults on fields mean callers only pass what they care about — useful for config-shaped data.</p>
+          <p>A <code>type Name = { … }</code> is a record: named fields grouped under one type. Field defaults mean callers only pass what they care about — typical for config.</p>
+          <p class="why">This is not a class. There is no inheritance here. Behavior comes later via <code>impl</code> (methods) or <code>trait</code> (shared contracts). For now, think “a bag of fields you construct with <code>Name { … }</code>.”</p>
           <pre class="pipe">type ServerConfig = {
     host: str  = "127.0.0.1"
     port: uint = 9000
@@ -171,7 +176,8 @@ pub main() = {
         <article class="tutorial-step" id="modules">
           <div class="step-label">Step 06</div>
           <h2>Modules</h2>
-          <p>One <code>.crp</code> file under <code>src/</code> is one module. Share helpers by marking them <code>pub</code> and importing with <code>use</code> — similar in spirit to Rust modules or TypeScript imports, with lighter syntax.</p>
+          <p>One <code>.crp</code> file under <code>src/</code> is one module. Mark helpers <code>pub</code> and import them with <code>use module { item }</code> — similar in spirit to Rust modules or TypeScript imports, with lighter syntax.</p>
+          <p class="why">You do not write <code>mod foo;</code> in source. The compiler discovers files from the crate layout (<code>crisp.toml</code> + <code>src/</code>). Start with a flat <code>src/main.crp</code> and one extra file; nested folders come when the project grows.</p>
           <pre class="pipe">-- src/arith.crp
 pub sum(a, b) = a + b
 
@@ -191,7 +197,8 @@ pub main() = {
         <article class="tutorial-step" id="tests">
           <div class="step-label">Step 07</div>
           <h2>Tests</h2>
-          <p>Write checks next to the code. <code>test "…"</code> is a positive assertion. <code>test_compile_fail</code> expects analysis to reject the body — useful for guarding error messages and “this must not typecheck” cases.</p>
+          <p>Write checks next to the code. <code>test "…"</code> is a positive assertion: run the body and fail the test if an <code>assert_eq</code> does not hold. <code>test_compile_fail</code> expects analysis to reject the body — “this must not typecheck.”</p>
+          <p class="why">Run them with <code>crisp test .</code> from the crate root (several paths are allowed). Keep cases small and named. Compile-fail tests are how the language suite guards diagnostics; they are also useful in your own crate when a mistake should stay illegal.</p>
           <pre class="pipe">test "greet works" = {
     assert_eq(greet("world"), "hello world")
 }
@@ -210,7 +217,8 @@ test_compile_fail "unknown name" = {
         <article class="tutorial-step" id="errors">
           <div class="step-label">Step 08</div>
           <h2>Fallible functions</h2>
-          <p>When a function can fail, mark it with ambient <code>!</code>. Use <code>throw</code> to fail and <code>catch</code> to recover. Beginners can think “this returns a value or an error,” without writing Rust <code>Result</code> by hand.</p>
+          <p>When a function can fail, mark it with ambient <code>!</code>. Use <code>throw</code> to fail and <code>catch</code> to recover. You can think “this returns a value or an error” without writing Rust <code>Result</code> by hand.</p>
+          <p class="why">This is not exception unwinding across unknown frames in the Java sense. The <code>!</code> is part of the function’s type: callers must handle failure or themselves be fallible. <code>catch</code> is the local recovery point. See <code>examples/fallible</code> before inventing a large error hierarchy.</p>
           <pre class="pipe">parse_port(s) ! = {
     if s == "" then throw "empty"
     -- …
@@ -231,7 +239,8 @@ pub main() = {
         <article class="tutorial-step" id="enums">
           <div class="step-label">Step 09</div>
           <h2>Enums and match</h2>
-          <p>Enums name a closed set of cases — plain tags or payloads. <code>match</code> is how you branch on them exhaustively. If you know Rust enums or TypeScript discriminated unions, this will feel familiar.</p>
+          <p>An enum names a closed set of cases: a plain tag (<code>Red</code>) or a tag with payload (<code>Custom(int, int, int)</code>). <code>match</code> is how you branch on every case. If you know Rust enums or TypeScript discriminated unions, this will feel familiar.</p>
+          <p class="why">Prefer an enum when a value is “one of these,” not a boolean plus extra fields. Construct and match with a qualified name: <code>Color.Red</code>. Exhaustiveness means if you add a variant later, matches that forgot it should fail to compile.</p>
           <pre class="pipe">type Color =
     | Red
     | Green
@@ -255,7 +264,8 @@ describe(color) = match color {
         <article class="tutorial-step" id="loops">
           <div class="step-label">Step 10</div>
           <h2>Loops</h2>
-          <p>Crisp has <code>while</code>, <code>for … in</code> (over <code>vec</code> today), and a value-producing <code>loop</code> with <code>break</code> / <code>continue</code>. Counters that change need <code>mut:=</code> so reassignment is allowed.</p>
+          <p>Crisp has three loop forms. <code>while</code> repeats while a condition holds. <code>for x in xs</code> walks a <code>vec</code> (MVP). <code>loop</code> repeats until <code>break</code>; <code>break expr</code> can give the whole loop a value. Counters that change need <code>mut:=</code>.</p>
+          <p class="why">There is no C-style <code>for (i = 0; i &lt; n; i++)</code>. Use <code>while</code> plus a mutable counter, or put values in a <code>vec</code> and <code>for</code>. <code>continue</code> skips to the next iteration. Labels and <code>enumerate</code> are not there yet — see <a href="limitations.html">limitations</a>.</p>
           <pre class="pipe">sum_to(n) = {
     total mut:= 0
     i mut:= 0
@@ -286,7 +296,8 @@ countdown_stop(start, stop) = {
         <article class="tutorial-step" id="methods">
           <div class="step-label">Step 11</div>
           <h2>Inherent methods</h2>
-          <p>Attach functions to a type with <code>impl Type = { … }</code>. Use <code>self</code> for instance methods and <code>Type.name(…)</code> for associated constructors — same mental model as Rust inherent impls, with less ceremony.</p>
+          <p>So far, functions have been free-standing: <code>double(n)</code>, <code>greet(who)</code>. An <strong>inherent method</strong> belongs to one type. You write <code>impl Type = { … }</code>, then call <code>Type.new(…)</code> for constructors and <code>value.method()</code> for operations on an instance.</p>
+          <p class="why">Use this when the operation only makes sense for that type — magnitude of a <code>Vec2</code>, not of an arbitrary pair of numbers. <code>self</code> is the receiver (the value before the dot). You do not write <code>self: Vec2</code>; the impl already names the type. This is not yet a trait: nothing else can “implement Vec2 methods.” Shared behavior across types is the next step.</p>
           <pre class="pipe">type Vec2 = {
     x: float
     y: float
@@ -316,7 +327,9 @@ pub main() = {
         <article class="tutorial-step" id="traits">
           <div class="step-label">Step 12</div>
           <h2>Traits</h2>
-          <p>Traits are named contracts: “this type can <code>show</code> itself.” You declare the trait, then write an explicit <code>impl Trait for Type</code>. The prelude also offers Show / Eq / Ord-style helpers for common cases.</p>
+          <p>A <strong>trait</strong> is a named contract: “this type can <code>show</code> itself as text.” You declare the operations, then write an explicit <code>impl Trait for Type</code> for each type that should participate. Several types can share the same trait; one type can implement several traits.</p>
+          <p class="why">Contrast with the previous step. Inherent <code>impl Point</code> is “functions that live on Point only.” <code>impl Show for Point</code> is “Point agrees to the Show protocol,” so other code can ask for “anything that can <code>show</code>.” The prelude also offers Show / Eq / Ord-style helpers for everyday types.</p>
+          <p class="why">From v1.6.1, if a generic function calls a unique trait method — <code>label(x: T) = x.show()</code> — the compiler infers <code>T: Show</code> from the body. You keep parametric <code>T</code>; a call with a type that has no <code>impl Show</code> is a typeck error (<code>E0084</code>). You still write the <code>impl</code> for each concrete type. Written <code>where</code> clauses, generic trait bounds, and <code>dyn Trait</code> are not the stable path yet.</p>
           <pre class="pipe">trait Show = { show(self) -> str }
 
 type Point = {
@@ -345,7 +358,9 @@ pub main() = {
         <article class="tutorial-step" id="shapes">
           <div class="step-label">Step 13</div>
           <h2>Shapes</h2>
-          <p>Shapes are structural: “anything with <code>x</code> and <code>y</code> floats.” Unlike traits, matching structs do not need an explicit <code>impl</code> — useful when you care about fields, not a named protocol.</p>
+          <p>A <strong>shape</strong> is a structural requirement on fields: “anything with <code>x</code> and <code>y</code> floats.” Matching structs do <em>not</em> need an explicit <code>impl</code>. If the fields are there with the right types, the value already satisfies the shape.</p>
+          <p class="why">Think of this as a typed form of “duck typing” for data, not for methods. A trait says “this type promised a named protocol.” A shape says “this value has these fields.” Use a shape when many records share a layout (points, vectors, cells) and you do not want each one to implement a trait. Use a trait when the interesting part is behavior (<code>show</code>, <code>minus</code>) rather than field names.</p>
+          <p class="why">The snippet below is the concrete, float-only form (<code>examples/shapes</code>). The next step makes the same idea parametric: <code>HasPosition&lt;T&gt;</code> works for <code>int</code> and <code>float</code> because <code>+</code> <code>-</code> <code>*</code> infer numeric bounds.</p>
           <pre class="pipe">shape HasPosition = {
     x: float
     y: float
@@ -379,7 +394,9 @@ pub main() = {
         <article class="tutorial-step" id="generics">
           <div class="step-label">Step 14</div>
           <h2>Generics</h2>
-          <p><strong>Prefer implicit binders.</strong> Unbound names in type position are parameters. Write <code>&lt;&gt;</code> only to pin a definition or to apply arguments: <code>Pair&lt;int, str&gt;</code>, <code>Boxy&lt;int&gt;</code>.</p>
+          <p>A generic item is written once and used at many types. <code>id(x: T) = x</code> works for <code>int</code>, <code>str</code>, or a struct — <code>T</code> is a placeholder filled in at each call. <strong>Prefer implicit binders:</strong> an unbound name in type position is already a parameter. Write <code>&lt;&gt;</code> only to pin a definition or to apply arguments: <code>Pair&lt;int, str&gt;</code>, <code>Boxy&lt;int&gt;</code>.</p>
+          <p class="why">If you know Java or C# <code>&lt;T&gt;</code>, the idea is the same, but Crisp usually omits the angle brackets on the definition. <code>type Pair = { left: A, right: B }</code> is already generic in <code>A</code> and <code>B</code>. A name that is already a type (<code>int</code>, <code>Pair</code>) stays that type; it does not become a parameter.</p>
+          <p class="why">Keep parametric <code>T</code>. If the body uses <code>+</code> or <code>x.show()</code>, the compiler infers the constraint (<code>T: Add</code>, <code>T: Show</code>) instead of secretly specializing to one concrete type. A bad instantiation is a typeck error (<code>E0084</code>), not only a later <code>rustc</code> failure. User types with user methods (not <code>int</code> <code>+</code>) live in <code>examples/shapes_user</code>.</p>
           <pre class="pipe">type Pair = { left: A, right: B }
 
 id(x: T) = x
@@ -392,7 +409,7 @@ pub main() = {
     p := Pair { left: 1, right: 2 }
     log("id={id(41)} first={first(p)}")
 }</pre>
-          <p>Keep parametric <code>T</code>. The body infers the constraint; a bad instantiation is a typeck error (<code>E0084</code>), not only a later <code>rustc</code> failure.</p>
+          <p>Keep that rule in the second snippet: <code>HasPosition&lt;T&gt;</code> is still a shape; the numeric bound sits on <code>distance</code>, inferred from <code>-</code> and <code>*</code>.</p>
           <pre class="pipe">shape HasPosition = { x: T, y: T }
 
 distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
@@ -413,7 +430,9 @@ distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
         <article class="tutorial-step" id="rust-import">
           <div class="step-label">Step 15</div>
           <h2>Import a Rust crate</h2>
-          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package.</p>
+          <p>Crisp is a front end that emits ordinary Rust. It does not replace crates.io. When you need JSON, HTTP, or any other Rust library, declare it in <code>crisp.toml</code> with <code>rust = true</code>, then <code>use crate { items }</code> much like importing a package in TypeScript.</p>
+          <p class="why">Without <code>rust = true</code>, a Cargo dependency is not a Crisp import. The explicit flag is how the compiler knows to forward the crate into the generated <code>Cargo.toml</code> and to resolve <code>use serde_json { … }</code>. Prefer the bare <code>use serde_json { from_str, to_string }</code> form; <code>use rust.serde_json { … }</code> is the explicit alias if a Crisp module shares the name.</p>
+          <p class="why">Unknown APIs are opaque stubs — you can mention them, but Crisp will not invent their types. Known <code>Result</code>-returning APIs (for example in <code>serde_json</code> / <code>ureq</code>) can surface as Crisp ambient errors (<code>?</code> / <code>catch</code>). Start with <code>examples/rust_import</code> before wrapping a large crate.</p>
           <pre class="pipe">-- crisp.toml
 -- [dependencies]
 -- serde_json = { version = "1", rust = true }
@@ -435,7 +454,8 @@ pub main() = {
         <article class="tutorial-step" id="async">
           <div class="step-label">Step 16</div>
           <h2>Async</h2>
-          <p>Mark entrypoints or blocks <code>async</code> when you need concurrency or timers. Start with a tiny sleep to prove the runtime is wired; then grow toward spawn/join patterns in the examples.</p>
+          <p>Mark <code>main</code> or a block <code>async</code> when work must wait (timers, I/O) without you writing threads by hand. <code>await</code> suspends until a future is ready. Start with a tiny <code>sleep_ms</code> to prove the runtime is wired; then look at spawn/join in the examples.</p>
+          <p class="why">This is the same idea as JavaScript <code>async</code> / <code>await</code> or Rust Tokio: the function can pause and the runtime can run other work. It is not a second Crisp scheduler. The bootstrap emits a Tokio-oriented Cargo project when the crate is async. Closures as first-class values (passing an <code>async</code> callback around) are still v1.7.0 — keep examples small.</p>
           <pre class="pipe">pub main() = async {
     sleep_ms(1)
     print("async-ok")
@@ -451,7 +471,8 @@ pub main() = {
         <article class="tutorial-step" id="next">
           <div class="step-label">Step 17</div>
           <h2>Where to go</h2>
-          <p>You now have the core surface: values, modules, tests, errors, data, traits/shapes, generics, Rust interop, and async. Next, read for depth or scan for fit.</p>
+          <p>You now have the core surface: values, modules, tests, errors, data, then the advanced stretch (methods, traits, shapes, generics, Rust interop, async). Next, read for depth or scan for fit.</p>
+          <p class="why">If a snippet surprised you, run it from the repo examples first, then change one line. <code>reveal types</code> / <code>reveal rust</code> on the same path shows what silence meant. Honest gaps vs the draft spec live on the limitations page — the compiler is a Rust-hosted bootstrap, not self-hosted yet.</p>
           <ul>
             <li><a href="language.html">Language</a> — compact reference for the same topics</li>
             <li><a href="cli.html">CLI</a> — <code>check</code>, <code>emit</code>, <code>build</code>, <code>run</code>, <code>test</code>, and <code>reveal</code></li>

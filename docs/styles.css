@@ -653,6 +653,10 @@ a:hover { color: var(--accent-soft); }
   color: var(--light-muted);
 }
 .tutorial-step .try code { font-size: 0.88em; }
+.tutorial-step .why {
+  color: var(--light-muted);
+  max-width: 46rem;
+}
 
 footer.site-footer {
   border-top: 1px solid var(--border);

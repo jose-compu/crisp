@@ -1,0 +1,12 @@
+type T = {
+    n: int
+}
+
+id(x: T) = x
+
+pub main() = {
+    v := T {
+        n: 1
+    }
+    id(v)
+}

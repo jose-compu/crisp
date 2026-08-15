@@ -56,6 +56,7 @@ fn parse_all_examples() {
         "rust_shadow",
         "generics",
         "shapes_generic",
+        "generics_implicit",
     ] {
         eprintln!("=== {name} ===");
         parse_crate(name);

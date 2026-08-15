@@ -11,6 +11,10 @@ fn shapes_generic_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_generic")
 }
 
+fn generics_implicit_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics_implicit")
+}
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures")
@@ -85,6 +89,45 @@ fn parametric_shape_rejects_wrong_field_type() {
     eprintln!("mismatch: {msg}");
     assert!(
         matches!(err, TypeError::Unify(_)) || msg.contains("shape") || msg.contains("mismatch"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn free_type_names_typecheck_like_explicit_binders() {
+    let typed =
+        TypeChecker::check_crate(&generics_implicit_root()).expect("typecheck generics_implicit");
+    assert_eq!(format_sig(sig_named(&typed, "id")), "id(x: T) -> T");
+    assert_eq!(
+        format_sig(sig_named(&typed, "first")),
+        "first(p: Pair<A, B>) -> A"
+    );
+    assert_eq!(
+        format_sig(sig_named(&typed, "unwrap_int")),
+        "unwrap_int(b: Boxy<int>) -> int"
+    );
+}
+
+#[test]
+fn explicit_binder_shadowing_type_is_error() {
+    let err = TypeChecker::check_crate(&fixture("generic_shadows_type"))
+        .expect_err("<T> must not shadow type T");
+    let msg = err.to_string();
+    eprintln!("shadow: {msg}");
+    assert!(msg.contains("E0049") || msg.contains("shadow"), "{msg}");
+}
+
+#[test]
+fn in_scope_type_is_not_a_parameter() {
+    let typed = TypeChecker::check_crate(&fixture("in_scope_type_not_param"))
+        .expect("T in scope is the struct");
+    assert_eq!(format_sig(sig_named(&typed, "id")), "id(x: T) -> T");
+    let err = TypeChecker::check_crate(&fixture("in_scope_type_rejects_int"))
+        .expect_err("id(1) must not instantiate in-scope type T");
+    let msg = err.to_string();
+    eprintln!("in-scope T vs int: {msg}");
+    assert!(
+        matches!(err, TypeError::Unify(_)) || msg.contains("mismatch"),
         "{msg}"
     );
 }

@@ -14,6 +14,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0045 | resolve | Dependency used via `use rust…` must set `rust = true` |
 | E0046 | resolve | `use rust…` requires `{ item, … }` import list |
 | E0047 | resolve | Invalid `use rust` path — expect `use rust.<crate> { … }` |
+| E0049 | resolve | Generic parameter shadows a type of the same name — rename the param or drop the binder ([#75](https://github.com/jose-compu/crisp/issues/75), [#78](https://github.com/jose-compu/crisp/issues/78)) |
 | W0048 | resolve | Warning: bare `use <name>` binds a Crisp module that shares a name with a `rust = true` dep — use `use rust.<name> { … }` for the crate |
 | E0040 | typeck | Unknown type — annotate params/fields or fix struct name |
 | E0041 | typeck | Unknown name |

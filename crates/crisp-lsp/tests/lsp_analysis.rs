@@ -116,6 +116,7 @@ fn analyze_all_examples() {
         "float_demo",
         "generics",
         "shapes_generic",
+        "generics_implicit",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

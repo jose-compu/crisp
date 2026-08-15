@@ -180,22 +180,27 @@ port(host: str, n: int) = n
 
 Primitive names: `int`, `uint`, `float`, `bool`, `char`, `str`.
 
-Explicit generics use `<>` (inference stays the default):
+Unbound names in type position are parameters. `<>` is a pin (and is still used for applications):
 
 ```crisp
-type Pair<A, B> = { left: A, right: B }
+type Pair = { left: A, right: B }
+id(x: T) = x
+first(p: Pair<A, B>) = p.left
 
-id<T>(x: T) = x
-first<A, B>(p: Pair<A, B>) = p.left
-
-shape Boxy<T> = { value: T }
+shape Boxy = { value: T }
 unwrap_int(b: Boxy<int>) = b.value
 
-trait Wrapper<T> = { unwrap(self) -> T }
+trait Wrapper = { unwrap(self) -> T }
 impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
+
+-- pins (same meaning):
+type Pair<A, B> = { left: A, right: B }
+id<T>(x: T) = x
 ```
 
-See `examples/generics` and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
+A name that is already a type (`int`, `Pair`, …) is that type, not a parameter. An explicit `<T>` that shadows a type is an error (E0049).
+
+See `examples/generics`, `examples/generics_implicit`, and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
 
 ## 5. Structs
 
@@ -407,6 +412,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
 | `shapes` | Data `shape` → generated trait + structural calls (§3.5 / #61) |
 | `generics` | Type / function / trait params + parametric shapes (#70 / #71) |
+| `generics_implicit` | Free type names as binders — no `<T>` on defs (#75) |
 | `shapes_generic` | `shape Boxy<T>` applied as `Boxy<int>` / `Boxy<str>` (#70) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |

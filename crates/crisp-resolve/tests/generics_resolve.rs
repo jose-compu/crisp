@@ -17,3 +17,9 @@ fn shapes_generic_example_resolves() {
     Resolver::resolve_crate(&example("shapes_generic"))
         .expect("examples/shapes_generic must resolve");
 }
+
+#[test]
+fn generics_implicit_example_resolves() {
+    Resolver::resolve_crate(&example("generics_implicit"))
+        .expect("examples/generics_implicit must resolve");
+}

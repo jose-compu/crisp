@@ -69,6 +69,7 @@
         <li><strong>Methods</strong> — <code>impl Type = { … }</code></li>
         <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code>; literal/simple default bodies</li>
         <li><strong>Shapes</strong> — data <code>shape</code> → generated traits + structural calls (<code>examples/shapes</code>)</li>
+        <li><strong>Generics</strong> — explicit <code>&lt;&gt;</code> on <code>type</code> / functions / <code>trait</code> / <code>shape</code> (<code>examples/generics</code>)</li>
         <li><strong>Loops</strong> — <code>while</code>, <code>for … in</code> (vec MVP), <code>loop</code>, <code>break</code> / <code>continue</code>, value <code>break expr</code> (<code>examples/loops</code>)</li>
         <li><strong>Rust crates</strong> — <code>rust = true</code> deps; <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
         <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
@@ -139,6 +140,31 @@ distance(a: HasPosition, b: HasPosition) -> float = {
     dy := a.y - b.y
     dx * dx + dy * dy
 }</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Generics</span><span>examples/generics</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type Pair&lt;A, B&gt; = { left: A, right: B }
+
+id&lt;T&gt;(x: T) = x
+first&lt;A, B&gt;(p: Pair&lt;A, B&gt;) = p.left
+
+trait Wrapper&lt;T&gt; = { unwrap(self) -&gt; T }
+impl Wrapper&lt;int&gt; for IntBox = {
+    unwrap(self) = self.value
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Parametric shape</span><span>examples/shapes_generic</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>shape Boxy&lt;T&gt; = { value: T }
+
+unwrap_int(b: Boxy&lt;int&gt;) = b.value
+unwrap_str(b: Boxy&lt;str&gt;) = b.value</pre>
           </div>
         </div>
         <div class="code-panel">

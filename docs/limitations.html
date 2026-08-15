@@ -61,7 +61,8 @@
     <div class="wrap content">
       <ul>
         <li>Not self-hosted — Rust-hosted <code>crisp</code> only (self-hosting → v2.0.0)</li>
-        <li><strong>Shapes</strong> — data shapes work (<code>examples/shapes</code>); method / anonymous shapes still limited (#61)</li>
+        <li><strong>Shapes</strong> — data shapes work (<code>examples/shapes</code>); parametric <code>shape Boxy&lt;T&gt;</code> works (<code>examples/generics</code>, <code>examples/shapes_generic</code>); method / anonymous shapes still limited (#61)</li>
+        <li><strong>Generics</strong> — explicit <code>type</code> / function / <code>trait</code> / <code>shape</code> params work; <code>where</code>, rich <code>T: Show</code> bounds, and nested <code>&gt;&gt;</code> (lexed as shift) still limited (#70 / #71)</li>
         <li>Unknown Rust APIs are opaque stubs; known <code>Result</code> imports (<code>serde_json</code>, <code>ureq</code>) use Crisp <code>?</code> (#55)</li>
         <li>Trait defaults for literal/simple bodies shipped (<code>examples/trait_defaults</code>); bounds / <code>dyn Trait</code> still incomplete (#59)</li>
         <li>Enums: unit/tuple variants work; recursive enums and full exhaustiveness still gap</li>

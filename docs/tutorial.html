@@ -362,8 +362,33 @@ pub main() = {
           <p class="tech"><strong>Under the hood:</strong> Shapes lower to a generated Rust trait plus accessors so emit stays coherent. Method/anonymous shape edges are still limited — prefer named data shapes as in the example.</p>
         </article>
 
-        <article class="tutorial-step" id="rust-import">
+        <article class="tutorial-step" id="generics">
           <div class="step-label">Step 14</div>
+          <h2>Generics</h2>
+          <p>Inference is the default. Write <code>&lt;T&gt;</code> when a type, function, trait, or shape should stay parametric. Applications use the same brackets: <code>Pair&lt;int, str&gt;</code>, <code>Boxy&lt;int&gt;</code>.</p>
+          <pre class="pipe">type Pair&lt;A, B&gt; = { left: A, right: B }
+
+id&lt;T&gt;(x: T) = x
+first&lt;A, B&gt;(p: Pair&lt;A, B&gt;) = p.left
+
+shape Boxy&lt;T&gt; = { value: T }
+unwrap_int(b: Boxy&lt;int&gt;) = b.value
+
+pub main() = {
+    p := Pair { left: 1, right: 2 }
+    log("id={id(41)} first={first(p)}")
+}</pre>
+          <ul>
+            <li>Same <code>&lt;&gt;</code> on <code>type</code>, functions, <code>trait</code>, and <code>shape</code> — not a second syntax.</li>
+            <li>A matching struct satisfies <code>Boxy&lt;int&gt;</code> automatically; no <code>impl</code> required for the shape.</li>
+            <li><code>where</code> clauses and rich <code>T: Show</code> bounds are still limited — see <a href="limitations.html">limitations</a>.</li>
+          </ul>
+          <p class="try">Try: <code>crisp test examples/generics</code> · also <code>examples/shapes_generic</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Explicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust.</p>
+        </article>
+
+        <article class="tutorial-step" id="rust-import">
+          <div class="step-label">Step 15</div>
           <h2>Import a Rust crate</h2>
           <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package.</p>
           <pre class="pipe">-- crisp.toml
@@ -385,7 +410,7 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="async">
-          <div class="step-label">Step 15</div>
+          <div class="step-label">Step 16</div>
           <h2>Async</h2>
           <p>Mark entrypoints or blocks <code>async</code> when you need concurrency or timers. Start with a tiny sleep to prove the runtime is wired; then grow toward spawn/join patterns in the examples.</p>
           <pre class="pipe">pub main() = async {
@@ -401,9 +426,9 @@ pub main() = {
         </article>
 
         <article class="tutorial-step" id="next">
-          <div class="step-label">Step 16</div>
+          <div class="step-label">Step 17</div>
           <h2>Where to go</h2>
-          <p>You now have the core surface: values, modules, tests, errors, data, traits/shapes, Rust interop, and async. Next, read for depth or scan for fit.</p>
+          <p>You now have the core surface: values, modules, tests, errors, data, traits/shapes, generics, Rust interop, and async. Next, read for depth or scan for fit.</p>
           <ul>
             <li><a href="language.html">Language</a> — compact reference for the same topics</li>
             <li><a href="cli.html">CLI</a> — <code>check</code>, <code>emit</code>, <code>build</code>, <code>run</code>, <code>test</code>, and <code>reveal</code></li>
@@ -431,9 +456,10 @@ pub main() = {
           <li><a href="#methods"><span class="num">11</span> Methods</a></li>
           <li><a href="#traits"><span class="num">12</span> Traits</a></li>
           <li><a href="#shapes"><span class="num">13</span> Shapes</a></li>
-          <li><a href="#rust-import"><span class="num">14</span> Rust import</a></li>
-          <li><a href="#async"><span class="num">15</span> Async</a></li>
-          <li><a href="#next"><span class="num">16</span> Next</a></li>
+          <li><a href="#generics"><span class="num">14</span> Generics</a></li>
+          <li><a href="#rust-import"><span class="num">15</span> Rust import</a></li>
+          <li><a href="#async"><span class="num">16</span> Async</a></li>
+          <li><a href="#next"><span class="num">17</span> Next</a></li>
         </ol>
       </nav>
     </div>

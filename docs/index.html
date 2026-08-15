@@ -274,6 +274,18 @@ distance(a: HasPosition, b: HasPosition) -> float = {
           </div>
         </div>
         <div class="code-panel">
+          <div class="caption"><span>Generics</span><span>examples/generics</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>type Pair&lt;A, B&gt; = { left: A, right: B }
+id&lt;T&gt;(x: T) = x
+first&lt;A, B&gt;(p: Pair&lt;A, B&gt;) = p.left
+
+shape Boxy&lt;T&gt; = { value: T }
+unwrap_int(b: Boxy&lt;int&gt;) = b.value</pre>
+          </div>
+        </div>
+        <div class="code-panel">
           <div class="caption"><span>Rust crate import</span><span>examples/rust_import</span></div>
           <div class="code-window">
             <div class="code-chrome"><span></span><span></span><span></span></div>

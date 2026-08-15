@@ -10,7 +10,7 @@ Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo
 - [Install](https://crisp-lang.org/install.html): Install `crisp-lang` / `crisp-lsp` from crates.io or from source
 - [Tutorial](https://crisp-lang.org/tutorial.html): Guided introduction to Crisp syntax and toolchain
 - [Learning path](https://crisp-lang.org/learning.html): Ordered path through docs and examples
-- [Language](https://crisp-lang.org/language.html): Language surface — bindings, types, errors, modules
+- [Language](https://crisp-lang.org/language.html): Language surface — bindings, types, generics, errors, modules
 - [Docs hub](https://crisp-lang.org/docs.html): Spec, limitations, and documentation index
 - [CLI](https://crisp-lang.org/cli.html): `crisp` and `reveal` command reference
 - [Use cases](https://crisp-lang.org/use-cases.html): Where Crisp fits (CLI tools, services, interop with Rust)
@@ -25,6 +25,21 @@ crisp run .
 ```
 
 Requires Rust 1.85+ (`rustup`). Optional LSP: `cargo install crisp-lsp --locked`.
+
+## Generics (explicit `<>`)
+
+Inference is the default. Write type parameters when a definition should stay parametric:
+
+```
+type Pair<A, B> = { left: A, right: B }
+id<T>(x: T) = x
+first<A, B>(p: Pair<A, B>) = p.left
+shape Boxy<T> = { value: T }
+unwrap_int(b: Boxy<int>) = b.value
+trait Wrapper<T> = { unwrap(self) -> T }
+```
+
+Examples: `examples/generics`, `examples/shapes_generic`. `where` / rich bounds are still limited.
 
 ## Source & package
 

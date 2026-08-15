@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -68,7 +68,7 @@
       <div id="domains" class="use-grid">
                 <article class="use-card" id="cli">
           <h3>CLI tools</h3>
-          <p>Parse args, format output, exit codes — without spelling every type and borrow up front. Emit stays a normal Rust binary.</p>
+          <p>Shapes, implicit generics, and interpolation — without spelling every type and borrow up front. Emit stays a normal Rust binary.</p>
           <div class="tag-row">
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/hello">examples/hello</a>
             <a href="https://github.com/jose-compu/crisp/tree/main/examples/inventory">inventory</a>
@@ -77,11 +77,21 @@
           </div>
           <div class="use-snippet">
             <pre class="pipe">-- examples/hello/src/main.crp
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }
 
 -- run: crisp run examples/hello</pre>
@@ -504,7 +514,7 @@ pub main() = async {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

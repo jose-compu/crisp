@@ -59,7 +59,7 @@
         ],
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "softwareVersion": "1.5.2",
+        "softwareVersion": "1.6.0",
         "url": "https://crisp-lang.org/",
         "downloadUrl": "https://crates.io/crates/crisp-lang",
         "installUrl": "https://crisp-lang.org/install.html",
@@ -94,7 +94,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -114,7 +114,7 @@
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <img class="hero-brand" src="crisp-logo.jpg" alt="Crisp" width="168" height="185" />
-        <p class="badge">Crisp v1.5.2 · public release</p>
+        <p class="badge">Crisp v1.6.0 · public release</p>
         <h1>Explicit on demand, implicit by default</h1>
         <ul class="hero-points">
           <li>Compact <code>.crp</code> source; <code>crisp</code> infers types, ownership, and errors</li>
@@ -133,11 +133,21 @@ crisp run .</pre>
         <div class="caption"><span>Hello world</span><span>examples/hello</span></div>
         <div class="code-window">
           <div class="code-chrome"><span></span><span></span><span></span></div>
-          <pre>greet(name) = "hello " ++ name
+          <pre>shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }</pre>
         </div>
         <div class="code-output">
@@ -274,14 +284,14 @@ distance(a: HasPosition, b: HasPosition) -> float = {
           </div>
         </div>
         <div class="code-panel">
-          <div class="caption"><span>Generics</span><span>examples/generics</span></div>
+          <div class="caption"><span>Generics</span><span>examples/generics_implicit</span></div>
           <div class="code-window">
             <div class="code-chrome"><span></span><span></span><span></span></div>
-            <pre>type Pair&lt;A, B&gt; = { left: A, right: B }
-id&lt;T&gt;(x: T) = x
-first&lt;A, B&gt;(p: Pair&lt;A, B&gt;) = p.left
+            <pre>type Pair = { left: A, right: B }
+id(x: T) = x
+first(p: Pair&lt;A, B&gt;) = p.left
 
-shape Boxy&lt;T&gt; = { value: T }
+shape Boxy = { value: T }
 unwrap_int(b: Boxy&lt;int&gt;) = b.value</pre>
           </div>
         </div>
@@ -390,7 +400,7 @@ countdown_stop(start, stop) = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

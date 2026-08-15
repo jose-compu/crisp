@@ -255,9 +255,16 @@ mod tests {
 
     fn copy_crate(src: &Path, dst: &Path) {
         std::fs::create_dir_all(dst).unwrap();
-        for entry in std::fs::read_dir(src).unwrap() {
+        let Ok(entries) = std::fs::read_dir(src) else {
+            return;
+        };
+        for entry in entries {
             let entry = entry.unwrap();
-            let dest = dst.join(entry.file_name());
+            let name = entry.file_name();
+            if name == "target" {
+                continue;
+            }
+            let dest = dst.join(&name);
             if entry.file_type().unwrap().is_dir() {
                 copy_crate(&entry.path(), &dest);
             } else {

@@ -90,12 +90,18 @@ fn hello_build_still_works() {
 }
 
 fn copy_crate(src: &std::path::Path, dst: &std::path::Path) {
-    for entry in std::fs::read_dir(src).unwrap() {
+    std::fs::create_dir_all(dst).unwrap();
+    let Ok(entries) = std::fs::read_dir(src) else {
+        return;
+    };
+    for entry in entries {
         let entry = entry.unwrap();
         let name = entry.file_name();
-        let dest = dst.join(name);
+        if name == "target" {
+            continue;
+        }
+        let dest = dst.join(&name);
         if entry.file_type().unwrap().is_dir() {
-            std::fs::create_dir_all(&dest).unwrap();
             copy_crate(&entry.path(), &dest);
         } else {
             std::fs::copy(entry.path(), dest).unwrap();

@@ -88,6 +88,14 @@ fn generics_implicit_emits_and_runs() {
     assert!(src.contains("fn id<T: Clone>"), "id:\n{src}");
     assert!(src.contains("trait Boxy<T>"), "Boxy:\n{src}");
     assert!(src.contains("trait Wrapper<T>"), "Wrapper:\n{src}");
+    assert!(
+        src.contains("impl Wrapper<i64> for IntBox"),
+        "inferred impl:\n{src}"
+    );
+    assert!(
+        src.contains("HasName") && src.contains("HasId"),
+        "shape + bound:\n{src}"
+    );
     let run = run_emitted(&example("generics_implicit")).expect("run");
     assert!(run.contains("n=10"), "stdout: {run}");
     let r = run_tests(&example("generics_implicit")).expect("test");

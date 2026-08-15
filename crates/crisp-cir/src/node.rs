@@ -156,6 +156,8 @@ pub struct CirParam {
     pub ty: CirTy,
     pub mode: OwnershipMode,
     pub lifetime: Option<String>,
+    /// Extra `+ Bound` names from `HasName + Show` (#77).
+    pub extra_bounds: Vec<String>,
     pub span: Span,
 }
 

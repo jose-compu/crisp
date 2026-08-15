@@ -1,4 +1,4 @@
--- examples/generics_implicit — free type names are binders (#75 / thin #77)
+-- examples/generics_implicit — free names (#75) + inferred impl args / + bounds (#77)
 
 type Pair = {
     left: A
@@ -31,13 +31,28 @@ trait Wrapper = {
     unwrap(self) -> T
 }
 
-impl Wrapper<int> for IntBox = {
+impl Wrapper for IntBox = {
     unwrap(self) = self.value
 }
 
-impl Wrapper<str> for StrBox = {
+impl Wrapper for StrBox = {
     unwrap(self) = self.value
 }
+
+shape HasName = {
+    name: str
+}
+
+shape HasId = {
+    id: int
+}
+
+type User = {
+    name: str
+    id: int
+}
+
+label(u: HasName + HasId) = u.name
 
 test "id and pair" = {
     assert_eq(id(41), 41)
@@ -76,6 +91,14 @@ test "generic trait" = {
     assert_eq(b.unwrap(), 3)
 }
 
+test "shape plus bound" = {
+    u := User {
+        name: "a"
+        id: 1
+    }
+    assert_eq(label(u), "a")
+}
+
 test_compile_fail "str box is not Boxy<int>" = {
     s := StrBox {
         value: "no"
@@ -101,5 +124,9 @@ pub main() = {
         left: n
         right: unwrap_str(s)
     }
-    log("n={n} v={v} w={w} s={second(mixed)} mix={first(mixed)}")
+    u := User {
+        name: "u"
+        id: n
+    }
+    log("n={n} v={v} w={w} s={second(mixed)} mix={first(mixed)} who={label(u)}")
 }

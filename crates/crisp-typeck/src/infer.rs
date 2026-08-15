@@ -40,6 +40,8 @@ pub struct TypedCrate {
     pub inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
     /// Resolved `use <crate> { … }` / `use rust.<crate> { … }` imports (spec §14.2).
     pub rust_imports: Vec<ResolvedRustImport>,
+    /// `module::Trait for Type` → inferred trait args when the impl omitted `<>` (#77).
+    pub impl_trait_args: BTreeMap<String, Vec<Ty>>,
 }
 
 #[derive(Debug, Clone)]
@@ -69,6 +71,10 @@ pub struct TypeChecker {
     inherent_methods: BTreeMap<String, BTreeMap<String, String>>,
     /// Stack of expected `break` value types for nested `loop` expressions (§6.3).
     loop_break_tys: Vec<Ty>,
+    /// Fresh vars for omitted impl trait args (`module::Trait for Type`).
+    impl_trait_fresh: BTreeMap<String, Vec<Ty>>,
+    /// Finalized inferred impl trait args.
+    impl_trait_args: BTreeMap<String, Vec<Ty>>,
 }
 
 impl TypeChecker {
@@ -93,6 +99,7 @@ impl TypeChecker {
             signatures: checker.signatures,
             inherent_methods: checker.inherent_methods,
             rust_imports: resolved.rust_imports,
+            impl_trait_args: checker.impl_trait_args,
         })
     }
 
@@ -110,6 +117,8 @@ impl TypeChecker {
             signatures: BTreeMap::new(),
             inherent_methods: BTreeMap::new(),
             loop_break_tys: Vec::new(),
+            impl_trait_fresh: BTreeMap::new(),
+            impl_trait_args: BTreeMap::new(),
         }
     }
 
@@ -394,11 +403,7 @@ impl TypeChecker {
             name: ty_name.clone(),
             args: vec![],
         };
-        let trait_subst = if let Some(tn) = &ib.trait_name {
-            self.trait_arg_subst(&tn.name, &ib.trait_args)?
-        } else {
-            BTreeMap::new()
-        };
+        let trait_subst = self.impl_trait_subst(module, ib, &ty_name)?;
         for f in &ib.items {
             let mut params = Vec::new();
             for p in &f.params {
@@ -521,6 +526,7 @@ impl TypeChecker {
         for f in &ib.items {
             self.check_impl_method(module, &ty_name, f)?;
         }
+        self.finalize_impl_trait_args(module, ib, &ty_name)?;
         Ok(())
     }
 
@@ -1492,6 +1498,73 @@ impl TypeChecker {
                 .map(|(k, v)| (k.clone(), subst_named_params(v, &subst)))
                 .collect(),
         )
+    }
+
+    fn impl_trait_key(module: &str, trait_name: &str, ty_name: &str) -> String {
+        format!("{module}::{trait_name} for {ty_name}")
+    }
+
+    fn impl_trait_subst(
+        &mut self,
+        module: &str,
+        ib: &ImplBlock,
+        ty_name: &str,
+    ) -> Result<BTreeMap<String, Ty>, TypeError> {
+        let Some(tn) = &ib.trait_name else {
+            return Ok(BTreeMap::new());
+        };
+        let gens = self
+            .trait_generics
+            .get(&tn.name)
+            .cloned()
+            .unwrap_or_default();
+        if gens.is_empty() {
+            return Ok(BTreeMap::new());
+        }
+        if ib.trait_args.is_empty() {
+            let mut subst = BTreeMap::new();
+            let mut fresh = Vec::new();
+            for g in &gens {
+                let v = self.ctx.fresh();
+                subst.insert(g.clone(), v.clone());
+                fresh.push(v);
+            }
+            self.impl_trait_fresh
+                .insert(Self::impl_trait_key(module, &tn.name, ty_name), fresh);
+            return Ok(subst);
+        }
+        self.trait_arg_subst(&tn.name, &ib.trait_args)
+    }
+
+    fn finalize_impl_trait_args(
+        &mut self,
+        module: &str,
+        ib: &ImplBlock,
+        ty_name: &str,
+    ) -> Result<(), TypeError> {
+        let Some(tn) = &ib.trait_name else {
+            return Ok(());
+        };
+        let key = Self::impl_trait_key(module, &tn.name, ty_name);
+        let Some(fresh) = self.impl_trait_fresh.remove(&key) else {
+            return Ok(());
+        };
+        let mut args = Vec::new();
+        for t in fresh {
+            let applied = self.ctx.apply(&t);
+            if matches!(applied, Ty::Var(_)) {
+                return Err(TypeError::UnknownType {
+                    name: format!(
+                        "cannot infer `{}` type arguments for `{ty_name}`; write `impl {}<...> for {ty_name}`",
+                        tn.name, tn.name
+                    ),
+                    span: ib.span,
+                });
+            }
+            args.push(applied);
+        }
+        self.impl_trait_args.insert(key, args);
+        Ok(())
     }
 
     fn trait_arg_subst(

@@ -136,6 +136,22 @@ fn mixed_type_application_parses() {
 }
 
 #[test]
+fn shape_plus_bound_parses() {
+    let src = "label(u: HasName + HasId) = u.name\n";
+    let mut p = Parser::new(src).expect("lex");
+    let file = p.parse_file().expect("HasName + HasId should parse");
+    let Item::Function(f) = &file.items[0] else {
+        panic!("expected Function");
+    };
+    let ty = f.params[0].ty.as_ref().expect("param type");
+    assert!(
+        matches!(ty.kind, TypeKind::Constrained { .. }),
+        "expected Constrained, got {:?}",
+        ty.kind
+    );
+}
+
+#[test]
 fn free_type_names_parse_without_binder() {
     let src = r#"
 type Pair = {

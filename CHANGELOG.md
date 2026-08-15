@@ -16,6 +16,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Examples: `examples/generics`, `examples/shapes_generic`.
 - Implicit generic binders: unbound type names (`id(x: T)`, `type Pair = { left: A, right: B }`, `shape Boxy = { value: T }`) become parameters; `<>` remains a pin. Explicit `<T>` that shadows a type is E0049 (#75, #77, #78).
 - Example: `examples/generics_implicit`.
+- Infer omitted `impl Trait for Type` args from method bodies (`impl Wrapper for IntBox` → `Wrapper<int>`) (#77).
+- `+` constraint lists on params emit as extra Rust bounds (`HasName + HasId`). Anonymous `{ value: T }` params still deferred (#61).
 
 ## [1.5.2] — 2026-08-14
 

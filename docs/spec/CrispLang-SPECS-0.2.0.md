@@ -438,7 +438,10 @@ trait Wrapper = { unwrap(self) -> T }
 id<T>(x: T) = x
 type Pair<A, B> = { left: A, right: B }
 
-impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
+impl Wrapper for IntBox = { unwrap(self) = self.value }
+-- pin: impl Wrapper<int> for IntBox = { … }
+
+label(u: HasName + HasId) = u.name
 
 convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 ```

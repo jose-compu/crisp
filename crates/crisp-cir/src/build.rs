@@ -178,9 +178,22 @@ impl CirBuilder {
                                 ));
                             }
                         }
+                        let trait_name = ib.trait_name.as_ref().map(|i| i.name.clone());
+                        let trait_args = if !ib.trait_args.is_empty() {
+                            ib.trait_args.iter().map(ast_type_to_cir_ty).collect()
+                        } else if let Some(tn) = &trait_name {
+                            let key = format!("{}::{tn} for {ty_name}", node.module_path);
+                            typed
+                                .impl_trait_args
+                                .get(&key)
+                                .map(|tys| tys.iter().map(CirTy::from_ty).collect())
+                                .unwrap_or_default()
+                        } else {
+                            Vec::new()
+                        };
                         items.push(CirItem::Impl(CirImpl {
-                            trait_name: ib.trait_name.as_ref().map(|i| i.name.clone()),
-                            trait_args: ib.trait_args.iter().map(ast_type_to_cir_ty).collect(),
+                            trait_name,
+                            trait_args,
                             ty_name,
                             functions: fns,
                             span: ib.span,
@@ -310,6 +323,22 @@ fn lower_trait_default_expr(expr: &Expr) -> CirExpr {
     }
 }
 
+fn type_extra_bounds(ty: &crisp_ast::ty::Type) -> Vec<String> {
+    use crisp_ast::ty::{TypeBound, TypeKind};
+    match &ty.kind {
+        TypeKind::Constrained { inner, bounds } => {
+            let mut out = type_extra_bounds(inner);
+            for b in bounds {
+                match b {
+                    TypeBound::Shape(id) | TypeBound::Trait(id) => out.push(id.name.clone()),
+                }
+            }
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
 fn ast_type_to_cir_ty(ty: &crisp_ast::ty::Type) -> CirTy {
     use crisp_ast::ty::TypeKind;
     match &ty.kind {
@@ -343,6 +372,7 @@ fn ast_type_to_cir_ty(ty: &crisp_ast::ty::Type) -> CirTy {
         },
         TypeKind::Never => CirTy::Never,
         TypeKind::Unit => CirTy::Unit,
+        TypeKind::Constrained { inner, .. } => ast_type_to_cir_ty(inner),
         _ => CirTy::Error,
     }
 }
@@ -425,6 +455,7 @@ fn lower_extern(ext: &ExternBlock) -> CirExternBlock {
                             .unwrap_or(CirTy::Error),
                         mode: OwnershipMode::Owned,
                         lifetime: None,
+                        extra_bounds: p.ty.as_ref().map(type_extra_bounds).unwrap_or_default(),
                         span: p.span,
                     })
                     .collect(),
@@ -541,6 +572,12 @@ fn lower_function(
                 ty,
                 mode: *mode,
                 lifetime,
+                extra_bounds: def
+                    .params
+                    .get(i)
+                    .and_then(|p| p.ty.as_ref())
+                    .map(type_extra_bounds)
+                    .unwrap_or_default(),
                 span: def.span,
             }
         })

@@ -191,7 +191,9 @@ shape Boxy = { value: T }
 unwrap_int(b: Boxy<int>) = b.value
 
 trait Wrapper = { unwrap(self) -> T }
-impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
+impl Wrapper for IntBox = { unwrap(self) = self.value }
+
+label(u: HasName + HasId) = u.name
 
 -- pins (same meaning):
 type Pair<A, B> = { left: A, right: B }

@@ -106,6 +106,22 @@ fn free_type_names_typecheck_like_explicit_binders() {
         format_sig(sig_named(&typed, "unwrap_int")),
         "unwrap_int(b: Boxy<int>) -> int"
     );
+    assert!(
+        typed
+            .impl_trait_args
+            .values()
+            .any(|args| matches!(args.first(), Some(crisp_typeck::Ty::Int))),
+        "expected inferred Wrapper<int>, got {:?}",
+        typed.impl_trait_args
+    );
+    assert!(
+        typed
+            .impl_trait_args
+            .values()
+            .any(|args| matches!(args.first(), Some(crisp_typeck::Ty::Str))),
+        "expected inferred Wrapper<str>, got {:?}",
+        typed.impl_trait_args
+    );
 }
 
 #[test]

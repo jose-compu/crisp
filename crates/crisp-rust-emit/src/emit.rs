@@ -480,7 +480,19 @@ fn emit_function(
 fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> String {
     let shape_names: std::collections::HashSet<&str> =
         cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
-    let mut type_params: Vec<String> = f.generics.iter().map(|g| format!("{g}: Clone")).collect();
+    let mut type_params: Vec<String> = f
+        .generics
+        .iter()
+        .map(|g| {
+            let extras: Vec<String> = f
+                .params
+                .iter()
+                .filter(|p| matches!(&p.ty, CirTy::Named { name, .. } if name == g))
+                .flat_map(|p| p.extra_bounds.iter().cloned())
+                .collect();
+            format!("{g}: Clone{}", extra_bounds_suffix(&extras))
+        })
+        .collect();
     let mut params = Vec::new();
     let mut shape_i = 0usize;
     for p in &f.params {
@@ -498,7 +510,10 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
                     args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
                 )
             };
-            type_params.push(format!("{tp}: {bound}"));
+            type_params.push(format!(
+                "{tp}: {bound}{}",
+                extra_bounds_suffix(&p.extra_bounds)
+            ));
             params.push(format_param_with_ty(p, &tp, trait_impl));
         } else {
             params.push(format_param(p, trait_impl));
@@ -514,6 +529,14 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
     }
     let ret = format_ret(&f.ret, f.fallible);
     format!("{generics}({}){}", params.join(", "), ret)
+}
+
+fn extra_bounds_suffix(bounds: &[String]) -> String {
+    if bounds.is_empty() {
+        String::new()
+    } else {
+        format!(" + {}", bounds.join(" + "))
+    }
 }
 
 fn format_extern_param(p: &CirParam) -> String {

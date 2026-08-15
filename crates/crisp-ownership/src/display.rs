@@ -25,7 +25,7 @@ pub fn format_owned_sig(sig: &OwnershipSignature, typed: Option<&InferredSig>) -
             .collect::<Vec<_>>()
             .join(", ");
         let ret = format_ty(&ts.ret);
-        let mut line = format!("{}({params}) -> {ret}", sig.name);
+        let mut line = format!("{}{}({params}) -> {ret}", sig.name, ts.scheme_prefix());
         for ac in &sig.auto_clones {
             line.push('\n');
             line.push_str(&ac.note);

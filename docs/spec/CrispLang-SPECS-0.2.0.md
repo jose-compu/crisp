@@ -448,8 +448,24 @@ convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 
 Applications use the same `<>` (`Pair<int, str>`, `Boxy<int>`, `Wrapper<int>`).
 `where` clauses lower verbatim to Rust when present; the bootstrap currently
-ships explicit params without `where` / HRTB. Unannotated `identity(x) = x`
-generalization from use sites is still inferred-at-`pub` (see Design B).
+ships explicit params without `where` / HRTB.
+
+Polymorphism is a **publication artifact**. After checking a function item:
+
+- leftover free type variables become a scheme (`identity(x) = x` → `identity<T>(x: T) -> T`);
+- a crate-internal scheme used at only one concrete type is monomorphized for emit;
+- a crate-internal scheme used at several types stays generic;
+- a `pub` scheme is never monomorphized — it is frozen in `crisp.lock`. Changing
+  that sealed `rust_signature` (including a new hidden `T: Clone` bound) without
+  an explicit pin is **E0080**. `id<T>` / `pub id(x: int)` remain pins.
+
+Only **function items** are generalized. Locals and `mut` bindings are not
+(value restriction). Empty containers stay ambiguous until annotated.
+
+`reveal types` shows the emit-grade scheme, including the hidden Clone bound
+that every user generic carries on the way to Rust (`id<T: Clone>(x: T) -> T`),
+and may list instantiating call sites. The lock `rust_signature` is that
+contract.
 
 ---
 
@@ -528,7 +544,9 @@ helper(x)     = x * 2     -- private fn
 
 `pub` items form the **sealed boundary** of a crate (§12.5): their inferred signatures
 are pinned in a lockfile so the crate can be depended upon without re-running global
-inference at every downstream build.
+inference at every downstream build. An unannotated `pub` function that still has
+free type variables is recorded as a scheme (`pub identity(x) = x` →
+`identity<T: Clone>(x: T) -> T` in `crisp.lock`). Drift is E0080.
 
 ### 5.3 Closures / Lambdas
 
@@ -542,6 +560,10 @@ list.fold(0, |acc, x| acc + x)
 Closures lower to Rust closures. The ownership pass decides `move` vs borrow capture and
 emits `move` where required (e.g. captures crossing a `spawn`, §11). `reveal ownership`
 shows capture modes.
+
+A local `|x| x` follows the same scheme rule as a named item: it generalizes only
+if the closure **escapes** (is returned or stored where callers can instantiate it);
+otherwise it is monomorphized at its use sites. First-class closure emit is [#72](https://github.com/jose-compu/crisp/issues/72).
 
 ### 5.4 Methods
 

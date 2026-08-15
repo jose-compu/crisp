@@ -136,31 +136,44 @@ fn emit_fallible_function(
     module: &str,
 ) {
     let _ = writeln!(out);
+    let (emit_params, emit_ret, emit_gens) = tsig.emit_view();
     let params = osig
         .params
         .iter()
         .enumerate()
         .map(|(i, (name, mode))| {
-            let ty = tsig.params.get(i).map(|(_, t)| t);
+            let ty = emit_params.get(i).map(|(_, t)| t);
             fallible_rust_param(name, ty, *mode, osig)
         })
         .collect::<Vec<_>>()
         .join(", ");
 
-    let inner_ret = if matches!(tsig.ret, crisp_typeck::Ty::Unit) {
+    let inner_ret = if matches!(emit_ret, crisp_typeck::Ty::Unit) {
         "()".into()
-    } else if matches!(tsig.ret, crisp_typeck::Ty::Var(_)) {
+    } else if matches!(emit_ret, crisp_typeck::Ty::Var(_)) {
         "Config".into()
     } else {
-        format_rust_ty(&tsig.ret)
+        format_rust_ty(&emit_ret)
     };
     let ret = if esig.fallible {
         format!(" -> Result<{inner_ret}, CrispError>")
     } else {
-        format_rust_ret(&tsig.ret)
+        format_rust_ret(&emit_ret)
+    };
+    let gens = if emit_gens.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<{}>",
+            emit_gens
+                .iter()
+                .map(|g| format!("{g}: Clone"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
     };
 
-    let _ = writeln!(out, "pub fn {}({params}){ret} {{", def.name.name);
+    let _ = writeln!(out, "pub fn {}{gens}({params}){ret} {{", def.name.name);
     emit_fallible_expr(
         out,
         &def.body,

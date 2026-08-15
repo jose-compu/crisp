@@ -18,6 +18,9 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Example: `examples/generics_implicit`.
 - Infer omitted `impl Trait for Type` args from method bodies (`impl Wrapper for IntBox` → `Wrapper<int>`) (#77).
 - `+` constraint lists on params emit as extra Rust bounds (`HasName + HasId`). Anonymous `{ value: T }` params still deferred (#61).
+- Polymorphism is a publication artifact: unannotated `id(x) = x` generalizes when free vars remain; crate-internal single-use items monomorphize; `pub` schemes freeze in `crisp.lock` (E0080 on drift) (#76).
+- Generics defaults: value restriction (no generalizing `mut` / locals), `reveal types` shows `id<T: Clone>(x: T) -> T`, hidden `T: Clone` is an emit/lock contract, closures follow the same scheme rule when they land (#78).
+- Example: `examples/generics_pub`.
 
 ## [1.5.2] — 2026-08-14
 

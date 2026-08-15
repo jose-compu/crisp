@@ -52,6 +52,7 @@ const EXAMPLES: &[&str] = &[
     "generics",
     "shapes_generic",
     "generics_implicit",
+    "generics_pub",
     "trait_defaults",
     "std_traits",
     "net_http",
@@ -110,6 +111,12 @@ fn sealed_example_lock_verifies() {
 }
 
 #[test]
+fn generics_pub_lock_verifies() {
+    let root = example("generics_pub");
+    verify_sealed_api(&root).expect("generics_pub crisp.lock must match pub API");
+}
+
+#[test]
 fn math_has_tests_in_arith_module() {
     let tests = collect_tests(&example("math")).unwrap();
     assert_eq!(tests.len(), 8);
@@ -138,6 +145,7 @@ fn examples_with_tests_pass_crpc_test() {
         "generics",
         "shapes_generic",
         "generics_implicit",
+        "generics_pub",
         "trait_defaults",
         "std_traits",
         "feature_gallery",
@@ -194,6 +202,7 @@ fn runnable_examples_build_and_run() {
         "generics",
         "shapes_generic",
         "generics_implicit",
+        "generics_pub",
         "trait_defaults",
         "std_traits",
         "feature_gallery",
@@ -372,6 +381,7 @@ const BUILDABLE: &[&str] = &[
     "generics",
     "shapes_generic",
     "generics_implicit",
+    "generics_pub",
     "trait_defaults",
     "std_traits",
     "net_http",

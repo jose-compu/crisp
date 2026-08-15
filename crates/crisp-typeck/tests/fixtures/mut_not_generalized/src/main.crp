@@ -1,0 +1,9 @@
+-- Value restriction (#78): mut bindings are not generalized.
+
+id(x) = x
+
+pub main() = {
+    f mut:= id
+    a := f(1)
+    f("no")
+}

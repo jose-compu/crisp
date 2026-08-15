@@ -7,7 +7,13 @@ pub fn format_sig(sig: &InferredSig) -> String {
         .map(|(n, t)| format!("{n}: {}", format_ty(t)))
         .collect::<Vec<_>>()
         .join(", ");
-    format!("{}({}) -> {}", sig.name, params, format_ty(&sig.ret))
+    format!(
+        "{}{}({}) -> {}",
+        sig.name,
+        sig.scheme_prefix(),
+        params,
+        format_ty(&sig.ret)
+    )
 }
 
 pub fn format_ty(ty: &Ty) -> String {

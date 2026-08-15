@@ -30,7 +30,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0060–E0062 | regions | Region assignment failures / wrapped ownership or type errors |
 | E0070–E0073 | errors / CIR / LSP | Fallibility set mismatches, or pipeline wrap of resolve/type/region/error |
 | E0074 | resolve / CIR / LSP | Resolve error (also used as wrap code in several crates) |
-| E0080 | seal | `crisp.lock` drift or missing/stale sealed API entry — regenerate lock or fix pub API |
+| E0080 | seal | `crisp.lock` drift or missing/stale sealed API entry — including a changed `pub` generic scheme (`identity<T: Clone>…`); regenerate lock or restore the pinned API ([#76](https://github.com/jose-compu/crisp/issues/76)) |
 | E0081 | tests | Runtime `cargo test` failed for injected tests |
 | E0082 | tests | `test_compile_fail` unexpectedly passed analysis |
 | E0083 | tests | `test_compile_fail` failed for the wrong reason |

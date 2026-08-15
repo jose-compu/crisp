@@ -82,7 +82,7 @@ fn collect_free(ty: &Ty, set: &mut HashSet<u32>) {
     }
 }
 
-fn collect_free_vars(ty: &Ty, out: &mut Vec<u32>) {
+pub(crate) fn collect_free_vars(ty: &Ty, out: &mut Vec<u32>) {
     match ty {
         Ty::Var(v) => out.push(*v),
         Ty::Tuple(ts) => ts.iter().for_each(|t| collect_free_vars(t, out)),
@@ -99,7 +99,7 @@ fn collect_free_vars(ty: &Ty, out: &mut Vec<u32>) {
     }
 }
 
-fn substitute_var(ty: &Ty, var: u32, replacement: &Ty) -> Ty {
+pub(crate) fn substitute_var(ty: &Ty, var: u32, replacement: &Ty) -> Ty {
     match ty {
         Ty::Var(v) if *v == var => replacement.clone(),
         Ty::Var(_) => ty.clone(),

@@ -1,4 +1,4 @@
-use crisp_reveal::{reveal_expand, reveal_map, reveal_seal, reveal_traits};
+use crisp_reveal::{reveal_expand, reveal_map, reveal_seal, reveal_traits, reveal_types};
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
@@ -43,4 +43,19 @@ fn reveal_map_hello() {
     let out = reveal_map(&hello_root()).unwrap();
     assert!(out.contains("greet"));
     assert!(out.contains("drop"));
+}
+
+#[test]
+fn reveal_types_shows_pub_scheme_and_clone() {
+    let out = reveal_types(&example("generics_pub")).unwrap();
+    eprintln!("reveal types generics_pub:\n{out}");
+    assert!(
+        out.contains("identity<T: Clone>(x: T) -> T"),
+        "scheme: {out}"
+    );
+    assert!(out.contains("id<T: Clone>(x: T) -> T"), "id: {out}");
+    assert!(
+        out.contains("once<T: Clone>(x: T) -> T") && out.contains("used as int"),
+        "once scheme + inst: {out}"
+    );
 }

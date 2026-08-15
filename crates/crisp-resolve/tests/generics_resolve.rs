@@ -23,3 +23,8 @@ fn generics_implicit_example_resolves() {
     Resolver::resolve_crate(&example("generics_implicit"))
         .expect("examples/generics_implicit must resolve");
 }
+
+#[test]
+fn generics_pub_example_resolves() {
+    Resolver::resolve_crate(&example("generics_pub")).expect("examples/generics_pub must resolve");
+}

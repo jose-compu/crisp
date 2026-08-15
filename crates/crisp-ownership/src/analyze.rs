@@ -184,8 +184,11 @@ fn is_copy_ty(ty: &Ty) -> bool {
     )
 }
 
-fn is_clone_ty(ty: &Ty) -> bool {
-    is_copy_ty(ty) || ty.is_stringish() || matches!(ty, Ty::Var(_))
+fn is_clone_ty(ty: &Ty, gens: &[String]) -> bool {
+    is_copy_ty(ty)
+        || ty.is_stringish()
+        || matches!(ty, Ty::Var(_))
+        || matches!(ty, Ty::Named { name, args } if args.is_empty() && gens.iter().any(|g| g == name))
 }
 
 fn type_for_binding(
@@ -549,7 +552,14 @@ impl<'a> Collector<'a> {
                 } else if saw_move
                     && matches!(usage, Usage::Read | Usage::Mutate)
                     && let Some(ty) = type_for_binding(name, self.fn_key, self.def, self.typed)
-                    && is_clone_ty(&ty)
+                    && is_clone_ty(
+                        &ty,
+                        self.typed
+                            .signatures
+                            .get(self.fn_key)
+                            .map(|s| s.generics.as_slice())
+                            .unwrap_or(&[]),
+                    )
                     && !is_copy_ty(&ty)
                 {
                     out.push(AutoClone {

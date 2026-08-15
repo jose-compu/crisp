@@ -161,18 +161,30 @@ fn emit_function(
     ownership: &OwnershipResult,
 ) {
     let _ = writeln!(out);
+    let (emit_params, emit_ret, emit_gens) = tsig.emit_view();
     let params = osig
         .params
         .iter()
         .enumerate()
         .map(|(i, (name, mode))| {
-            let ty = tsig.params.get(i).map(|(_, t)| t);
+            let ty = emit_params.get(i).map(|(_, t)| t);
             format_rust_param(name, ty, *mode, osig)
         })
         .collect::<Vec<_>>()
         .join(", ");
-    let ret = format_rust_ret(&tsig.ret);
-    let gens = format_probe_fn_gens(&def.generics);
+    let ret = format_rust_ret(&emit_ret);
+    let gens = if emit_gens.is_empty() {
+        format_probe_fn_gens(&def.generics)
+    } else {
+        format!(
+            "<{}>",
+            emit_gens
+                .iter()
+                .map(|g| format!("{g}: Clone"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    };
     let _ = writeln!(out, "pub fn {}{gens}({params}){ret} {{", def.name.name);
     emit_body(out, &def.body, osig, Some(ownership), 1);
     let _ = writeln!(out, "}}");

@@ -15,6 +15,10 @@ fn generics_implicit_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics_implicit")
 }
 
+fn generics_pub_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics_pub")
+}
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures")
@@ -42,9 +46,9 @@ fn generics_example_typechecks() {
     eprintln!("second: {second}");
     eprintln!("unwrap_int: {unwrap_int}");
     eprintln!("unwrap_str: {unwrap_str}");
-    assert_eq!(id, "id(x: T) -> T");
-    assert_eq!(first, "first(p: Pair<A, B>) -> A");
-    assert_eq!(second, "second(p: Pair<A, B>) -> B");
+    assert_eq!(id, "id<T: Clone>(x: T) -> T");
+    assert_eq!(first, "first<A: Clone, B: Clone>(p: Pair<A, B>) -> A");
+    assert_eq!(second, "second<A: Clone, B: Clone>(p: Pair<A, B>) -> B");
     assert_eq!(unwrap_int, "unwrap_int(b: Boxy<int>) -> int");
     assert_eq!(unwrap_str, "unwrap_str(b: Boxy<str>) -> str");
     let mut trait_unwraps: Vec<_> = typed
@@ -97,10 +101,13 @@ fn parametric_shape_rejects_wrong_field_type() {
 fn free_type_names_typecheck_like_explicit_binders() {
     let typed =
         TypeChecker::check_crate(&generics_implicit_root()).expect("typecheck generics_implicit");
-    assert_eq!(format_sig(sig_named(&typed, "id")), "id(x: T) -> T");
+    assert_eq!(
+        format_sig(sig_named(&typed, "id")),
+        "id<T: Clone>(x: T) -> T"
+    );
     assert_eq!(
         format_sig(sig_named(&typed, "first")),
-        "first(p: Pair<A, B>) -> A"
+        "first<A: Clone, B: Clone>(p: Pair<A, B>) -> A"
     );
     assert_eq!(
         format_sig(sig_named(&typed, "unwrap_int")),
@@ -156,6 +163,48 @@ fn rigid_param_rejects_concrete_return() {
     eprintln!("rigid return: {msg}");
     assert!(
         matches!(err, TypeError::Unify(_)) || msg.contains("mismatch") || msg.contains("T"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn publication_generalizes_unannotated_and_specializes_internal() {
+    let typed = TypeChecker::check_crate(&generics_pub_root()).expect("typecheck generics_pub");
+    let id = sig_named(&typed, "id");
+    let once = sig_named(&typed, "once");
+    let identity = sig_named(&typed, "identity");
+    eprintln!("id: {}", format_sig(id));
+    eprintln!("once: {}", format_sig(once));
+    eprintln!("identity: {}", format_sig(identity));
+    assert_eq!(format_sig(id), "id<T: Clone>(x: T) -> T");
+    assert!(
+        id.instantiations.iter().any(|s| s.contains("int"))
+            && id.instantiations.iter().any(|s| s.contains("str")),
+        "id instantiations: {:?}",
+        id.instantiations
+    );
+    assert!(id.mono_args.is_none(), "id used at two types stays generic");
+    assert_eq!(format_sig(once), "once<T: Clone>(x: T) -> T");
+    assert!(
+        once.mono_args.is_some(),
+        "once used only at int is marked for mono emit"
+    );
+    assert_eq!(format_sig(identity), "identity<T: Clone>(x: T) -> T");
+    assert!(identity.is_pub);
+    assert!(
+        identity.mono_args.is_none(),
+        "pub identity is never specialized"
+    );
+}
+
+#[test]
+fn mut_binding_is_not_generalized() {
+    let err = TypeChecker::check_crate(&fixture("mut_not_generalized"))
+        .expect_err("mut f := id must pin after first use");
+    let msg = err.to_string();
+    eprintln!("value restriction: {msg}");
+    assert!(
+        matches!(err, TypeError::Unify(_)) || msg.contains("mismatch"),
         "{msg}"
     );
 }

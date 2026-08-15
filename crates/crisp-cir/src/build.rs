@@ -556,13 +556,13 @@ fn lower_function(
     extern_fns: &std::collections::BTreeSet<String>,
     shape_fields: &BTreeMap<String, Vec<String>>,
 ) -> CirFunction {
+    let (emit_params, emit_ret, emit_gens) = tsig.emit_view();
     let params: Vec<CirParam> = osig
         .params
         .iter()
         .enumerate()
         .map(|(i, (name, mode))| {
-            let ty = tsig
-                .params
+            let ty = emit_params
                 .get(i)
                 .map(|(_, t)| CirTy::from_ty(t))
                 .unwrap_or(CirTy::Error);
@@ -585,18 +585,16 @@ fn lower_function(
 
     let ret = if esig.fallible {
         CirTy::Result {
-            ok: Box::new(CirTy::from_ty(&tsig.ret)),
+            ok: Box::new(CirTy::from_ty(&emit_ret)),
             err: "CrispError".into(),
         }
     } else {
-        CirTy::from_ty(&tsig.ret)
+        CirTy::from_ty(&emit_ret)
     };
 
     let mut locals: BTreeMap<String, CirTy> = BTreeMap::new();
-    for (i, (name, _)) in tsig.params.iter().enumerate() {
-        if let Some((_, t)) = tsig.params.get(i) {
-            locals.insert(name.clone(), CirTy::from_ty(t));
-        }
+    for (name, t) in &emit_params {
+        locals.insert(name.clone(), CirTy::from_ty(t));
     }
 
     let is_async = expr_is_async(&def.body);
@@ -626,7 +624,13 @@ fn lower_function(
         is_pub: def.is_pub,
         is_main: def.name.name == "main",
         is_async,
-        generics: def.generics.iter().map(|g| g.name.clone()).collect(),
+        generics: if tsig.mono_args.is_some() {
+            Vec::new()
+        } else if def.generics.is_empty() {
+            emit_gens
+        } else {
+            def.generics.iter().map(|g| g.name.clone()).collect()
+        },
         params,
         ret,
         fallible: esig.fallible,

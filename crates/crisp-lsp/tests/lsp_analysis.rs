@@ -117,6 +117,7 @@ fn analyze_all_examples() {
         "generics",
         "shapes_generic",
         "generics_implicit",
+        "generics_pub",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

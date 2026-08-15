@@ -202,7 +202,9 @@ id<T>(x: T) = x
 
 A name that is already a type (`int`, `Pair`, …) is that type, not a parameter. An explicit `<T>` that shadows a type is an error (E0049).
 
-See `examples/generics`, `examples/generics_implicit`, and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
+Unannotated `id(x) = x` is a scheme when the body leaves type variables free. Crate-internal items used at one concrete type emit monomorphic Rust; `pub` items stay schemes and are sealed in `crisp.lock`. `reveal types` shows the emitted bound (`id<T: Clone>(x: T) -> T`). Locals and `mut` bindings are not generalized.
+
+See `examples/generics`, `examples/generics_implicit`, `examples/generics_pub`, and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
 
 ## 5. Structs
 
@@ -415,6 +417,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `shapes` | Data `shape` → generated trait + structural calls (§3.5 / #61) |
 | `generics` | Type / function / trait params + parametric shapes (#70 / #71) |
 | `generics_implicit` | Free type names as binders — no `<T>` on defs (#75) |
+| `generics_pub` | Unannotated `id(x)=x` — internal mono vs `pub` scheme (#76) |
 | `shapes_generic` | `shape Boxy<T>` applied as `Boxy<int>` / `Boxy<str>` (#70) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |

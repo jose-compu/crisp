@@ -174,6 +174,7 @@ fn spec_s20_all_examples_typecheck() {
         "generics",
         "shapes_generic",
         "generics_implicit",
+        "generics_pub",
     ] {
         eprintln!("§20 typecheck {name}");
         TypeChecker::check_crate(&example(name)).unwrap_or_else(|e| panic!("{name}: {e}"));

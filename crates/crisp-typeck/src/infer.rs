@@ -1,4 +1,5 @@
-use crate::env::{TypeEnv, generalize, instantiate, scheme};
+use crate::display::format_ty;
+use crate::env::{TypeEnv, collect_free_vars, generalize, instantiate, scheme, substitute_var};
 use crate::types::{InferContext, InferredSig, Scheme, Ty};
 use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
@@ -75,6 +76,8 @@ pub struct TypeChecker {
     impl_trait_fresh: BTreeMap<String, Vec<Ty>>,
     /// Finalized inferred impl trait args.
     impl_trait_args: BTreeMap<String, Vec<Ty>>,
+    /// Call-site argument types for crate-internal specialization (#76).
+    fn_instantiations: BTreeMap<String, Vec<Vec<Ty>>>,
 }
 
 impl TypeChecker {
@@ -95,6 +98,7 @@ impl TypeChecker {
         for node in graph.modules.values() {
             checker.check_module(&node.module_path, &node.ast)?;
         }
+        checker.specialize_internal_functions();
         Ok(TypedCrate {
             signatures: checker.signatures,
             inherent_methods: checker.inherent_methods,
@@ -119,6 +123,7 @@ impl TypeChecker {
             loop_break_tys: Vec::new(),
             impl_trait_fresh: BTreeMap::new(),
             impl_trait_args: BTreeMap::new(),
+            fn_instantiations: BTreeMap::new(),
         }
     }
 
@@ -146,6 +151,11 @@ impl TypeChecker {
                         .collect(),
                     ret,
                     span: Span::new(0, 0),
+                    generics: Vec::new(),
+                    is_pub: false,
+                    inferred_from_use: false,
+                    instantiations: Vec::new(),
+                    mono_args: None,
                 },
             );
         }
@@ -455,6 +465,11 @@ impl TypeChecker {
                         .collect(),
                     ret,
                     span: f.span,
+                    generics: Vec::new(),
+                    is_pub: f.is_pub,
+                    inferred_from_use: false,
+                    instantiations: Vec::new(),
+                    mono_args: None,
                 },
             );
         }
@@ -493,6 +508,11 @@ impl TypeChecker {
                         params: sig_params,
                         ret: sig_ret,
                         span: ib.span,
+                        generics: Vec::new(),
+                        is_pub: false,
+                        inferred_from_use: false,
+                        instantiations: Vec::new(),
+                        mono_args: None,
                     },
                 );
             }
@@ -595,6 +615,11 @@ impl TypeChecker {
                 params: param_types,
                 ret,
                 span: f.span,
+                generics: Vec::new(),
+                is_pub: f.is_pub,
+                inferred_from_use: false,
+                instantiations: Vec::new(),
+                mono_args: None,
             },
         );
         self.inherent_methods
@@ -640,6 +665,11 @@ impl TypeChecker {
                         .collect(),
                     ret,
                     span: f.span,
+                    generics: Vec::new(),
+                    is_pub: false,
+                    inferred_from_use: false,
+                    instantiations: Vec::new(),
+                    mono_args: None,
                 },
             );
         }
@@ -666,6 +696,11 @@ impl TypeChecker {
                 params: vec![],
                 ret: Ty::Unit,
                 span: body.span,
+                generics: Vec::new(),
+                is_pub: false,
+                inferred_from_use: false,
+                instantiations: Vec::new(),
+                mono_args: None,
             },
         );
         Ok(())
@@ -706,10 +741,6 @@ impl TypeChecker {
         }
         let ret_ann = f.ret_type.as_ref().map(|t| self.ast_type(t)).transpose()?;
         let body_ty = self.infer_expr(&mut local, &f.body)?;
-        let param_types: Vec<(String, Ty)> = param_vars
-            .iter()
-            .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
-            .collect();
         let ret = if let Some(ann) = ret_ann {
             unify(&mut self.ctx, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
@@ -722,7 +753,39 @@ impl TypeChecker {
         } else {
             self.ctx.apply(&body_ty)
         };
+        let param_types: Vec<(String, Ty)> = param_vars
+            .iter()
+            .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
+            .collect();
+        let ret = self.ctx.apply(&ret);
         let fn_params: Vec<Ty> = param_types.iter().map(|(_, t)| t.clone()).collect();
+        let mut fn_ty = Ty::Fn {
+            params: fn_params,
+            ret: Box::new(ret.clone()),
+        };
+        let mut gens = gens;
+        let mut param_types = param_types;
+        let mut ret = ret;
+        let mut inferred_from_use = false;
+        // Unannotated items with leftover free vars become a scheme (#76).
+        // Forward-ref calls that already pinned the stub stay monomorphic.
+        // Explicit `<>` / free type names (`x: T`) are pins and are not specialized.
+        if gens.is_empty() {
+            let (named, inferred) = name_free_vars(&fn_ty);
+            if !inferred.is_empty() {
+                fn_ty = named;
+                gens = inferred;
+                inferred_from_use = true;
+                if let Ty::Fn { params, ret: r } = &fn_ty {
+                    for (i, t) in params.iter().enumerate() {
+                        if let Some(slot) = param_types.get_mut(i) {
+                            slot.1 = t.clone();
+                        }
+                    }
+                    ret = r.as_ref().clone();
+                }
+            }
+        }
         let key = format!("{module}::{}", f.name.name);
         self.signatures.insert(
             key,
@@ -733,12 +796,13 @@ impl TypeChecker {
                 params: param_types,
                 ret: ret.clone(),
                 span: f.span,
+                generics: gens.clone(),
+                is_pub: f.is_pub,
+                inferred_from_use,
+                instantiations: Vec::new(),
+                mono_args: None,
             },
         );
-        let fn_ty = Ty::Fn {
-            params: fn_params,
-            ret: Box::new(ret),
-        };
         self.env.insert(
             f.name.name.clone(),
             if gens.is_empty() {
@@ -749,6 +813,55 @@ impl TypeChecker {
         );
         self.generic_params = saved;
         Ok(())
+    }
+
+    /// Record call-site instantiations. Internal single-use schemes set `mono_args`
+    /// for emit; the typeck scheme stays generic so ownership still sees `T` (#76).
+    fn specialize_internal_functions(&mut self) {
+        let insts = std::mem::take(&mut self.fn_instantiations);
+        let keys: Vec<String> = self.signatures.keys().cloned().collect();
+        for key in keys {
+            let Some(sig) = self.signatures.get(&key) else {
+                continue;
+            };
+            if let Some(uses) = insts.get(&sig.name) {
+                let mut labels: Vec<String> = uses
+                    .iter()
+                    .map(|u| u.iter().map(format_ty).collect::<Vec<_>>().join(", "))
+                    .collect();
+                labels.sort();
+                labels.dedup();
+                if let Some(sig) = self.signatures.get_mut(&key) {
+                    sig.instantiations = labels;
+                }
+            }
+            let Some(sig) = self.signatures.get(&key) else {
+                continue;
+            };
+            if sig.is_pub
+                || !sig.inferred_from_use
+                || sig.generics.is_empty()
+                || sig.impl_ty.is_some()
+            {
+                continue;
+            }
+            let Some(uses) = insts.get(&sig.name) else {
+                continue;
+            };
+            if uses.is_empty() {
+                continue;
+            }
+            let first = &uses[0];
+            if !first.iter().all(ty_is_ground) {
+                continue;
+            }
+            if !uses.iter().all(|u| u == first) {
+                continue;
+            }
+            if let Some(sig) = self.signatures.get_mut(&key) {
+                sig.mono_args = Some(first.clone());
+            }
+        }
     }
 
     fn infer_expr(&mut self, env: &mut TypeEnv, expr: &Expr) -> Result<Ty, TypeError> {
@@ -851,9 +964,18 @@ impl TypeChecker {
                         found: format!("{} arguments", args.len()),
                     }));
                 }
-                for (arg, pty) in args.iter().zip(params) {
+                for (arg, pty) in args.iter().zip(params.iter()) {
                     let aty = self.infer_expr(env, arg)?;
-                    self.unify_or_shape(&aty, &pty)?;
+                    self.unify_or_shape(&aty, pty)?;
+                }
+                if let ExprKind::Ident(id) = &func.kind {
+                    let applied: Vec<Ty> = params.iter().map(|p| self.ctx.apply(p)).collect();
+                    if applied.iter().all(ty_is_ground) {
+                        self.fn_instantiations
+                            .entry(id.name.clone())
+                            .or_default()
+                            .push(applied);
+                    }
                 }
                 Ok(self.ctx.apply(&ret))
             }
@@ -1126,6 +1248,7 @@ impl TypeChecker {
         match &pat.kind {
             PatKind::Wildcard => Ok(()),
             PatKind::Ident(id) => {
+                // Value restriction (#78): locals and `mut` bindings stay monomorphic.
                 env.insert(id.name.clone(), scheme(self.ctx.apply(ty)));
                 Ok(())
             }
@@ -1698,6 +1821,49 @@ fn subst_named_params(ty: &Ty, subst: &BTreeMap<String, Ty>) -> Ty {
         Ty::Tuple(ts) => Ty::Tuple(ts.iter().map(|t| subst_named_params(t, subst)).collect()),
         other => other.clone(),
     }
+}
+
+fn ty_is_ground(ty: &Ty) -> bool {
+    let mut vars = Vec::new();
+    collect_free_vars(ty, &mut vars);
+    vars.is_empty()
+}
+
+fn generic_name(i: usize) -> String {
+    match i {
+        0 => "T".into(),
+        1 => "U".into(),
+        2 => "V".into(),
+        3 => "W".into(),
+        n => format!("T{n}"),
+    }
+}
+
+fn name_free_vars(ty: &Ty) -> (Ty, Vec<String>) {
+    let mut vars = Vec::new();
+    collect_free_vars(ty, &mut vars);
+    vars.sort_unstable();
+    vars.dedup();
+    if vars.is_empty() {
+        return (ty.clone(), Vec::new());
+    }
+    let names: Vec<String> = vars
+        .iter()
+        .enumerate()
+        .map(|(i, _)| generic_name(i))
+        .collect();
+    let mut named = ty.clone();
+    for (v, name) in vars.iter().zip(&names) {
+        named = substitute_var(
+            &named,
+            *v,
+            &Ty::Named {
+                name: name.clone(),
+                args: vec![],
+            },
+        );
+    }
+    (named, names)
 }
 
 fn generalize_named_params(ty: &Ty, gens: &[String], ctx: &mut InferContext) -> Scheme {

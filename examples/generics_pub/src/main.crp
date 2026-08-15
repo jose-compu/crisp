@@ -1,0 +1,28 @@
+-- examples/generics_pub — polymorphism is a publication artifact (#76)
+
+id(x) = x
+once(x) = x
+pub identity(x) = x
+
+test "poly id" = {
+    assert_eq(id(1), 1)
+    assert_eq(id("a"), "a")
+}
+
+test "mono once" = {
+    assert_eq(once(7), 7)
+}
+
+test "pub identity" = {
+    assert_eq(identity(3), 3)
+    assert_eq(identity("hi"), "hi")
+}
+
+pub main() = {
+    a := id(1)
+    b := id("ok")
+    c := once(2)
+    d := identity(3)
+    e := identity("hi")
+    log("a={a} b={b} c={c} d={d} e={e}")
+}

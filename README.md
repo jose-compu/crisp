@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jose-compu/crisp/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/crisp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.2-0A66C2.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.6.0-0A66C2.svg)](CHANGELOG.md)
 [![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
 [![Tests](https://img.shields.io/badge/tests-271-brightgreen.svg)](.github/workflows/ci.yml)
 [![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
@@ -16,7 +16,7 @@
 
 Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crisp` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
 
-**This is a Rust-hosted bootstrap compiler (v1.5.2) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
+**This is a Rust-hosted bootstrap compiler (v1.6.0) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
 Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (`CrispError::Thrown` + `?`) — see `examples/rust_import`, `examples/net_http` (#55).
 
@@ -27,7 +27,7 @@ Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  
 **Security:** [SECURITY.md](SECURITY.md)  
-**Milestone:** [v1.5.0](https://github.com/jose-compu/crisp/milestone/6)
+**Milestone:** [v1.6.0](https://github.com/jose-compu/crisp/milestones)
 
 License: **MIT OR Apache-2.0** ([LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE)).
 
@@ -90,6 +90,7 @@ Rust emission  ──►  rustc  ──►  native binary
 | Functions | `name(args) = expr` or `{ … }` block | `fn` with inferred/annotated params |
 | Bindings | `x := value` | `let` / `let mut` |
 | Types | `type T = { … }`, `float`, `int`, `str`, … | Rust structs / aliases / `f64` / `i64` / `String` |
+| Generics | Prefer `id(x: T)`, `type Pair = { left: A, right: B }`; `<>` pins / applies | Rust type params (`T: Clone` on emit) |
 | Errors | `f() ! E`, `throw`, `catch` | `Result<T, CrispError>` |
 | Modules | one file = one module; `use m { f }` | generated `mod` tree |
 | Tests | `test`, `test_compile_fail` | injected `#[test]` in emitted crate |
@@ -99,7 +100,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.5.2** — `crisp` / `crisp-lang` naming (#68); crates.io republish (#66). Includes v1.5.1 loops and v1.5.0 shapes / LSP / traits.
+**v1.6.0** — implicit generics (preferred), parametric shapes, `pub` schemes in `crisp.lock` (#70 / #71 / #75–#78). Closures (#72) are scheduled for v1.7.0.
 
 **Still open:** first crates.io publish track ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 
@@ -134,11 +135,21 @@ error_model = "enum"
 EOF
 
 cat > src/main.crp <<'EOF'
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }
 EOF
 
@@ -181,9 +192,9 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 
 | Example | Topics | Notes |
 |---------|--------|--------|
-| `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crisp test` |
+| `hello`, `math`, `float_demo`, `enums` | Shapes, implicit generics, integers, floats, enum + match | `crisp test` |
 | `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crisp test` |
-| `generics`, `generics_implicit`, `generics_pub`, `shapes_generic` | Type/function/trait params; free names; pub schemes vs internal mono | `crisp test` |
+| `generics_implicit`, `generics`, `generics_pub`, `shapes_generic` | Implicit binders (preferred), pins, pub schemes, `shape Boxy` | `crisp test` |
 | `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |

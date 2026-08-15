@@ -1,3 +1,4 @@
+use crisp_ast::Item;
 use crisp_parser::Parser;
 use std::fs;
 use std::path::PathBuf;
@@ -20,5 +21,13 @@ fn parse_hello_has_main_and_greet() {
     let src = hello_source();
     let mut parser = Parser::new(&src).expect("lexer");
     let items = parser.parse_module().expect("parse hello");
-    assert_eq!(items.len(), 2);
+    let fns: Vec<_> = items
+        .iter()
+        .filter_map(|item| match item {
+            Item::Function(f) => Some(f.name.name.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert!(fns.contains(&"greet"));
+    assert!(fns.contains(&"main"));
 }

@@ -15,10 +15,29 @@ pub trait Ord {
     fn compare(&self, other: &Self) -> i64;
 }
 
-fn greet(name: &str) -> String {
-    format!("{}{}", "hello ".to_string(), name)
+trait Named {
+    fn name(&self) -> String;
+}
+impl Named for Guest {
+    fn name(&self) -> String { self.name.clone() }
+}
+
+#[derive(Debug, Clone)]
+struct Guest {pub name: String}
+impl Guest {
+    pub fn with(name: Option<String>) -> Self {
+        Self {
+            name: name.unwrap_or_else(|| "world".into()),
+        }
+    }
+}
+fn id<T: Clone>(x: T) -> T {
+    x
+}
+fn greet<S0: Named>(who: &S0) -> String {
+    format!("hello {}", who.name())
 }
 pub fn main() {
-    let msg = greet("world");
-    println!("{:?}", msg);
+    let world = Guest::with(None);
+    println!("{:?}", id(greet(&world)));
 }

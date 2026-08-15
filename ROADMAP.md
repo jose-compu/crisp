@@ -313,13 +313,14 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.5.0**. Active milestones:
+Current compiler: **v1.6.0**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
 | **v1.4.x** | patch/minor | Interop, traits, Show/Eq/Ord, net/http, preview hygiene (shipped) | [v1.4.0](https://github.com/jose-compu/crisp/milestone/5) · [v1.4.1](https://github.com/jose-compu/crisp/milestone/7) |
 | **v1.5.0** | minor | Public launch: Result `?`, data shapes, stdio LSP, VSIX, trait defaults | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
-| **v1.6.0** | minor | Language depth: user generics (#71), parametric shapes (#70), first-class closures (#72) | label `release:v1.6.0` |
+| **v1.6.0** | minor | Generics (implicit preferred), parametric shapes, pub schemes | label `release:v1.6.0` |
+| **v1.7.0** | minor | First-class closures / function values (#72) | label `release:v1.7.0` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -327,23 +328,30 @@ Current compiler: **v1.5.0**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.5.2) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md); was [#60](https://github.com/jose-compu/crisp/issues/60)) |
-| **P2** | v1.6 language: generics, parametric shapes, closures | [#71](https://github.com/jose-compu/crisp/issues/71), [#70](https://github.com/jose-compu/crisp/issues/70), [#72](https://github.com/jose-compu/crisp/issues/72) |
+| **P1** | crates.io republish (v1.6.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-### Planned — v1.6.0 (language depth)
+### Shipped — v1.6.0 (generics)
 
-Closures and explicit generics deepen the “compact source → explicit Rust” story without changing the soundness model (`rustc` remains truth).
+Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` remains a pin and is used for applications.
+
+- [x] **User-facing generics** — types / functions / traits end-to-end — [#71](https://github.com/jose-compu/crisp/issues/71)
+- [x] **Parametric shapes** — `shape Name = { value: T }` / `shape Name<T>` — [#70](https://github.com/jose-compu/crisp/issues/70)
+- [x] **Implicit binders** — unbound type names are parameters — [#75](https://github.com/jose-compu/crisp/issues/75)
+- [x] **Impl inference + `+` bounds** — [#77](https://github.com/jose-compu/crisp/issues/77)
+- [x] **Publication schemes** — internal mono vs `pub` lock — [#76](https://github.com/jose-compu/crisp/issues/76)
+- [x] **Defaults** — value restriction, reveal `T: Clone`, E0080 — [#78](https://github.com/jose-compu/crisp/issues/78)
+
+### Planned — v1.7.0 (closures)
 
 - [ ] **Function values / closures** (spec §5.2–§5.3) — **one** callable kind; naming optional (`|x| …` or `f := …` / top-level sugar); lexical capture; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
-- [x] **User-facing generics** — types / functions / traits end-to-end — [#71](https://github.com/jose-compu/crisp/issues/71)
-- [x] **Parametric shapes** — `shape Name<T> = { … }` — [#70](https://github.com/jose-compu/crisp/issues/70)
 
 **Design note (#72, thanks [@aurelianito](https://github.com/aurelianito)):** Crisp should have **only closures** (first-class function values). Named “functions” are the same values bound to a name when useful — not a Ruby-style function-vs-closure split, and not a Java anonymous-inner-class escape hatch. Capture is lexical; ownership decides borrow/`move`. Emit may lower top-level named bindings to Rust `fn` and locals to Rust closures as a specialization, not as two language concepts.
 
 ---
 
-*Last updated: 2026-08-15 — v1.6.0: generics (#71) and parametric shapes (#70) implemented; closures (#72) remain.*
+*Last updated: 2026-08-15 — v1.6.0 ships generics (implicit preferred); closures (#72) move to v1.7.0.*

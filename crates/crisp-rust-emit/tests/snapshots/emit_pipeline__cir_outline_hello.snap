@@ -4,5 +4,7 @@ expression: cir_outline(&cir)
 ---
 package hello
 module main
-  fn greet(name)
+  struct Guest {name}
+  fn id(x)
+  fn greet(who)
   fn main()

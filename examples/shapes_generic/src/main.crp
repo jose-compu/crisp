@@ -1,6 +1,6 @@
 -- examples/shapes_generic — parametric data shapes (#70)
 
-shape Boxy<T> = {
+shape Boxy = {
     value: T
 }
 
@@ -16,6 +16,42 @@ unwrap_int(b: Boxy<int>) = b.value
 
 unwrap_str(b: Boxy<str>) = b.value
 
+-- Parametric position: any struct with x/y of the applied type matches.
+-- A single `distance(a: HasPosition<T>, b: HasPosition<T>)` does not
+-- instantiate T at the call site (T stays a named type). Apply int/float.
+shape HasPosition = {
+    x: T
+    y: T
+}
+
+type Point = {
+    x: int
+    y: int
+}
+
+type Vec2 = {
+    x: int
+    y: int
+}
+
+type FPoint = {
+    x: float
+    y: float
+}
+
+-- Squared Euclidean distance (3-4-5 → 25). No sqrt builtin yet.
+distance(a: HasPosition<int>, b: HasPosition<int>) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+
+distance_f(a: HasPosition<float>, b: HasPosition<float>) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+
 test "int and str boxes" = {
     i := IntBox {
         value: 11
@@ -25,6 +61,30 @@ test "int and str boxes" = {
     }
     assert_eq(unwrap_int(i), 11)
     assert_eq(unwrap_str(s), "box")
+}
+
+test "int distance" = {
+    p := Point {
+        x: 0
+        y: 0
+    }
+    q := Vec2 {
+        x: 3
+        y: 4
+    }
+    assert_eq(distance(p, q), 25)
+}
+
+test "float distance" = {
+    p := FPoint {
+        x: 0.0
+        y: 0.0
+    }
+    q := FPoint {
+        x: 3.0
+        y: 4.0
+    }
+    assert_eq(distance_f(p, q), 25.0)
 }
 
 test_compile_fail "str box is not Boxy<int>" = {
@@ -41,5 +101,13 @@ pub main() = {
     s := StrBox {
         value: "ok"
     }
-    log("i={unwrap_int(i)} s={unwrap_str(s)}")
+    p := Point {
+        x: 0
+        y: 0
+    }
+    q := Vec2 {
+        x: 3
+        y: 4
+    }
+    log("i={unwrap_int(i)} s={unwrap_str(s)} d={distance(p, q)}")
 }

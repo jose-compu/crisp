@@ -439,7 +439,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `generics_implicit` | Preferred: free type names as binders — no `<T>` on defs (#75) |
 | `generics` | Explicit `<>` pins + parametric shapes (#70 / #71) |
 | `generics_pub` | Unannotated `id(x)=x` — internal mono vs `pub` scheme (#76) |
-| `shapes_generic` | `shape Boxy` applied as `Boxy<int>` / `Boxy<str>` (#70) |
+| `shapes_generic` | `shape Boxy`, `shape HasPosition` + squared Euclidean distance (#70) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |

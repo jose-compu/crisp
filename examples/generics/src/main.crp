@@ -1,0 +1,72 @@
+-- examples/generics — user-facing type/function/trait params + parametric shapes (#70 / #71)
+
+type Pair<A, B> = {
+    left: A
+    right: B
+}
+
+id<T>(x: T) = x
+
+first<A, B>(p: Pair<A, B>) = p.left
+
+shape Boxy<T> = {
+    value: T
+}
+
+type IntBox = {
+    value: int
+}
+
+type StrBox = {
+    value: str
+}
+
+unwrap_int(b: Boxy<int>) = b.value
+
+trait Wrapper<T> = {
+    unwrap(self) -> T
+}
+
+impl Wrapper<int> for IntBox = {
+    unwrap(self) = self.value
+}
+
+test "id and pair" = {
+    assert_eq(id(41), 41)
+    p := Pair {
+        left: 1
+        right: 2
+    }
+    assert_eq(first(p), 1)
+}
+
+test "parametric shape" = {
+    b := IntBox {
+        value: 7
+    }
+    assert_eq(unwrap_int(b), 7)
+}
+
+test "generic trait" = {
+    b := IntBox {
+        value: 3
+    }
+    assert_eq(b.unwrap(), 3)
+}
+
+pub main() = {
+    p := Pair {
+        left: 10
+        right: 20
+    }
+    n := first(p)
+    boxed := IntBox {
+        value: n
+    }
+    v := unwrap_int(boxed)
+    w := boxed.unwrap()
+    s := StrBox {
+        value: "ok"
+    }
+    log("n={n} v={v} w={w} s={s.value}")
+}

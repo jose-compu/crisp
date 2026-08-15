@@ -338,6 +338,18 @@ shape Measurable = { len(self) -> uint }
 Anonymous shapes (`a: { x: float, y: float }`) lower the same way, with a compiler-named
 trait.
 
+Parametric (generic) shapes use the same `<>` type parameters as types and functions:
+
+```rust
+shape Boxy<T> = { value: T }
+
+unwrap_int(b: Boxy<int>) = b.value
+```
+
+This lowers to a generic Rust trait (`trait Boxy<T> { fn value(&self) -> T; }`) plus
+structural impls (`impl Boxy<i64> for IntBox`). A bare `shape HasPosition` (no
+parameters) is unchanged.
+
 ### 3.6 Traits (Nominal Types)
 
 Traits are explicit semantic contracts and map directly to Rust traits.

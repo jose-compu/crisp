@@ -204,7 +204,8 @@ fn emit_module_items(
             CirItem::Trait(t) => emit_user_trait(out, t, map),
             CirItem::Impl(ib) => {
                 if let Some(tn) = &ib.trait_name {
-                    let _ = writeln!(out, "impl {tn} for {} {{", ib.ty_name);
+                    let args = format_ty_args(&ib.trait_args);
+                    let _ = writeln!(out, "impl {tn}{args} for {} {{", ib.ty_name);
                 } else {
                     let _ = writeln!(out, "impl {} {{", ib.ty_name);
                 }
@@ -234,7 +235,8 @@ fn emit_module_items(
 
 fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, t.span);
-    let _ = writeln!(out, "trait {} {{", t.name);
+    let gens = format_ty_params(&t.generics);
+    let _ = writeln!(out, "trait {}{gens} {{", t.name);
     for m in &t.methods {
         let params: Vec<_> = m
             .params
@@ -334,8 +336,9 @@ fn emit_extern_block(out: &mut String, ext: &crisp_cir::CirExternBlock, map: &mu
 fn emit_struct(out: &mut String, s: &CirStruct, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, s.span);
     let vis = if s.is_pub { "pub " } else { "" };
+    let gens = format_ty_params(&s.generics);
     let _ = writeln!(out, "#[derive(Debug, Clone)]");
-    let _ = write!(out, "{vis}struct {} {{", s.name);
+    let _ = write!(out, "{vis}struct {}{gens} {{", s.name);
     for (i, f) in s.fields.iter().enumerate() {
         if i > 0 {
             let _ = write!(out, ", ");
@@ -401,7 +404,8 @@ fn emit_variant(out: &mut String, v: &CirVariant) {
 }
 
 fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
-    let _ = writeln!(out, "trait {} {{", shape.name);
+    let gens = format_ty_params(&shape.generics);
+    let _ = writeln!(out, "trait {}{gens} {{", shape.name);
     for (name, ty) in &shape.fields {
         let _ = writeln!(out, "    fn {name}(&self) -> {};", format_ty(ty));
     }
@@ -421,13 +425,25 @@ fn emit_shape_trait(out: &mut String, shape: &CirShapeTrait) {
     }
     let _ = writeln!(out, "}}");
     for imp in &shape.impls {
-        let _ = writeln!(out, "impl {} for {} {{", shape.name, imp.ty_name);
+        let impl_gens = format_ty_params_bounded(&imp.ty_generics, "Clone");
+        let args = format_ty_args(&imp.args);
+        let ty = if imp.ty_generics.is_empty() {
+            imp.ty_name.clone()
+        } else {
+            format!("{}<{}>", imp.ty_name, imp.ty_generics.join(", "))
+        };
+        let _ = writeln!(
+            out,
+            "impl{impl_gens} {}{args} for {ty} {{",
+            shape.name
+        );
         for (name, ty) in &shape.fields {
-            let body = shape_accessor_body(name, ty);
+            let field_ty = subst_shape_field_ty(ty, &shape.generics, &imp.args);
+            let body = shape_accessor_body(name, &field_ty);
             let _ = writeln!(
                 out,
                 "    fn {name}(&self) -> {} {{ {body} }}",
-                format_ty(ty)
+                format_ty(&field_ty)
             );
         }
         let _ = writeln!(out, "}}");
@@ -468,17 +484,29 @@ fn emit_function(
 fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> String {
     let shape_names: std::collections::HashSet<&str> =
         cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
-    let mut type_params = Vec::new();
+    let mut type_params: Vec<String> = f
+        .generics
+        .iter()
+        .map(|g| format!("{g}: Clone"))
+        .collect();
     let mut params = Vec::new();
     let mut shape_i = 0usize;
     for p in &f.params {
-        if let CirTy::Named { name, .. } = &p.ty
+        if let CirTy::Named { name, args } = &p.ty
             && shape_names.contains(name.as_str())
             && p.name != "self"
         {
             let tp = format!("S{shape_i}");
             shape_i += 1;
-            type_params.push(format!("{tp}: {name}"));
+            let bound = if args.is_empty() {
+                name.clone()
+            } else {
+                format!(
+                    "{name}<{}>",
+                    args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+                )
+            };
+            type_params.push(format!("{tp}: {bound}"));
             params.push(format_param_with_ty(p, &tp, trait_impl));
         } else {
             params.push(format_param(p, trait_impl));
@@ -1446,6 +1474,57 @@ fn binop_rust(op: CirBinOp) -> &'static str {
         CirBinOp::Or => "||",
         CirBinOp::Pow => ".powf",
         CirBinOp::Concat => "+",
+    }
+}
+
+fn format_ty_params(gens: &[String]) -> String {
+    if gens.is_empty() {
+        String::new()
+    } else {
+        format!("<{}>", gens.join(", "))
+    }
+}
+
+fn format_ty_params_bounded(gens: &[String], bound: &str) -> String {
+    if gens.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<{}>",
+            gens.iter()
+                .map(|g| format!("{g}: {bound}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
+fn format_ty_args(args: &[CirTy]) -> String {
+    if args.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<{}>",
+            args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+        )
+    }
+}
+
+fn subst_shape_field_ty(ty: &CirTy, gens: &[String], args: &[CirTy]) -> CirTy {
+    match ty {
+        CirTy::Named { name, args: inner } if inner.is_empty() => gens
+            .iter()
+            .position(|g| g == name)
+            .and_then(|i| args.get(i).cloned())
+            .unwrap_or_else(|| ty.clone()),
+        CirTy::Named { name, args: inner } => CirTy::Named {
+            name: name.clone(),
+            args: inner
+                .iter()
+                .map(|a| subst_shape_field_ty(a, gens, args))
+                .collect(),
+        },
+        other => other.clone(),
     }
 }
 

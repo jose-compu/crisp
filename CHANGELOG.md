@@ -9,6 +9,12 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- User-facing generics end-to-end: `type Pair<A, B>`, `id<T>(x: T) = x`, `trait Wrapper<T>`, and type applications (`Pair<int, str>`) (#71).
+- Parametric shapes: `shape Boxy<T> = { value: T }` with applications `Boxy<int>` (#70).
+- Example: `examples/generics`.
+
 ## [1.5.2] — 2026-08-14
 
 ### Changed

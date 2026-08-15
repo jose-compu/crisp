@@ -114,6 +114,7 @@ fn analyze_all_examples() {
         "abnormal_suite",
         "design_patterns",
         "float_demo",
+        "generics",
     ] {
         eprintln!("analyze {name}");
         let root = example(name);

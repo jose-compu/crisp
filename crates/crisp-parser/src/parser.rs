@@ -132,7 +132,7 @@ impl Parser {
         }
 
         let name = self.expect_ident()?;
-        if self.check(TokenKind::LParen) {
+        if self.check(TokenKind::Lt) || self.check(TokenKind::LParen) {
             return Ok(Item::Function(
                 self.parse_function_after_name(is_pub, name)?,
             ));
@@ -153,6 +153,7 @@ impl Parser {
         name: Ident,
     ) -> Result<FunctionDef, ParseError> {
         let start = name.span.start;
+        let generics = self.parse_optional_generics()?;
         self.expect(TokenKind::LParen)?;
         let params = self.parse_params()?;
         self.expect(TokenKind::RParen)?;
@@ -172,7 +173,7 @@ impl Parser {
         Ok(FunctionDef {
             is_pub,
             name,
-            generics: vec![],
+            generics,
             params,
             ret_type,
             error_type,
@@ -307,6 +308,7 @@ impl Parser {
     fn parse_trait_def(&mut self) -> Result<TraitDef, ParseError> {
         let start = self.previous_start();
         let name = self.expect_ident()?;
+        let generics = self.parse_optional_generics()?;
         self.expect(TokenKind::Assign)?;
         self.expect(TokenKind::LBrace)?;
         let mut items = Vec::new();
@@ -316,6 +318,7 @@ impl Parser {
         self.expect(TokenKind::RBrace)?;
         Ok(TraitDef {
             name,
+            generics,
             items,
             span: Span::new(start, self.previous_end()),
         })
@@ -349,6 +352,7 @@ impl Parser {
     fn parse_shape_def(&mut self) -> Result<ShapeDef, ParseError> {
         let start = self.previous_start();
         let name = self.expect_ident()?;
+        let generics = self.parse_optional_generics()?;
         self.expect(TokenKind::Assign)?;
         self.expect(TokenKind::LBrace)?;
         let mut fields = Vec::new();
@@ -358,6 +362,7 @@ impl Parser {
         self.expect(TokenKind::RBrace)?;
         Ok(ShapeDef {
             name,
+            generics,
             fields,
             span: Span::new(start, self.previous_end()),
         })
@@ -390,6 +395,7 @@ impl Parser {
     fn parse_impl_block(&mut self) -> Result<ImplBlock, ParseError> {
         let start = self.previous_start();
         let first = self.expect_ident()?;
+        let trait_args = self.parse_optional_type_args()?;
         let (trait_name, ty) = if self.match_kw(Kw::For) {
             let ty = self.parse_type()?;
             (Some(first), ty)
@@ -414,6 +420,7 @@ impl Parser {
         }
         Ok(ImplBlock {
             trait_name,
+            trait_args,
             ty,
             items,
             span: Span::new(start, self.previous_end()),
@@ -675,6 +682,18 @@ impl Parser {
         }
         self.expect(TokenKind::Gt)?;
         Ok(names)
+    }
+
+    fn parse_optional_type_args(&mut self) -> Result<Vec<Type>, ParseError> {
+        if !self.match_token(TokenKind::Lt) {
+            return Ok(vec![]);
+        }
+        let mut args = vec![self.parse_type()?];
+        while self.match_token(TokenKind::Comma) {
+            args.push(self.parse_type()?);
+        }
+        self.expect(TokenKind::Gt)?;
+        Ok(args)
     }
 
     // ── Expressions ───────────────────────────────────────────────────────

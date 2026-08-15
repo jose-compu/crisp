@@ -71,6 +71,7 @@ pub struct VariantDef {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TraitDef {
     pub name: Ident,
+    pub generics: Vec<Ident>,
     pub items: Vec<TraitItem>,
     pub span: Span,
 }
@@ -87,6 +88,7 @@ pub struct TraitItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDef {
     pub name: Ident,
+    pub generics: Vec<Ident>,
     pub fields: Vec<ShapeField>,
     pub span: Span,
 }
@@ -109,6 +111,7 @@ pub enum ShapeField {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImplBlock {
     pub trait_name: Option<Ident>,
+    pub trait_args: Vec<Type>,
     pub ty: Type,
     pub items: Vec<FunctionDef>,
     pub span: Span,

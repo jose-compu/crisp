@@ -19,6 +19,7 @@ pub fn lower_struct(td: &TypeDef, field_types: &BTreeMap<String, Ty>) -> CirStru
     CirStruct {
         name: td.name.name.clone(),
         is_pub: td.is_pub,
+        generics: td.generics.iter().map(|g| g.name.clone()).collect(),
         fields,
         with_fn,
         span: td.span,
@@ -84,6 +85,21 @@ fn ast_type_to_cir(ty: &Type) -> CirTy {
                 args: vec![],
             },
         },
+        TypeKind::Generic { base, args } => {
+            let mut cir = ast_type_to_cir(base);
+            if let CirTy::Named { args: ref mut a, .. } = cir {
+                *a = args.iter().map(ast_type_to_cir).collect();
+            }
+            cir
+        }
+        TypeKind::Option(inner) => CirTy::Option(Box::new(ast_type_to_cir(inner))),
+        TypeKind::Tuple(ts) => CirTy::Tuple(ts.iter().map(ast_type_to_cir).collect()),
+        TypeKind::Ref { mutable, inner } => CirTy::Ref {
+            mutable: *mutable,
+            inner: Box::new(ast_type_to_cir(inner)),
+        },
+        TypeKind::Never => CirTy::Never,
+        TypeKind::Unit => CirTy::Unit,
         _ => CirTy::Error,
     }
 }
@@ -181,17 +197,15 @@ pub fn synthesize_shape_trait(shape: &ShapeDef, structs: &[(String, CirStruct)])
         }
     }
 
+    let shape_gens: Vec<String> = shape.generics.iter().map(|g| g.name.clone()).collect();
     let impls: Vec<CirShapeImpl> = structs
         .iter()
-        .filter(|(_, s)| struct_matches_shape(s, &fields))
-        .map(|(_module, s)| CirShapeImpl {
-            ty_name: s.name.clone(),
-            span: s.span,
-        })
+        .filter_map(|(_module, s)| infer_shape_impl(s, &fields, &shape_gens))
         .collect();
 
     CirShapeTrait {
         name: shape.name.name.clone(),
+        generics: shape_gens,
         fields,
         methods,
         impls,
@@ -199,23 +213,76 @@ pub fn synthesize_shape_trait(shape: &ShapeDef, structs: &[(String, CirStruct)])
     }
 }
 
-fn struct_matches_shape(s: &CirStruct, shape_fields: &[(String, CirTy)]) -> bool {
-    shape_fields.iter().all(|(name, sty)| {
-        s.fields
-            .iter()
-            .find(|f| &f.name == name)
-            .is_some_and(|f| types_compatible(&f.ty, sty))
+fn infer_shape_impl(
+    s: &CirStruct,
+    shape_fields: &[(String, CirTy)],
+    shape_gens: &[String],
+) -> Option<CirShapeImpl> {
+    let mut subst: BTreeMap<String, CirTy> = BTreeMap::new();
+    for (name, sty) in shape_fields {
+        let field = s.fields.iter().find(|f| &f.name == name)?;
+        bind_or_check(&field.ty, sty, shape_gens, &mut subst)?;
+    }
+    let args: Vec<CirTy> = shape_gens
+        .iter()
+        .map(|g| subst.get(g).cloned())
+        .collect::<Option<Vec<_>>>()?;
+    Some(CirShapeImpl {
+        ty_name: s.name.clone(),
+        ty_generics: s.generics.clone(),
+        args,
+        span: s.span,
     })
+}
+
+fn bind_or_check(
+    concrete: &CirTy,
+    pattern: &CirTy,
+    gens: &[String],
+    subst: &mut BTreeMap<String, CirTy>,
+) -> Option<()> {
+    match pattern {
+        CirTy::Named { name, args } if args.is_empty() && gens.iter().any(|g| g == name) => {
+            if let Some(prev) = subst.get(name) {
+                if types_compatible(prev, concrete) {
+                    Some(())
+                } else {
+                    None
+                }
+            } else {
+                subst.insert(name.clone(), concrete.clone());
+                Some(())
+            }
+        }
+        _ => {
+            if types_compatible(concrete, pattern) {
+                Some(())
+            } else {
+                None
+            }
+        }
+    }
 }
 
 fn types_compatible(a: &CirTy, b: &CirTy) -> bool {
     match (a, b) {
-        (CirTy::Named { name: na, .. }, CirTy::Named { name: nb, .. }) => na == nb,
+        (
+            CirTy::Named {
+                name: na,
+                args: aa,
+            },
+            CirTy::Named {
+                name: nb,
+                args: ab,
+            },
+        ) => na == nb && aa.len() == ab.len() && aa.iter().zip(ab).all(|(x, y)| types_compatible(x, y)),
         (CirTy::Int, CirTy::Int)
         | (CirTy::UInt, CirTy::UInt)
         | (CirTy::Float, CirTy::Float)
         | (CirTy::Bool, CirTy::Bool)
-        | (CirTy::Str, CirTy::Str) => true,
+        | (CirTy::Str, CirTy::Str)
+        | (CirTy::Char, CirTy::Char) => true,
+        (CirTy::Option(a), CirTy::Option(b)) => types_compatible(a, b),
         _ => false,
     }
 }

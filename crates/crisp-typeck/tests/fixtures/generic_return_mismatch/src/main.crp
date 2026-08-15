@@ -1,0 +1,5 @@
+id<T>(x: T) -> int = x
+
+pub main() = {
+    id(1)
+}

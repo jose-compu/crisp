@@ -172,6 +172,7 @@ fn spec_s20_all_examples_typecheck() {
         "rust_import",
         "rust_shadow",
         "generics",
+        "shapes_generic",
     ] {
         eprintln!("§20 typecheck {name}");
         TypeChecker::check_crate(&example(name)).unwrap_or_else(|e| panic!("{name}: {e}"));

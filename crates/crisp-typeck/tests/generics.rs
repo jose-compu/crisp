@@ -1,33 +1,102 @@
 //! User-facing generics + parametric shapes (#70 / #71).
 
-use crisp_typeck::{TypeChecker, format_sig};
+use crisp_typeck::{TypeChecker, TypeError, format_sig};
 use std::path::PathBuf;
 
 fn generics_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/generics")
 }
 
+fn shapes_generic_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/shapes_generic")
+}
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
+}
+
+fn sig_named<'a>(typed: &'a crisp_typeck::TypedCrate, name: &str) -> &'a crisp_typeck::InferredSig {
+    typed
+        .signatures
+        .values()
+        .find(|s| s.name == name)
+        .unwrap_or_else(|| panic!("missing signature {name}"))
+}
+
 #[test]
 fn generics_example_typechecks() {
     let typed = TypeChecker::check_crate(&generics_root()).expect("typecheck generics");
-    let mut names: Vec<_> = typed.signatures.keys().cloned().collect();
-    names.sort();
-    assert!(
-        names.iter().any(|k| k.ends_with("::id")),
-        "expected id signature, got {names:?}"
-    );
-    assert!(
-        names.iter().any(|k| k.ends_with("::first")),
-        "expected first signature, got {names:?}"
-    );
-    assert!(
-        names.iter().any(|k| k.ends_with("::unwrap_int")),
-        "expected unwrap_int signature, got {names:?}"
-    );
-    let id = typed
+    let id = format_sig(sig_named(&typed, "id"));
+    let first = format_sig(sig_named(&typed, "first"));
+    let second = format_sig(sig_named(&typed, "second"));
+    let unwrap_int = format_sig(sig_named(&typed, "unwrap_int"));
+    let unwrap_str = format_sig(sig_named(&typed, "unwrap_str"));
+    eprintln!("id: {id}");
+    eprintln!("first: {first}");
+    eprintln!("second: {second}");
+    eprintln!("unwrap_int: {unwrap_int}");
+    eprintln!("unwrap_str: {unwrap_str}");
+    assert_eq!(id, "id(x: T) -> T");
+    assert_eq!(first, "first(p: Pair<A, B>) -> A");
+    assert_eq!(second, "second(p: Pair<A, B>) -> B");
+    assert_eq!(unwrap_int, "unwrap_int(b: Boxy<int>) -> int");
+    assert_eq!(unwrap_str, "unwrap_str(b: Boxy<str>) -> str");
+    let mut trait_unwraps: Vec<_> = typed
         .signatures
         .values()
-        .find(|s| s.name == "id")
-        .expect("id");
-    eprintln!("id: {}", format_sig(id));
+        .filter(|s| s.name == "unwrap")
+        .map(|s| (s.impl_ty.clone(), format_sig(s)))
+        .collect();
+    trait_unwraps.sort();
+    assert!(
+        trait_unwraps.iter().any(
+            |(ty, sig)| ty.as_deref() == Some("IntBox") && sig == "unwrap(self: IntBox) -> int"
+        ),
+        "expected IntBox unwrap, got {trait_unwraps:?}"
+    );
+    assert!(
+        trait_unwraps.iter().any(
+            |(ty, sig)| ty.as_deref() == Some("StrBox") && sig == "unwrap(self: StrBox) -> str"
+        ),
+        "expected StrBox unwrap, got {trait_unwraps:?}"
+    );
+}
+
+#[test]
+fn shapes_generic_example_typechecks() {
+    let typed = TypeChecker::check_crate(&shapes_generic_root()).expect("typecheck shapes_generic");
+    assert_eq!(
+        format_sig(sig_named(&typed, "unwrap_int")),
+        "unwrap_int(b: Boxy<int>) -> int"
+    );
+    assert_eq!(
+        format_sig(sig_named(&typed, "unwrap_str")),
+        "unwrap_str(b: Boxy<str>) -> str"
+    );
+}
+
+#[test]
+fn parametric_shape_rejects_wrong_field_type() {
+    let err = TypeChecker::check_crate(&fixture("shape_generic_mismatch"))
+        .expect_err("StrBox must not satisfy Boxy<int>");
+    let msg = err.to_string();
+    eprintln!("mismatch: {msg}");
+    assert!(
+        matches!(err, TypeError::Unify(_)) || msg.contains("shape") || msg.contains("mismatch"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn rigid_param_rejects_concrete_return() {
+    let err = TypeChecker::check_crate(&fixture("generic_return_mismatch"))
+        .expect_err("id<T>(x: T) -> int must not typecheck");
+    let msg = err.to_string();
+    eprintln!("rigid return: {msg}");
+    assert!(
+        matches!(err, TypeError::Unify(_)) || msg.contains("mismatch") || msg.contains("T"),
+        "{msg}"
+    );
 }

@@ -184,10 +184,18 @@ Explicit generics use `<>` (inference stays the default):
 
 ```crisp
 type Pair<A, B> = { left: A, right: B }
+
 id<T>(x: T) = x
+first<A, B>(p: Pair<A, B>) = p.left
+
+shape Boxy<T> = { value: T }
+unwrap_int(b: Boxy<int>) = b.value
+
+trait Wrapper<T> = { unwrap(self) -> T }
+impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
 ```
 
-See `examples/generics`. Parametric shapes: `shape Boxy<T> = { value: T }`.
+See `examples/generics` and `examples/shapes_generic`. `where` clauses and rich `T: Show` bounds are still limited.
 
 ## 5. Structs
 
@@ -399,6 +407,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |
 | `shapes` | Data `shape` → generated trait + structural calls (§3.5 / #61) |
 | `generics` | Type / function / trait params + parametric shapes (#70 / #71) |
+| `shapes_generic` | `shape Boxy<T>` applied as `Boxy<int>` / `Boxy<str>` (#70) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |

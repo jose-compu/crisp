@@ -9,6 +9,8 @@ id<T>(x: T) = x
 
 first<A, B>(p: Pair<A, B>) = p.left
 
+second<A, B>(p: Pair<A, B>) = p.right
+
 shape Boxy<T> = {
     value: T
 }
@@ -23,11 +25,17 @@ type StrBox = {
 
 unwrap_int(b: Boxy<int>) = b.value
 
+unwrap_str(b: Boxy<str>) = b.value
+
 trait Wrapper<T> = {
     unwrap(self) -> T
 }
 
 impl Wrapper<int> for IntBox = {
+    unwrap(self) = self.value
+}
+
+impl Wrapper<str> for StrBox = {
     unwrap(self) = self.value
 }
 
@@ -38,6 +46,22 @@ test "id and pair" = {
         right: 2
     }
     assert_eq(first(p), 1)
+    assert_eq(second(p), 2)
+    q := Pair {
+        left: 8
+        right: 9
+    }
+    assert_eq(first(q), 8)
+    assert_eq(second(q), 9)
+}
+
+test "mixed pair" = {
+    p := Pair {
+        left: 3
+        right: "hi"
+    }
+    assert_eq(first(p), 3)
+    assert_eq(second(p), "hi")
 }
 
 test "parametric shape" = {
@@ -45,6 +69,10 @@ test "parametric shape" = {
         value: 7
     }
     assert_eq(unwrap_int(b), 7)
+    s := StrBox {
+        value: "ok"
+    }
+    assert_eq(unwrap_str(s), "ok")
 }
 
 test "generic trait" = {
@@ -52,6 +80,17 @@ test "generic trait" = {
         value: 3
     }
     assert_eq(b.unwrap(), 3)
+    s := StrBox {
+        value: "w"
+    }
+    assert_eq(s.unwrap(), "w")
+}
+
+test_compile_fail "str box is not Boxy<int>" = {
+    s := StrBox {
+        value: "no"
+    }
+    unwrap_int(s)
 }
 
 pub main() = {
@@ -68,5 +107,9 @@ pub main() = {
     s := StrBox {
         value: "ok"
     }
-    log("n={n} v={v} w={w} s={s.value}")
+    mixed := Pair {
+        left: n
+        right: unwrap_str(s)
+    }
+    log("n={n} v={v} w={w} s={second(mixed)} mix={first(mixed)}")
 }

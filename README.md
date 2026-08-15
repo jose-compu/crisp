@@ -183,6 +183,7 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 |---------|--------|--------|
 | `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crisp test` |
 | `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crisp test` |
+| `generics`, `shapes_generic` | Type/function/trait params, `shape Boxy<T>` | `crisp test` |
 | `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |
 | `defaults`, `inventory`, `server` | Struct defaults, domain modules, config | |
 | `fallible`, `fallible_chain` | `!`, `throw`, `catch`, error chains | |

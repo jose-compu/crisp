@@ -1,0 +1,16 @@
+shape Boxy<T> = {
+    value: T
+}
+
+type StrBox = {
+    value: str
+}
+
+unwrap_int(b: Boxy<int>) = b.value
+
+pub main() = {
+    s := StrBox {
+        value: "no"
+    }
+    unwrap_int(s)
+}

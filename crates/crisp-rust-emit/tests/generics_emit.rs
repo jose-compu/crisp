@@ -78,3 +78,23 @@ fn shapes_generic_emits_and_runs() {
         r.compile_fail_passed
     );
 }
+
+#[test]
+fn generics_implicit_emits_and_runs() {
+    let cir = CirBuilder::build_crate(&example("generics_implicit")).expect("cir");
+    let src = emit_crate(&cir).lib_rs;
+    eprintln!("emitted implicit:\n{src}");
+    assert!(src.contains("struct Pair<A, B>"), "Pair:\n{src}");
+    assert!(src.contains("fn id<T: Clone>"), "id:\n{src}");
+    assert!(src.contains("trait Boxy<T>"), "Boxy:\n{src}");
+    assert!(src.contains("trait Wrapper<T>"), "Wrapper:\n{src}");
+    let run = run_emitted(&example("generics_implicit")).expect("run");
+    assert!(run.contains("n=10"), "stdout: {run}");
+    let r = run_tests(&example("generics_implicit")).expect("test");
+    assert!(r.runtime_passed >= 4, "runtime_passed={}", r.runtime_passed);
+    assert!(
+        r.compile_fail_passed >= 1,
+        "compile_fail_passed={}",
+        r.compile_fail_passed
+    );
+}

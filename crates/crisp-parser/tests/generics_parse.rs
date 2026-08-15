@@ -136,6 +136,45 @@ fn mixed_type_application_parses() {
 }
 
 #[test]
+fn free_type_names_parse_without_binder() {
+    let src = r#"
+type Pair = {
+    left: A
+    right: B
+}
+
+id(x: T) = x
+shape Boxy = {
+    value: T
+}
+trait Wrapper = {
+    unwrap(self) -> T
+}
+"#;
+    let mut p = Parser::new(src).expect("lex");
+    let file = p.parse_file().expect("free names should parse");
+    let Item::TypeDef(td) = &file.items[0] else {
+        panic!("expected TypeDef");
+    };
+    assert!(
+        td.generics.is_empty(),
+        "binder is inferred later, not at parse"
+    );
+    let Item::Function(f) = &file.items[1] else {
+        panic!("expected Function");
+    };
+    assert!(f.generics.is_empty());
+    let Item::ShapeDef(s) = &file.items[2] else {
+        panic!("expected ShapeDef");
+    };
+    assert!(s.generics.is_empty());
+    let Item::TraitDef(t) = &file.items[3] else {
+        panic!("expected TraitDef");
+    };
+    assert!(t.generics.is_empty());
+}
+
+#[test]
 fn impl_without_trait_args_still_parses() {
     let src = r#"
 impl Show for IntBox = {

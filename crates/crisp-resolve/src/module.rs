@@ -1,4 +1,5 @@
 use crate::error::ResolveError;
+use crisp_ast::generics::{apply_implicit_generics, defined_type_names, prelude_type_set};
 use crisp_ast::item::SourceFile;
 use crisp_parser::Parser;
 use std::collections::BTreeMap;
@@ -53,11 +54,31 @@ pub fn load_module_graph(crate_root: &Path) -> Result<ModuleGraph, ResolveError>
         });
     }
 
+    apply_free_type_binders(&mut modules)?;
+
     Ok(ModuleGraph {
         crate_root: crate_root.to_path_buf(),
         src_root,
         modules,
     })
+}
+
+/// Unbound type names become item generics (#75). Explicit `<T>` that shadows a
+/// known type is E0049 (#78).
+fn apply_free_type_binders(modules: &mut BTreeMap<String, ModuleNode>) -> Result<(), ResolveError> {
+    let mut known = prelude_type_set();
+    for node in modules.values() {
+        known.extend(defined_type_names(&node.ast.items));
+    }
+    for node in modules.values_mut() {
+        apply_implicit_generics(&mut node.ast.items, &known).map_err(|shadow| {
+            ResolveError::GenericShadowsType {
+                name: shadow.name,
+                span: shadow.span,
+            }
+        })?;
+    }
+    Ok(())
 }
 
 fn collect_crp_files(

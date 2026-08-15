@@ -420,16 +420,24 @@ Lowers to a generic bound combining the generated shape trait and the nominal tr
 Inferred from usage; explicit `<>` when needed. The same brackets are used on
 `type`, functions, `trait`, and `shape` (see §3.5 for parametric shapes).
 
+Unbound names in type position are parameters. A name that is already a type
+(prelude, `type` / `shape` / `trait` in scope) is that type. An explicit binder
+that shadows a type is an error. `<>` on a definition is a pin.
+
 ```rust
 identity(x) = x
 -- reveal: identity<T>(x: T) -> T
 
+id(x: T) = x
+type Pair = { left: A, right: B }
+first(p: Pair<A, B>) = p.left
+shape Boxy = { value: T }
+trait Wrapper = { unwrap(self) -> T }
+
+-- pins (equivalent):
 id<T>(x: T) = x
-
 type Pair<A, B> = { left: A, right: B }
-first<A, B>(p: Pair<A, B>) = p.left
 
-trait Wrapper<T> = { unwrap(self) -> T }
 impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
 
 convert<T, U>(x: T) -> U where T: Into<U> = x.into()
@@ -437,7 +445,8 @@ convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 
 Applications use the same `<>` (`Pair<int, str>`, `Boxy<int>`, `Wrapper<int>`).
 `where` clauses lower verbatim to Rust when present; the bootstrap currently
-ships explicit params without `where` / HRTB.
+ships explicit params without `where` / HRTB. Unannotated `identity(x) = x`
+generalization from use sites is still inferred-at-`pub` (see Design B).
 
 ---
 

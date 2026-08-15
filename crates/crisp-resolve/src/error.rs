@@ -61,6 +61,10 @@ pub enum ResolveError {
     RustImportNeedsList { name: String, span: Span },
     #[error("[E0047] invalid `use rust` path `{path}`; expected `use rust.<crate> {{ … }}`")]
     RustUsePathInvalid { path: String, span: Span },
+    #[error(
+        "[E0049] generic parameter `{name}` shadows a type of the same name; rename the parameter or drop the `<{name}>` binder"
+    )]
+    GenericShadowsType { name: String, span: Span },
     #[error("failed to read crisp.toml at {root}: {message}")]
     Manifest { root: String, message: String },
 }

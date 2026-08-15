@@ -14,6 +14,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - User-facing generics end-to-end: `type Pair<A, B>`, `id<T>(x: T) = x`, `trait Wrapper<T>`, and type applications (`Pair<int, str>`) (#71).
 - Parametric shapes: `shape Boxy<T> = { value: T }` with applications `Boxy<int>` (#70).
 - Examples: `examples/generics`, `examples/shapes_generic`.
+- Implicit generic binders: unbound type names (`id(x: T)`, `type Pair = { left: A, right: B }`, `shape Boxy = { value: T }`) become parameters; `<>` remains a pin. Explicit `<T>` that shadows a type is E0049 (#75, #77, #78).
+- Example: `examples/generics_implicit`.
 
 ## [1.5.2] — 2026-08-14
 

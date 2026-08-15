@@ -1,0 +1,9 @@
+[package]
+name = "in_scope_type_rejects_int"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+runtime = "tokio"
+error_model = "enum"

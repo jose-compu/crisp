@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -64,7 +64,7 @@
 crisp emit   &lt;path&gt;
 crisp build  &lt;path&gt;
 crisp run    &lt;path&gt;
-crisp test   &lt;path&gt;</pre>
+crisp test   [path…]</pre>
 
       <h3 id="check"><code>crisp check</code></h3>
       <p>Fast analyze-only pass: resolve modules/imports, typecheck, ownership probe (and related frontend passes). Does <strong>not</strong> write a full Cargo project or run the binary. Use this while editing to catch errors quickly.</p>
@@ -86,8 +86,9 @@ crisp check .</pre>
 # → "hello world"</pre>
 
       <h3 id="test"><code>crisp test</code></h3>
-      <p>Emits Rust, then runs Crisp <code>test "…"</code> / <code>test_compile_fail</code> items via <code>cargo test</code> on the generated crate. Runtime tests become <code>#[test]</code> functions; compile-fail tests assert that bad snippets stay rejected.</p>
+      <p>Emits Rust, then runs Crisp <code>test "…"</code> / <code>test_compile_fail</code> items via <code>cargo test</code> on the generated crate. Several crate paths may be given; a pasted <code>and</code> is ignored.</p>
       <pre class="pipe">crisp test examples/shapes
+crisp test examples/math examples/shapes_generic
 crisp test examples/with_tests</pre>
 
       <h2>Debug / inspect (crisp)</h2>
@@ -143,7 +144,7 @@ crisp-lsp</pre>
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

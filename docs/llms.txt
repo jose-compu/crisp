@@ -2,7 +2,7 @@
 
 > Crisp is a systems programming language that transpiles compact `.crp` source to Rust. The `crisp` toolchain infers types, ownership, and errors; `rustc` remains the soundness boundary.
 
-Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.6.0. Repository: https://github.com/jose-compu/crisp
+Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.6.1. Repository: https://github.com/jose-compu/crisp
 
 ## Docs
 
@@ -55,7 +55,19 @@ trait Wrapper = { unwrap(self) -> T }
 impl Wrapper for IntBox = { unwrap(self) = self.value }
 ```
 
-Pins (same meaning): `id<T>(x: T)`, `type Pair<A, B>`. Examples: `examples/generics_implicit` (preferred), `examples/generics`, `examples/generics_pub`, `examples/shapes_generic`. `where` / rich bounds and first-class closures (#72, v1.7.0) are still limited.
+Keep `T`. The body infers the constraint (`+` → `T: Add`; `x.show()` → `T: Show`). Unsatisfied instantiations are typeck **E0084**.
+
+```
+shape HasPosition = { x: T, y: T }
+distance(a: HasPosition<T>, b: HasPosition<T>) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+label(x: T) = x.show()
+```
+
+Pins (same meaning): `id<T>(x: T)`, `type Pair<A, B>`. Examples: `examples/generics_implicit` (preferred), `examples/generics`, `examples/generics_pub`, `examples/shapes_generic`, `examples/shapes_user`, `examples/show_trait`. Written `where` / generic trait bounds / `dyn Trait` and first-class closures (#72, v1.7.0) are still limited.
 
 ## Source & package
 

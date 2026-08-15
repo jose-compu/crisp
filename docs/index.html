@@ -133,11 +133,21 @@ crisp run .</pre>
         <div class="caption"><span>Hello world</span><span>examples/hello</span></div>
         <div class="code-window">
           <div class="code-chrome"><span></span><span></span><span></span></div>
-          <pre>greet(name) = "hello " ++ name
+          <pre>shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }</pre>
         </div>
         <div class="code-output">

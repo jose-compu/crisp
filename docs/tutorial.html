@@ -69,17 +69,28 @@
         <article class="tutorial-step" id="hello">
           <div class="step-label">Step 01</div>
           <h2>Hello world</h2>
-          <p>Start here. A Crisp program is a few functions in a <code>.crp</code> file. You define work with <code>name(args) = …</code>, bind locals with <code>:=</code>, and mark the process entry as <code>pub main</code>.</p>
-          <pre class="pipe">greet(name) = "hello " ++ name
+          <p>Start here. A Crisp program is a few items in a <code>.crp</code> file. You define work with <code>name(args) = …</code>, bind locals with <code>:=</code>, and mark the process entry as <code>pub main</code>.</p>
+          <pre class="pipe">shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }</pre>
           <ul>
-            <li><code>++</code> concatenates strings — think of it as “append,” not numeric plus.</li>
+            <li><code>shape Named</code> is structural: any type with <code>name: str</code> can be greeted.</li>
+            <li><code>Guest {}</code> fills the default <code>name = "world"</code>. Interpolation writes <code>"hello {who.name}"</code>.</li>
+            <li><code>id(x: T)</code> is an implicit generic — unbound <code>T</code> is a type parameter. <code>&lt;&gt;</code> is only a pin.</li>
             <li>No semicolons; the last expression in a block is the value (here <code>print</code> returns unit).</li>
-            <li>You did not write types: Crisp infers <code>name</code> and <code>msg</code> as strings from use.</li>
           </ul>
           <p class="try">Try: <code>crisp run examples/hello</code></p>
           <p class="tech"><strong>Under the hood:</strong> <code>crisp</code> analyzes the crate, emits a normal Cargo project under <code>target/rust/</code>, then <code>cargo run</code>. <code>rustc</code> remains the soundness boundary — if emitted Rust fails to compile, that is treated as a compiler bug, not a user debt.</p>

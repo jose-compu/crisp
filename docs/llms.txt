@@ -26,6 +26,21 @@ crisp run .
 
 Requires Rust 1.85+ (`rustup`). Optional LSP: `cargo install crisp-lsp --locked`.
 
+## Hello world
+
+```
+shape Named = { name: str }
+type Guest = { name: str = "world" }
+id(x: T) = x
+greet(who: Named) = "hello {who.name}"
+pub main() = {
+    world := Guest {}
+    print(id(greet(world)))
+}
+```
+
+`crisp run examples/hello` prints `"hello world"`. Shape `Named` is structural; unbound `T` is a type parameter; `Guest {}` uses the field default.
+
 ## Generics (prefer implicit binders)
 
 Unbound names in type position are parameters. Write `<>` to pin a definition or to apply arguments:

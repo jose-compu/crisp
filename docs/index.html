@@ -261,9 +261,11 @@ impl Show for Point = {
     show(self) = "({self.x},{self.y})"
 }
 
+label(x: T) = x.show()
+
 pub main() = {
     p := Point { x: 3, y: 4 }
-    log("p={p.show()}")
+    log("p={p.show()} l={label(p)}")
 }</pre>
           </div>
         </div>
@@ -291,8 +293,12 @@ distance(a: HasPosition, b: HasPosition) -> float = {
 id(x: T) = x
 first(p: Pair&lt;A, B&gt;) = p.left
 
-shape Boxy = { value: T }
-unwrap_int(b: Boxy&lt;int&gt;) = b.value</pre>
+shape HasPosition = { x: T, y: T }
+distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}</pre>
           </div>
         </div>
         <div class="code-panel">

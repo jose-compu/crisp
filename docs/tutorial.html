@@ -328,16 +328,18 @@ impl Show for Point = {
     show(self) = "({self.x},{self.y})"
 }
 
+label(x: T) = x.show()
+
 pub main() = {
     p := Point { x: 1, y: 2 }
-    log("p={p.show()}")
+    log("p={p.show()} l={label(p)}")
 }</pre>
           <ul>
             <li>Prefer traits when several types share a behavior you want to name.</li>
-            <li>Defaults and tighter bound enforcement are still maturing — see <a href="limitations.html">limitations</a> and <code>examples/trait_defaults</code>.</li>
+            <li><code>label(x: T) = x.show()</code> infers <code>T: Show</code> from the body (v1.6.1 / #84). Written <code>where</code> / generic trait bounds / <code>dyn Trait</code> are still limited — see <a href="limitations.html">limitations</a> and <code>examples/trait_defaults</code>.</li>
           </ul>
-          <p class="try">Try: <code>crisp run examples/show_trait</code></p>
-          <p class="tech"><strong>Under the hood:</strong> Traits lower toward Rust traits / impls. Full Rust-style bound / <code>dyn Trait</code> fidelity is partial in the bootstrap; nominal <code>impl</code> is the stable path today.</p>
+          <p class="try">Try: <code>crisp test examples/show_trait</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Traits lower toward Rust traits / impls. A unique method on generic <code>T</code> records a nullary bound and typeck <code>E0084</code> rejects instantiations without an impl. Full Rust-style written bounds / <code>dyn Trait</code> remain partial.</p>
         </article>
 
         <article class="tutorial-step" id="shapes">
@@ -368,8 +370,9 @@ pub main() = {
           <ul>
             <li>Use a <code>shape</code> for “duck” field requirements; use a <code>trait</code> for named behavior.</li>
             <li><code>Point</code> satisfies <code>HasPosition</code> automatically because the fields match.</li>
+            <li>Parametric <code>HasPosition&lt;T&gt;</code> (next step) infers <code>T: Add</code> / <code>Sub</code> / <code>Mul</code> from <code>+</code> <code>-</code> <code>*</code> — <code>examples/shapes_generic</code>.</li>
           </ul>
-          <p class="try">Try: <code>crisp run examples/shapes</code></p>
+          <p class="try">Try: <code>crisp run examples/shapes</code> · also <code>examples/shapes_generic</code></p>
           <p class="tech"><strong>Under the hood:</strong> Shapes lower to a generated Rust trait plus accessors so emit stays coherent. Method/anonymous shape edges are still limited — prefer named data shapes as in the example.</p>
         </article>
 
@@ -389,13 +392,22 @@ pub main() = {
     p := Pair { left: 1, right: 2 }
     log("id={id(41)} first={first(p)}")
 }</pre>
+          <p>Keep parametric <code>T</code>. The body infers the constraint; a bad instantiation is a typeck error (<code>E0084</code>), not only a later <code>rustc</code> failure.</p>
+          <pre class="pipe">shape HasPosition = { x: T, y: T }
+
+distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}</pre>
           <ul>
             <li>Free names (<code>T</code>, <code>A</code>, <code>B</code>) become parameters. <code>&lt;T&gt;</code> is a pin — same meaning, optional.</li>
             <li>A matching struct satisfies <code>Boxy&lt;int&gt;</code> automatically; no <code>impl</code> required for the shape.</li>
-            <li><code>impl Wrapper for IntBox</code> infers the trait args. Unique methods on <code>T</code> infer a bound (<code>x.show()</code> → <code>T: Show</code>, #84). Written <code>where</code> / generic trait bounds / <code>dyn Trait</code> are still limited — see <a href="limitations.html">limitations</a>.</li>
+            <li><code>+</code> <code>-</code> <code>*</code> on <code>T</code> infer <code>Add</code> / <code>Sub</code> / <code>Mul</code>. Unique methods infer a trait bound (<code>x.show()</code> → <code>T: Show</code>). User methods on a user type: <code>examples/shapes_user</code>.</li>
+            <li>Written <code>where</code> / generic trait bounds / <code>dyn Trait</code> are still limited — see <a href="limitations.html">limitations</a>.</li>
           </ul>
           <p class="try">Try: <code>crisp test examples/generics_implicit</code> · also <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/shapes_user</code>, <code>examples/generics_pub</code></p>
-          <p class="tech"><strong>Under the hood:</strong> Implicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust. <code>pub</code> schemes freeze in <code>crisp.lock</code>.</p>
+          <p class="tech"><strong>Under the hood:</strong> Implicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Arith on <code>T</code> emits <code>std::ops</code>; typeck checks the bound before rustc. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust. <code>pub</code> schemes freeze in <code>crisp.lock</code>.</p>
         </article>
 
         <article class="tutorial-step" id="rust-import">

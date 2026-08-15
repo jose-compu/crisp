@@ -69,7 +69,7 @@
         <li><strong>Methods</strong> — <code>impl Type = { … }</code></li>
         <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code>; literal/simple default bodies</li>
         <li><strong>Shapes</strong> — data <code>shape</code> → generated traits + structural calls (<code>examples/shapes</code>)</li>
-        <li><strong>Generics</strong> — prefer implicit binders (<code>id(x: T)</code>, <code>type Pair = { left: A, right: B }</code>); <code>&lt;&gt;</code> pins and applies (<code>examples/generics_implicit</code>)</li>
+        <li><strong>Generics</strong> — prefer implicit binders (<code>id(x: T)</code>); <code>&lt;&gt;</code> pins and applies. Operators / unique methods on <code>T</code> infer bounds (<code>examples/generics_implicit</code>, <code>examples/shapes_generic</code>)</li>
         <li><strong>Loops</strong> — <code>while</code>, <code>for … in</code> (vec MVP), <code>loop</code>, <code>break</code> / <code>continue</code>, value <code>break expr</code> (<code>examples/loops</code>)</li>
         <li><strong>Rust crates</strong> — <code>rust = true</code> deps; <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
         <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
@@ -123,7 +123,9 @@ describe(c) = match c {
 
 impl Show for Point = {
     show(self) = "({self.x},{self.y})"
-}</pre>
+}
+
+label(x: T) = x.show()</pre>
           </div>
         </div>
         <div class="code-panel">
@@ -161,10 +163,13 @@ impl Wrapper for IntBox = {
           <div class="caption"><span>Parametric shape</span><span>examples/shapes_generic</span></div>
           <div class="code-window">
             <div class="code-chrome"><span></span><span></span><span></span></div>
-            <pre>shape Boxy = { value: T }
+            <pre>shape HasPosition = { x: T, y: T }
 
-unwrap_int(b: Boxy&lt;int&gt;) = b.value
-unwrap_str(b: Boxy&lt;str&gt;) = b.value</pre>
+distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}</pre>
           </div>
         </div>
         <div class="code-panel">

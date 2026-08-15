@@ -56,8 +56,9 @@ pub fn emit_probe_crate(
 fn emit_type_def(out: &mut String, td: &crisp_ast::item::TypeDef) {
     match &td.body {
         TypeBody::Struct(fields) => {
+            let gens = format_probe_gens(&td.generics);
             let _ = writeln!(out, "#[derive(Clone)]");
-            let _ = writeln!(out, "struct {} {{", td.name.name);
+            let _ = writeln!(out, "struct {}{gens} {{", td.name.name);
             for f in fields {
                 let ty = ast_type_rust(&f.ty);
                 let _ = writeln!(out, "    {}: {ty},", f.name.name);
@@ -65,8 +66,9 @@ fn emit_type_def(out: &mut String, td: &crisp_ast::item::TypeDef) {
             let _ = writeln!(out, "}}");
         }
         TypeBody::Enum(variants) => {
+            let gens = format_probe_gens(&td.generics);
             let _ = writeln!(out, "#[derive(Clone)]");
-            let _ = writeln!(out, "enum {} {{", td.name.name);
+            let _ = writeln!(out, "enum {}{gens} {{", td.name.name);
             for v in variants {
                 if v.fields.is_empty() {
                     let _ = writeln!(out, "    {},", v.name.name);
@@ -83,6 +85,34 @@ fn emit_type_def(out: &mut String, td: &crisp_ast::item::TypeDef) {
     }
 }
 
+fn format_probe_gens(gens: &[crisp_ast::ident::Ident]) -> String {
+    if gens.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<{}>",
+            gens.iter()
+                .map(|g| g.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
+fn format_probe_fn_gens(gens: &[crisp_ast::ident::Ident]) -> String {
+    if gens.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<{}>",
+            gens.iter()
+                .map(|g| format!("{}: Clone", g.name))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
 fn ast_type_rust(ty: &crisp_ast::ty::Type) -> String {
     use crisp_ast::ty::TypeKind;
     match &ty.kind {
@@ -96,6 +126,16 @@ fn ast_type_rust(ty: &crisp_ast::ty::Type) -> String {
             "Never" => "!".into(),
             other => other.to_string(),
         },
+        TypeKind::Generic { base, args } => {
+            let head = ast_type_rust(base);
+            format!(
+                "{head}<{}>",
+                args.iter()
+                    .map(ast_type_rust)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }
         TypeKind::Unit | TypeKind::Never => "()".into(),
         TypeKind::Option(inner) => format!("Option<{}>", ast_type_rust(inner)),
         TypeKind::Tuple(ts) => format!(
@@ -132,7 +172,8 @@ fn emit_function(
         .collect::<Vec<_>>()
         .join(", ");
     let ret = format_rust_ret(&tsig.ret);
-    let _ = writeln!(out, "pub fn {}({params}){ret} {{", def.name.name);
+    let gens = format_probe_fn_gens(&def.generics);
+    let _ = writeln!(out, "pub fn {}{gens}({params}){ret} {{", def.name.name);
     emit_body(out, &def.body, osig, Some(ownership), 1);
     let _ = writeln!(out, "}}");
 }

@@ -11,7 +11,12 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
         for item in &m.items {
             match item {
                 crisp_cir::CirItem::Trait(t) => {
-                    let _ = writeln!(out, "trait {} {{", t.name);
+                    let gens = if t.generics.is_empty() {
+                        String::new()
+                    } else {
+                        format!("<{}>", t.generics.join(", "))
+                    };
+                    let _ = writeln!(out, "trait {}{gens} {{", t.name);
                     for meth in &t.methods {
                         let params: Vec<_> = meth
                             .params
@@ -29,7 +34,19 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
                 }
                 crisp_cir::CirItem::Impl(ib) => {
                     if let Some(tn) = &ib.trait_name {
-                        let _ = writeln!(out, "impl {tn} for {}", ib.ty_name);
+                        let args = if ib.trait_args.is_empty() {
+                            String::new()
+                        } else {
+                            format!(
+                                "<{}>",
+                                ib.trait_args
+                                    .iter()
+                                    .map(format_ty)
+                                    .collect::<Vec<_>>()
+                                    .join(", ")
+                            )
+                        };
+                        let _ = writeln!(out, "impl {tn}{args} for {}", ib.ty_name);
                     }
                 }
                 _ => {}
@@ -37,7 +54,12 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
         }
     }
     for shape in &cir.shape_traits {
-        let _ = writeln!(out, "shape {} {{", shape.name);
+        let gens = if shape.generics.is_empty() {
+            String::new()
+        } else {
+            format!("<{}>", shape.generics.join(", "))
+        };
+        let _ = writeln!(out, "shape {}{gens} {{", shape.name);
         for (name, ty) in &shape.fields {
             let _ = writeln!(out, "    {name}: {}", format_ty(ty));
         }
@@ -57,7 +79,19 @@ pub fn reveal_traits(crate_root: &Path) -> Result<String> {
         }
         let _ = writeln!(out, "}}");
         for imp in &shape.impls {
-            let _ = writeln!(out, "impl {} for {}", shape.name, imp.ty_name);
+            let args = if imp.args.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "<{}>",
+                    imp.args
+                        .iter()
+                        .map(format_ty)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+            let _ = writeln!(out, "impl {}{args} for {}", shape.name, imp.ty_name);
         }
         let _ = writeln!(out);
     }

@@ -38,6 +38,7 @@ pub enum CirItem {
 #[derive(Debug, Clone)]
 pub struct CirTrait {
     pub name: String,
+    pub generics: Vec<String>,
     pub methods: Vec<CirTraitMethod>,
     pub span: Span,
 }
@@ -46,6 +47,7 @@ pub struct CirTrait {
 pub struct CirStruct {
     pub name: String,
     pub is_pub: bool,
+    pub generics: Vec<String>,
     pub fields: Vec<CirField>,
     pub with_fn: Option<CirWithFn>,
     pub span: Span,
@@ -85,6 +87,7 @@ pub struct CirVariant {
 #[derive(Debug, Clone)]
 pub struct CirShapeTrait {
     pub name: String,
+    pub generics: Vec<String>,
     pub fields: Vec<(String, CirTy)>,
     pub methods: Vec<CirTraitMethod>,
     pub impls: Vec<CirShapeImpl>,
@@ -103,12 +106,15 @@ pub struct CirTraitMethod {
 #[derive(Debug, Clone)]
 pub struct CirShapeImpl {
     pub ty_name: String,
+    pub ty_generics: Vec<String>,
+    pub args: Vec<CirTy>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct CirImpl {
     pub trait_name: Option<String>,
+    pub trait_args: Vec<CirTy>,
     pub ty_name: String,
     pub functions: Vec<CirFunction>,
     pub span: Span,
@@ -120,6 +126,7 @@ pub struct CirFunction {
     pub is_pub: bool,
     pub is_main: bool,
     pub is_async: bool,
+    pub generics: Vec<String>,
     pub params: Vec<CirParam>,
     pub ret: CirTy,
     pub fallible: bool,

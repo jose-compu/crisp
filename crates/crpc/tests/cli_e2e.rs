@@ -432,9 +432,16 @@ fn sealed_drift_fails_check() {
 
 fn copy_dir(src: &std::path::Path, dst: &std::path::Path) {
     std::fs::create_dir_all(dst).unwrap();
-    for entry in std::fs::read_dir(src).unwrap() {
+    let Ok(entries) = std::fs::read_dir(src) else {
+        return;
+    };
+    for entry in entries {
         let entry = entry.unwrap();
-        let to = dst.join(entry.file_name());
+        let name = entry.file_name();
+        if name == "target" {
+            continue;
+        }
+        let to = dst.join(&name);
         if entry.file_type().unwrap().is_dir() {
             copy_dir(&entry.path(), &to);
         } else {

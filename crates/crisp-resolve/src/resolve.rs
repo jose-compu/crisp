@@ -405,7 +405,7 @@ impl Resolver {
         for item in &file.items {
             match item {
                 Item::Function(f) => {
-                    let mut local = scope.clone();
+                    let mut local = scope_with_generics(&scope, &f.generics);
                     for p in &f.params {
                         local.insert(
                             p.name.name.clone(),
@@ -424,7 +424,8 @@ impl Resolver {
                     self.check_expr(&local, &f.body)?;
                 }
                 Item::TypeDef(t) => {
-                    self.check_type_def(&scope, t)?;
+                    let local = scope_with_generics(&scope, &t.generics);
+                    self.check_type_def(&local, t)?;
                 }
                 Item::Const(c) => self.check_expr(&scope, &c.value)?,
                 Item::Test(t) => self.check_block(&scope, &t.body)?,
@@ -433,9 +434,12 @@ impl Resolver {
                     if let Some(tn) = &i.trait_name {
                         self.check_name(&scope, &tn.name, tn.span)?;
                     }
+                    for arg in &i.trait_args {
+                        self.check_type(&scope, arg)?;
+                    }
                     self.check_type(&scope, &i.ty)?;
                     for f in &i.items {
-                        let mut local = scope.clone();
+                        let mut local = scope_with_generics(&scope, &f.generics);
                         for p in &f.params {
                             local.insert(
                                 p.name.name.clone(),
@@ -455,8 +459,9 @@ impl Resolver {
                     }
                 }
                 Item::TraitDef(t) => {
+                    let trait_scope = scope_with_generics(&scope, &t.generics);
                     for item in &t.items {
-                        let mut local = scope.clone();
+                        let mut local = trait_scope.clone();
                         for p in &item.params {
                             local.insert(
                                 p.name.name.clone(),
@@ -478,20 +483,21 @@ impl Resolver {
                     }
                 }
                 Item::ShapeDef(s) => {
+                    let local = scope_with_generics(&scope, &s.generics);
                     for f in &s.fields {
                         match f {
                             crisp_ast::item::ShapeField::Data { ty, .. } => {
-                                self.check_type(&scope, ty)?;
+                                self.check_type(&local, ty)?;
                             }
                             crisp_ast::item::ShapeField::Method {
                                 params, ret_type, ..
                             } => {
                                 for p in params {
                                     if let Some(ty) = &p.ty {
-                                        self.check_type(&scope, ty)?;
+                                        self.check_type(&local, ty)?;
                                     }
                                 }
-                                self.check_type(&scope, ret_type)?;
+                                self.check_type(&local, ret_type)?;
                             }
                         }
                     }
@@ -862,6 +868,23 @@ impl Resolver {
         // Named shapes are supported as types (v1.5 / #61).
         Ok(())
     }
+}
+
+fn scope_with_generics(
+    scope: &HashMap<String, SymbolKey>,
+    generics: &[Ident],
+) -> HashMap<String, SymbolKey> {
+    let mut local = scope.clone();
+    for g in generics {
+        local.insert(
+            g.name.clone(),
+            SymbolKey {
+                module: "_generic".to_string(),
+                name: g.name.clone(),
+            },
+        );
+    }
+    local
 }
 
 fn load_dep_sets(crate_root: &Path) -> Result<(HashSet<String>, HashSet<String>), ResolveError> {

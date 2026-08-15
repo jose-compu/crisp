@@ -1,5 +1,5 @@
 use crate::env::{TypeEnv, generalize, instantiate, scheme};
-use crate::types::{InferContext, InferredSig, Ty};
+use crate::types::{InferContext, InferredSig, Scheme, Ty};
 use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
@@ -54,6 +54,12 @@ pub struct TypeChecker {
     structs: BTreeMap<String, BTreeMap<String, Ty>>,
     /// Named `shape` definitions (structural; also present in `structs` for field access).
     shapes: BTreeSet<String>,
+    /// Type/shape name → declared type-parameter names (`Pair` → `["A", "B"]`).
+    type_params: BTreeMap<String, Vec<String>>,
+    /// Trait name → declared type-parameter names.
+    trait_generics: BTreeMap<String, Vec<String>>,
+    /// Rigid generic bindings in the current definition (`T` → `Named("T")`).
+    generic_params: BTreeMap<String, Ty>,
     /// Enum name → variant name → payload field types.
     enums: BTreeMap<String, BTreeMap<String, Vec<Ty>>>,
     /// Trait name → method stubs (`self` filled at impl site).
@@ -96,6 +102,9 @@ impl TypeChecker {
             env: TypeEnv::new(),
             structs: BTreeMap::new(),
             shapes: BTreeSet::new(),
+            type_params: BTreeMap::new(),
+            trait_generics: BTreeMap::new(),
+            generic_params: BTreeMap::new(),
             enums: BTreeMap::new(),
             traits: BTreeMap::new(),
             signatures: BTreeMap::new(),
@@ -211,6 +220,11 @@ impl TypeChecker {
     fn collect_types(&mut self, module: &str, file: &SourceFile) {
         for item in &file.items {
             if let Item::TypeDef(td) = item {
+                let gens: Vec<String> = td.generics.iter().map(|g| g.name.clone()).collect();
+                if !gens.is_empty() {
+                    self.type_params.insert(td.name.name.clone(), gens.clone());
+                }
+                let saved = self.bind_rigid_generics(&gens);
                 if let TypeBody::Struct(fields) = &td.body {
                     let mut field_map = BTreeMap::new();
                     for f in fields {
@@ -250,8 +264,15 @@ impl TypeChecker {
                 {
                     self.env.insert(td.name.name.clone(), scheme(t));
                 }
+                self.generic_params = saved;
             } else if let Item::ShapeDef(shape) = item {
                 // Data shapes participate in field access like structs (#61).
+                let gens: Vec<String> = shape.generics.iter().map(|g| g.name.clone()).collect();
+                if !gens.is_empty() {
+                    self.type_params
+                        .insert(shape.name.name.clone(), gens.clone());
+                }
+                let saved = self.bind_rigid_generics(&gens);
                 let mut field_map = BTreeMap::new();
                 for f in &shape.fields {
                     if let crisp_ast::item::ShapeField::Data { name, ty, .. } = f
@@ -269,7 +290,14 @@ impl TypeChecker {
                         args: vec![],
                     }),
                 );
+                self.generic_params = saved;
             } else if let Item::TraitDef(td) = item {
+                let gens: Vec<String> = td.generics.iter().map(|g| g.name.clone()).collect();
+                if !gens.is_empty() {
+                    self.trait_generics
+                        .insert(td.name.name.clone(), gens.clone());
+                }
+                let saved = self.bind_rigid_generics(&gens);
                 let mut methods = BTreeMap::new();
                 for m in &td.items {
                     let mut params = Vec::new();
@@ -303,6 +331,7 @@ impl TypeChecker {
                     methods.insert(m.name.name.clone(), TraitMethodStub { params, ret });
                 }
                 self.traits.insert(td.name.name.clone(), methods);
+                self.generic_params = saved;
             }
         }
         let _ = module;
@@ -316,6 +345,8 @@ impl TypeChecker {
                     self.check_extern(module, ext)?;
                 }
                 Item::Function(f) => {
+                    let gens: Vec<String> = f.generics.iter().map(|g| g.name.clone()).collect();
+                    let saved = self.bind_rigid_generics(&gens);
                     let mut params = Vec::new();
                     for p in &f.params {
                         let ty = if let Some(ast_ty) = &p.ty {
@@ -330,13 +361,15 @@ impl TypeChecker {
                     } else {
                         self.ctx.fresh()
                     };
+                    let fn_ty = Ty::Fn {
+                        params,
+                        ret: Box::new(ret),
+                    };
                     self.env.insert(
                         f.name.name.clone(),
-                        scheme(Ty::Fn {
-                            params,
-                            ret: Box::new(ret),
-                        }),
+                        generalize_named_params(&fn_ty, &gens, &mut self.ctx),
                     );
+                    self.generic_params = saved;
                 }
                 Item::Impl(ib) => {
                     self.collect_impl_stubs(module, ib)?;
@@ -361,6 +394,11 @@ impl TypeChecker {
             name: ty_name.clone(),
             args: vec![],
         };
+        let trait_subst = if let Some(tn) = &ib.trait_name {
+            self.trait_arg_subst(&tn.name, &ib.trait_args)?
+        } else {
+            BTreeMap::new()
+        };
         for f in &ib.items {
             let mut params = Vec::new();
             for p in &f.params {
@@ -373,11 +411,25 @@ impl TypeChecker {
                 };
                 params.push(ty);
             }
-            let ret = if let Some(t) = &f.ret_type {
+            let mut ret = if let Some(t) = &f.ret_type {
                 self.ast_type(t)?
             } else {
                 self.ctx.fresh()
             };
+            if !trait_subst.is_empty() {
+                params = params
+                    .into_iter()
+                    .map(|t| subst_named_params(&t, &trait_subst))
+                    .collect();
+                ret = subst_named_params(&ret, &trait_subst);
+            }
+            if let Some(tn) = &ib.trait_name
+                && let Some(methods) = self.traits.get(&tn.name)
+                && let Some(stub) = methods.get(&f.name.name)
+                && let Some(trait_ret) = &stub.ret
+            {
+                ret = subst_named_params(trait_ret, &trait_subst);
+            }
             let key = format!("{module}::{ty_name}::{}", f.name.name);
             self.inherent_methods
                 .entry(ty_name.clone())
@@ -419,12 +471,14 @@ impl TypeChecker {
                         let ty = if pname == "self" {
                             self_ty.clone()
                         } else {
-                            pty.unwrap_or_else(|| self.ctx.fresh())
+                            let t = pty.unwrap_or_else(|| self.ctx.fresh());
+                            subst_named_params(&t, &trait_subst)
                         };
                         (pname, ty)
                     })
                     .collect();
-                let sig_ret = stub.ret.unwrap_or_else(|| self.ctx.fresh());
+                let sig_ret =
+                    subst_named_params(&stub.ret.unwrap_or_else(|| self.ctx.fresh()), &trait_subst);
                 self.signatures.insert(
                     key,
                     InferredSig {
@@ -612,12 +666,18 @@ impl TypeChecker {
     }
 
     fn check_function(&mut self, module: &str, f: &FunctionDef) -> Result<(), TypeError> {
+        let gens: Vec<String> = f.generics.iter().map(|g| g.name.clone()).collect();
+        let saved = self.bind_rigid_generics(&gens);
         // Reuse stub param/ret vars so call-site unifications from earlier modules stick.
-        let stub = self
-            .env
-            .get(&f.name.name)
-            .map(|s| instantiate(&mut self.ctx, s))
-            .map(|t| self.ctx.apply(&t));
+        // Explicit generics are instantiated per call; the body is checked with rigid names.
+        let stub = if gens.is_empty() {
+            self.env
+                .get(&f.name.name)
+                .map(|s| instantiate(&mut self.ctx, s))
+                .map(|t| self.ctx.apply(&t))
+        } else {
+            None
+        };
         let (stub_params, stub_ret) = match stub {
             Some(Ty::Fn { params, ret }) => (params, Some(*ret)),
             _ => (Vec::new(), None),
@@ -669,13 +729,19 @@ impl TypeChecker {
                 span: f.span,
             },
         );
+        let fn_ty = Ty::Fn {
+            params: fn_params,
+            ret: Box::new(ret),
+        };
         self.env.insert(
             f.name.name.clone(),
-            scheme(Ty::Fn {
-                params: fn_params,
-                ret: Box::new(ret),
-            }),
+            if gens.is_empty() {
+                scheme(fn_ty)
+            } else {
+                generalize_named_params(&fn_ty, &gens, &mut self.ctx)
+            },
         );
+        self.generic_params = saved;
         Ok(())
     }
 
@@ -842,13 +908,7 @@ impl TypeChecker {
                 }
             },
             ExprKind::Binary { op, left, right } => self.infer_binary(env, *op, left, right),
-            ExprKind::StructLit { name, fields } => {
-                self.check_struct_lit(env, name, fields)?;
-                Ok(Ty::Named {
-                    name: name.name.clone(),
-                    args: vec![],
-                })
-            }
+            ExprKind::StructLit { name, fields } => self.check_struct_lit(env, name, fields),
             ExprKind::Bind { pat, value, .. } => {
                 let ty = self.infer_expr(env, value)?;
                 let mut local = env.clone();
@@ -1121,14 +1181,26 @@ impl TypeChecker {
         env: &mut TypeEnv,
         name: &Ident,
         fields: &[FieldInit],
-    ) -> Result<(), TypeError> {
-        let schema = self
-            .structs
+    ) -> Result<Ty, TypeError> {
+        let schema =
+            self.structs
+                .get(&name.name)
+                .cloned()
+                .ok_or_else(|| TypeError::UnknownType {
+                    name: name.name.clone(),
+                    span: name.span,
+                })?;
+        let gens = self
+            .type_params
             .get(&name.name)
-            .ok_or_else(|| TypeError::UnknownType {
-                name: name.name.clone(),
-                span: name.span,
-            })?;
+            .cloned()
+            .unwrap_or_default();
+        let subst: BTreeMap<String, Ty> =
+            gens.iter().map(|g| (g.clone(), self.ctx.fresh())).collect();
+        let schema: BTreeMap<String, Ty> = schema
+            .iter()
+            .map(|(k, v)| (k.clone(), subst_named_params(v, &subst)))
+            .collect();
         let field_types: Vec<_> = fields
             .iter()
             .map(|field| {
@@ -1145,7 +1217,14 @@ impl TypeChecker {
             let got = self.infer_expr(env, &field.value)?;
             unify(&mut self.ctx, &got, &expected)?;
         }
-        Ok(())
+        let args: Vec<Ty> = gens
+            .iter()
+            .map(|g| self.ctx.apply(subst.get(g).expect("generic subst")))
+            .collect();
+        Ok(Ty::Named {
+            name: name.name.clone(),
+            args,
+        })
     }
 
     fn method_sig(&self, ty_name: &str, method: &str) -> Option<&InferredSig> {
@@ -1261,8 +1340,8 @@ impl TypeChecker {
 
     fn field_type(&mut self, base: &Ty, field: &str, span: Span) -> Result<Ty, TypeError> {
         let base = self.ctx.apply(base);
-        if let Ty::Named { name, .. } = &base
-            && let Some(fields) = self.structs.get(name)
+        if let Ty::Named { name, args } = &base
+            && let Some(fields) = self.instantiate_schema(name, args)
         {
             return fields.get(field).cloned().ok_or(TypeError::UnknownType {
                 name: field.to_string(),
@@ -1316,27 +1395,39 @@ impl TypeChecker {
     /// Unify normally, or accept structural match when the expected type is a shape (§3.5).
     fn unify_or_shape(&mut self, actual: &Ty, expected: &Ty) -> Result<(), TypeError> {
         let expected = self.ctx.apply(expected);
-        if let Ty::Named { name, .. } = &expected
+        if let Ty::Named { name, args } = &expected
             && self.shapes.contains(name)
         {
-            return self.check_shape_arg(actual, name);
+            return self.check_shape_arg(actual, name, args);
         }
         unify(&mut self.ctx, actual, &expected)?;
         Ok(())
     }
 
-    fn check_shape_arg(&mut self, actual: &Ty, shape_name: &str) -> Result<(), TypeError> {
+    fn check_shape_arg(
+        &mut self,
+        actual: &Ty,
+        shape_name: &str,
+        shape_args: &[Ty],
+    ) -> Result<(), TypeError> {
         let actual = self.ctx.apply(actual);
-        let Some(shape_fields) = self.structs.get(shape_name).cloned() else {
+        let Some(shape_fields) = self.instantiate_schema(shape_name, shape_args) else {
             return Err(TypeError::UnknownType {
                 name: shape_name.to_string(),
                 span: Span::new(0, 0),
             });
         };
         match &actual {
-            Ty::Named { name, .. } if name == shape_name => Ok(()),
-            Ty::Named { name, .. } => {
-                let Some(fields) = self.structs.get(name) else {
+            Ty::Named { name, args } if name == shape_name => {
+                if args.len() == shape_args.len() {
+                    for (a, b) in args.iter().zip(shape_args) {
+                        unify(&mut self.ctx, a, b)?;
+                    }
+                }
+                Ok(())
+            }
+            Ty::Named { name, args } => {
+                let Some(fields) = self.instantiate_schema(name, args) else {
                     return Err(TypeError::Unify(UnifyError::Mismatch {
                         expected: format!("type satisfying shape `{shape_name}`"),
                         found: name.clone(),
@@ -1372,22 +1463,76 @@ impl TypeChecker {
         Ok(instantiate(&mut self.ctx, scheme))
     }
 
+    fn bind_rigid_generics(&mut self, gens: &[String]) -> BTreeMap<String, Ty> {
+        let saved = self.generic_params.clone();
+        for g in gens {
+            self.generic_params.insert(
+                g.clone(),
+                Ty::Named {
+                    name: g.clone(),
+                    args: vec![],
+                },
+            );
+        }
+        saved
+    }
+
+    fn instantiate_schema(&self, name: &str, args: &[Ty]) -> Option<BTreeMap<String, Ty>> {
+        let fields = self.structs.get(name)?.clone();
+        let Some(gens) = self.type_params.get(name) else {
+            return Some(fields);
+        };
+        if args.len() != gens.len() {
+            return Some(fields);
+        }
+        let subst: BTreeMap<String, Ty> = gens.iter().cloned().zip(args.iter().cloned()).collect();
+        Some(
+            fields
+                .iter()
+                .map(|(k, v)| (k.clone(), subst_named_params(v, &subst)))
+                .collect(),
+        )
+    }
+
+    fn trait_arg_subst(
+        &mut self,
+        trait_name: &str,
+        args: &[Type],
+    ) -> Result<BTreeMap<String, Ty>, TypeError> {
+        let Some(gens) = self.trait_generics.get(trait_name).cloned() else {
+            return Ok(BTreeMap::new());
+        };
+        if gens.is_empty() || args.is_empty() {
+            return Ok(BTreeMap::new());
+        }
+        let mut subst = BTreeMap::new();
+        for (g, ast_ty) in gens.iter().zip(args.iter()) {
+            subst.insert(g.clone(), self.ast_type(ast_ty)?);
+        }
+        Ok(subst)
+    }
+
     fn ast_type(&mut self, ty: &Type) -> Result<Ty, TypeError> {
         match &ty.kind {
-            TypeKind::Named(id) => match id.name.as_str() {
-                "Never" => Ok(Ty::Never),
-                "()" => Ok(Ty::Unit),
-                "int" => Ok(Ty::Int),
-                "uint" => Ok(Ty::UInt),
-                "float" => Ok(Ty::Float),
-                "bool" => Ok(Ty::Bool),
-                "char" => Ok(Ty::Char),
-                "str" => Ok(Ty::Str),
-                other => Ok(Ty::Named {
-                    name: other.to_string(),
-                    args: vec![],
-                }),
-            },
+            TypeKind::Named(id) => {
+                if let Some(bound) = self.generic_params.get(&id.name) {
+                    return Ok(bound.clone());
+                }
+                match id.name.as_str() {
+                    "Never" => Ok(Ty::Never),
+                    "()" => Ok(Ty::Unit),
+                    "int" => Ok(Ty::Int),
+                    "uint" => Ok(Ty::UInt),
+                    "float" => Ok(Ty::Float),
+                    "bool" => Ok(Ty::Bool),
+                    "char" => Ok(Ty::Char),
+                    "str" => Ok(Ty::Str),
+                    other => Ok(Ty::Named {
+                        name: other.to_string(),
+                        args: vec![],
+                    }),
+                }
+            }
             TypeKind::Never => Ok(Ty::Never),
             TypeKind::Unit => Ok(Ty::Unit),
             TypeKind::Option(inner) => Ok(Ty::Option(Box::new(self.ast_type(inner)?))),
@@ -1433,7 +1578,11 @@ impl TypeChecker {
 
 fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
     match (a, b) {
-        (Ty::Named { name: na, .. }, Ty::Named { name: nb, .. }) => na == nb,
+        (Ty::Named { name: na, args: aa }, Ty::Named { name: nb, args: ab }) => {
+            na == nb
+                && aa.len() == ab.len()
+                && aa.iter().zip(ab).all(|(x, y)| ty_structurally_eq(x, y))
+        }
         (Ty::Int, Ty::Int)
         | (Ty::UInt, Ty::UInt)
         | (Ty::Float, Ty::Float)
@@ -1442,7 +1591,58 @@ fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
         | (Ty::Str, Ty::Str)
         | (Ty::StrSlice, Ty::StrSlice)
         | (Ty::Unit, Ty::Unit) => true,
+        (Ty::Option(a), Ty::Option(b)) => ty_structurally_eq(a, b),
         _ => false,
+    }
+}
+
+fn subst_named_params(ty: &Ty, subst: &BTreeMap<String, Ty>) -> Ty {
+    match ty {
+        Ty::Named { name, args } if args.is_empty() => {
+            subst.get(name).cloned().unwrap_or_else(|| ty.clone())
+        }
+        Ty::Named { name, args } => Ty::Named {
+            name: name.clone(),
+            args: args.iter().map(|a| subst_named_params(a, subst)).collect(),
+        },
+        Ty::Fn { params, ret } => Ty::Fn {
+            params: params
+                .iter()
+                .map(|p| subst_named_params(p, subst))
+                .collect(),
+            ret: Box::new(subst_named_params(ret, subst)),
+        },
+        Ty::Option(inner) => Ty::Option(Box::new(subst_named_params(inner, subst))),
+        Ty::Slice(inner) => Ty::Slice(Box::new(subst_named_params(inner, subst))),
+        Ty::Array { elem, len } => Ty::Array {
+            elem: Box::new(subst_named_params(elem, subst)),
+            len: *len,
+        },
+        Ty::Ref { mutable, inner } => Ty::Ref {
+            mutable: *mutable,
+            inner: Box::new(subst_named_params(inner, subst)),
+        },
+        Ty::Tuple(ts) => Ty::Tuple(ts.iter().map(|t| subst_named_params(t, subst)).collect()),
+        other => other.clone(),
+    }
+}
+
+fn generalize_named_params(ty: &Ty, gens: &[String], ctx: &mut InferContext) -> Scheme {
+    if gens.is_empty() {
+        return scheme(ty.clone());
+    }
+    let mut subst = BTreeMap::new();
+    let mut vars = Vec::new();
+    for g in gens {
+        let fresh = ctx.fresh();
+        if let Ty::Var(v) = &fresh {
+            vars.push(*v);
+        }
+        subst.insert(g.clone(), fresh);
+    }
+    Scheme {
+        vars,
+        ty: subst_named_params(ty, &subst),
     }
 }
 

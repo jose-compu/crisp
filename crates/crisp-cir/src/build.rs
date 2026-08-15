@@ -180,6 +180,7 @@ impl CirBuilder {
                         }
                         items.push(CirItem::Impl(CirImpl {
                             trait_name: ib.trait_name.as_ref().map(|i| i.name.clone()),
+                            trait_args: ib.trait_args.iter().map(ast_type_to_cir_ty).collect(),
                             ty_name,
                             functions: fns,
                             span: ib.span,
@@ -237,6 +238,7 @@ fn lower_trait_def(td: &crisp_ast::item::TraitDef) -> CirTrait {
     use crisp_ast::expr::Param;
     CirTrait {
         name: td.name.name.clone(),
+        generics: td.generics.iter().map(|g| g.name.clone()).collect(),
         methods: td
             .items
             .iter()
@@ -317,11 +319,30 @@ fn ast_type_to_cir_ty(ty: &crisp_ast::ty::Type) -> CirTy {
             "float" => CirTy::Float,
             "bool" => CirTy::Bool,
             "str" => CirTy::Str,
+            "char" => CirTy::Char,
             other => CirTy::Named {
                 name: other.to_string(),
                 args: vec![],
             },
         },
+        TypeKind::Generic { base, args } => {
+            let mut cir = ast_type_to_cir_ty(base);
+            if let CirTy::Named {
+                args: ref mut a, ..
+            } = cir
+            {
+                *a = args.iter().map(ast_type_to_cir_ty).collect();
+            }
+            cir
+        }
+        TypeKind::Option(inner) => CirTy::Option(Box::new(ast_type_to_cir_ty(inner))),
+        TypeKind::Tuple(ts) => CirTy::Tuple(ts.iter().map(ast_type_to_cir_ty).collect()),
+        TypeKind::Ref { mutable, inner } => CirTy::Ref {
+            mutable: *mutable,
+            inner: Box::new(ast_type_to_cir_ty(inner)),
+        },
+        TypeKind::Never => CirTy::Never,
+        TypeKind::Unit => CirTy::Unit,
         _ => CirTy::Error,
     }
 }
@@ -568,6 +589,7 @@ fn lower_function(
         is_pub: def.is_pub,
         is_main: def.name.name == "main",
         is_async,
+        generics: def.generics.iter().map(|g| g.name.clone()).collect(),
         params,
         ret,
         fallible: esig.fallible,

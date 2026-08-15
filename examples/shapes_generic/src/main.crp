@@ -1,0 +1,45 @@
+-- examples/shapes_generic — parametric data shapes (#70)
+
+shape Boxy<T> = {
+    value: T
+}
+
+type IntBox = {
+    value: int
+}
+
+type StrBox = {
+    value: str
+}
+
+unwrap_int(b: Boxy<int>) = b.value
+
+unwrap_str(b: Boxy<str>) = b.value
+
+test "int and str boxes" = {
+    i := IntBox {
+        value: 11
+    }
+    s := StrBox {
+        value: "box"
+    }
+    assert_eq(unwrap_int(i), 11)
+    assert_eq(unwrap_str(s), "box")
+}
+
+test_compile_fail "str box is not Boxy<int>" = {
+    s := StrBox {
+        value: "no"
+    }
+    unwrap_int(s)
+}
+
+pub main() = {
+    i := IntBox {
+        value: 4
+    }
+    s := StrBox {
+        value: "ok"
+    }
+    log("i={unwrap_int(i)} s={unwrap_str(s)}")
+}

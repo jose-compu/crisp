@@ -1,0 +1,115 @@
+-- examples/generics — user-facing type/function/trait params + parametric shapes (#70 / #71)
+
+type Pair<A, B> = {
+    left: A
+    right: B
+}
+
+id<T>(x: T) = x
+
+first<A, B>(p: Pair<A, B>) = p.left
+
+second<A, B>(p: Pair<A, B>) = p.right
+
+shape Boxy<T> = {
+    value: T
+}
+
+type IntBox = {
+    value: int
+}
+
+type StrBox = {
+    value: str
+}
+
+unwrap_int(b: Boxy<int>) = b.value
+
+unwrap_str(b: Boxy<str>) = b.value
+
+trait Wrapper<T> = {
+    unwrap(self) -> T
+}
+
+impl Wrapper<int> for IntBox = {
+    unwrap(self) = self.value
+}
+
+impl Wrapper<str> for StrBox = {
+    unwrap(self) = self.value
+}
+
+test "id and pair" = {
+    assert_eq(id(41), 41)
+    p := Pair {
+        left: 1
+        right: 2
+    }
+    assert_eq(first(p), 1)
+    assert_eq(second(p), 2)
+    q := Pair {
+        left: 8
+        right: 9
+    }
+    assert_eq(first(q), 8)
+    assert_eq(second(q), 9)
+}
+
+test "mixed pair" = {
+    p := Pair {
+        left: 3
+        right: "hi"
+    }
+    assert_eq(first(p), 3)
+    assert_eq(second(p), "hi")
+}
+
+test "parametric shape" = {
+    b := IntBox {
+        value: 7
+    }
+    assert_eq(unwrap_int(b), 7)
+    s := StrBox {
+        value: "ok"
+    }
+    assert_eq(unwrap_str(s), "ok")
+}
+
+test "generic trait" = {
+    b := IntBox {
+        value: 3
+    }
+    assert_eq(b.unwrap(), 3)
+    s := StrBox {
+        value: "w"
+    }
+    assert_eq(s.unwrap(), "w")
+}
+
+test_compile_fail "str box is not Boxy<int>" = {
+    s := StrBox {
+        value: "no"
+    }
+    unwrap_int(s)
+}
+
+pub main() = {
+    p := Pair {
+        left: 10
+        right: 20
+    }
+    n := first(p)
+    boxed := IntBox {
+        value: n
+    }
+    v := unwrap_int(boxed)
+    w := boxed.unwrap()
+    s := StrBox {
+        value: "ok"
+    }
+    mixed := Pair {
+        left: n
+        right: unwrap_str(s)
+    }
+    log("n={n} v={v} w={w} s={second(mixed)} mix={first(mixed)}")
+}

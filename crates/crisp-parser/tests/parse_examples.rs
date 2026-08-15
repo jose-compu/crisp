@@ -54,6 +54,8 @@ fn parse_all_examples() {
         "float_demo",
         "rust_import",
         "rust_shadow",
+        "generics",
+        "shapes_generic",
     ] {
         eprintln!("=== {name} ===");
         parse_crate(name);

@@ -338,6 +338,18 @@ shape Measurable = { len(self) -> uint }
 Anonymous shapes (`a: { x: float, y: float }`) lower the same way, with a compiler-named
 trait.
 
+Parametric (generic) shapes use the same `<>` type parameters as types and functions:
+
+```rust
+shape Boxy<T> = { value: T }
+
+unwrap_int(b: Boxy<int>) = b.value
+```
+
+This lowers to a generic Rust trait (`trait Boxy<T> { fn value(&self) -> T; }`) plus
+structural impls (`impl Boxy<i64> for IntBox`). A bare `shape HasPosition` (no
+parameters) is unchanged.
+
 ### 3.6 Traits (Nominal Types)
 
 Traits are explicit semantic contracts and map directly to Rust traits.
@@ -405,16 +417,27 @@ Lowers to a generic bound combining the generated shape trait and the nominal tr
 
 ### 3.8 Generics
 
-Inferred from usage; explicit `<>` when needed.
+Inferred from usage; explicit `<>` when needed. The same brackets are used on
+`type`, functions, `trait`, and `shape` (see §3.5 for parametric shapes).
 
 ```rust
 identity(x) = x
 -- reveal: identity<T>(x: T) -> T
 
+id<T>(x: T) = x
+
+type Pair<A, B> = { left: A, right: B }
+first<A, B>(p: Pair<A, B>) = p.left
+
+trait Wrapper<T> = { unwrap(self) -> T }
+impl Wrapper<int> for IntBox = { unwrap(self) = self.value }
+
 convert<T, U>(x: T) -> U where T: Into<U> = x.into()
 ```
 
-`where` clauses lower verbatim to Rust.
+Applications use the same `<>` (`Pair<int, str>`, `Boxy<int>`, `Wrapper<int>`).
+`where` clauses lower verbatim to Rust when present; the bootstrap currently
+ships explicit params without `where` / HRTB.
 
 ---
 

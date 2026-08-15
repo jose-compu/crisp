@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -392,9 +392,9 @@ pub main() = {
           <ul>
             <li>Free names (<code>T</code>, <code>A</code>, <code>B</code>) become parameters. <code>&lt;T&gt;</code> is a pin — same meaning, optional.</li>
             <li>A matching struct satisfies <code>Boxy&lt;int&gt;</code> automatically; no <code>impl</code> required for the shape.</li>
-            <li><code>impl Wrapper for IntBox</code> infers the trait args. <code>where</code> and rich <code>T: Show</code> bounds are still limited — see <a href="limitations.html">limitations</a>.</li>
+            <li><code>impl Wrapper for IntBox</code> infers the trait args. Unique methods on <code>T</code> infer a bound (<code>x.show()</code> → <code>T: Show</code>, #84). Written <code>where</code> / generic trait bounds / <code>dyn Trait</code> are still limited — see <a href="limitations.html">limitations</a>.</li>
           </ul>
-          <p class="try">Try: <code>crisp test examples/generics_implicit</code> · also <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/generics_pub</code></p>
+          <p class="try">Try: <code>crisp test examples/generics_implicit</code> · also <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/shapes_user</code>, <code>examples/generics_pub</code></p>
           <p class="tech"><strong>Under the hood:</strong> Implicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust. <code>pub</code> schemes freeze in <code>crisp.lock</code>.</p>
         </article>
 
@@ -500,7 +500,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

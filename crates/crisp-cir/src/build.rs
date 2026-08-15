@@ -12,7 +12,7 @@ use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipPass, OwnershipResul
 use crisp_regions::{RegionPass, RegionResult};
 use crisp_resolve::module::{ModuleGraph, load_module_graph};
 use crisp_resolve::stdlib::stdlib_fn_modules;
-use crisp_typeck::{InferredSig, Ty, TypeChecker, TypedCrate};
+use crisp_typeck::{InferredSig, Ty, TypeChecker, TypedCrate, is_arith_bound};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -569,8 +569,12 @@ fn lower_function(
             let lifetime = lt.and_then(|l| l.param_lifetimes.get(i).cloned().flatten());
             CirParam {
                 name: name.clone(),
-                ty,
-                mode: *mode,
+                ty: ty.clone(),
+                mode: if sig_param_is_copy_generic(tsig, i) {
+                    OwnershipMode::Owned
+                } else {
+                    *mode
+                },
                 lifetime,
                 extra_bounds: def
                     .params
@@ -1086,6 +1090,37 @@ fn lower_expr(
                         span: expr.span,
                     };
                 }
+                // Generic `T: Trait` — still `recv.method(args)`; rustc resolves via the bound (#84).
+                let call_args: Vec<CirExpr> = args
+                    .iter()
+                    .map(|arg| {
+                        lower_expr(
+                            arg,
+                            module,
+                            osig,
+                            typed,
+                            ownership,
+                            errors,
+                            locals,
+                            struct_fields,
+                            fn_modules,
+                            ctx,
+                        )
+                    })
+                    .collect();
+                let ret_ty = typed
+                    .inherent_methods
+                    .values()
+                    .find_map(|m| m.get(&field.name))
+                    .and_then(|key| typed.signatures.get(key).map(|s| CirTy::from_ty(&s.ret)))
+                    .unwrap_or(CirTy::Error);
+                return E::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: field.name.clone(),
+                    args: call_args,
+                    ty: ret_ty,
+                    span: expr.span,
+                };
             }
             if let ExprKind::Ident(id) = &func.kind {
                 if (id.name == "print" || id.name == "log") && args.len() == 1 {
@@ -1146,9 +1181,13 @@ fn lower_expr(
                             fn_modules,
                             ctx,
                         );
-                        let mode = callee_osig
-                            .and_then(|c| c.params.get(i).map(|(_, m)| *m))
-                            .unwrap_or(OwnershipMode::Borrow);
+                        let mode = if callee_param_is_copy_generic(typed, &id.name, i) {
+                            OwnershipMode::Owned
+                        } else {
+                            callee_osig
+                                .and_then(|c| c.params.get(i).map(|(_, m)| *m))
+                                .unwrap_or(OwnershipMode::Borrow)
+                        };
                         if matches!(mode, OwnershipMode::Borrow)
                             && matches!(lowered, E::Ident { .. })
                         {
@@ -1711,6 +1750,32 @@ fn should_clone_at_bind(
     }
     let _ = binding;
     false
+}
+
+fn sig_param_is_copy_generic(sig: &InferredSig, i: usize) -> bool {
+    let Some((_, ty)) = sig.params.get(i) else {
+        return false;
+    };
+    ty_is_copy_generic(ty, sig)
+}
+
+fn callee_param_is_copy_generic(typed: &TypedCrate, fname: &str, i: usize) -> bool {
+    typed
+        .signatures
+        .values()
+        .find(|s| s.name == fname && s.impl_ty.is_none())
+        .is_some_and(|sig| sig_param_is_copy_generic(sig, i))
+}
+
+fn ty_is_copy_generic(ty: &Ty, sig: &InferredSig) -> bool {
+    match ty {
+        Ty::Named { name, args } if args.is_empty() && sig.generics.iter().any(|g| g == name) => {
+            sig.op_bounds
+                .get(name)
+                .is_some_and(|ops| ops.iter().any(|o| is_arith_bound(o)))
+        }
+        _ => false,
+    }
 }
 
 #[cfg(test)]

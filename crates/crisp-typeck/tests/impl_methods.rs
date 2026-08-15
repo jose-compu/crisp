@@ -1,6 +1,6 @@
 //! Inherent `impl Type` methods (§5.4 / #20).
 
-use crisp_typeck::TypeChecker;
+use crisp_typeck::{TypeChecker, format_sig};
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
@@ -56,4 +56,10 @@ fn show_trait_typechecks_and_registers_methods() {
         typed.inherent_methods
     );
     assert!(typed.signatures.contains_key("main::Point::show"));
+    let label = typed
+        .signatures
+        .values()
+        .find(|s| s.name == "label")
+        .expect("label");
+    assert_eq!(format_sig(label), "label<T: Clone + Show>(x: T) -> str");
 }

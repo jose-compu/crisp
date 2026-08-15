@@ -20,6 +20,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0041 | typeck | Unknown name |
 | E0042 | typeck | Resolve error wrapped into typeck |
 | E0043 | typeck | Ambiguous field on unresolved param type — annotate the parameter (`x: Item`) |
+| E0084 | typeck | Instantiation does not satisfy an inferred bound on `T` (`T: Add` / `T: Show` from the body) — use a type that implements the capability, or avoid that operation ([#84](https://github.com/jose-compu/crisp/issues/84)) |
 | E0050 | ownership | Ownership contradicts explicit annotation — adjust `own`/`&`/`&mut` or usage |
 | E0051 | ownership | Ownership analysis failed |
 | E0052 | ownership | Resolve error during ownership |

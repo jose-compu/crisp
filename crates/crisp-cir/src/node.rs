@@ -127,7 +127,7 @@ pub struct CirFunction {
     pub is_main: bool,
     pub is_async: bool,
     pub generics: Vec<String>,
-    /// `T` → `Add` / `Sub` / … inferred from arithmetic (spec §15.4).
+    /// `T` → `Add` / `Show` / … inferred from use (spec §15.4 / #84).
     pub op_bounds: std::collections::BTreeMap<String, Vec<String>>,
     pub params: Vec<CirParam>,
     pub ret: CirTy,

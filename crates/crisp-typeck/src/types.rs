@@ -110,7 +110,7 @@ pub struct InferredSig {
     pub instantiations: Vec<String>,
     /// Single concrete instantiation for crate-internal emit (#76). Scheme stays generic.
     pub mono_args: Option<Vec<Ty>>,
-    /// Generics used in `+` / `-` / `*` / `/` → prelude Add/Sub/Mul/Div (§15.4).
+    /// Inferred bounds on generics (`T` → `Add` / `Show` / …) from operators and unique trait methods (#84).
     pub op_bounds: BTreeMap<String, Vec<String>>,
 }
 
@@ -161,7 +161,7 @@ impl InferredSig {
     fn crisp_generic_bound(&self, g: &str) -> String {
         let mut parts = vec![format!("{g}: Clone")];
         if let Some(ops) = self.op_bounds.get(g) {
-            if !ops.is_empty() {
+            if ops.iter().any(|o| is_arith_bound(o)) {
                 parts.push("Copy".into());
             }
             for op in ops {
@@ -189,7 +189,7 @@ impl InferredSig {
     pub fn rust_generic_bound(&self, g: &str) -> String {
         let mut parts = vec![format!("{g}: Clone")];
         if let Some(ops) = self.op_bounds.get(g) {
-            if !ops.is_empty() {
+            if ops.iter().any(|o| is_arith_bound(o)) {
                 parts.push("Copy".into());
             }
             for op in ops {
@@ -198,6 +198,11 @@ impl InferredSig {
         }
         parts.join(" + ")
     }
+}
+
+/// Prelude arithmetic traits inferred from `+` `-` `*` `/` (spec §15.4).
+pub fn is_arith_bound(name: &str) -> bool {
+    matches!(name, "Add" | "Sub" | "Mul" | "Div")
 }
 
 /// Prelude operator trait → `std::ops` bound (spec §15.4).

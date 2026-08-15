@@ -553,7 +553,10 @@ fn rust_ops_suffix(
     if ops.is_empty() {
         return String::new();
     }
-    let mut extra = vec!["Copy".to_string()];
+    let mut extra = Vec::new();
+    if ops.iter().any(|op| crisp_typeck::is_arith_bound(op)) {
+        extra.push("Copy".to_string());
+    }
     extra.extend(
         ops.iter()
             .map(|op| crisp_typeck::rust_op_bound(generic, op)),

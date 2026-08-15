@@ -1,0 +1,28 @@
+-- T needs Sub/Mul/Add from the body; str does not implement them (#84).
+shape HasPosition = {
+    x: T
+    y: T
+}
+
+type StrPt = {
+    x: str
+    y: str
+}
+
+distance(a: HasPosition<T>, b: HasPosition<T>) = {
+    dx := a.x - b.x
+    dy := a.y - b.y
+    dx * dx + dy * dy
+}
+
+pub main() = {
+    p := StrPt {
+        x: "a"
+        y: "b"
+    }
+    q := StrPt {
+        x: "c"
+        y: "d"
+    }
+    distance(p, q)
+}

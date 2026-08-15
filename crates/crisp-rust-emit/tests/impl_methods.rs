@@ -104,12 +104,19 @@ fn show_trait_emits_trait_and_impl() {
         "emitted:\n{}",
         out.lib_rs
     );
+    assert!(
+        out.lib_rs.contains("fn label<T: Clone + Show>")
+            && !out.lib_rs.contains("fn label<T: Clone + Copy + Show>"),
+        "inferred T: Show without Copy:\n{}",
+        out.lib_rs
+    );
 }
 
 #[test]
 fn show_trait_run_and_test() {
     let out = run_emitted(&example("show_trait")).expect("run");
     assert!(out.contains("p=(3,4)"), "stdout: {out}");
+    assert!(out.contains("l=(3,4)"), "stdout: {out}");
     let r = run_tests(&example("show_trait")).expect("test");
-    assert!(r.runtime_passed >= 1);
+    assert!(r.runtime_passed >= 2);
 }

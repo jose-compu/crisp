@@ -16,7 +16,8 @@ unwrap_int(b: Boxy<int>) = b.value
 
 unwrap_str(b: Boxy<str>) = b.value
 
--- T is inferred as Add + Sub + Mul from the body (prelude §15.4).
+-- T is inferred as Add + Sub + Mul from the body (prelude §15.4 / #84).
+-- Instantiating with a non-numeric field type is a typeck error (E0084).
 -- HasPosition stays a shape; the numeric bound is on distance, not the shape.
 shape HasPosition = {
     x: T

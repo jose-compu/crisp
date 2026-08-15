@@ -20,12 +20,20 @@ impl Show for Point = {
     show(self) = "({self.x},{self.y})"
 }
 
+-- T: Show is inferred from x.show(); instantiation with Point succeeds (#84).
+label(x: T) = x.show()
+
 test "show" = {
     p := Point.new(1, 2)
     assert_eq(p.show(), "(1,2)")
 }
 
+test "label" = {
+    p := Point.new(1, 2)
+    assert_eq(label(p), "(1,2)")
+}
+
 pub main() = {
     p := Point.new(3, 4)
-    log("p={p.show()}")
+    log("p={p.show()} l={label(p)}")
 }

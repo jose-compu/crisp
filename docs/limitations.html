@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crisp Known Limitations — honest gaps vs the draft spec</title>
   <!-- SEO -->
-  <meta name="description" content="Known limitations of the Crisp v1.5.x bootstrap compiler relative to the v0.2.0-draft specification." />
+  <meta name="description" content="Known limitations of the Crisp v1.6.x bootstrap compiler relative to the v0.2.0-draft specification." />
   <meta name="keywords" content="Crisp limitations, Crisp roadmap" />
   <meta name="author" content="Crisp / jose-compu" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -17,12 +17,12 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content="https://crisp-lang.org/limitations.html" />
   <meta property="og:title" content="Crisp Known Limitations — honest gaps vs the draft spec" />
-  <meta property="og:description" content="Known limitations of the Crisp v1.5.x bootstrap compiler relative to the v0.2.0-draft specification." />
+  <meta property="og:description" content="Known limitations of the Crisp v1.6.x bootstrap compiler relative to the v0.2.0-draft specification." />
   <meta property="og:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta property="og:image:alt" content="Crisp programming language logo" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Crisp Known Limitations — honest gaps vs the draft spec" />
-  <meta name="twitter:description" content="Known limitations of the Crisp v1.5.x bootstrap compiler relative to the v0.2.0-draft specification." />
+  <meta name="twitter:description" content="Known limitations of the Crisp v1.6.x bootstrap compiler relative to the v0.2.0-draft specification." />
   <meta name="twitter:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta name="theme-color" content="#0b1220" />
   <!-- /SEO -->
@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -53,7 +53,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the v1.5.x public release versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.6.x public release versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
@@ -61,8 +61,9 @@
     <div class="wrap content">
       <ul>
         <li>Not self-hosted — Rust-hosted <code>crisp</code> only (self-hosting → v2.0.0)</li>
-        <li><strong>Shapes</strong> — data shapes work (<code>examples/shapes</code>); parametric <code>shape Boxy&lt;T&gt;</code> works (<code>examples/generics</code>, <code>examples/shapes_generic</code>); method / anonymous shapes still limited (#61)</li>
-        <li><strong>Generics</strong> — explicit <code>type</code> / function / <code>trait</code> / <code>shape</code> params work; <code>where</code>, rich <code>T: Show</code> bounds, and nested <code>&gt;&gt;</code> (lexed as shift) still limited (#70 / #71)</li>
+        <li><strong>Shapes</strong> — data shapes work (<code>examples/shapes</code>); parametric <code>shape Boxy</code> works (<code>examples/generics_implicit</code>, <code>examples/shapes_generic</code>); method / anonymous shapes still limited (#61)</li>
+        <li><strong>Generics</strong> — prefer implicit binders (<code>id(x: T)</code>); <code>&lt;&gt;</code> pins and applies. <code>where</code>, rich <code>T: Show</code> bounds, and nested <code>&gt;&gt;</code> (lexed as shift) still limited (#70 / #71 / #75)</li>
+        <li><strong>Closures</strong> — parsed / partially typed; not emitted end-to-end yet (#72, v1.7.0)</li>
         <li>Unknown Rust APIs are opaque stubs; known <code>Result</code> imports (<code>serde_json</code>, <code>ureq</code>) use Crisp <code>?</code> (#55)</li>
         <li>Trait defaults for literal/simple bodies shipped (<code>examples/trait_defaults</code>); bounds / <code>dyn Trait</code> still incomplete (#59)</li>
         <li>Enums: unit/tuple variants work; recursive enums and full exhaustiveness still gap</li>
@@ -70,9 +71,9 @@
         <li>Field access on parameters: inferred when exactly one struct has the field; else annotate (<code>E0043</code>)</li>
         <li><code>crisp-lsp</code> stdio host ships (hover, inlays, diagnostics); install with <code>cargo install --path crates/crisp-lsp</code> (#56)</li>
         <li>Editor VSIX via <code>./scripts/package-vsix.sh</code>; Marketplace listing optional (#57)</li>
-        <li>crates.io publish deferred; install from source (#60)</li>
+        <li>Install: <code>cargo install crisp-lang --locked</code> (#66). Republish v1.6.0 after this tag.</li>
       </ul>
-      <p><strong>Shipped in v1.5.x:</strong> loops (§6.3), Result <code>?</code>, data shapes, stdio LSP, VSIX packaging, trait default bodies — on top of v1.4 interop / Show/Eq/Ord / net+HTTP.</p>
+      <p><strong>Shipped in v1.6.0:</strong> implicit generics (preferred), parametric shapes, <code>pub</code> schemes in <code>crisp.lock</code> — on top of v1.5 loops / LSP / shapes and v1.4 interop.</p>
       <p>
         <a href="https://github.com/jose-compu/crisp/blob/main/docs/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md →</a>
         ·
@@ -105,7 +106,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

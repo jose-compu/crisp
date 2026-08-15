@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -365,13 +365,13 @@ pub main() = {
         <article class="tutorial-step" id="generics">
           <div class="step-label">Step 14</div>
           <h2>Generics</h2>
-          <p>Inference is the default. Write <code>&lt;T&gt;</code> when a type, function, trait, or shape should stay parametric. Applications use the same brackets: <code>Pair&lt;int, str&gt;</code>, <code>Boxy&lt;int&gt;</code>.</p>
-          <pre class="pipe">type Pair&lt;A, B&gt; = { left: A, right: B }
+          <p><strong>Prefer implicit binders.</strong> Unbound names in type position are parameters. Write <code>&lt;&gt;</code> only to pin a definition or to apply arguments: <code>Pair&lt;int, str&gt;</code>, <code>Boxy&lt;int&gt;</code>.</p>
+          <pre class="pipe">type Pair = { left: A, right: B }
 
-id&lt;T&gt;(x: T) = x
-first&lt;A, B&gt;(p: Pair&lt;A, B&gt;) = p.left
+id(x: T) = x
+first(p: Pair&lt;A, B&gt;) = p.left
 
-shape Boxy&lt;T&gt; = { value: T }
+shape Boxy = { value: T }
 unwrap_int(b: Boxy&lt;int&gt;) = b.value
 
 pub main() = {
@@ -379,12 +379,12 @@ pub main() = {
     log("id={id(41)} first={first(p)}")
 }</pre>
           <ul>
-            <li>Same <code>&lt;&gt;</code> on <code>type</code>, functions, <code>trait</code>, and <code>shape</code> — not a second syntax.</li>
+            <li>Free names (<code>T</code>, <code>A</code>, <code>B</code>) become parameters. <code>&lt;T&gt;</code> is a pin — same meaning, optional.</li>
             <li>A matching struct satisfies <code>Boxy&lt;int&gt;</code> automatically; no <code>impl</code> required for the shape.</li>
-            <li><code>where</code> clauses and rich <code>T: Show</code> bounds are still limited — see <a href="limitations.html">limitations</a>.</li>
+            <li><code>impl Wrapper for IntBox</code> infers the trait args. <code>where</code> and rich <code>T: Show</code> bounds are still limited — see <a href="limitations.html">limitations</a>.</li>
           </ul>
-          <p class="try">Try: <code>crisp test examples/generics</code> · also <code>examples/shapes_generic</code></p>
-          <p class="tech"><strong>Under the hood:</strong> Explicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust.</p>
+          <p class="try">Try: <code>crisp test examples/generics_implicit</code> · also <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/generics_pub</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Implicit params stay rigid in the definition and instantiate at call sites. Shapes emit <code>trait Boxy&lt;T&gt;</code> plus structural <code>impl Boxy&lt;i64&gt; for IntBox</code>. Field access on a type parameter currently requires <code>T: Clone</code> in the generated Rust. <code>pub</code> schemes freeze in <code>crisp.lock</code>.</p>
         </article>
 
         <article class="tutorial-step" id="rust-import">
@@ -489,7 +489,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

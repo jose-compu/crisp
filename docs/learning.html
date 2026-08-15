@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.5.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.6.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -106,7 +106,7 @@
           <li><code>examples/fallible</code> — ambient errors with <code>!</code>, <code>throw</code>, <code>catch</code></li>
           <li><code>examples/show_trait</code>, <code>examples/trait_defaults</code>, <code>examples/std_traits</code> — traits, defaults, Show/Eq/Ord</li>
           <li><code>examples/shapes</code> — data shapes → generated traits</li>
-          <li><code>examples/generics</code>, <code>examples/shapes_generic</code> — type/function/trait params and <code>shape Boxy&lt;T&gt;</code></li>
+          <li><code>examples/generics_implicit</code> (preferred), <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/generics_pub</code> — implicit binders, pins, parametric shapes, pub schemes</li>
           <li><code>examples/rust_import</code>, <code>examples/net_http</code> — Rust crate interop</li>
           <li><code>examples/async_hello</code> — async / Tokio</li>
           <li><code>examples/ffi</code> — <code>extern "C"</code></li>
@@ -116,7 +116,7 @@
 
       <div id="limits" class="content" style="margin-top:2.5rem">
         <h2>Honest limits</h2>
-        <p>This is a Rust-hosted bootstrap (<strong>v1.5.2</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes and <code>dyn Trait</code> still limited; crates.io deferred. Loops, data shapes, stdio <code>crisp-lsp</code>, and trait defaults are in. See <a href="limitations.html">limitations</a>.</p>
+        <p>This is a Rust-hosted bootstrap (<strong>v1.6.0</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, <code>dyn Trait</code>, and first-class closures (v1.7.0). Implicit generics, loops, data shapes, stdio <code>crisp-lsp</code>, and trait defaults are in. See <a href="limitations.html">limitations</a>.</p>
       </div>
     </div>
   </section>
@@ -145,7 +145,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.5.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

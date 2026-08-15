@@ -490,7 +490,11 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
                 .filter(|p| matches!(&p.ty, CirTy::Named { name, .. } if name == g))
                 .flat_map(|p| p.extra_bounds.iter().cloned())
                 .collect();
-            format!("{g}: Clone{}", extra_bounds_suffix(&extras))
+            format!(
+                "{g}: Clone{}{}",
+                extra_bounds_suffix(&extras),
+                rust_ops_suffix(g, &f.op_bounds)
+            )
         })
         .collect();
     let mut params = Vec::new();
@@ -537,6 +541,24 @@ fn extra_bounds_suffix(bounds: &[String]) -> String {
     } else {
         format!(" + {}", bounds.join(" + "))
     }
+}
+
+fn rust_ops_suffix(
+    generic: &str,
+    op_bounds: &std::collections::BTreeMap<String, Vec<String>>,
+) -> String {
+    let Some(ops) = op_bounds.get(generic) else {
+        return String::new();
+    };
+    if ops.is_empty() {
+        return String::new();
+    }
+    let mut extra = vec!["Copy".to_string()];
+    extra.extend(
+        ops.iter()
+            .map(|op| crisp_typeck::rust_op_bound(generic, op)),
+    );
+    extra_bounds_suffix(&extra)
 }
 
 fn format_extern_param(p: &CirParam) -> String {

@@ -68,6 +68,11 @@ fn shapes_generic_emits_and_runs() {
         "shape bound:\n{}",
         out.lib_rs
     );
+    assert!(
+        out.lib_rs.contains("std::ops::Add") && out.lib_rs.contains("fn distance"),
+        "op bounds:\n{}",
+        out.lib_rs
+    );
     let run = run_emitted(&example("shapes_generic")).expect("run");
     assert!(run.contains("i=4"), "stdout: {run}");
     let r = run_tests(&example("shapes_generic")).expect("test");

@@ -631,6 +631,7 @@ fn lower_function(
         } else {
             def.generics.iter().map(|g| g.name.clone()).collect()
         },
+        op_bounds: tsig.op_bounds.clone(),
         params,
         ret,
         fallible: esig.fallible,

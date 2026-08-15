@@ -10,7 +10,7 @@ pub fn prelude_symbols() -> Vec<Symbol> {
     ];
     let fns = ["log", "print", "some", "none", "assert_eq"];
     // Spec §15.4 — compiler-injected shims (Show→Display, Eq→PartialEq/Eq, Ord→Ord).
-    let traits = ["Show", "Eq", "Ord"];
+    let traits = ["Show", "Eq", "Ord", "Add", "Sub", "Mul", "Div"];
 
     let mut out = Vec::new();
     for name in types {

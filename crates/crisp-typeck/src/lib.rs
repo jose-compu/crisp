@@ -8,4 +8,4 @@ mod unify;
 
 pub use display::{format_sig, format_ty};
 pub use infer::{TypeChecker, TypeError, TypedCrate, rust_import_returns_result};
-pub use types::{InferredSig, Ty};
+pub use types::{InferredSig, Ty, rust_op_bound};

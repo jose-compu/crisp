@@ -99,20 +99,6 @@ fn format_probe_gens(gens: &[crisp_ast::ident::Ident]) -> String {
     }
 }
 
-fn format_probe_fn_gens(gens: &[crisp_ast::ident::Ident]) -> String {
-    if gens.is_empty() {
-        String::new()
-    } else {
-        format!(
-            "<{}>",
-            gens.iter()
-                .map(|g| format!("{}: Clone", g.name))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
-    }
-}
-
 fn ast_type_rust(ty: &crisp_ast::ty::Type) -> String {
     use crisp_ast::ty::TypeKind;
     match &ty.kind {
@@ -174,16 +160,14 @@ fn emit_function(
         .join(", ");
     let ret = format_rust_ret(&emit_ret);
     let gens = if emit_gens.is_empty() {
-        format_probe_fn_gens(&def.generics)
-    } else {
-        format!(
-            "<{}>",
-            emit_gens
+        tsig.rust_scheme_prefix_for(
+            &def.generics
                 .iter()
-                .map(|g| format!("{g}: Clone"))
-                .collect::<Vec<_>>()
-                .join(", ")
+                .map(|g| g.name.clone())
+                .collect::<Vec<_>>(),
         )
+    } else {
+        tsig.rust_scheme_prefix_for(&emit_gens)
     };
     let _ = writeln!(out, "pub fn {}{gens}({params}){ret} {{", def.name.name);
     emit_body(out, &def.body, osig, Some(ownership), 1);

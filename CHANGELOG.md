@@ -9,6 +9,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- Prelude **Add / Sub / Mul / Div** inferred from `+` `-` `*` `/` on generic `T` (emit `std::ops::*`, spec §15.4). `distance(a: HasPosition<T>, …)` works for int and float (`examples/shapes_generic`).
+
 ## [1.6.0] — 2026-08-15
 
 ### Added

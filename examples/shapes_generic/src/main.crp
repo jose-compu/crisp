@@ -1,4 +1,4 @@
--- examples/shapes_generic — parametric data shapes (#70)
+-- examples/shapes_generic — parametric data shapes (#70) + inferred Add/Sub/Mul
 
 shape Boxy = {
     value: T
@@ -16,9 +16,8 @@ unwrap_int(b: Boxy<int>) = b.value
 
 unwrap_str(b: Boxy<str>) = b.value
 
--- Parametric position: any struct with x/y of the applied type matches.
--- A single `distance(a: HasPosition<T>, b: HasPosition<T>)` does not
--- instantiate T at the call site (T stays a named type). Apply int/float.
+-- T is inferred as Add + Sub + Mul from the body (prelude §15.4).
+-- HasPosition stays a shape; the numeric bound is on distance, not the shape.
 shape HasPosition = {
     x: T
     y: T
@@ -40,13 +39,7 @@ type FPoint = {
 }
 
 -- Squared Euclidean distance (3-4-5 → 25). No sqrt builtin yet.
-distance(a: HasPosition<int>, b: HasPosition<int>) = {
-    dx := a.x - b.x
-    dy := a.y - b.y
-    dx * dx + dy * dy
-}
-
-distance_f(a: HasPosition<float>, b: HasPosition<float>) = {
+distance(a: HasPosition<T>, b: HasPosition<T>) = {
     dx := a.x - b.x
     dy := a.y - b.y
     dx * dx + dy * dy
@@ -84,7 +77,7 @@ test "float distance" = {
         x: 3.0
         y: 4.0
     }
-    assert_eq(distance_f(p, q), 25.0)
+    assert_eq(distance(p, q), 25.0)
 }
 
 test_compile_fail "str box is not Boxy<int>" = {
@@ -109,5 +102,13 @@ pub main() = {
         x: 3
         y: 4
     }
-    log("i={unwrap_int(i)} s={unwrap_str(s)} d={distance(p, q)}")
+    f := FPoint {
+        x: 0.0
+        y: 0.0
+    }
+    g := FPoint {
+        x: 3.0
+        y: 4.0
+    }
+    log("i={unwrap_int(i)} s={unwrap_str(s)} d={distance(p, q)} df={distance(f, g)}")
 }

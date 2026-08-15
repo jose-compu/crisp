@@ -83,6 +83,10 @@ fn shapes_generic_example_typechecks() {
         format_sig(sig_named(&typed, "unwrap_str")),
         "unwrap_str(b: Boxy<str>) -> str"
     );
+    assert_eq!(
+        format_sig(sig_named(&typed, "distance")),
+        "distance<T: Clone + Copy + Add + Mul + Sub>(a: HasPosition<T>, b: HasPosition<T>) -> T"
+    );
 }
 
 #[test]

@@ -78,6 +78,10 @@ pub struct TypeChecker {
     impl_trait_args: BTreeMap<String, Vec<Ty>>,
     /// Call-site argument types for crate-internal specialization (#76).
     fn_instantiations: BTreeMap<String, Vec<Vec<Ty>>>,
+    /// Named generics used in arithmetic (`T` → `Add` / `Sub` / …).
+    arith_named: BTreeMap<String, BTreeSet<String>>,
+    /// Unannotated type vars used in arithmetic (mapped to names after generalization).
+    arith_vars: BTreeMap<u32, BTreeSet<String>>,
 }
 
 impl TypeChecker {
@@ -124,6 +128,8 @@ impl TypeChecker {
             impl_trait_fresh: BTreeMap::new(),
             impl_trait_args: BTreeMap::new(),
             fn_instantiations: BTreeMap::new(),
+            arith_named: BTreeMap::new(),
+            arith_vars: BTreeMap::new(),
         }
     }
 
@@ -156,6 +162,7 @@ impl TypeChecker {
                     inferred_from_use: false,
                     instantiations: Vec::new(),
                     mono_args: None,
+                    op_bounds: BTreeMap::new(),
                 },
             );
         }
@@ -470,6 +477,7 @@ impl TypeChecker {
                     inferred_from_use: false,
                     instantiations: Vec::new(),
                     mono_args: None,
+                    op_bounds: BTreeMap::new(),
                 },
             );
         }
@@ -513,6 +521,7 @@ impl TypeChecker {
                         inferred_from_use: false,
                         instantiations: Vec::new(),
                         mono_args: None,
+                        op_bounds: BTreeMap::new(),
                     },
                 );
             }
@@ -620,6 +629,7 @@ impl TypeChecker {
                 inferred_from_use: false,
                 instantiations: Vec::new(),
                 mono_args: None,
+                op_bounds: BTreeMap::new(),
             },
         );
         self.inherent_methods
@@ -670,6 +680,7 @@ impl TypeChecker {
                     inferred_from_use: false,
                     instantiations: Vec::new(),
                     mono_args: None,
+                    op_bounds: BTreeMap::new(),
                 },
             );
         }
@@ -701,12 +712,15 @@ impl TypeChecker {
                 inferred_from_use: false,
                 instantiations: Vec::new(),
                 mono_args: None,
+                op_bounds: BTreeMap::new(),
             },
         );
         Ok(())
     }
 
     fn check_function(&mut self, module: &str, f: &FunctionDef) -> Result<(), TypeError> {
+        self.arith_named.clear();
+        self.arith_vars.clear();
         let gens: Vec<String> = f.generics.iter().map(|g| g.name.clone()).collect();
         let saved = self.bind_rigid_generics(&gens);
         // Reuse stub param/ret vars so call-site unifications from earlier modules stick.
@@ -770,6 +784,7 @@ impl TypeChecker {
         // Unannotated items with leftover free vars become a scheme (#76).
         // Forward-ref calls that already pinned the stub stay monomorphic.
         // Explicit `<>` / free type names (`x: T`) are pins and are not specialized.
+        let pre_ty = fn_ty.clone();
         if gens.is_empty() {
             let (named, inferred) = name_free_vars(&fn_ty);
             if !inferred.is_empty() {
@@ -786,6 +801,7 @@ impl TypeChecker {
                 }
             }
         }
+        let op_bounds = self.take_op_bounds(&pre_ty, &gens);
         let key = format!("{module}::{}", f.name.name);
         self.signatures.insert(
             key,
@@ -801,6 +817,7 @@ impl TypeChecker {
                 inferred_from_use,
                 instantiations: Vec::new(),
                 mono_args: None,
+                op_bounds,
             },
         );
         self.env.insert(
@@ -1188,11 +1205,19 @@ impl TypeChecker {
             }
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
                 unify(&mut self.ctx, &lt, &rt)?;
-                if matches!(&lt, Ty::Float) || matches!(&rt, Ty::Float) {
-                    unify(&mut self.ctx, &lt, &Ty::Float)?;
+                let t = self.ctx.apply(&lt);
+                let r = self.ctx.apply(&rt);
+                if matches!(t, Ty::Float) || matches!(r, Ty::Float) {
+                    unify(&mut self.ctx, &t, &Ty::Float)?;
                     Ok(Ty::Float)
+                } else if matches!(t, Ty::Int | Ty::UInt) || matches!(r, Ty::Int | Ty::UInt) {
+                    unify(&mut self.ctx, &t, &Ty::Int)?;
+                    Ok(Ty::Int)
+                } else if let Some(op) = arith_trait_name(op) {
+                    self.record_arith(&t, op);
+                    Ok(t)
                 } else {
-                    unify(&mut self.ctx, &lt, &Ty::Int)?;
+                    unify(&mut self.ctx, &t, &Ty::Int)?;
                     Ok(Ty::Int)
                 }
             }
@@ -1563,17 +1588,18 @@ impl TypeChecker {
                     }));
                 };
                 for (fname, fty) in &shape_fields {
-                    match fields.get(fname) {
-                        Some(aty) if ty_structurally_eq(aty, fty) => {}
-                        _ => {
-                            return Err(TypeError::Unify(UnifyError::Mismatch {
-                                expected: format!(
-                                    "shape `{shape_name}` (field `{fname}: {fty:?}`)"
-                                ),
-                                found: name.clone(),
-                            }));
-                        }
-                    }
+                    let Some(aty) = fields.get(fname) else {
+                        return Err(TypeError::Unify(UnifyError::Mismatch {
+                            expected: format!("shape `{shape_name}` (field `{fname}: {fty:?}`)"),
+                            found: name.clone(),
+                        }));
+                    };
+                    unify(&mut self.ctx, aty, fty).map_err(|err| {
+                        TypeError::Unify(UnifyError::Mismatch {
+                            expected: format!("shape `{shape_name}` (field `{fname}: {fty:?}`)"),
+                            found: format!("{name} ({err})"),
+                        })
+                    })?;
                 }
                 Ok(())
             }
@@ -1590,6 +1616,44 @@ impl TypeChecker {
             span,
         })?;
         Ok(instantiate(&mut self.ctx, scheme))
+    }
+
+    fn record_arith(&mut self, ty: &Ty, op: &str) {
+        match self.ctx.apply(ty) {
+            Ty::Named { name, args } if args.is_empty() => {
+                self.arith_named.entry(name).or_default().insert(op.into());
+            }
+            Ty::Var(v) => {
+                self.arith_vars.entry(v).or_default().insert(op.into());
+            }
+            _ => {}
+        }
+    }
+
+    fn take_op_bounds(&mut self, pre_ty: &Ty, gens: &[String]) -> BTreeMap<String, Vec<String>> {
+        let mut named = std::mem::take(&mut self.arith_named);
+        let vars = std::mem::take(&mut self.arith_vars);
+        let mut free = Vec::new();
+        collect_free_vars(pre_ty, &mut free);
+        free.sort_unstable();
+        free.dedup();
+        for (i, v) in free.iter().enumerate() {
+            if let Some(ops) = vars.get(v) {
+                named
+                    .entry(generic_name(i))
+                    .or_default()
+                    .extend(ops.iter().cloned());
+            }
+        }
+        let mut out = BTreeMap::new();
+        for g in gens {
+            if let Some(ops) = named.remove(g) {
+                let mut list: Vec<String> = ops.into_iter().collect();
+                list.sort();
+                out.insert(g.clone(), list);
+            }
+        }
+        out
     }
 
     fn bind_rigid_generics(&mut self, gens: &[String]) -> BTreeMap<String, Ty> {
@@ -1772,23 +1836,13 @@ impl TypeChecker {
     }
 }
 
-fn ty_structurally_eq(a: &Ty, b: &Ty) -> bool {
-    match (a, b) {
-        (Ty::Named { name: na, args: aa }, Ty::Named { name: nb, args: ab }) => {
-            na == nb
-                && aa.len() == ab.len()
-                && aa.iter().zip(ab).all(|(x, y)| ty_structurally_eq(x, y))
-        }
-        (Ty::Int, Ty::Int)
-        | (Ty::UInt, Ty::UInt)
-        | (Ty::Float, Ty::Float)
-        | (Ty::Bool, Ty::Bool)
-        | (Ty::Char, Ty::Char)
-        | (Ty::Str, Ty::Str)
-        | (Ty::StrSlice, Ty::StrSlice)
-        | (Ty::Unit, Ty::Unit) => true,
-        (Ty::Option(a), Ty::Option(b)) => ty_structurally_eq(a, b),
-        _ => false,
+fn arith_trait_name(op: BinaryOp) -> Option<&'static str> {
+    match op {
+        BinaryOp::Add => Some("Add"),
+        BinaryOp::Sub => Some("Sub"),
+        BinaryOp::Mul => Some("Mul"),
+        BinaryOp::Div => Some("Div"),
+        _ => None,
     }
 }
 

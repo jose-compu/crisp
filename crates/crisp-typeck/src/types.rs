@@ -1,5 +1,5 @@
 use crisp_ast::Span;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 pub type TypeVar = u32;
 
@@ -110,6 +110,8 @@ pub struct InferredSig {
     pub instantiations: Vec<String>,
     /// Single concrete instantiation for crate-internal emit (#76). Scheme stays generic.
     pub mono_args: Option<Vec<Ty>>,
+    /// Generics used in `+` / `-` / `*` / `/` → prelude Add/Sub/Mul/Div (§15.4).
+    pub op_bounds: BTreeMap<String, Vec<String>>,
 }
 
 impl InferredSig {
@@ -139,18 +141,73 @@ impl InferredSig {
 
     /// Emit-style binder list, including the hidden `T: Clone` bound (#78).
     pub fn scheme_prefix(&self) -> String {
-        if self.generics.is_empty() {
+        self.scheme_prefix_for(&self.generics)
+    }
+
+    pub fn scheme_prefix_for(&self, gens: &[String]) -> String {
+        if gens.is_empty() {
             String::new()
         } else {
             format!(
                 "<{}>",
-                self.generics
-                    .iter()
-                    .map(|g| format!("{g}: Clone"))
+                gens.iter()
+                    .map(|g| self.crisp_generic_bound(g))
                     .collect::<Vec<_>>()
                     .join(", ")
             )
         }
+    }
+
+    fn crisp_generic_bound(&self, g: &str) -> String {
+        let mut parts = vec![format!("{g}: Clone")];
+        if let Some(ops) = self.op_bounds.get(g) {
+            if !ops.is_empty() {
+                parts.push("Copy".into());
+            }
+            for op in ops {
+                parts.push(op.clone());
+            }
+        }
+        parts.join(" + ")
+    }
+
+    /// Rust binder list (`T: Clone + std::ops::Add<Output = T>`).
+    pub fn rust_scheme_prefix_for(&self, gens: &[String]) -> String {
+        if gens.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "<{}>",
+                gens.iter()
+                    .map(|g| self.rust_generic_bound(g))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }
+    }
+
+    pub fn rust_generic_bound(&self, g: &str) -> String {
+        let mut parts = vec![format!("{g}: Clone")];
+        if let Some(ops) = self.op_bounds.get(g) {
+            if !ops.is_empty() {
+                parts.push("Copy".into());
+            }
+            for op in ops {
+                parts.push(rust_op_bound(g, op));
+            }
+        }
+        parts.join(" + ")
+    }
+}
+
+/// Prelude operator trait → `std::ops` bound (spec §15.4).
+pub fn rust_op_bound(generic: &str, op: &str) -> String {
+    match op {
+        "Add" => format!("std::ops::Add<Output = {generic}>"),
+        "Sub" => format!("std::ops::Sub<Output = {generic}>"),
+        "Mul" => format!("std::ops::Mul<Output = {generic}>"),
+        "Div" => format!("std::ops::Div<Output = {generic}>"),
+        other => other.to_string(),
     }
 }
 

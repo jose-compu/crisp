@@ -163,14 +163,7 @@ fn emit_fallible_function(
     let gens = if emit_gens.is_empty() {
         String::new()
     } else {
-        format!(
-            "<{}>",
-            emit_gens
-                .iter()
-                .map(|g| format!("{g}: Clone"))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
+        tsig.rust_scheme_prefix_for(&emit_gens)
     };
 
     let _ = writeln!(out, "pub fn {}{gens}({params}){ret} {{", def.name.name);

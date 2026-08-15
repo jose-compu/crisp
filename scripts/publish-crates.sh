@@ -10,9 +10,11 @@
 #
 # crates.io new-crate limits: burst of 5, then 1 every 10 minutes.
 # New versions of existing crates: burst of 30, then 1 per minute.
-# We do NOT sleep the full 10 minutes proactively — short post-upload
-# cushion only; rate limits are handled by wait-and-retry on 429.
-# Defaults: NEW_CRATE_SLEEP=15, VERSION_SLEEP=5. Override via env.
+# After each upload, poll crates.io until name@version returns 200 so the
+# next crate can resolve the new registry dep. Then a short extra cushion.
+# Rate limits are handled by wait-and-retry on 429 (not a fixed 10 min sleep).
+# Defaults: NEW_CRATE_SLEEP=15, VERSION_SLEEP=5, INDEX_POLL_SECS=5,
+# INDEX_POLL_MAX=60. Override via env.
 #
 # Dev-dependencies are ignored for ordering (e.g. crisp-rust-emit → crisp-lsp).
 set -euo pipefail
@@ -25,6 +27,8 @@ EXECUTE=0
 NEW_CRATE_SLEEP="${NEW_CRATE_SLEEP:-15}"
 VERSION_SLEEP="${VERSION_SLEEP:-5}"
 PUBLISH_SLEEP="${PUBLISH_SLEEP:-}"
+INDEX_POLL_SECS="${INDEX_POLL_SECS:-5}"
+INDEX_POLL_MAX="${INDEX_POLL_MAX:-60}"
 # Fallback wait if a 429 does not include a parseable retry-after date.
 RATE_LIMIT_FALLBACK="${RATE_LIMIT_FALLBACK:-620}"
 
@@ -37,10 +41,11 @@ elif [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo
   echo "Already-published crate@version pairs are skipped."
   echo "On 429 rate limits: wait until crates.io retry-after, then retry."
-  echo "Short pause after success (index cushion; not the full rate-limit window):"
+  echo "After each upload: poll crates.io until the version is visible, then:"
   echo "  new crate name:  ${NEW_CRATE_SLEEP}s  (NEW_CRATE_SLEEP)"
   echo "  new version:     ${VERSION_SLEEP}s   (VERSION_SLEEP)"
   echo "  override both:   PUBLISH_SLEEP=<seconds>"
+  echo "  index poll:      ${INDEX_POLL_SECS}s × ${INDEX_POLL_MAX}  (INDEX_POLL_SECS / INDEX_POLL_MAX)"
   echo "  429 fallback:    ${RATE_LIMIT_FALLBACK}s (RATE_LIMIT_FALLBACK)"
   echo
   echo "After publish, end users install:"
@@ -183,6 +188,26 @@ print(int(max(wait, 1)))
   done
 }
 
+wait_until_indexed() {
+  local name="$1" ver="$2"
+  local tries=0
+  if crate_version_exists "$name" "$ver"; then
+    echo "    index has ${name}@${ver}"
+    return 0
+  fi
+  echo "    polling crates.io for ${name}@${ver}…"
+  while ! crate_version_exists "$name" "$ver"; do
+    tries=$((tries + 1))
+    if [[ "$tries" -ge "$INDEX_POLL_MAX" ]]; then
+      echo "error: ${name}@${ver} not visible on crates.io after $((INDEX_POLL_MAX * INDEX_POLL_SECS))s" >&2
+      return 1
+    fi
+    echo "    … not visible yet (poll ${tries}/${INDEX_POLL_MAX}); sleeping ${INDEX_POLL_SECS}s"
+    sleep "$INDEX_POLL_SECS"
+  done
+  echo "    index has ${name}@${ver}"
+}
+
 sleep_after_success() {
   local is_new_crate="$1"
   local secs
@@ -193,7 +218,7 @@ sleep_after_success() {
   else
     secs="$VERSION_SLEEP"
   fi
-  echo "    sleeping ${secs}s (index cushion)…"
+  echo "    sleeping ${secs}s (extra index cushion)…"
   sleep "$secs"
 }
 
@@ -214,6 +239,7 @@ publish_with_retry() {
     if [[ $status -eq 0 ]]; then
       PUBLISHED=$((PUBLISHED + 1))
       echo "    published ${name}@${VERSION}"
+      wait_until_indexed "$name" "$VERSION"
       sleep_after_success "$is_new_crate"
       return 0
     fi
@@ -237,13 +263,17 @@ publish_with_retry() {
   done
 }
 
-if [[ "$EXECUTE" -eq 0 ]]; then
+if [[ "$EXECUTE" -eq 1 ]]; then
+  if [[ ! -f "${CARGO_HOME:-$HOME/.cargo}/credentials.toml" && ! -f "${CARGO_HOME:-$HOME/.cargo}/credentials" ]]; then
+    echo "error: no cargo credentials; run: cargo login" >&2
+    exit 1
+  fi
+  echo "==> PUBLISHING to crates.io (${#CRATES[@]} packages @ ${VERSION})"
+  echo "==> after each upload: wait until crates.io lists the version, then ${NEW_CRATE_SLEEP}s (new) / ${VERSION_SLEEP}s (version)"
+  echo "==> on 429: wait for crates.io retry-after, then retry automatically"
+else
   echo "==> dry-run only (pass --execute to publish)"
   echo "==> workspace version ${VERSION}; skip if already on crates.io"
-else
-  echo "==> PUBLISHING to crates.io (${#CRATES[@]} packages @ ${VERSION})"
-  echo "==> post-upload cushion ${NEW_CRATE_SLEEP}s (new) / ${VERSION_SLEEP}s (version); 429 waits use retry-after"
-  echo "==> on 429: wait for crates.io retry-after, then retry automatically"
 fi
 
 FAILED=0

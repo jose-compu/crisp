@@ -83,6 +83,6 @@ mod tests {
         let typed = TypeChecker::check_crate(&root).unwrap();
         let ownership = OwnershipPass::analyze_crate(&root).unwrap();
         let out = format_ownership_crate(&ownership, &typed);
-        assert!(out.contains("greet(name: &str)"));
+        assert!(out.contains("greet(who: &Named)"));
     }
 }

@@ -2,5 +2,6 @@
 source: crates/crisp-reveal/tests/reveal_ownership.rs
 expression: out
 ---
-greet(name: &str) -> str
+greet(who: &Named) -> str
+id<T: Clone>(x: T) -> T
 main() -> ()

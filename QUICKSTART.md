@@ -56,11 +56,21 @@ error_model = "enum"
 `src/main.crp`:
 
 ```crisp
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }
 ```
 
@@ -117,11 +127,21 @@ error_model = "enum"
 **`src/main.crp`**
 
 ```crisp
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }
 ```
 
@@ -337,11 +357,12 @@ reveal --help
 Example — `reveal types examples/hello` prints something like:
 
 ```
-greet(name: &str) -> str
+greet(who: Named) -> str  -- used as Named
+id<T: Clone>(x: T) -> T  -- used as str
 main() -> ()
 ```
 
-Your Crisp may only say `greet(name) = …`; `reveal` shows that `name` became `&str`.
+Your Crisp may only say `id(x: T)` and `greet(who: Named)`; `reveal` shows the inferred scheme and that `Named` is a shape bound.
 
 ### Common questions → which command
 
@@ -408,7 +429,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 
 | Example | Topics |
 |---------|--------|
-| `hello` | Minimal program |
+| `hello` | Shapes, implicit generics, field defaults |
 | `math` | Integer + float arithmetic, multi-module tests |
 | `nested_math` | Nested `src/math/vector.crp` module tree |
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |

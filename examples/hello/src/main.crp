@@ -1,8 +1,23 @@
--- examples/hello — minimal Crisp program (spec §5)
+-- examples/hello — shapes, implicit generics, defaults, interpolation
 
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
+
+test "greet guest" = {
+    g := Guest { name: "world" }
+    assert_eq(id(greet(g)), "hello world")
+}
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }

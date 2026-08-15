@@ -135,11 +135,21 @@ error_model = "enum"
 EOF
 
 cat > src/main.crp <<'EOF'
-greet(name) = "hello " ++ name
+shape Named = {
+    name: str
+}
+
+type Guest = {
+    name: str = "world"
+}
+
+id(x: T) = x
+
+greet(who: Named) = "hello {who.name}"
 
 pub main() = {
-    msg := greet("world")
-    print(msg)
+    world := Guest {}
+    print(id(greet(world)))
 }
 EOF
 
@@ -182,7 +192,7 @@ See [QUICKSTART.md](QUICKSTART.md) for project layout, modules, tests, and falli
 
 | Example | Topics | Notes |
 |---------|--------|--------|
-| `hello`, `math`, `float_demo`, `enums` | Basics, integers, floats, enum + match | `crisp test` |
+| `hello`, `math`, `float_demo`, `enums` | Shapes, implicit generics, integers, floats, enum + match | `crisp test` |
 | `show_trait`, `trait_defaults`, `shapes` | Traits, defaults, data shapes | `crisp test` |
 | `generics_implicit`, `generics`, `generics_pub`, `shapes_generic` | Implicit binders (preferred), pins, pub schemes, `shape Boxy` | `crisp test` |
 | `std_traits`, `rust_import`, `net_http` | Show/Eq/Ord, Rust crates, thin HTTP | |

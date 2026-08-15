@@ -7,6 +7,9 @@ type Pair = {
 
 id(x: T) = x
 
+-- `Pair` alone is Pair with no args and will not unify with
+-- `Pair { left: …, right: … }`. `<>` applies A and B; those names
+-- become implicit binders on first/second. `first(p: Pair)` is rejected.
 first(p: Pair<A, B>) = p.left
 
 second(p: Pair<A, B>) = p.right

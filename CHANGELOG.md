@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.6.1] — 2026-08-15
+
 ### Added
 
 - Prelude **Add / Sub / Mul / Div** inferred from `+` `-` `*` `/` on generic `T` (emit `std::ops::*`, spec §15.4). `distance(a: HasPosition<T>, …)` works for int and float (`examples/shapes_generic`).
@@ -192,7 +194,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/jose-compu/crisp/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/jose-compu/crisp/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/jose-compu/crisp/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/jose-compu/crisp/compare/v1.5.0...v1.5.1

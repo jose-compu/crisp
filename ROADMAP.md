@@ -313,13 +313,14 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.6.0**. Active milestones:
+Current compiler: **v1.6.1**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
 | **v1.4.x** | patch/minor | Interop, traits, Show/Eq/Ord, net/http, preview hygiene (shipped) | [v1.4.0](https://github.com/jose-compu/crisp/milestone/5) · [v1.4.1](https://github.com/jose-compu/crisp/milestone/7) |
 | **v1.5.0** | minor | Public launch: Result `?`, data shapes, stdio LSP, VSIX, trait defaults | [milestone](https://github.com/jose-compu/crisp/milestone/6) · label `release:v1.5.0` |
 | **v1.6.0** | minor | Generics (implicit preferred), parametric shapes, pub schemes | label `release:v1.6.0` |
+| **v1.6.1** | patch | Inferred bounds on `T`; E0084 on unsatisfied instantiations | label `release:v1.6.1` |
 | **v1.7.0** | minor | First-class closures / function values (#72) | label `release:v1.7.0` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
@@ -328,12 +329,21 @@ Current compiler: **v1.6.0**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io republish (v1.6.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io republish (v1.6.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### Shipped — v1.6.1 (bound instantiation)
+
+Keep parametric `T`. Infer constraints from the body. Reject unsatisfied instantiations in typeck.
+
+- [x] **Prelude arith bounds** — `+` `-` `*` `/` on `T` → `Add`/`Sub`/`Mul`/`Div` — [#84](https://github.com/jose-compu/crisp/issues/84)
+- [x] **Unique method → trait bound** — `x.show()` → `T: Show`; user `Measure` on `HasPosition<T>` (`examples/shapes_user`)
+- [x] **E0084** — typeck rejects instantiations that do not satisfy inferred bounds
+- [x] **`crisp test` several paths** — ignore a pasted `and` / repeated `crisp test`
 
 ### Shipped — v1.6.0 (generics)
 
@@ -354,4 +364,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-15 — v1.6.0 ships generics (implicit preferred); closures (#72) move to v1.7.0.*
+*Last updated: 2026-08-15 — v1.6.1 infers bounds on `T` from use (#84); closures (#72) remain v1.7.0.*

@@ -274,7 +274,7 @@ fn normalize_crate_paths(raw: Vec<String>) -> Vec<String> {
     ];
     let out: Vec<String> = raw
         .into_iter()
-        .filter(|p| !(GLUE.contains(&p.as_str()) && !Path::new(p).exists()))
+        .filter(|p| !GLUE.contains(&p.as_str()) || Path::new(p).exists())
         .collect();
     if out.is_empty() {
         vec![".".into()]

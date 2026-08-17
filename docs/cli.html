@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -86,7 +86,7 @@ crisp check .</pre>
 # → "hello world"</pre>
 
       <h3 id="test"><code>crisp test</code></h3>
-      <p>Emits Rust, then runs Crisp <code>test "…"</code> / <code>test_compile_fail</code> items via <code>cargo test</code> on the generated crate. Several crate paths may be given; a pasted <code>and</code> is ignored.</p>
+      <p>Emits Rust, then runs Crisp <code>test "…"</code> / <code>test_compile_fail</code> items via <code>cargo test</code> on the generated crate. Several crate paths may be given; a pasted <code>and</code> is ignored. Test function names include the module path so the same title can appear in two files (#102).</p>
       <pre class="pipe">crisp test examples/shapes
 crisp test examples/math examples/shapes_generic
 crisp test examples/with_tests</pre>
@@ -144,7 +144,7 @@ crisp-lsp</pre>
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.2 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

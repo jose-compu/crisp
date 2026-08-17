@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -193,7 +193,7 @@ pub main() = {
 }</pre>
           <ul>
             <li>Flat <code>src/*.crp</code> modules can import each other without worrying about file order.</li>
-            <li>Nested paths such as <code>src/math/vector.crp</code> become a nested Rust module tree when emitted.</li>
+            <li>Nested paths such as <code>src/math/vector.crp</code> become a nested Rust module tree when emitted. Nested <code>use</code> of functions and types both get <code>crate::</code> paths (#93 / #100; <code>examples/nested_math</code>, <code>examples/nested_types</code>).</li>
           </ul>
           <p class="tech"><strong>Under the hood:</strong> Resolve builds a module graph from the crate root (<code>crisp.toml</code> + <code>src/</code>). Visibility and <code>use</code> are checked before typeck; emit then writes a conventional <code>mod</code> tree for Cargo.</p>
         </article>
@@ -212,7 +212,8 @@ test_compile_fail "unknown name" = {
           <pre class="pipe">crisp test .</pre>
           <ul>
             <li>Keep tests in the same crate as the code under exercise unless you outgrow that.</li>
-            <li>Prefer small named cases over one giant script.</li>
+            <li>Prefer small named cases over one giant script. Titles may repeat across modules — emit prefixes the module path (#102).</li>
+            <li><code>assert_eq</code> on floats uses a small epsilon; bool / str / comparisons stay <code>assert_eq!</code>.</li>
           </ul>
           <p class="tech"><strong>Under the hood:</strong> Positive tests become Rust <code>#[test]</code> functions in the emitted crate. Compile-fail tests are run by the Crisp harness (expect diagnostics), not by hoping <code>rustc</code> fails on bad user code.</p>
         </article>
@@ -257,6 +258,7 @@ describe(color) = match color {
           <ul>
             <li>Write variants as <code>Color.Red</code> when constructing or matching.</li>
             <li>Payloads bind names in the arm (<code>r, g, b</code> above).</li>
+            <li>String literal arms work too: <code>match name { "h2" -> 1, _ -> 0 }</code> (#101).</li>
           </ul>
           <p class="try">Try: <code>crisp run examples/enums</code></p>
           <p class="tech"><strong>Under the hood:</strong> Enums become Rust <code>enum</code>s; <code>match</code> becomes a Rust <code>match</code>. Exhaustiveness is enforced in analysis so emit does not rely on “hope the arms cover it.”</p>
@@ -524,7 +526,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.2 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

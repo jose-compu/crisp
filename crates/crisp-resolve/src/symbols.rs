@@ -105,6 +105,9 @@ pub fn collect_module_symbols(module_path: &str, items: &[Item]) -> Vec<Symbol> 
                 from_prelude: false,
             }),
             Item::Extern(e) => {
+                if e.rust_crate.is_some() {
+                    continue;
+                }
                 for f in &e.functions {
                     symbols.push(Symbol {
                         key: SymbolKey {

@@ -19,6 +19,7 @@ pub struct EmitResult {
 pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     let mut map = EmitSourceMap::default();
     map.set_type_modules(collect_type_modules(cir));
+    map.set_rust_extern_spans(cir.rust_extern_spans.clone());
     let mut modules = Vec::new();
 
     if cir.modules.len() == 1 && cir.modules[0].path == "main" {
@@ -1441,6 +1442,9 @@ fn emit_rust_crate_call(
     fallible: bool,
     propagate_error: bool,
 ) {
+    if let Some(span) = map.rust_extern_span(crate_name, callee) {
+        map.record(out.len() as u32, span);
+    }
     match (crate_name, callee) {
         ("serde_json", "from_str") => {
             let _ = write!(out, "serde_json::from_str::<serde_json::Value>(");
@@ -1499,6 +1503,9 @@ fn emit_rust_crate_call(
                 emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
             }
             let _ = write!(out, ")");
+            if fallible {
+                emit_rust_result_absorb(out, fallible, propagate_error);
+            }
         }
     }
 }

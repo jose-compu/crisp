@@ -142,6 +142,8 @@ pub struct ConstDef {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExternBlock {
     pub abi: String,
+    /// Set for `extern rust crate { … }` (#116). `None` for `extern "C"`.
+    pub rust_crate: Option<Ident>,
     pub functions: Vec<ExternFn>,
     pub span: Span,
 }
@@ -151,6 +153,8 @@ pub struct ExternFn {
     pub name: Ident,
     pub params: Vec<Param>,
     pub ret_type: Option<Type>,
+    /// Trailing `!` — Rust `Result` absorbed as a Crisp ambient error (#116 / #55).
+    pub fallible: bool,
     pub span: Span,
 }
 

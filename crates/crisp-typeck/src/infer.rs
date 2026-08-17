@@ -65,6 +65,18 @@ pub enum TypeError {
         "[E0088] cannot infer element type of `vec`; pin it (`xs: vec<float> := new()`, or `-> vec<int> = new()`)"
     )]
     UninferredVec { span: Span },
+    #[error(
+        "[E0089] `{item}` is not declared in `extern rust {crate_name}`; add a scalar signature (`float`/`int`/`str`/`bool`)"
+    )]
+    UndeclaredRustImport {
+        crate_name: String,
+        item: String,
+        span: Span,
+    },
+    #[error(
+        "[E0090] `extern rust` types must be `float`, `int`, `str`, or `bool` (`{found}` is not allowed)"
+    )]
+    InvalidExternRustTy { found: String, span: Span },
     #[error("unification error: {message}")]
     UnifyAt { message: String, span: Span },
 }
@@ -94,6 +106,29 @@ pub struct TypedCrate {
     pub warnings: Vec<crate::warning::TypeWarning>,
     /// Instantiated types of selected exprs (calls, array lits) for CIR emit (#119).
     pub expr_tys: HashMap<Span, Ty>,
+    /// `extern rust crate { item(...) }` scalar signatures (#116).
+    pub rust_externs: Vec<RustExternSig>,
+}
+
+/// Declared `extern rust` function used to type imported crate items (#116).
+#[derive(Debug, Clone)]
+pub struct RustExternSig {
+    pub crate_name: String,
+    pub item: String,
+    pub params: Vec<Ty>,
+    pub ret: Ty,
+    pub fallible: bool,
+    pub span: Span,
+}
+
+impl TypedCrate {
+    pub fn rust_call_fallible(&self, crate_name: &str, item: &str) -> bool {
+        rust_import_returns_result(crate_name, item)
+            || self
+                .rust_externs
+                .iter()
+                .any(|s| s.crate_name == crate_name && s.item == item && s.fallible)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -145,6 +180,8 @@ pub struct TypeChecker {
     warnings: Vec<crate::warning::TypeWarning>,
     expr_tys: HashMap<Span, Ty>,
     fn_vec_tys: Vec<(Span, Ty)>,
+    extern_rust: BTreeMap<(String, String), RustExternSig>,
+    undeclared_rust: BTreeMap<String, (String, String)>,
 }
 
 impl TypeChecker {
@@ -153,6 +190,9 @@ impl TypeChecker {
         let graph = load_module_graph(crate_root)?;
         let mut checker = Self::new();
         checker.register_prelude();
+        for node in graph.modules.values() {
+            checker.collect_extern_rust(&node.ast)?;
+        }
         checker.register_rust_imports(&resolved.rust_imports);
         for node in graph.modules.values() {
             checker.collect_types(&node.module_path, &node.ast);
@@ -182,6 +222,7 @@ impl TypeChecker {
             coercions: checker.coercions,
             warnings: checker.warnings,
             expr_tys,
+            rust_externs: checker.extern_rust.into_values().collect(),
         })
     }
 
@@ -209,13 +250,34 @@ impl TypeChecker {
             warnings: Vec::new(),
             expr_tys: HashMap::new(),
             fn_vec_tys: Vec::new(),
+            extern_rust: BTreeMap::new(),
+            undeclared_rust: BTreeMap::new(),
         }
     }
 
-    /// Bind imported Rust crate items into the type env (opaque / known stubs).
+    /// Bind imported Rust crate items into the type env (known stubs or `extern rust`).
     fn register_rust_imports(&mut self, imports: &[ResolvedRustImport]) {
         for imp in imports {
-            let (params, ret) = rust_import_fn_type(&imp.crate_name, &imp.item);
+            let (params, ret, _fallible, span) =
+                if let Some((params, ret)) = rust_import_fn_type(&imp.crate_name, &imp.item) {
+                    (
+                        params,
+                        ret,
+                        rust_import_returns_result(&imp.crate_name, &imp.item),
+                        Span::new(0, 0),
+                    )
+                } else if let Some(sig) = self
+                    .extern_rust
+                    .get(&(imp.crate_name.clone(), imp.item.clone()))
+                {
+                    (sig.params.clone(), sig.ret.clone(), sig.fallible, sig.span)
+                } else {
+                    self.undeclared_rust.insert(
+                        imp.local_name.clone(),
+                        (imp.crate_name.clone(), imp.item.clone()),
+                    );
+                    continue;
+                };
             let fn_ty = Ty::Fn {
                 params: params.clone(),
                 ret: Box::new(ret.clone()),
@@ -235,7 +297,7 @@ impl TypeChecker {
                         .map(|(i, t)| (format!("arg{i}"), t))
                         .collect(),
                     ret,
-                    span: Span::new(0, 0),
+                    span,
                     generics: Vec::new(),
                     is_pub: false,
                     inferred_from_use: false,
@@ -245,6 +307,60 @@ impl TypeChecker {
                 },
             );
         }
+    }
+
+    fn collect_extern_rust(&mut self, file: &SourceFile) -> Result<(), TypeError> {
+        for item in &file.items {
+            let Item::Extern(ext) = item else {
+                continue;
+            };
+            let Some(crate_id) = &ext.rust_crate else {
+                continue;
+            };
+            for f in &ext.functions {
+                let mut param_tys = Vec::new();
+                for p in &f.params {
+                    let ty = if let Some(ast_ty) = &p.ty {
+                        self.ast_type(ast_ty)?
+                    } else {
+                        return Err(TypeError::InvalidExternRustTy {
+                            found: "unannotated".into(),
+                            span: p.span,
+                        });
+                    };
+                    if !rust_extern_scalar_ok(&ty) {
+                        return Err(TypeError::InvalidExternRustTy {
+                            found: format_ty(&ty),
+                            span: p.span,
+                        });
+                    }
+                    param_tys.push(ty);
+                }
+                let ret = if let Some(ast_ty) = &f.ret_type {
+                    self.ast_type(ast_ty)?
+                } else {
+                    Ty::Unit
+                };
+                if !rust_extern_scalar_ok(&ret) {
+                    return Err(TypeError::InvalidExternRustTy {
+                        found: format_ty(&ret),
+                        span: f.span,
+                    });
+                }
+                self.extern_rust.insert(
+                    (crate_id.name.clone(), f.name.name.clone()),
+                    RustExternSig {
+                        crate_name: crate_id.name.clone(),
+                        item: f.name.name.clone(),
+                        params: param_tys,
+                        ret,
+                        fallible: f.fallible,
+                        span: f.span,
+                    },
+                );
+            }
+        }
+        Ok(())
     }
 
     fn register_prelude(&mut self) {
@@ -503,8 +619,7 @@ impl TypeChecker {
     fn collect_fn_stubs(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
         for item in &file.items {
             match item {
-                Item::Extern(ext) => {
-                    // Externs are fully known; register immediately as stubs.
+                Item::Extern(ext) if ext.rust_crate.is_none() => {
                     self.check_extern(module, ext)?;
                 }
                 Item::Function(f) => {
@@ -1178,6 +1293,15 @@ impl TypeChecker {
                 })
             }
             ExprKind::Call { func, args } => {
+                if let ExprKind::Ident(id) = &func.kind
+                    && let Some((crate_name, item)) = self.undeclared_rust.get(&id.name)
+                {
+                    return Err(TypeError::UndeclaredRustImport {
+                        crate_name: crate_name.clone(),
+                        item: item.clone(),
+                        span: expr.span,
+                    });
+                }
                 // Inherent methods parse as Call(Field(...), args) — not MethodCall.
                 if let ExprKind::Field { base, field } = &func.kind
                     && let Some(ret) = self.try_infer_method_call(env, base, field, args)?
@@ -2742,27 +2866,29 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
 }
 
 /// Known Rust crate item stubs for typeck (Result Ok payload types).
-fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
+fn rust_import_fn_type(crate_name: &str, item: &str) -> Option<(Vec<Ty>, Ty)> {
     let json_value = Ty::Named {
         name: "serde_json::Value".into(),
         args: vec![],
     };
     match (crate_name, item) {
-        ("serde_json", "from_str") => (vec![Ty::Str], json_value),
-        ("serde_json", "to_string" | "to_string_pretty" | "to_vec") => (vec![json_value], Ty::Str),
-        ("serde_json", "from_value") => (vec![json_value.clone()], json_value),
+        ("serde_json", "from_str") => Some((vec![Ty::Str], json_value)),
+        ("serde_json", "to_string" | "to_string_pretty" | "to_vec") => {
+            Some((vec![json_value], Ty::Str))
+        }
+        ("serde_json", "from_value") => Some((vec![json_value.clone()], json_value)),
         // Type-like imports (e.g. `Value as JsonValue`) — not callable; placeholder unit fn.
-        ("serde_json", "Value") => (vec![], json_value),
-        ("ureq", "get") => (vec![Ty::Str], Ty::Str),
-        ("local_core", "answer") => (vec![], Ty::Int),
-        _ => (
-            vec![Ty::Str],
-            Ty::Named {
-                name: "RustValue".into(),
-                args: vec![],
-            },
-        ),
+        ("serde_json", "Value") => Some((vec![], json_value)),
+        ("ureq", "get") => Some((vec![Ty::Str], Ty::Str)),
+        _ => None,
     }
+}
+
+fn rust_extern_scalar_ok(ty: &Ty) -> bool {
+    matches!(
+        ty,
+        Ty::Float | Ty::Int | Ty::UInt | Ty::Bool | Ty::Str | Ty::StrSlice | Ty::Unit
+    )
 }
 
 /// Whether a known `rust = true` import returns Rust `Result` and should lower via Crisp `?`

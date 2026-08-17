@@ -2,9 +2,19 @@
 --
 -- `local_core` lives in vendor/ and is rewritten into target/rust/Cargo.toml
 -- as `{ path = "../../vendor/local_core" }` so Makefile inject is not required.
+-- Typed imports come from `src/local_core.crpi` (`extern rust`, #116).
 
-use local_core { answer }
+use local_core { answer, lap3 }
 
 pub main() = {
     print(answer())
+    print(lap3(0.0, 1.0, 0.0, 1.0))
+}
+
+test "answer is 42" = {
+    assert_eq(answer(), 42)
+}
+
+test "lap3 spike" = {
+    assert_eq(lap3(0.0, 1.0, 0.0, 1.0), -2.0)
 }

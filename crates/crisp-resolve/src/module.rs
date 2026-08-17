@@ -99,17 +99,25 @@ fn collect_crp_files(
             collect_crp_files(src_root, &path, out)?;
             continue;
         }
-        if path.extension().and_then(|e| e.to_str()) != Some("crp") {
+        let ext = path.extension().and_then(|e| e.to_str());
+        let is_crpi = ext == Some("crpi");
+        if ext != Some("crp") && !is_crpi {
             continue;
         }
         let rel = path.strip_prefix(src_root).map_err(|_| ResolveError::Io {
             path: path.display().to_string(),
             source: std::io::Error::new(std::io::ErrorKind::InvalidInput, "bad path"),
         })?;
-        let module_path = rel
+        let rel_mod = rel
             .with_extension("")
             .to_string_lossy()
             .replace(std::path::MAIN_SEPARATOR, ".");
+        // Sidecar decls must not shadow a `rust = true` crate of the same name (#116).
+        let module_path = if is_crpi {
+            format!("__extern.{rel_mod}")
+        } else {
+            rel_mod
+        };
         let source = fs::read_to_string(&path).map_err(|e| ResolveError::Io {
             path: path.display().to_string(),
             source: e,

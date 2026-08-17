@@ -95,6 +95,9 @@ impl CirBuilder {
         let mut modules = Vec::new();
 
         for node in graph.modules.values() {
+            if node.module_path.starts_with("__extern.") {
+                continue;
+            }
             let mut items = Vec::new();
             for ast_item in &node.ast.items {
                 match ast_item {
@@ -201,7 +204,7 @@ impl CirBuilder {
                             span: ib.span,
                         }));
                     }
-                    Item::Extern(ext) => {
+                    Item::Extern(ext) if ext.rust_crate.is_none() => {
                         items.push(CirItem::Extern(lower_extern(ext)));
                     }
                     _ => {}
@@ -219,6 +222,16 @@ impl CirBuilder {
             crisp_error: errors.crisp_error.clone(),
             shape_traits,
             source_map: SourceMap::default(),
+            rust_extern_spans: typed
+                .rust_externs
+                .iter()
+                .map(|s| ((s.crate_name.clone(), s.item.clone()), s.span))
+                .collect(),
+            rust_import_crates: typed
+                .rust_imports
+                .iter()
+                .map(|i| (i.local_name.clone(), i.crate_name.clone()))
+                .collect(),
         })
     }
 }
@@ -565,6 +578,9 @@ fn collect_extern_fns(graph: &ModuleGraph) -> std::collections::BTreeSet<String>
     for node in graph.modules.values() {
         for item in &node.ast.items {
             if let Item::Extern(ext) = item {
+                if ext.rust_crate.is_some() {
+                    continue;
+                }
                 for f in &ext.functions {
                     set.insert(f.name.name.clone());
                 }
@@ -1376,9 +1392,7 @@ fn lower_expr_raw(
                 let key = format!("{callee_module}::{}", id.name);
                 let rust_result = callee_module
                     .strip_prefix("rust.")
-                    .is_some_and(|crate_name| {
-                        crisp_typeck::rust_import_returns_result(crate_name, &id.name)
-                    });
+                    .is_some_and(|crate_name| typed.rust_call_fallible(crate_name, &id.name));
                 let fallible = rust_result
                     || errors
                         .signatures
@@ -1409,16 +1423,16 @@ fn lower_expr_raw(
                         let mode = if callee_param_is_copy_generic(typed, &id.name, i)
                             || matches!(lowered, E::Lambda { .. })
                             || matches!(cir_expr_value_ty(&lowered), Some(CirTy::Fn { .. }))
+                            || rust_extern_param_is_copy(typed, &key, i)
+                            || callee_module == "std.math"
                         {
                             OwnershipMode::Owned
+                        } else if let Some(m) =
+                            callee_osig.and_then(|c| c.params.get(i).map(|(_, m)| *m))
+                        {
+                            m
                         } else {
-                            callee_osig
-                                .and_then(|c| c.params.get(i).map(|(_, m)| *m))
-                                .unwrap_or(if callee_module == "std.math" {
-                                    OwnershipMode::Owned
-                                } else {
-                                    OwnershipMode::Borrow
-                                })
+                            OwnershipMode::Borrow
                         };
                         if matches!(mode, OwnershipMode::Borrow)
                             && matches!(lowered, E::Ident { .. })
@@ -2223,6 +2237,15 @@ fn callee_param_is_copy_generic(typed: &TypedCrate, fname: &str, i: usize) -> bo
         .values()
         .find(|s| s.name == fname && s.impl_ty.is_none())
         .is_some_and(|sig| sig_param_is_copy_generic(sig, i))
+}
+
+fn rust_extern_param_is_copy(typed: &TypedCrate, key: &str, i: usize) -> bool {
+    typed.signatures.get(key).is_some_and(|sig| {
+        matches!(
+            sig.params.get(i).map(|(_, t)| t),
+            Some(Ty::Float | Ty::Int | Ty::UInt | Ty::Bool | Ty::Char | Ty::Unit)
+        )
+    })
 }
 
 fn ty_is_copy_generic(ty: &Ty, sig: &InferredSig) -> bool {

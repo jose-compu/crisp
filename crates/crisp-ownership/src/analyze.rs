@@ -389,6 +389,7 @@ impl<'a> Collector<'a> {
                 }
             }
             ExprKind::Unary { expr: inner, .. } => self.walk_expr(inner),
+            ExprKind::Cast { expr: inner, .. } => self.walk_expr(inner),
             ExprKind::Call { func, args } => {
                 if let Some(callee) = resolve_callee_key(self.module, func, self.fn_defs) {
                     let modes = self.callee_modes.get(&callee).cloned().unwrap_or_default();

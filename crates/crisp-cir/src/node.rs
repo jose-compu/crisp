@@ -225,6 +225,11 @@ pub enum CirExpr {
         ty: CirTy,
         span: Span,
     },
+    Cast {
+        expr: Box<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
     Call {
         callee: String,
         module: String,

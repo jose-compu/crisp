@@ -4,6 +4,7 @@ use crate::node::*;
 use crate::source_map::SourceMap;
 use crate::synthesize::{lower_enum, lower_struct, synthesize_shape_trait};
 use crate::ty::CirTy;
+use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart, UnaryOp};
 use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
 use crisp_ast::lift_holes;
@@ -849,6 +850,91 @@ fn lower_expr(
     fn_modules: &BTreeMap<String, String>,
     ctx: LowerCtx,
 ) -> CirExpr {
+    let lowered = lower_expr_raw(
+        expr,
+        module,
+        osig,
+        typed,
+        ownership,
+        errors,
+        locals,
+        struct_fields,
+        fn_modules,
+        ctx,
+    );
+    apply_numeric_coercion(expr, lowered, typed)
+}
+
+fn apply_numeric_coercion(expr: &Expr, lowered: CirExpr, typed: &TypedCrate) -> CirExpr {
+    let Some(c) = typed
+        .coercions
+        .iter()
+        .find(|c| c.span == expr.span && !c.explicit)
+    else {
+        return lowered;
+    };
+    if c.literal && c.to_float {
+        return rewrite_int_literal_to_float(lowered, expr.span);
+    }
+    let ty = if c.to_float { CirTy::Float } else { CirTy::Int };
+    CirExpr::Cast {
+        expr: Box::new(lowered),
+        ty,
+        span: expr.span,
+    }
+}
+
+fn rewrite_int_literal_to_float(expr: CirExpr, span: Span) -> CirExpr {
+    match expr {
+        CirExpr::Int { value, span: s } => CirExpr::Float {
+            value: value as f64,
+            span: s,
+        },
+        CirExpr::Unary {
+            op: CirUnaryOp::Neg,
+            expr: inner,
+            span: s,
+            ..
+        } => {
+            if let CirExpr::Int { value, .. } = *inner {
+                CirExpr::Float {
+                    value: -(value as f64),
+                    span: s,
+                }
+            } else {
+                CirExpr::Cast {
+                    expr: Box::new(CirExpr::Unary {
+                        op: CirUnaryOp::Neg,
+                        expr: inner,
+                        ty: CirTy::Int,
+                        span: s,
+                    }),
+                    ty: CirTy::Float,
+                    span,
+                }
+            }
+        }
+        other => CirExpr::Cast {
+            expr: Box::new(other),
+            ty: CirTy::Float,
+            span,
+        },
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn lower_expr_raw(
+    expr: &Expr,
+    module: &str,
+    osig: &crisp_ownership::OwnershipSignature,
+    typed: &TypedCrate,
+    ownership: &OwnershipResult,
+    errors: &ErrorResult,
+    locals: &BTreeMap<String, CirTy>,
+    struct_fields: &BTreeMap<String, Vec<String>>,
+    fn_modules: &BTreeMap<String, String>,
+    ctx: LowerCtx,
+) -> CirExpr {
     use crate::node::{CirExpr as E, CirFormatPart};
     if let Some(lifted) = lift_holes(expr) {
         return lower_expr(
@@ -999,6 +1085,25 @@ fn lower_expr(
                 op: cir_op,
                 expr: Box::new(lowered),
                 ty,
+                span: expr.span,
+            }
+        }
+        ExprKind::Cast { expr: inner, ty } => {
+            let lowered = lower_expr(
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            E::Cast {
+                expr: Box::new(lowered),
+                ty: ast_type_to_cir_ty(ty),
                 span: expr.span,
             }
         }
@@ -1817,6 +1922,7 @@ fn infer_expr_ty(
         ExprKind::Str(_) => CirTy::Str,
         ExprKind::Int(_) => CirTy::Int,
         ExprKind::Float(_) => CirTy::Float,
+        ExprKind::Cast { ty, .. } => ast_type_to_cir_ty(ty),
         ExprKind::StructLit { name, .. } => CirTy::Named {
             name: name.name.clone(),
             args: vec![],
@@ -1875,6 +1981,7 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::StructLit { ty, .. }
         | CirExpr::BinOp { ty, .. }
         | CirExpr::Unary { ty, .. }
+        | CirExpr::Cast { ty, .. }
         | CirExpr::If { ty, .. }
         | CirExpr::Match { ty, .. }
         | CirExpr::Lambda { ty, .. }

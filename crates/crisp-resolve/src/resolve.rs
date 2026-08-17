@@ -764,9 +764,10 @@ impl Resolver {
                 self.check_expr(scope, base)?;
                 self.check_expr(scope, index)
             }
-            ExprKind::Unary { expr, .. } | ExprKind::Throw(expr) | ExprKind::Return(Some(expr)) => {
-                self.check_expr(scope, expr)
-            }
+            ExprKind::Unary { expr, .. }
+            | ExprKind::Cast { expr, .. }
+            | ExprKind::Throw(expr)
+            | ExprKind::Return(Some(expr)) => self.check_expr(scope, expr),
             ExprKind::Binary { left, right, .. } | ExprKind::Pipe { left, right, .. } => {
                 self.check_expr(scope, left)?;
                 self.check_expr(scope, right)

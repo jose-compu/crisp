@@ -18,5 +18,20 @@ pub fn reveal_types(crate_path: &Path) -> anyhow::Result<String> {
         })
         .collect();
     lines.sort();
+    for c in &typed.coercions {
+        let slot = if c.to_float { "float" } else { "int" };
+        let kind = if c.explicit {
+            "explicit"
+        } else if c.literal {
+            "int literal"
+        } else {
+            "implicit"
+        };
+        lines.push(format!(
+            "coercion @{start}..{end}: {kind} as {slot}",
+            start = c.span.start,
+            end = c.span.end
+        ));
+    }
     Ok(lines.join("\n"))
 }

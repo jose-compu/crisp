@@ -487,6 +487,21 @@ fn emit_expr_inner(
                 let _ = write!(out, ")");
             }
         }
+        ExprKind::Cast { expr: inner, ty } => {
+            let _ = write!(out, "(");
+            emit_expr(out, inner, osig, ownership);
+            match &ty.kind {
+                crisp_ast::ty::TypeKind::Named(id) if id.name == "float" => {
+                    let _ = write!(out, " as f64)");
+                }
+                crisp_ast::ty::TypeKind::Named(id) if id.name == "int" || id.name == "uint" => {
+                    let _ = write!(out, " as i64)");
+                }
+                _ => {
+                    let _ = write!(out, ")");
+                }
+            }
+        }
         ExprKind::Call { func, args } => {
             if let ExprKind::Field { base, field } = &func.kind
                 && let ExprKind::Ident(ty) = &base.kind

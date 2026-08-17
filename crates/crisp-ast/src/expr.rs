@@ -60,6 +60,11 @@ pub enum ExprKind {
         op: UnaryOp,
         expr: Box<Expr>,
     },
+    /// Postfix `expr as float` / `expr as int` (#112).
+    Cast {
+        expr: Box<Expr>,
+        ty: crate::ty::Type,
+    },
     Binary {
         op: BinaryOp,
         left: Box<Expr>,

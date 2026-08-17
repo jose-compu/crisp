@@ -1,0 +1,26 @@
+pub type Grid1d = {
+    nx: int = 256
+    length: float = 12.0
+}
+
+pub dx_of(g: Grid1d) = g.length / (g.nx + 0.0)
+
+pub scale(x: float) = x * 2.0
+
+pub use_scale() = scale(1)
+
+pub to_f(n: int) = n as float
+
+pub main() = {
+    print(dx_of(Grid1d {}))
+    print(use_scale())
+    print(to_f(3))
+}
+
+test "use scale" = {
+    assert_eq(use_scale(), 2.0)
+}
+
+test "explicit as" = {
+    assert_eq(to_f(3), 3.0)
+}

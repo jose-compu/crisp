@@ -1,6 +1,5 @@
 ---
 source: crates/crisp-rust-emit/tests/emit_pipeline.rs
-assertion_line: 132
 expression: emit_bundle(&out)
 ---
 // === main / lib.rs ===
@@ -58,4 +57,7 @@ pub fn avg2(a: f64, b: f64) -> f64 {
 }
 pub fn lap3(um: f64, uc: f64, up: f64, dx: f64) -> f64 {
     (um + up - 2.0_f64 * uc) / (dx * dx)
+}
+pub fn add_mix(a: f64, n: i64) -> f64 {
+    a + (n as f64)
 }

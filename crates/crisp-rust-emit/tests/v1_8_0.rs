@@ -100,3 +100,37 @@ fn issue_113_runtime_tests() {
         Err(e) => panic!("issue_113 harness: {e}"),
     }
 }
+
+#[test]
+fn issue_112_emit_widening_and_as_float() {
+    let cir = CirBuilder::build_crate(&fixture("issue_112_widen")).expect("cir #112");
+    let out = emit_crate(&cir);
+    eprintln!("#112 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("as f64"),
+        "int→float should emit `as f64`:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("1.0_f64"),
+        "int literal in a float slot should emit a float literal:\n{}",
+        out.lib_rs
+    );
+}
+
+#[test]
+fn issue_112_runtime_tests() {
+    match run_tests(&fixture("issue_112_widen")) {
+        Ok(r) => {
+            eprintln!(
+                "#112 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert_eq!(r.runtime_passed, 2, "got {}", r.runtime_passed);
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_112 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_112 harness: {e}"),
+    }
+}

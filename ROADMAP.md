@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.7.0**. Active milestones:
+Current compiler: **v1.7.1**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -322,6 +322,7 @@ Current compiler: **v1.7.0**. Active milestones:
 | **v1.6.0** | minor | Generics (implicit preferred), parametric shapes, pub schemes | label `release:v1.6.0` |
 | **v1.6.1** | patch | Inferred bounds on `T`; E0084 on unsatisfied instantiations | label `release:v1.6.1` |
 | **v1.7.0** | minor | First-class closures / function values (#72) | label `release:v1.7.0` |
+| **v1.7.1** | patch | Nested emit, float powf, interpolation spans, while/if assign | label `release:v1.7.1` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -329,12 +330,19 @@ Current compiler: **v1.7.0**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.7.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io publish (v1.7.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### Shipped — v1.7.1 (compiler bugfixes)
+
+- [x] **Nested `use` paths** — emit `crate::math::…` (`E0433`, [#93](https://github.com/jose-compu/crisp/issues/93)); unannotated `twice(x) = scale(x, 2.0)` infers across module order
+- [x] **Float `**`** — `_f64` / `as f64` so `.powf` is not called on `{float}` (`E0689`, [#94](https://github.com/jose-compu/crisp/issues/94))
+- [x] **Interpolation spans** — E0035 points at the string, not the first `use` ([#95](https://github.com/jose-compu/crisp/issues/95))
+- [x] **while / if assign** — typeck Unit + CIR lower; `while {…}` is not called as a function ([#96](https://github.com/jose-compu/crisp/issues/96))
 
 ### Shipped — v1.7.0 (function values)
 
@@ -371,4 +379,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.7.0 function values, implicit-closure sugar, method sections.*
+*Last updated: 2026-08-17 — v1.7.1 nested emit / powf / interpolation spans / while-if assign.*

@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-08-17
+
 ### Fixed
 
 - Nested-module `use` emits `crate::math::…` so rustc does not look up an external crate (`E0433`, [#93](https://github.com/jose-compu/crisp/issues/93)). `examples/nested_math` now has a sibling nested file that imports another nested module. Unannotated `twice(x) = scale(x, 2.0)` infers `float` even when `math.double` is typechecked before `math.scale`.
@@ -208,7 +210,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/jose-compu/crisp/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/jose-compu/crisp/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/jose-compu/crisp/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/jose-compu/crisp/compare/v1.5.2...v1.6.0

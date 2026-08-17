@@ -4,7 +4,7 @@ use crate::node::*;
 use crate::source_map::SourceMap;
 use crate::synthesize::{lower_enum, lower_struct, synthesize_shape_trait};
 use crate::ty::CirTy;
-use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart};
+use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart, UnaryOp};
 use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
 use crisp_ast::lift_holes;
 use crisp_ast::pat::{Pat, PatKind};
@@ -977,6 +977,31 @@ fn lower_expr(
                 lowered
             }
         }
+        ExprKind::Unary { op, expr: inner } => {
+            let lowered = lower_expr(
+                inner,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            let ty = cir_expr_value_ty(&lowered).unwrap_or(CirTy::Error);
+            let cir_op = match op {
+                UnaryOp::Neg => CirUnaryOp::Neg,
+                UnaryOp::Not => CirUnaryOp::Not,
+            };
+            E::Unary {
+                op: cir_op,
+                expr: Box::new(lowered),
+                ty,
+                span: expr.span,
+            }
+        }
         ExprKind::Binary { op, left, right } => {
             let l = lower_expr(
                 left,
@@ -1849,6 +1874,7 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::EnumVariant { ty, .. }
         | CirExpr::StructLit { ty, .. }
         | CirExpr::BinOp { ty, .. }
+        | CirExpr::Unary { ty, .. }
         | CirExpr::If { ty, .. }
         | CirExpr::Match { ty, .. }
         | CirExpr::Lambda { ty, .. }

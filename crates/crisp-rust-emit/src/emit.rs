@@ -3,7 +3,7 @@
 use crate::source_map::EmitSourceMap;
 use crisp_cir::{
     CirBinOp, CirBlock, CirCatchArm, CirCrate, CirExpr, CirFunction, CirItem, CirModule, CirParam,
-    CirPat, CirShapeTrait, CirStmt, CirStruct, CirTy, CirVariant, CirWithFn,
+    CirPat, CirShapeTrait, CirStmt, CirStruct, CirTy, CirUnaryOp, CirVariant, CirWithFn,
 };
 use crisp_errors::format_crisp_error_enum;
 use crisp_ownership::OwnershipMode;
@@ -818,6 +818,20 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 let _ = write!(out, " {} ", binop_rust(*op));
                 emit_binop_operand(out, right, *op, true, current_module, map);
             }
+        }
+        CirExpr::Unary {
+            op,
+            expr: inner,
+            span,
+            ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let op_s = match op {
+                CirUnaryOp::Neg => "-",
+                CirUnaryOp::Not => "!",
+            };
+            let _ = write!(out, "{op_s}");
+            emit_unary_operand(out, inner, current_module, map);
         }
         CirExpr::Call {
             callee,
@@ -1721,15 +1735,33 @@ fn qualify_type_name(
 }
 
 fn binop_needs_parens(child: &CirExpr, parent: CirBinOp, is_right: bool) -> bool {
-    let CirExpr::BinOp { op, .. } = child else {
-        return false;
-    };
-    if matches!(*op, CirBinOp::Pow | CirBinOp::Concat) {
-        return false;
+    match child {
+        CirExpr::BinOp { op, .. } => {
+            if matches!(*op, CirBinOp::Pow | CirBinOp::Concat) {
+                return false;
+            }
+            let cp = op.rust_prec();
+            let pp = parent.rust_prec();
+            cp < pp || (cp == pp && is_right)
+        }
+        _ => false,
     }
-    let cp = op.rust_prec();
-    let pp = parent.rust_prec();
-    cp < pp || (cp == pp && is_right)
+}
+
+fn emit_unary_operand(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    let paren = matches!(expr, CirExpr::BinOp { .. });
+    if paren {
+        let _ = write!(out, "(");
+    }
+    emit_expr(out, expr, current_module, map);
+    if paren {
+        let _ = write!(out, ")");
+    }
 }
 
 fn emit_binop_operand(

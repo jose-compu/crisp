@@ -1,0 +1,18 @@
+pub lap3(um: float, uc: float, up: float, dx: float) = (um + up - 2.0 * uc) / (dx * dx)
+
+pub negf(x: float) = -x
+
+pub main() = {
+    print(lap3(0.0, 1.0, 0.0, 1.0))
+    print(negf(2.0))
+}
+
+test "spike unary" = {
+    a := lap3(0.0, 1.0, 0.0, 1.0)
+    assert_eq(a, -2.0)
+}
+
+test "spike binop rhs" = {
+    a := lap3(0.0, 1.0, 0.0, 1.0)
+    assert_eq(a, 0.0 - 2.0)
+}

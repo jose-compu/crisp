@@ -219,6 +219,12 @@ pub enum CirExpr {
         ty: CirTy,
         span: Span,
     },
+    Unary {
+        op: CirUnaryOp,
+        expr: Box<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
     Call {
         callee: String,
         module: String,
@@ -414,6 +420,12 @@ pub enum CirPat {
 pub enum CirFormatPart {
     Lit(String),
     Expr(CirExpr),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CirUnaryOp {
+    Neg,
+    Not,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -121,13 +121,13 @@ test "float bisection if-assign" = {
 }
 
 test "else if then-form clamp01" = {
-    assert_eq(clamp01(0.0 - 0.5), 0.0)
+    assert_eq(clamp01(-0.5), 0.0)
     assert_eq(clamp01(1.5), 1.0)
     assert_eq(clamp01(0.25), 0.25)
 }
 
 test "else if brace-form clamp01" = {
-    assert_eq(clamp01_brace(0.0 - 0.5), 0.0)
+    assert_eq(clamp01_brace(-0.5), 0.0)
     assert_eq(clamp01_brace(1.5), 1.0)
     assert_eq(clamp01_brace(0.25), 0.25)
 }

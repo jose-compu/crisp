@@ -270,6 +270,18 @@ fn emit_expr(expr: &Expr) -> String {
                 )
             }
         }
+        ExprKind::Unary { op, expr: inner } => {
+            let op_s = match op {
+                crisp_ast::expr::UnaryOp::Neg => "-",
+                crisp_ast::expr::UnaryOp::Not => "!",
+            };
+            let inner_s = emit_expr(inner);
+            if matches!(inner.kind, ExprKind::Binary { .. }) {
+                format!("{op_s}({inner_s})")
+            } else {
+                format!("{op_s}{inner_s}")
+            }
+        }
         ExprKind::Block(b) => {
             let mut inner = String::new();
             emit_block(&mut inner, b, 0);
@@ -347,7 +359,7 @@ fn emit_assert_eq(args: &[Expr], emitted: &[String]) -> String {
         && args.iter().any(contains_float_literal)
         && !args.iter().any(is_non_numeric_eq_side)
     {
-        format!("assert!(({} - {}).abs() < 1e-9)", emitted[0], emitted[1])
+        format!("assert!(({} - ({})).abs() < 1e-9)", emitted[0], emitted[1])
     } else {
         format!("assert_eq!({})", emitted.join(", "))
     }
@@ -377,6 +389,7 @@ fn contains_float_literal(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Float(_) => true,
         ExprKind::Call { args, .. } => args.iter().any(contains_float_literal),
+        ExprKind::Unary { expr: inner, .. } => contains_float_literal(inner),
         ExprKind::Binary { left, right, .. } => {
             contains_float_literal(left) || contains_float_literal(right)
         }
@@ -783,5 +796,63 @@ mod tests {
         let out = emit_test_module(&tests);
         assert!(out.contains("assert_eq!"), "{out}");
         assert!(!out.contains(".abs()"), "{out}");
+    }
+
+    fn float_lit(v: f64) -> Expr {
+        Expr {
+            kind: ExprKind::Float(v),
+            span: Default::default(),
+        }
+    }
+
+    #[test]
+    fn assert_eq_float_rhs_binop_is_parenthesized() {
+        let rhs = Expr {
+            kind: ExprKind::Binary {
+                op: crisp_ast::expr::BinaryOp::Sub,
+                left: Box::new(float_lit(0.0)),
+                right: Box::new(float_lit(2.0)),
+            },
+            span: Default::default(),
+        };
+        let tests = vec![CollectedTest {
+            module: "main".into(),
+            name: "paren rhs".into(),
+            compile_fail: false,
+            body: Block {
+                stmts: vec![call_assert_eq(vec![ident_expr("a"), rhs])],
+                tail: None,
+                span: Default::default(),
+            },
+        }];
+        let out = emit_test_module(&tests);
+        assert!(
+            out.contains("(a - (0.0_f64 - 2.0_f64)).abs()"),
+            "RHS must be parenthesized (#113):\n{out}"
+        );
+    }
+
+    #[test]
+    fn assert_eq_float_unary_minus_uses_epsilon() {
+        let rhs = Expr {
+            kind: ExprKind::Unary {
+                op: crisp_ast::expr::UnaryOp::Neg,
+                expr: Box::new(float_lit(2.0)),
+            },
+            span: Default::default(),
+        };
+        let tests = vec![CollectedTest {
+            module: "main".into(),
+            name: "unary".into(),
+            compile_fail: false,
+            body: Block {
+                stmts: vec![call_assert_eq(vec![ident_expr("a"), rhs])],
+                tail: None,
+                span: Default::default(),
+            },
+        }];
+        let out = emit_test_module(&tests);
+        assert!(out.contains(".abs() < 1e-9"), "{out}");
+        assert!(out.contains("-2.0_f64"), "{out}");
     }
 }

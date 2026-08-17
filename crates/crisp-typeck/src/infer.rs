@@ -1205,8 +1205,15 @@ impl TypeChecker {
                 }
                 UnaryOp::Neg => {
                     let t = self.infer_expr(env, expr)?;
-                    unify(&mut self.ctx, &t, &Ty::Int)?;
-                    Ok(Ty::Int)
+                    let t = self.ctx.apply(&t);
+                    if matches!(t, Ty::Float) {
+                        Ok(Ty::Float)
+                    } else if matches!(t, Ty::Int | Ty::UInt) {
+                        Ok(Ty::Int)
+                    } else {
+                        unify(&mut self.ctx, &t, &Ty::Int)?;
+                        Ok(Ty::Int)
+                    }
                 }
             },
             ExprKind::Binary { op, left, right } => self.infer_binary(env, *op, left, right),

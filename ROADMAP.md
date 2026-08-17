@@ -346,7 +346,8 @@ Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123
 
 - [x] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
 - [x] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
-- [ ] **Parse/lex `file:line:col`** — snippets instead of byte offsets ([#109](https://github.com/jose-compu/crisp/issues/109))
+- [x] **Parse/lex `file:line:col`** — snippets instead of byte offsets ([#109](https://github.com/jose-compu/crisp/issues/109))
+- [ ] **Unary minus** — float `Neg`, CIR `Unary`, harness parenthesizes `assert_eq` RHS ([#113](https://github.com/jose-compu/crisp/issues/113))
 
 GitHub follow-up when the API recovers:
 
@@ -408,4 +409,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (parse/lex file:line:col #109).*
+*Last updated: 2026-08-17 — v1.8.0 in progress (unary minus #113).*

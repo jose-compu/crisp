@@ -1,6 +1,6 @@
 # Error catalog (`E00xx`)
 
-User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Prefer the rendered message; this table is a navigation aid.
+User-facing Crisp toolchain errors use codes in the `E00xx`–`E009x` range. Prefer the rendered message; this table is a navigation aid.
 
 | Code | Area | Meaning / recovery |
 |------|------|-------------------|

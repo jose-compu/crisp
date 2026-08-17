@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.3</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -81,7 +81,7 @@ crisp check .</pre>
       <pre class="pipe">crisp build examples/hello</pre>
 
       <h3 id="run"><code>crisp run</code></h3>
-      <p>Build (emit + <code>cargo build</code>) and execute the crate’s binary. Prints program stdout/stderr. Typical day-to-day command for examples and small apps.</p>
+      <p>Build (emit + <code>cargo build</code>) and execute the crate’s binary. Prints program stdout/stderr. Typical day-to-day command for examples and small apps. The process working directory is the Crisp crate root (the folder with <code>crisp.toml</code>), not <code>target/rust</code>; <code>CRISP_CRATE_ROOT</code> is set to that absolute path (#106).</p>
       <pre class="pipe">crisp run examples/hello
 # → "hello world"</pre>
 
@@ -144,7 +144,7 @@ crisp-lsp</pre>
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.3 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

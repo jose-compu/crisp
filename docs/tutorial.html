@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.3</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -93,7 +93,7 @@ pub main() = {
             <li>No semicolons; the last expression in a block is the value (here <code>print</code> returns unit).</li>
           </ul>
           <p class="try">Try: <code>crisp run examples/hello</code></p>
-          <p class="tech"><strong>Under the hood:</strong> <code>crisp</code> analyzes the crate, emits a normal Cargo project under <code>target/rust/</code>, then <code>cargo run</code>. <code>rustc</code> remains the soundness boundary — if emitted Rust fails to compile, that is treated as a compiler bug, not a user debt.</p>
+          <p class="tech"><strong>Under the hood:</strong> <code>crisp</code> analyzes the crate, emits a normal Cargo project under <code>target/rust/</code>, then <code>cargo run --manifest-path …</code> with cwd at the crate root (#106). <code>rustc</code> remains the soundness boundary — if emitted Rust fails to compile, that is treated as a compiler bug, not a user debt.</p>
         </article>
 
         <article class="tutorial-step" id="bindings">
@@ -427,10 +427,11 @@ distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
         <article class="tutorial-step" id="rust-import">
           <div class="step-label">Step 15</div>
           <h2>Import a Rust crate</h2>
-          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package.</p>
+          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package. A local crate can use <code>path = "…"</code> (implies <code>rust = true</code>); the compiler rewrites it for <code>target/rust/</code> (#105).</p>
           <pre class="pipe">-- crisp.toml
 -- [dependencies]
 -- serde_json = { version = "1", rust = true }
+-- local_core = { path = "vendor/local_core" }
 
 use serde_json { from_str, to_string }
 
@@ -442,8 +443,8 @@ pub main() = {
             <li>Compat path: <code>use rust.serde_json { … }</code> if you prefer an explicit namespace.</li>
             <li>Known <code>Result</code>-returning APIs can surface as Crisp ambient errors (<code>?</code> / <code>catch</code>) — see <a href="limitations.html">limitations</a>.</li>
           </ul>
-          <p class="try">Try: <code>crisp run examples/rust_import</code></p>
-          <p class="tech"><strong>Under the hood:</strong> Dependencies with <code>rust = true</code> are forwarded into the emitted <code>Cargo.toml</code>. Crisp does not reimplement those crates — it generates ordinary Rust uses against them.</p>
+          <p class="try">Try: <code>crisp run examples/rust_import</code> · also <code>examples/path_dep</code></p>
+          <p class="tech"><strong>Under the hood:</strong> Dependencies with <code>rust = true</code> are forwarded into the emitted <code>Cargo.toml</code>. Path deps are rewritten relative to <code>target/rust/</code>. <code>crisp run</code> keeps cwd at the crate root (#106). Crisp does not reimplement those crates — it generates ordinary Rust uses against them.</p>
         </article>
 
         <article class="tutorial-step" id="async">
@@ -526,7 +527,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.2 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.3 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

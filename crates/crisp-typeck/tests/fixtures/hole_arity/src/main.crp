@@ -1,0 +1,5 @@
+-- E0085: too many holes for a one-parameter function.
+
+apply(f, x) = f(x)
+
+pub main() = apply(_ + _, 1)

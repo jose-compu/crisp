@@ -61,6 +61,7 @@ const EXAMPLES: &[&str] = &[
     "rust_import",
     "rust_shadow",
     "loops",
+    "closures",
 ];
 
 #[test]
@@ -152,6 +153,7 @@ fn examples_with_tests_pass_crpc_test() {
         "std_traits",
         "feature_gallery",
         "loops",
+        "closures",
     ] {
         let root = example(name);
         eprintln!("crisp test: {name}");
@@ -393,6 +395,7 @@ const BUILDABLE: &[&str] = &[
     "rust_import",
     "rust_shadow",
     "loops",
+    "closures",
 ];
 
 #[test]

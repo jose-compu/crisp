@@ -122,12 +122,7 @@ impl InferredSig {
         };
         let mut subst = std::collections::BTreeMap::new();
         for ((_, sty), ity) in self.params.iter().zip(args.iter()) {
-            if let Ty::Named { name, args } = sty
-                && args.is_empty()
-                && self.generics.iter().any(|g| g == name)
-            {
-                subst.insert(name.clone(), ity.clone());
-            }
+            collect_generic_subst(sty, ity, &self.generics, &mut subst);
         }
         let params = self
             .params
@@ -213,6 +208,43 @@ pub fn rust_op_bound(generic: &str, op: &str) -> String {
         "Mul" => format!("std::ops::Mul<Output = {generic}>"),
         "Div" => format!("std::ops::Div<Output = {generic}>"),
         other => other.to_string(),
+    }
+}
+
+fn collect_generic_subst(
+    scheme: &Ty,
+    inst: &Ty,
+    generics: &[String],
+    subst: &mut std::collections::BTreeMap<String, Ty>,
+) {
+    match (scheme, inst) {
+        (Ty::Named { name, args }, inst)
+            if args.is_empty() && generics.iter().any(|g| g == name) =>
+        {
+            subst.entry(name.clone()).or_insert_with(|| inst.clone());
+        }
+        (Ty::Fn { params: a, ret: ra }, Ty::Fn { params: b, ret: rb }) if a.len() == b.len() => {
+            for (x, y) in a.iter().zip(b.iter()) {
+                collect_generic_subst(x, y, generics, subst);
+            }
+            collect_generic_subst(ra, rb, generics, subst);
+        }
+        (Ty::Named { args: a, .. }, Ty::Named { args: b, .. }) if a.len() == b.len() => {
+            for (x, y) in a.iter().zip(b.iter()) {
+                collect_generic_subst(x, y, generics, subst);
+            }
+        }
+        (Ty::Option(a), Ty::Option(b))
+        | (Ty::Slice(a), Ty::Slice(b))
+        | (Ty::Ref { inner: a, .. }, Ty::Ref { inner: b, .. }) => {
+            collect_generic_subst(a, b, generics, subst);
+        }
+        (Ty::Tuple(a), Ty::Tuple(b)) if a.len() == b.len() => {
+            for (x, y) in a.iter().zip(b.iter()) {
+                collect_generic_subst(x, y, generics, subst);
+            }
+        }
+        _ => {}
     }
 }
 

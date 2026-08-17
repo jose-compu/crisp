@@ -295,3 +295,33 @@ fn mut_binding_is_not_generalized() {
         "{msg}"
     );
 }
+
+#[test]
+fn closures_example_typechecks() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/closures");
+    let typed = TypeChecker::check_crate(&root).expect("typecheck closures");
+    eprintln!("apply: {}", format_sig(sig_named(&typed, "apply")));
+    eprintln!("run: {}", format_sig(sig_named(&typed, "run")));
+}
+
+#[test]
+fn hole_arity_is_e0085() {
+    let err = TypeChecker::check_crate(&fixture("hole_arity")).expect_err("two holes vs one param");
+    let msg = err.to_string();
+    eprintln!("hole arity: {msg}");
+    assert!(
+        matches!(err, TypeError::HoleArity { .. }) || msg.contains("E0085"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn misplaced_hole_is_e0086() {
+    let err = TypeChecker::check_crate(&fixture("hole_misplaced")).expect_err("hole in print arg");
+    let msg = err.to_string();
+    eprintln!("hole misplaced: {msg}");
+    assert!(
+        matches!(err, TypeError::HoleMisplaced { .. }) || msg.contains("E0086"),
+        "{msg}"
+    );
+}

@@ -145,6 +145,9 @@ fn pat_name(pat: &crisp_ast::pat::Pat) -> String {
 }
 
 fn emit_expr(expr: &Expr) -> String {
+    if let Some(lifted) = crisp_ast::lift_holes(expr) {
+        return emit_expr(&lifted);
+    }
     match &expr.kind {
         ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
@@ -191,16 +194,16 @@ fn emit_expr(expr: &Expr) -> String {
                 };
                 return format!("{}.{}({})", emit_expr(base), field.name, args_fmt);
             }
-            let name = match &func.kind {
+            let callee = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),
-                _ => "unknown".into(),
+                _ => format!("({})", emit_expr(func)),
             };
-            if name == "assert_eq" {
+            if callee == "assert_eq" {
                 let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
                 return emit_assert_eq(args, &arg_strs);
             }
             let arg_strs: Vec<_> = args.iter().map(emit_call_arg_for_test).collect();
-            format!("{}({})", name, arg_strs.join(", "))
+            format!("{}({})", callee, arg_strs.join(", "))
         }
         ExprKind::Binary { op, left, right } => {
             let op_str = match op {
@@ -263,6 +266,10 @@ fn emit_expr(expr: &Expr) -> String {
                     .collect();
                 format!("{} {{ {} }}", name.name, parts.join(", "))
             }
+        }
+        ExprKind::Lambda { params, body } => {
+            let names: Vec<_> = params.iter().map(|p| p.name.name.as_str()).collect();
+            format!("move |{}| {}", names.join(", "), emit_expr(body))
         }
         _ => "()".into(),
     }

@@ -685,6 +685,7 @@ impl Resolver {
         expr: &Expr,
     ) -> Result<(), ResolveError> {
         match &expr.kind {
+            ExprKind::Ident(id) if crisp_ast::is_hole_ident(&id.name) => Ok(()),
             ExprKind::Ident(id) => self.check_name(scope, &id.name, id.span),
             ExprKind::Block(b) => self.check_block(scope, b),
             ExprKind::If {

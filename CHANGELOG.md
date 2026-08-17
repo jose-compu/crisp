@@ -9,6 +9,11 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- First-class **function values** (#72): `|x| …` and named items are the same callable kind. CIR + Rust emit (`move` closures / `impl Fn`); `examples/closures`.
+- Implicit-closure sugar: holes `apply(_ * 2, n)`, trailing last-arg `run { |x| x * 2 }`, field sections `.name` (#87–#89). **E0085** hole arity; **E0086** misplaced `_`.
+
 ## [1.6.1] — 2026-08-15
 
 ### Added

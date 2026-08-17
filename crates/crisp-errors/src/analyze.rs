@@ -294,6 +294,9 @@ fn walk_expr(
         }
         ExprKind::Break(Some(v)) => walk_expr(module, v, fn_defs, callee_sigs, rust_imports, out),
         ExprKind::Break(None) | ExprKind::Continue => {}
+        ExprKind::Lambda { body, .. } => {
+            walk_expr(module, body, fn_defs, callee_sigs, rust_imports, out)
+        }
         _ => {}
     }
 }

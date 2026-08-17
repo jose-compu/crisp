@@ -38,6 +38,8 @@ pub enum DependencySpec {
         version: String,
         features: Vec<String>,
         rust: bool,
+        /// Path relative to the Crisp crate root (`crisp.toml`), or absolute.
+        path: Option<String>,
     },
 }
 
@@ -126,11 +128,19 @@ fn parse_dependencies(table: &toml::Table) -> BTreeMap<String, DependencySpec> {
         let spec = match value {
             toml::Value::String(v) => DependencySpec::Version(v.clone()),
             toml::Value::Table(t) => {
+                let path = t.get("path").and_then(|v| v.as_str()).map(str::to_string);
+                let has_path = path.is_some();
                 let version = t
                     .get("version")
                     .and_then(|v| v.as_str())
-                    .unwrap_or("*")
-                    .to_string();
+                    .map(str::to_string)
+                    .unwrap_or_else(|| {
+                        if has_path {
+                            String::new()
+                        } else {
+                            "*".to_string()
+                        }
+                    });
                 let features = t
                     .get("features")
                     .and_then(|v| v.as_array())
@@ -140,11 +150,13 @@ fn parse_dependencies(table: &toml::Table) -> BTreeMap<String, DependencySpec> {
                             .collect()
                     })
                     .unwrap_or_default();
-                let rust = t.get("rust").and_then(|v| v.as_bool()).unwrap_or(false);
+                // A `path` dep is a local Cargo crate; imply `rust = true` unless set.
+                let rust = t.get("rust").and_then(|v| v.as_bool()).unwrap_or(has_path);
                 DependencySpec::Detailed {
                     version,
                     features,
                     rust,
+                    path,
                 }
             }
             _ => continue,
@@ -180,6 +192,7 @@ error_model = "enum"
 http = "1.2"
 json = { version = "0.5", features = ["pretty"] }
 serde_json = { rust = true, version = "1" }
+local_core = { path = "../local_core" }
 "#;
 
     #[test]
@@ -190,7 +203,7 @@ serde_json = { rust = true, version = "1" }
         assert_eq!(m.rust_edition(), "2021");
         assert!(m.needs_tokio());
         assert_eq!(m.build.error_model, "enum");
-        assert_eq!(m.dependencies.len(), 3);
+        assert_eq!(m.dependencies.len(), 4);
         assert!(matches!(
             m.dependencies.get("http"),
             Some(DependencySpec::Version(v)) if v == "1.2"
@@ -198,6 +211,15 @@ serde_json = { rust = true, version = "1" }
         assert!(matches!(
             m.dependencies.get("serde_json"),
             Some(DependencySpec::Detailed { rust: true, .. })
+        ));
+        assert!(matches!(
+            m.dependencies.get("local_core"),
+            Some(DependencySpec::Detailed {
+                rust: true,
+                path: Some(p),
+                version,
+                ..
+            }) if p == "../local_core" && version.is_empty()
         ));
     }
 

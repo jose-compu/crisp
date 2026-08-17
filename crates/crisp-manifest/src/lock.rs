@@ -21,6 +21,9 @@ pub struct ResolvedDependency {
     pub rust: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub features: Vec<String>,
+    /// Path as written in `crisp.toml` (relative to the Crisp crate root).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -87,6 +90,7 @@ mod tests {
                 version: "1".into(),
                 rust: true,
                 features: vec!["rt".into(), "macros".into()],
+                path: None,
             }],
             sealed_api: vec![SealedSignature {
                 name: "main::main".into(),

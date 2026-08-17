@@ -62,7 +62,7 @@ crisp run examples/float_demo
 
 ## Pull requests
 
-1. Prefer an open issue from [milestone v1.7.2+](https://github.com/jose-compu/crisp/milestones) or label `epic:publication`.
+1. Prefer an open issue from [milestone v1.7.3+](https://github.com/jose-compu/crisp/milestones) or label `epic:publication`.
 2. Cross-reference the **spec section** (e.g. §7.6, §12) in the PR description.
 3. Add or update tests under the relevant crate’s `tests/` (or examples e2e lists).
 4. Keep `cargo fmt --check` and clippy `-D warnings` green.

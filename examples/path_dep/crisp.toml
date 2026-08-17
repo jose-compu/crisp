@@ -1,0 +1,11 @@
+[package]
+name = "path_dep"
+version = "0.1.0"
+edition = "2026"
+
+[build]
+target = "rust"
+error_model = "ambient"
+
+[dependencies]
+local_core = { rust = true, path = "vendor/local_core" }

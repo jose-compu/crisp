@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.7.2)
+# Known limitations (Crisp v1.7.3)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
@@ -38,7 +38,8 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Rust crate interop (spec §14.2)
 
-- **`crisp.toml` → Cargo.toml** works: `[dependencies]` with `rust = true` are written into `target/rust/Cargo.toml`.
+- **`crisp.toml` → Cargo.toml** works: `[dependencies]` with `rust = true` are written into `target/rust/Cargo.toml`. Local **path** deps (`foo = { rust = true, path = "../foo" }`, or `{ path = "…" }` which implies `rust = true`) are rewritten relative to `target/rust/` ([#105](https://github.com/jose-compu/crisp/issues/105), `examples/path_dep`). Crisp-to-Crisp package path deps remain out of scope (spec §12.5).
+- **`crisp run` cwd** is the Crisp crate root (directory with `crisp.toml`), not `target/rust`. `CRISP_CRATE_ROOT` is set to that absolute path. `CARGO_MANIFEST_DIR` remains the emitted crate (`target/rust`) ([#106](https://github.com/jose-compu/crisp/issues/106)).
 - **Primary import (TS-like):** `use serde_json { from_str }` when `serde_json` is a `rust = true` dependency — no `rust.` prefix required.
 - **Compat alias:** `use rust.serde_json { … }` / `use rust::<crate> { … }` still force the Cargo crate.
 - **Collision:** if a Crisp module and a Rust dep share a name, bare `use <name>` binds the **Crisp module** and emits **W0048**; use `use rust.<name> { … }` for the crate.

@@ -54,6 +54,7 @@ fn parse_all_examples() {
         "float_demo",
         "rust_import",
         "rust_shadow",
+        "path_dep",
         "generics",
         "shapes_generic",
         "shapes_user",

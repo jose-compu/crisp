@@ -80,6 +80,7 @@ fn crisp_check_all_examples() {
         "feature_gallery",
         "rust_import",
         "rust_shadow",
+        "path_dep",
     ] {
         run_ok(
             "crisp",

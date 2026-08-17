@@ -5,10 +5,7 @@ shape HasPosition = {
     y: float
 }
 
-type Point = {
-    x: float
-    y: float
-}
+type Point = { x: float, y: float }
 
 type Vec2 = {
     x: float
@@ -23,10 +20,7 @@ distance(a: HasPosition, b: HasPosition) -> float = {
 }
 
 test "shape distance" = {
-    p := Point {
-        x: 0.0
-        y: 0.0
-    }
+    p := Point { x: 0.0, y: 0.0 }
     q := Vec2 {
         x: 3.0
         y: 4.0
@@ -35,10 +29,7 @@ test "shape distance" = {
 }
 
 pub main() = {
-    p := Point {
-        x: 1.0
-        y: 2.0
-    }
+    p := Point { x: 1.0, y: 2.0 }
     q := Vec2 {
         x: 4.0
         y: 6.0

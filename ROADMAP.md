@@ -325,6 +325,7 @@ Current compiler: **v1.7.3**. Active milestones:
 | **v1.7.1** | patch | Nested emit, float powf, interpolation spans, while/if assign | label `release:v1.7.1` |
 | **v1.7.2** | patch | Binop parens, nested type paths, string match, test harness | label `release:v1.7.2` |
 | **v1.7.3** | patch | `crisp.toml` path deps; `crisp run` cwd = crate root | label `release:v1.7.3` |
+| **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -336,6 +337,19 @@ Current compiler: **v1.7.3**. Active milestones:
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
+
+---
+
+### In progress — v1.8.0
+
+Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123](https://github.com/jose-compu/crisp/issues/123) numeric typeck · [#124](https://github.com/jose-compu/crisp/issues/124) ownership · [#110](https://github.com/jose-compu/crisp/issues/110) collections · [#125](https://github.com/jose-compu/crisp/issues/125) stdlib/interop · [#126](https://github.com/jose-compu/crisp/issues/126) release.
+
+- [ ] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
+- [ ] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
+
+GitHub follow-up when the API recovers:
+
+- Label `release:v1.8.0` on #112 and comment `Child of Epic 2 (#123)`
 
 ---
 
@@ -393,4 +407,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.7.3 path deps / run cwd.*
+*Last updated: 2026-08-17 — v1.8.0 in progress (`else if` #117, record commas #111).*

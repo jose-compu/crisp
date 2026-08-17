@@ -283,6 +283,7 @@ impl Parser {
                 default,
                 span: Span::new(start, self.previous_end()),
             });
+            self.skip_optional_comma();
         }
         Ok(fields)
     }
@@ -370,6 +371,7 @@ impl Parser {
         let mut fields = Vec::new();
         while !self.check(TokenKind::RBrace) && !self.check(TokenKind::Eof) {
             fields.push(self.parse_shape_field()?);
+            self.skip_optional_comma();
         }
         self.expect(TokenKind::RBrace)?;
         Ok(ShapeDef {
@@ -1284,6 +1286,9 @@ impl Parser {
     }
 
     fn parse_if_expr(&mut self, start: u32) -> Result<Expr, ParseError> {
+        // Consume `if` when entering from `else if` (parse_primary already ate the
+        // leading `if`). Without this, the inner `if` is parsed as the condition (#117).
+        let _ = self.match_kw(Kw::If);
         let cond = self.with_no_struct_lit(|p| p.parse_expr())?;
         let then_branch = if self.match_kw(Kw::Then) {
             Box::new(self.parse_expr()?)
@@ -1443,6 +1448,7 @@ match (Name { field: value }) { ... }",
                 value,
                 span: Span::new(s, self.previous_end()),
             });
+            self.skip_optional_comma();
         }
         self.expect(TokenKind::RBrace)?;
         Ok(Expr {
@@ -1831,6 +1837,11 @@ match (Name { field: value }) { ... }",
         } else {
             false
         }
+    }
+
+    /// Optional `,` between record / shape fields. Newlines remain valid (#111).
+    fn skip_optional_comma(&mut self) {
+        let _ = self.match_token(TokenKind::Comma);
     }
 
     /// Path separator `::` (two `Colon` tokens), for `use rust::serde_json { … }`.

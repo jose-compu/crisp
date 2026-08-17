@@ -18,8 +18,8 @@ pub trait Ord {
 mod math;
 pub use math::*;
 pub fn main() {
-    let a = math::vector::origin();
-    let b = Vec2 { x: 1.0, y: 2.0 };
-    let c = math::vector::add(&a, &b);
-    println!("{}", format!("sum={}", math::vector::sum_xy(&c)));
+    let a = crate::math::vector::origin();
+    let b = Vec2 { x: 1.0_f64, y: 2.0_f64 };
+    let c = crate::math::vector::add(&a, &b);
+    println!("{}", format!("sum={} twice={}", crate::math::vector::sum_xy(&c), crate::math::double::twice(3.0_f64)));
 }

@@ -1,0 +1,3 @@
+use math.add { add }
+
+pub twice(x) = add(x, x)

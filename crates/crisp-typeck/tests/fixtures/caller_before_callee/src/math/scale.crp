@@ -1,0 +1,1 @@
+pub scale(x: float, k: float) = x * k

@@ -19,6 +19,10 @@ impl TypeEnv {
         self.bindings.insert(name.into(), scheme);
     }
 
+    pub fn remove(&mut self, name: &str) -> Option<Scheme> {
+        self.bindings.remove(name)
+    }
+
     pub fn get(&self, name: &str) -> Option<&Scheme> {
         self.bindings.get(name)
     }
@@ -27,10 +31,11 @@ impl TypeEnv {
         self.bindings.extend(other.bindings.clone());
     }
 
-    pub fn free_vars(&self) -> HashSet<u32> {
+    pub fn free_vars(&self, ctx: &mut InferContext) -> HashSet<u32> {
         let mut set = HashSet::new();
         for scheme in self.bindings.values() {
-            collect_free(&scheme.ty, &mut set);
+            let ty = ctx.apply(&scheme.ty);
+            collect_free(&ty, &mut set);
             for v in &scheme.vars {
                 set.remove(v);
             }
@@ -54,7 +59,7 @@ pub fn instantiate(ctx: &mut InferContext, scheme: &Scheme) -> Ty {
 
 pub fn generalize(env: &TypeEnv, ctx: &mut InferContext, ty: &Ty) -> Scheme {
     let ty = ctx.apply(ty);
-    let env_free = env.free_vars();
+    let env_free = env.free_vars(ctx);
     let mut vars = Vec::new();
     collect_free_vars(&ty, &mut vars);
     vars.retain(|v| !env_free.contains(v));

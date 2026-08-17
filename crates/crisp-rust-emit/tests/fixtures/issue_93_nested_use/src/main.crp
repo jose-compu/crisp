@@ -1,0 +1,5 @@
+use math.double { twice }
+
+pub main() = {
+    print(twice(3))
+}

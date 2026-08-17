@@ -57,8 +57,20 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(source: &str) -> Result<Self, ParseError> {
+        Self::with_span_base(source, 0)
+    }
+
+    /// Lex `source` as if it began at byte `base` in the outer file (interpolation, #95).
+    pub fn with_span_base(source: &str, base: u32) -> Result<Self, ParseError> {
+        let mut tokens = lex(source)?;
+        if base != 0 {
+            for t in &mut tokens {
+                t.start = t.start.saturating_add(base);
+                t.end = t.end.saturating_add(base);
+            }
+        }
         Ok(Self {
-            tokens: lex(source)?,
+            tokens,
             pos: 0,
             allow_struct_lit: true,
         })
@@ -997,6 +1009,10 @@ impl Parser {
 
     fn parse_postfix(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_primary()?;
+        // `while { … }` followed by `(lo + hi) / 2.0` is a sibling tail, not a call (#96).
+        if is_control_expr(&expr.kind) {
+            return Ok(expr);
+        }
         loop {
             match self.peek_kind() {
                 TokenKind::LParen => {
@@ -1080,7 +1096,21 @@ impl Parser {
         }
         Ok(expr)
     }
+}
 
+fn is_control_expr(kind: &ExprKind) -> bool {
+    matches!(
+        kind,
+        ExprKind::If { .. }
+            | ExprKind::Match { .. }
+            | ExprKind::While { .. }
+            | ExprKind::For { .. }
+            | ExprKind::Loop(_)
+            | ExprKind::Block(_)
+    )
+}
+
+impl Parser {
     fn parse_primary(&mut self) -> Result<Expr, ParseError> {
         let start = self.current_start();
         match self.peek_kind() {
@@ -1626,20 +1656,26 @@ match (Name { field: value }) { ... }",
         Ok(left)
     }
 
-    #[allow(clippy::while_let_on_iterator)]
     fn parse_string_parts(&mut self, s: &str, start: u32) -> Result<StringParts, ParseError> {
         let mut parts = Vec::new();
         let mut lit = String::new();
-        let mut chars = s.chars().peekable();
-        let iter = chars.by_ref();
-        while let Some(c) = iter.next() {
+        let inner_base = start.saturating_add(1); // skip opening `"`
+        let mut byte_i = 0usize;
+        while byte_i < s.len() {
+            let Some(c) = s[byte_i..].chars().next() else {
+                break;
+            };
             if c == '{' {
                 if !lit.is_empty() {
                     parts.push(StringPart::Lit(std::mem::take(&mut lit)));
                 }
+                let expr_start = byte_i + c.len_utf8();
                 let mut depth = 1i32;
-                let mut expr_text = String::new();
-                while let Some(ch) = iter.next() {
+                let mut expr_end = expr_start;
+                while expr_end < s.len() {
+                    let Some(ch) = s[expr_end..].chars().next() else {
+                        break;
+                    };
                     if ch == '{' {
                         depth += 1;
                     }
@@ -1649,13 +1685,21 @@ match (Name { field: value }) { ... }",
                             break;
                         }
                     }
-                    expr_text.push(ch);
+                    expr_end += ch.len_utf8();
                 }
-                let mut sub = Parser::new(&expr_text)?;
+                let expr_text = &s[expr_start..expr_end];
+                let expr_base = inner_base.saturating_add(expr_start as u32);
+                let mut sub = Parser::with_span_base(expr_text, expr_base)?;
                 let expr = sub.parse_expr()?;
                 parts.push(StringPart::Expr(Box::new(expr)));
+                byte_i = if expr_end < s.len() {
+                    expr_end + 1
+                } else {
+                    expr_end
+                };
             } else {
                 lit.push(c);
+                byte_i += c.len_utf8();
             }
         }
         if !lit.is_empty() {
@@ -1664,7 +1708,6 @@ match (Name { field: value }) { ... }",
         if parts.is_empty() {
             parts.push(StringPart::Lit(String::new()));
         }
-        let _ = start;
         Ok(StringParts(parts))
     }
 

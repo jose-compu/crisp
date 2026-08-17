@@ -9,6 +9,13 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Fixed
+
+- Nested-module `use` emits `crate::math::…` so rustc does not look up an external crate (`E0433`, [#93](https://github.com/jose-compu/crisp/issues/93)). `examples/nested_math` now has a sibling nested file that imports another nested module. Unannotated `twice(x) = scale(x, 2.0)` infers `float` even when `math.double` is typechecked before `math.scale`.
+- Float `**` and float literals emit `as f64` / `_f64`, so `.powf` is not called on `{float}` (`E0689`, [#94](https://github.com/jose-compu/crisp/issues/94)).
+- Interpolation `{expr}` spans are remapped to the outer file, so **E0035** points at the string, not the first `use` ([#95](https://github.com/jose-compu/crisp/issues/95)).
+- Assignment in `if` / `while` expressions typecks as `Unit` and lowers to CIR. A `while { … }` followed by a parenthesized tail is a sibling statement, not a call of the loop ([#96](https://github.com/jose-compu/crisp/issues/96)). Remaining unify failures at a call site include a source caret (**E0041**).
+
 ## [1.7.0] — 2026-08-17
 
 ### Added

@@ -1,0 +1,4 @@
+-- Sibling nested `use` of another nested module (#93).
+use math.scale { scale }
+
+pub twice(x) = scale(x, 2.0)

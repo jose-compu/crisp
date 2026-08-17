@@ -1,0 +1,2 @@
+-- Nested helper used by `math.double` (#93).
+pub scale(x: float, k: float) = x * k

@@ -1634,6 +1634,26 @@ fn lower_expr(
             span: expr.span,
         },
         ExprKind::Continue => E::Continue { span: expr.span },
+        ExprKind::Assign { target, value } => E::Block(CirBlock {
+            stmts: vec![CirStmt::Assign {
+                target: target.name.clone(),
+                value: lower_expr(
+                    value,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                ),
+                span: expr.span,
+            }],
+            tail: Some(Box::new(E::Unit { span: expr.span })),
+            span: expr.span,
+        }),
         ExprKind::Unsafe(inner) => E::Unsafe {
             body: Box::new(lower_expr(
                 inner,

@@ -436,9 +436,9 @@ fn emit_expr_inner(
         }
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
-                let _ = write!(out, "{f}.0");
+                let _ = write!(out, "{f}.0_f64");
             } else {
-                let _ = write!(out, "{f}");
+                let _ = write!(out, "{f}_f64");
             }
         }
         ExprKind::Binary { op, left, right } => {
@@ -451,11 +451,11 @@ fn emit_expr_inner(
                 return;
             }
             if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
-                let _ = write!(out, "(");
+                let _ = write!(out, "((");
                 emit_expr(out, left, osig, ownership);
-                let _ = write!(out, ").powf(");
+                let _ = write!(out, ") as f64).powf((");
                 emit_expr(out, right, osig, ownership);
-                let _ = write!(out, ")");
+                let _ = write!(out, ") as f64)");
                 return;
             }
             emit_expr(out, left, osig, ownership);
@@ -611,6 +611,11 @@ fn emit_expr_inner(
         }
         ExprKind::Continue => {
             let _ = write!(out, "continue");
+        }
+        ExprKind::Assign { target, value } => {
+            let _ = write!(out, "{{ {} = ", target.name);
+            emit_expr(out, value, osig, ownership);
+            let _ = write!(out, "; () }}");
         }
         // Keep both sides in the probe so arg ownership is still checked.
         ExprKind::Catch { body, arms } => {

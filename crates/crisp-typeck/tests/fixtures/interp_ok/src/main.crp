@@ -1,0 +1,4 @@
+pub main() = {
+    s := 2.10
+    print("speed={s}")
+}

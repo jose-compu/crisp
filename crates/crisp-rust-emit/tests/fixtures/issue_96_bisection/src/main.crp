@@ -1,0 +1,17 @@
+ignites(width: float, wCrit: float) = width > wCrit
+
+bisection_width(wLo: float, wHi: float, steps: int) = {
+    lo mut:= wLo
+    hi mut:= wHi
+    i mut:= 0
+    while i < steps {
+        i = i + 1
+        mid := (lo + hi) / 2.0
+        if ignites(mid, 0.8) then hi = mid else lo = mid
+    }
+    (lo + hi) / 2.0
+}
+
+pub main() = {
+    print(bisection_width(0.10, 2.0, 8))
+}

@@ -54,6 +54,8 @@ pub enum TypeError {
         "[E0086] hole `_` is only valid where a function value is expected; write `|x| …` or use `_` as a call argument"
     )]
     HoleMisplaced { span: Span },
+    #[error("unification error: {message}")]
+    UnifyAt { message: String, span: Span },
 }
 
 #[derive(Debug, Clone)]
@@ -132,6 +134,9 @@ impl TypeChecker {
         for node in graph.modules.values() {
             checker.check_module(&node.module_path, &node.ast)?;
         }
+        // Apply substitutions from later modules, then name leftover holes.
+        // Otherwise `math.double` (before `math.scale`) publishes `twice<T>(x: float) -> T`.
+        checker.seal_open_signatures();
         checker.specialize_internal_functions()?;
         Ok(TypedCrate {
             signatures: checker.signatures,
@@ -610,6 +615,74 @@ impl TypeChecker {
         Ok(())
     }
 
+    /// Env used to decide which holes may be named now. Skip this item (its own
+    /// stub still holds the body vars) and skip already-checked items so a later
+    /// `id(x) = x` can still generalize after an earlier `wrap(x) = id(x)`.
+    fn env_for_generalize(&self, self_name: &str) -> TypeEnv {
+        let mut env = self.env.clone();
+        env.remove(self_name);
+        for sig in self.signatures.values() {
+            if sig.impl_ty.is_some() || sig.name.starts_with("test::") {
+                continue;
+            }
+            if sig.name != self_name {
+                env.remove(&sig.name);
+            }
+        }
+        env
+    }
+
+    /// After every body has been checked, substitute and name leftover holes.
+    fn seal_open_signatures(&mut self) {
+        let keys: Vec<String> = self.signatures.keys().cloned().collect();
+        for key in keys {
+            let Some(sig) = self.signatures.get(&key).cloned() else {
+                continue;
+            };
+            let param_types: Vec<(String, Ty)> = sig
+                .params
+                .iter()
+                .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
+                .collect();
+            let ret = self.ctx.apply(&sig.ret);
+            if !sig.generics.is_empty() {
+                if let Some(s) = self.signatures.get_mut(&key) {
+                    s.params = param_types;
+                    s.ret = ret;
+                }
+                continue;
+            }
+            let fn_ty = Ty::Fn {
+                params: param_types.iter().map(|(_, t)| t.clone()).collect(),
+                ret: Box::new(ret.clone()),
+            };
+            let (named, inferred) = name_free_vars(&fn_ty);
+            if inferred.is_empty() {
+                if let Some(s) = self.signatures.get_mut(&key) {
+                    s.params = param_types;
+                    s.ret = ret;
+                }
+                continue;
+            }
+            let mut params = param_types;
+            let mut named_ret = ret;
+            if let Ty::Fn { params: ps, ret: r } = &named {
+                for (i, t) in ps.iter().enumerate() {
+                    if let Some(slot) = params.get_mut(i) {
+                        slot.1 = t.clone();
+                    }
+                }
+                named_ret = r.as_ref().clone();
+            }
+            if let Some(s) = self.signatures.get_mut(&key) {
+                s.params = params;
+                s.ret = named_ret;
+                s.generics = inferred;
+                s.inferred_from_use = true;
+            }
+        }
+    }
+
     fn check_impl(&mut self, module: &str, ib: &ImplBlock) -> Result<(), TypeError> {
         let ty_name = match &ib.ty.kind {
             TypeKind::Named(id) => id.name.clone(),
@@ -852,20 +925,26 @@ impl TypeChecker {
         // Unannotated items with leftover free vars become a scheme (#76).
         // Forward-ref calls that already pinned the stub stay monomorphic.
         // Explicit `<>` / free type names (`x: T`) are pins and are not specialized.
+        // Do not name holes that still belong to unchecked stubs (callee later in
+        // filename order): `twice(x) = scale(x, 2.0)` must wait for `scale`.
         let pre_ty = fn_ty.clone();
         if gens.is_empty() {
-            let (named, inferred) = name_free_vars(&fn_ty);
-            if !inferred.is_empty() {
-                fn_ty = named;
-                gens = inferred;
-                inferred_from_use = true;
-                if let Ty::Fn { params, ret: r } = &fn_ty {
-                    for (i, t) in params.iter().enumerate() {
-                        if let Some(slot) = param_types.get_mut(i) {
-                            slot.1 = t.clone();
+            let env_wo = self.env_for_generalize(&f.name.name);
+            let gen_scheme = generalize(&env_wo, &mut self.ctx, &fn_ty);
+            if !gen_scheme.vars.is_empty() {
+                let (named, inferred) = name_vars(&fn_ty, &gen_scheme.vars);
+                if !inferred.is_empty() {
+                    fn_ty = named;
+                    gens = inferred;
+                    inferred_from_use = true;
+                    if let Ty::Fn { params, ret: r } = &fn_ty {
+                        for (i, t) in params.iter().enumerate() {
+                            if let Some(slot) = param_types.get_mut(i) {
+                                slot.1 = t.clone();
+                            }
                         }
+                        ret = r.as_ref().clone();
                     }
-                    ret = r.as_ref().clone();
                 }
             }
         }
@@ -1043,10 +1122,10 @@ impl TypeChecker {
                         (ps, Box::new(ret))
                     }
                     other => {
-                        return Err(TypeError::Unify(UnifyError::Mismatch {
-                            expected: "function".into(),
-                            found: format!("{other:?}"),
-                        }));
+                        return Err(TypeError::UnifyAt {
+                            message: format!("type mismatch: expected function, found {other:?}"),
+                            span: expr.span,
+                        });
                     }
                 };
                 if args.len() != params.len() {
@@ -1257,6 +1336,15 @@ impl TypeChecker {
                 Ok(Ty::Never)
             }
             ExprKind::Continue => Ok(Ty::Never),
+            ExprKind::Assign { target, value } => {
+                let expected = self.lookup(env, &target.name, target.span)?;
+                let got = self.infer_value(env, value)?;
+                unify(&mut self.ctx, &got, &expected).map_err(|e| TypeError::UnifyAt {
+                    message: e.to_string(),
+                    span: expr.span,
+                })?;
+                Ok(Ty::Unit)
+            }
             _ => Ok(self.ctx.fresh()),
         }
     }
@@ -2267,6 +2355,13 @@ fn generic_name(i: usize) -> String {
 fn name_free_vars(ty: &Ty) -> (Ty, Vec<String>) {
     let mut vars = Vec::new();
     collect_free_vars(ty, &mut vars);
+    vars.sort_unstable();
+    vars.dedup();
+    name_vars(ty, &vars)
+}
+
+fn name_vars(ty: &Ty, vars: &[u32]) -> (Ty, Vec<String>) {
+    let mut vars = vars.to_vec();
     vars.sort_unstable();
     vars.dedup();
     if vars.is_empty() {

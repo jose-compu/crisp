@@ -262,6 +262,22 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
             print_resolve_diagnostic(root, inner);
             return;
         }
+        TypeError::UnifyAt { message, span } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0041",
+                    message,
+                    *span,
+                    Severity::Error,
+                    &[],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
         _ => {}
     }
     eprintln!("{err}");

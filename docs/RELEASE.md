@@ -43,7 +43,7 @@ cargo install --path crates/crpc --locked
 | Homepage → https://crisp-lang.org/ (GitHub Pages + custom domain) | Done |
 | CI status badge on README | Done |
 | LICENSE dual files + SECURITY + CONTRIBUTING linked | Done |
-| Known limitations honest for current version | Done (v1.5.0) |
+| Known limitations honest for current version | Done (v1.8.0) |
 | Web docs on `docs` branch / Pages | Done (#39) |
 | Branch protection on `main` | Maintainer action (Settings → Branches) if plan allows |
 | Flip visibility to **public** | Maintainer action — [#58](https://github.com/jose-compu/crisp/issues/58) |

@@ -344,8 +344,6 @@ Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/iss
 
 Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123](https://github.com/jose-compu/crisp/issues/123) numeric typeck · [#124](https://github.com/jose-compu/crisp/issues/124) ownership · [#110](https://github.com/jose-compu/crisp/issues/110) collections · [#125](https://github.com/jose-compu/crisp/issues/125) stdlib/interop · [#126](https://github.com/jose-compu/crisp/issues/126) release.
 
-Site, git tag, and crates.io are deferred (docs branch later; [#66](https://github.com/jose-compu/crisp/issues/66)).
-
 - [x] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
 - [x] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
 - [x] **Parse/lex `file:line:col`** — snippets instead of byte offsets ([#109](https://github.com/jose-compu/crisp/issues/109))

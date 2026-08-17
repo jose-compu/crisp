@@ -9,6 +9,11 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Fixed
+
+- Chained `else if` parses as a nested If else-branch (then-form and brace-form), not as an If used as the condition ([#117](https://github.com/jose-compu/crisp/issues/117)). See `examples/loops`.
+- Record / shape / type fields accept optional commas (and trailing commas); newlines remain valid ([#111](https://github.com/jose-compu/crisp/issues/111)). See `examples/shapes`.
+
 ## [1.7.3] — 2026-08-17
 
 ### Added

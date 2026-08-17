@@ -1,4 +1,13 @@
 -- loops — while / for / loop + break / continue (spec §6.3)
+-- `else if` (#117): then-form and brace-form.
+
+clamp01(x: float) = {
+    if x < 0.0 then 0.0 else if x > 1.0 then 1.0 else x
+}
+
+clamp01_brace(x: float) = {
+    if x < 0.0 { 0.0 } else if x > 1.0 { 1.0 } else { x }
+}
 
 sum_to(n) = {
     total mut:= 0
@@ -111,9 +120,22 @@ test "float bisection if-assign" = {
     assert_eq(w, w)
 }
 
+test "else if then-form clamp01" = {
+    assert_eq(clamp01(0.0 - 0.5), 0.0)
+    assert_eq(clamp01(1.5), 1.0)
+    assert_eq(clamp01(0.25), 0.25)
+}
+
+test "else if brace-form clamp01" = {
+    assert_eq(clamp01_brace(0.0 - 0.5), 0.0)
+    assert_eq(clamp01_brace(1.5), 1.0)
+    assert_eq(clamp01_brace(0.25), 0.25)
+}
+
 pub main() = {
     print("sum_to(4)={sum_to(4)}")
     print("sum_vec={sum_vec(sample_vec())}")
     print("countdown={countdown_stop(5, 3)}")
     print("bisection={bisection_width(0.10, 2.0, 8)}")
+    print("clamp01={clamp01(1.5)}")
 }

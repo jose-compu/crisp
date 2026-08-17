@@ -29,7 +29,8 @@ pub use seal::{
 };
 pub use source_map::EmitSourceMap;
 pub use test_harness::{
-    CollectedTest, TestHarnessError, TestRunReport, collect_tests, emit_test_module, run_tests,
+    CollectedTest, TestHarnessError, TestRunReport, collect_tests, emit_test_module,
+    emit_test_module_with_cir, run_tests,
 };
 
 use anyhow::Result;

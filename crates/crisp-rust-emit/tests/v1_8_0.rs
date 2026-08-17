@@ -1,7 +1,9 @@
 //! v1.8.0 regressions.
 
 use crisp_cir::{CirBuilder, CirExpr, CirItem, CirUnaryOp};
-use crisp_rust_emit::{collect_tests, emit_crate, emit_test_module, run_tests};
+use crisp_rust_emit::{
+    collect_tests, emit_crate, emit_test_module, emit_test_module_with_cir, run_tests,
+};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -173,5 +175,50 @@ fn issue_118_runtime_tests() {
             eprintln!("SKIP issue_118 run_tests: cargo not on PATH");
         }
         Err(e) => panic!("issue_118 harness: {e}"),
+    }
+}
+
+#[test]
+fn issue_114_harness_matches_cir_ownership() {
+    let root = fixture("issue_114_harness");
+    let cir = CirBuilder::build_crate(&root).expect("cir #114");
+    let tests = collect_tests(&root).expect("collect #114");
+    let emitted = emit_test_module_with_cir(&tests, Some(&cir));
+    eprintln!("#114 tests:\n{emitted}");
+    assert!(
+        emitted.contains("hold_0d(unburnt_yt()") && !emitted.contains("hold_0d(&unburnt_yt()"),
+        "owned record call must not grow an extra `&`:\n{emitted}"
+    );
+    assert!(
+        emitted.contains("rhs_point(")
+            && emitted.contains("lap3(")
+            && !emitted.contains("&lap3(")
+            && !emitted.contains("&upwind("),
+        "owned float nested calls must not grow `&`:\n{emitted}"
+    );
+    assert!(
+        emitted.contains("step(u)") && !emitted.contains("step(&u)"),
+        "owned ident must not grow `&`:\n{emitted}"
+    );
+    assert!(
+        emitted.contains("describe(&fuel_ch4()") || emitted.contains("describe(fuel_ch4("),
+        "nested record arg should emit:\n{emitted}"
+    );
+}
+
+#[test]
+fn issue_114_runtime_tests() {
+    match run_tests(&fixture("issue_114_harness")) {
+        Ok(r) => {
+            eprintln!(
+                "#114 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert_eq!(r.runtime_passed, 4, "got {}", r.runtime_passed);
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_114 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_114 harness: {e}"),
     }
 }

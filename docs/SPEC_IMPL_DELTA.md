@@ -45,6 +45,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Unary minus | §3 | `-2.0` stays `float`; CIR `Unary` + harness parenthesizes float `assert_eq` RHS — [#113](https://github.com/jose-compu/crisp/issues/113) |
 | int / float mix | §3 | Checking-position `int` → `float`; postfix `as float` / `as int`; W0087 on non-literal widen; no implicit narrow — [#112](https://github.com/jose-compu/crisp/issues/112) |
 | Record `:=` / Copy | §7, §0.1 | All-Copy records derive `Copy`; other records clone at `:=` when the source is reused — [#118](https://github.com/jose-compu/crisp/issues/118) |
+| Test harness args | §19 | Call `&` follows CIR ownership (same as `emit_call_arg`), not an AST heuristic — [#114](https://github.com/jose-compu/crisp/issues/114) |
 | Collections | §3 arrays, §15 `vec<T>` | **i64-only** `new`/`push`/`len`; indexing parsed not emitted; no `vec<float>` — [#110](https://github.com/jose-compu/crisp/issues/110) |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
 

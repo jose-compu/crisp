@@ -5,18 +5,31 @@ use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
 pub enum LexError {
-    #[error("unexpected character `{ch}` at byte {pos}")]
+    #[error("unexpected character `{ch}`")]
     UnexpectedChar { ch: char, pos: u32 },
-    #[error("unterminated block comment starting at byte {pos}")]
+    #[error("unterminated block comment")]
     UnterminatedBlockComment { pos: u32 },
-    #[error("unterminated string starting at byte {pos}")]
+    #[error("unterminated string")]
     UnterminatedString { pos: u32 },
-    #[error("unterminated char literal starting at byte {pos}")]
+    #[error("unterminated char literal")]
     UnterminatedChar { pos: u32 },
-    #[error("invalid escape in string at byte {pos}")]
+    #[error("invalid escape in string")]
     InvalidEscape { pos: u32 },
-    #[error("invalid number literal at byte {pos}")]
+    #[error("invalid number literal")]
     InvalidNumber { pos: u32 },
+}
+
+impl LexError {
+    pub fn byte_pos(&self) -> u32 {
+        match self {
+            LexError::UnexpectedChar { pos, .. }
+            | LexError::UnterminatedBlockComment { pos }
+            | LexError::UnterminatedString { pos }
+            | LexError::UnterminatedChar { pos }
+            | LexError::InvalidEscape { pos }
+            | LexError::InvalidNumber { pos } => *pos,
+        }
+    }
 }
 
 pub struct Lexer<'a> {

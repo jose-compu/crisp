@@ -344,8 +344,9 @@ Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/iss
 
 Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123](https://github.com/jose-compu/crisp/issues/123) numeric typeck · [#124](https://github.com/jose-compu/crisp/issues/124) ownership · [#110](https://github.com/jose-compu/crisp/issues/110) collections · [#125](https://github.com/jose-compu/crisp/issues/125) stdlib/interop · [#126](https://github.com/jose-compu/crisp/issues/126) release.
 
-- [ ] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
-- [ ] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
+- [x] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
+- [x] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
+- [ ] **Parse/lex `file:line:col`** — snippets instead of byte offsets ([#109](https://github.com/jose-compu/crisp/issues/109))
 
 GitHub follow-up when the API recovers:
 
@@ -407,4 +408,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (`else if` #117, record commas #111).*
+*Last updated: 2026-08-17 — v1.8.0 in progress (parse/lex file:line:col #109).*

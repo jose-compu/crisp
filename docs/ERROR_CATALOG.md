@@ -4,6 +4,8 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 
 | Code | Area | Meaning / recovery |
 |------|------|-------------------|
+| E0010 | parse | Unexpected token / invalid pattern — location is `file:line:col` |
+| E0011 | lex | Unexpected character, unterminated string/comment, invalid number/escape |
 | E0034 | resolve | Duplicate definition in a module — rename or remove one item |
 | E0035 | resolve | Unresolved name — check spelling/`use`; help names the defining module when known |
 | E0036 | resolve | Name is private — export with `pub` or import from the defining module |

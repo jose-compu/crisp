@@ -41,6 +41,18 @@ fn run_fail(bin: &str, args: &[&str]) {
     assert!(!output.status.success(), "{bin} {:?} should fail", args);
 }
 
+fn run_fail_stderr(bin: &str, args: &[&str]) -> String {
+    let output = Command::new(bin_path(bin))
+        .args(args)
+        .output()
+        .expect("spawn");
+    eprintln!("$ {bin} {} (status={})", args.join(" "), output.status);
+    let err = String::from_utf8_lossy(&output.stderr).into_owned();
+    eprintln!("stderr:\n{err}");
+    assert!(!output.status.success(), "{bin} {:?} should fail", args);
+    err
+}
+
 fn bin_path(name: &str) -> PathBuf {
     bin(name)
 }
@@ -440,6 +452,41 @@ fn sealed_drift_fails_check() {
     raw = raw.replace("greet(name: &str)", "greet(name: &str) DRIFT");
     std::fs::write(&lock_path, raw).unwrap();
     run_fail("crisp", &["check", &dir.path().to_string_lossy()]);
+}
+
+#[test]
+fn issue_109_parse_error_is_file_line_col() {
+    let dir = tempfile::TempDir::new().unwrap();
+    std::fs::write(
+        dir.path().join("crisp.toml"),
+        r#"[package]
+name = "parse_err"
+version = "0.1.0"
+edition = "2026"
+"#,
+    )
+    .unwrap();
+    let src_dir = dir.path().join("src");
+    std::fs::create_dir_all(&src_dir).unwrap();
+    std::fs::write(
+        src_dir.join("main.crp"),
+        "pub main() = {\n    foo(a, b,)\n}\n",
+    )
+    .unwrap();
+    let err = run_fail_stderr("crisp", &["check", &dir.path().to_string_lossy()]);
+    assert!(
+        err.contains("src/main.crp:2:"),
+        "want file:line:col, got {err}"
+    );
+    assert!(
+        err.contains("ERROR [E0010]") || err.contains("E0010"),
+        "{err}"
+    );
+    assert!(err.contains("^"), "{err}");
+    assert!(
+        !err.contains("at byte"),
+        "byte must not be the primary location: {err}"
+    );
 }
 
 fn copy_dir(src: &std::path::Path, dst: &std::path::Path) {

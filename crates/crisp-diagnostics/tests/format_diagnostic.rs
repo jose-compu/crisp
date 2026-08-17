@@ -2,8 +2,8 @@
 
 use crisp_ast::Span;
 use crisp_diagnostics::{
-    Severity, format_diagnostic_at, format_ownership_contradiction, format_type_mismatch,
-    format_unresolved_name,
+    Severity, format_diagnostic_at, format_ownership_contradiction, format_parse_error,
+    format_type_mismatch, format_unresolved_name,
 };
 
 #[test]
@@ -87,4 +87,32 @@ fn ambiguous_field_snippet_includes_annotation_help() {
     assert!(diag.rendered.contains("--> src/catalog.crp:"));
     assert!(diag.rendered.contains("= help:"));
     assert!(diag.rendered.contains("^"));
+}
+
+#[test]
+fn parse_error_renders_file_line_col_and_byte_note() {
+    let src = "pub main() = {\n    foo(a, b,)\n}\n";
+    let pos = (src.find("b,)").expect("needle") + 2) as u32;
+    let diag = format_parse_error(
+        "src/main.crp",
+        src,
+        "E0010",
+        "unexpected token `)`, expected identifier",
+        pos,
+        &[],
+    );
+    eprintln!("{}", diag.rendered);
+    assert!(diag.rendered.contains("ERROR [E0010]"));
+    assert!(
+        diag.rendered.contains("--> src/main.crp:2:"),
+        "want line 2, got {}",
+        diag.rendered
+    );
+    assert!(diag.rendered.contains("^"));
+    assert!(
+        !diag.rendered.contains("at byte"),
+        "byte must not be the primary location: {}",
+        diag.rendered
+    );
+    assert!(diag.rendered.contains("byte offset"));
 }

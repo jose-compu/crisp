@@ -116,11 +116,13 @@ fn collect_crp_files(
         })?;
         let mut parser = Parser::new(&source).map_err(|e| ResolveError::Parse {
             path: path.display().to_string(),
-            message: e.to_string(),
+            message: e.primary_message(),
+            pos: e.byte_pos(),
         })?;
         let ast = parser.parse_file().map_err(|e| ResolveError::Parse {
             path: path.display().to_string(),
-            message: e.to_string(),
+            message: e.primary_message(),
+            pos: e.byte_pos(),
         })?;
         out.insert(
             module_path.clone(),

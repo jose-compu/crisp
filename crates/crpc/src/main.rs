@@ -1,8 +1,10 @@
 use clap::{Parser, Subcommand};
-use crisp_diagnostics::{Severity, format_diagnostic_at, format_unresolved_name};
+use crisp_diagnostics::{
+    Severity, format_diagnostic_at, format_parse_error, format_unresolved_name,
+};
 use crisp_errors::ErrorPass;
 use crisp_ownership::OwnershipPass;
-use crisp_parser::Parser as CrispParser;
+use crisp_parser::{ParseError, Parser as CrispParser};
 use crisp_regions::RegionPass;
 use crisp_resolve::module::load_module_graph;
 use crisp_resolve::{ResolveError, Resolver, find_crate_root};
@@ -69,17 +71,30 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Commands::Parse { file } => {
             let src = fs::read_to_string(&file)?;
-            let mut parser = CrispParser::new(&src)?;
-            let module = parser.parse_file()?;
-            println!("{module:#?}");
-            Ok(())
+            match CrispParser::new(&src).and_then(|mut p| p.parse_file()) {
+                Ok(module) => {
+                    println!("{module:#?}");
+                    Ok(())
+                }
+                Err(e) => {
+                    print_parse_error(&file, &src, &e);
+                    Err(e.into())
+                }
+            }
         }
         Commands::Resolve { path } => {
             let root = find_crate_root(&path).unwrap_or(path);
-            let resolved = Resolver::resolve_crate(&root)?;
-            print_resolve_warnings(&resolved.warnings);
-            println!("{resolved:#?}");
-            Ok(())
+            match Resolver::resolve_crate(&root) {
+                Ok(resolved) => {
+                    print_resolve_warnings(&resolved.warnings);
+                    println!("{resolved:#?}");
+                    Ok(())
+                }
+                Err(e) => {
+                    print_resolve_diagnostic(&root, &e);
+                    Err(e.into())
+                }
+            }
         }
         Commands::Check { path } => {
             let root = find_crate_root(PathBuf::from(&path).as_path())
@@ -173,6 +188,24 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
+fn print_parse_error(file: &Path, source: &str, err: &ParseError) {
+    let mut extras = Vec::new();
+    if let Some(h) = err.help() {
+        extras.push(format!("help: {h}"));
+    }
+    let name = file.display().to_string();
+    let rendered = format_parse_error(
+        &name,
+        source,
+        err.diagnostic_code(),
+        &err.primary_message(),
+        err.byte_pos(),
+        &extras,
+    )
+    .rendered;
+    eprintln!("{rendered}");
+}
+
 fn print_resolve_warnings(warnings: &[crisp_resolve::ResolveWarning]) {
     for w in warnings {
         eprintln!("warning: {w}");
@@ -181,6 +214,23 @@ fn print_resolve_warnings(warnings: &[crisp_resolve::ResolveWarning]) {
 
 fn print_resolve_diagnostic(root: &Path, err: &ResolveError) {
     match err {
+        ResolveError::Parse { path, message, pos } => {
+            if let Ok(source) = fs::read_to_string(path) {
+                let rel = Path::new(path)
+                    .strip_prefix(root)
+                    .unwrap_or(Path::new(path))
+                    .display()
+                    .to_string();
+                let code = if message.starts_with("lex error:") {
+                    "E0011"
+                } else {
+                    "E0010"
+                };
+                let rendered = format_parse_error(&rel, &source, code, message, *pos, &[]).rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
         ResolveError::UnresolvedName {
             name, span, hint, ..
         } => {

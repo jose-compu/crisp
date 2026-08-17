@@ -41,6 +41,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Loops | §6.3 | `while` / `for` / `loop` + `break`/`continue` / value `break` (`examples/loops`); `for` MVP over i64 `vec` only; no labels / `enumerate` yet |
 | `if` / `else if` | §6.1 | `if then else` and chained `else if` (then-form and brace-form) — [#117](https://github.com/jose-compu/crisp/issues/117); `examples/loops` |
 | Record field separators | §3 | Commas optional in type/shape/literal fields; newlines still valid — [#111](https://github.com/jose-compu/crisp/issues/111) |
+| Parse/lex diagnostics | §17.2–17.4 | `file:line:col` + caret; byte offset is a note (E0010/E0011) — [#109](https://github.com/jose-compu/crisp/issues/109) |
 | Record `:=` / Copy | §7, §0.1 | Float `:=` chains work; record `k1 := s` moves; rustc E0382 if `s` is used again — [#118](https://github.com/jose-compu/crisp/issues/118) |
 | Collections | §3 arrays, §15 `vec<T>` | **i64-only** `new`/`push`/`len`; indexing parsed not emitted; no `vec<float>` — [#110](https://github.com/jose-compu/crisp/issues/110) |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |

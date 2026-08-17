@@ -68,6 +68,29 @@ pub enum TokenKind {
     Eof,
 }
 
+impl TokenKind {
+    /// Short user-facing token name for parse errors (#109).
+    pub fn describe(&self) -> String {
+        match self {
+            TokenKind::Comma => "`,`".into(),
+            TokenKind::Semi => "`;`".into(),
+            TokenKind::Colon => "`:`".into(),
+            TokenKind::Dot => "`.`".into(),
+            TokenKind::Assign => "`=`".into(),
+            TokenKind::LParen => "`(`".into(),
+            TokenKind::RParen => "`)`".into(),
+            TokenKind::LBrace => "`{`".into(),
+            TokenKind::RBrace => "`}`".into(),
+            TokenKind::LBracket => "`[`".into(),
+            TokenKind::RBracket => "`]`".into(),
+            TokenKind::Eof => "end of file".into(),
+            TokenKind::Ident(s) => format!("`{s}`"),
+            TokenKind::Kw(kw) => format!("`{kw:?}`").to_ascii_lowercase(),
+            other => format!("{other:?}"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kw {
     If,

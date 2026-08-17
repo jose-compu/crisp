@@ -7,7 +7,7 @@ use thiserror::Error;
 
 pub use format::{
     FormattedDiagnostic, format_diagnostic, format_diagnostic_at, format_ownership_contradiction,
-    format_type_mismatch, format_unresolved_name, from_diagnostic,
+    format_parse_error, format_type_mismatch, format_unresolved_name, from_diagnostic,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.7.1)
+# Known limitations (Crisp v1.7.2)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
@@ -10,12 +10,13 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Modules
 
-- Flat `src/*.crp` modules may import each other regardless of filename order (function stubs are registered before body checking; [#13](https://github.com/jose-compu/crisp/issues/13)). Nested layouts such as `src/math/vector.crp` emit a Rust `math` / `math/vector` module tree with `crate::` paths for intra-crate calls (see `examples/nested_math`; [#35](https://github.com/jose-compu/crisp/issues/35), [#93](https://github.com/jose-compu/crisp/issues/93)).
+- Flat `src/*.crp` modules may import each other regardless of filename order (function stubs are registered before body checking; [#13](https://github.com/jose-compu/crisp/issues/13)). Nested layouts such as `src/math/vector.crp` emit a Rust `math` / `math/vector` module tree with `crate::` paths for intra-crate **functions and types** (see `examples/nested_math`, `examples/nested_types`; [#35](https://github.com/jose-compu/crisp/issues/35), [#93](https://github.com/jose-compu/crisp/issues/93), [#100](https://github.com/jose-compu/crisp/issues/100)).
 
 ## Types and expressions
 
 - **Field access on function parameters:** if exactly one known struct has the field, the param type is inferred (`item.sku`). If several structs share the field name, annotate the param or you get `E0043` ([#12](https://github.com/jose-compu/crisp/issues/12)).
-- **Enums / variant `match`:** unit and simple tuple variants work (`Color.Red`, `Color.Custom(r,g,b)` with `match color { … }`). See `examples/enums`. Remaining gaps: recursive enums beyond CIR `Box`, bare unqualified variant values, full exhaustiveness checking ([#11](https://github.com/jose-compu/crisp/issues/11) / [#34](https://github.com/jose-compu/crisp/issues/34)).
+- **Enums / variant `match`:** unit and simple tuple variants work (`Color.Red`, `Color.Custom(r,g,b)` with `match color { … }`). See `examples/enums`. String literal arms are kept (`match name { "h2" -> … }`, [#101](https://github.com/jose-compu/crisp/issues/101)). Remaining gaps: recursive enums beyond CIR `Box`, bare unqualified variant values, full exhaustiveness checking ([#11](https://github.com/jose-compu/crisp/issues/11) / [#34](https://github.com/jose-compu/crisp/issues/34)).
+- **Binop grouping:** emit parenthesizes a child whose precedence is lower than the parent, or equal on the right (`(lo + hi) / 2`, [#99](https://github.com/jose-compu/crisp/issues/99)).
 - `match name {` with a bare identifier scrutinee is supported; prefer `match (expr) { … }` for complex scrutinees.
 - **`shape`** data shapes work end-to-end for field accessors (`examples/shapes`): generated trait + structural call sites (§3.5). Parametric shapes (`shape Boxy<T>`) work (`examples/generics`, [#70](https://github.com/jose-compu/crisp/issues/70)). Remaining gaps: method shapes, anonymous `{ x: float }` params, full bound/`dyn`-style use ([#61](https://github.com/jose-compu/crisp/issues/61)).
 - **Function values** (spec §5.2–§5.3): one callable kind — named items and `|x| …` are the same. Holes (`_ * 2`), trailing last-arg (`run { |x| … }`), field sections (`.name`), method sections (`.magnitude()`, `.scale(2.0)` baked args) — `examples/closures` (#72, #87–#89). Remaining: operator sections (`+ 1`), `dyn Fn`.
@@ -30,7 +31,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 - **`crisp check`** runs ownership probe emit + rustc (floats, `format!` interpolation, type defs). Remaining gaps may still yield non-borrow probe failures that are ignored rather than `E0057` ([#14](https://github.com/jose-compu/crisp/issues/14)).
 - **Diagnostics:** resolve/typeck errors from `crisp check` render source snippets and hints when spans resolve (E0035 names the defining module when known; interpolation `{name}` points at the string, not the first `use`) ([#22](https://github.com/jose-compu/crisp/issues/22), [#95](https://github.com/jose-compu/crisp/issues/95)).
-- **`test "name"`** becomes `fn test_<sanitized>` so it does not shadow crate items. Float `assert_eq` uses a small epsilon. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
+- **`test "name"`** becomes `fn test_<module>_<sanitized>` so titles can repeat across modules ([#102](https://github.com/jose-compu/crisp/issues/102)). Float `assert_eq` uses a small epsilon; bool/str/comparisons stay `assert_eq!`. Nested user traits emit `pub`. Crisp string literals with unescaped quotes/`\` can still break harness emit ([#17](https://github.com/jose-compu/crisp/issues/17)).
 - **`reveal` (spec §16):** beginner walkthrough in [QUICKSTART §10](../QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal). Deep overlays today: `types` / `ownership` / `lifetimes` / `errors` / `rust` / `seal` / user `traits`. Gaps ([#19](https://github.com/jose-compu/crisp/issues/19)): `expand` / `diff` / `map` remain shallow.
 - **`crisp-lsp`:** stdio LSP binary (`cargo install --path crates/crisp-lsp`) — hover, inlay hints, crate diagnostics on open/save ([#56](https://github.com/jose-compu/crisp/issues/56)). Library API: `CrispAnalysis`.
 - **Editor packaging:** [`editors/vscode-crisp`](../editors/vscode-crisp) + `./scripts/package-vsix.sh` ([#57](https://github.com/jose-compu/crisp/issues/57)). Marketplace listing still optional.

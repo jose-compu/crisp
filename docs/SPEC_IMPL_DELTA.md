@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.7.1)
+# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.7.2)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,7 +23,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (through 1.7.1) |
+| Feature | Spec | Impl (through 1.7.2) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
@@ -37,7 +37,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Channels | §11.4 | Not implemented |
 | Std Show/Eq/Ord | §15.4 | Prelude shims + Display/PartialEq/Ord bridges (`examples/std_traits`) — [#27](https://github.com/jose-compu/crisp/issues/27). Add/Sub/Mul/Div inferred from operators on `T`; typeck E0084 on bad instantiations; unique method → nullary trait bound (`examples/shapes_generic`, `examples/show_trait`, `examples/shapes_user`) — [#84](https://github.com/jose-compu/crisp/issues/84) |
 | Std net/http | §15.2 | `std.net.parse_ip` + thin `ureq` GET (`examples/net_http`); full `std.http` server API deferred — [#28](https://github.com/jose-compu/crisp/issues/28) |
-| Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs` (`examples/nested_math`) |
+| Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs`; intra-crate functions and types use `crate::` (`examples/nested_math`, `examples/nested_types`) |
 | Loops | §6.3 | `while` / `for` / `loop` + `break`/`continue` / value `break` (`examples/loops`); `for` MVP over `vec` only; no labels / `enumerate` yet |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)

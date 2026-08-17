@@ -441,6 +441,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `hello` | Shapes, implicit generics, field defaults |
 | `math` | Integer + float arithmetic, multi-module tests |
 | `nested_math` | Nested `src/math/vector.crp` module tree |
+| `nested_types` | Nested `use` of an enum type (`Verdict`, #100) |
 | `vec2_methods` | Inherent `impl Vec2` + nested `math.vector` (§5.4 / #20) |
 | `point_impl` | Flat inherent `impl Point` methods |
 | `show_trait` | `trait Show` + `impl Show for Point` (§3.6 / #50) |

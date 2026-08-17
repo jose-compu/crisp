@@ -19,7 +19,7 @@ members = [
 ]
 
 [workspace.package]
-version = "1.7.1"
+version = "1.7.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jose-compu/crisp"
@@ -28,20 +28,20 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # Internal crates (version + path so `cargo publish` can rewrite to registry deps)
-crisp-ast = { path = "crates/crisp-ast", version = "1.7.1" }
-crisp-lexer = { path = "crates/crisp-lexer", version = "1.7.1" }
-crisp-parser = { path = "crates/crisp-parser", version = "1.7.1" }
-crisp-resolve = { path = "crates/crisp-resolve", version = "1.7.1" }
-crisp-typeck = { path = "crates/crisp-typeck", version = "1.7.1" }
-crisp-ownership = { path = "crates/crisp-ownership", version = "1.7.1" }
-crisp-regions = { path = "crates/crisp-regions", version = "1.7.1" }
-crisp-errors = { path = "crates/crisp-errors", version = "1.7.1" }
-crisp-cir = { path = "crates/crisp-cir", version = "1.7.1" }
-crisp-rust-emit = { path = "crates/crisp-rust-emit", version = "1.7.1" }
-crisp-diagnostics = { path = "crates/crisp-diagnostics", version = "1.7.1" }
-crisp-reveal = { path = "crates/crisp-reveal", version = "1.7.1" }
-crisp-lsp = { path = "crates/crisp-lsp", version = "1.7.1" }
-crisp-manifest = { path = "crates/crisp-manifest", version = "1.7.1" }
+crisp-ast = { path = "crates/crisp-ast", version = "1.7.2" }
+crisp-lexer = { path = "crates/crisp-lexer", version = "1.7.2" }
+crisp-parser = { path = "crates/crisp-parser", version = "1.7.2" }
+crisp-resolve = { path = "crates/crisp-resolve", version = "1.7.2" }
+crisp-typeck = { path = "crates/crisp-typeck", version = "1.7.2" }
+crisp-ownership = { path = "crates/crisp-ownership", version = "1.7.2" }
+crisp-regions = { path = "crates/crisp-regions", version = "1.7.2" }
+crisp-errors = { path = "crates/crisp-errors", version = "1.7.2" }
+crisp-cir = { path = "crates/crisp-cir", version = "1.7.2" }
+crisp-rust-emit = { path = "crates/crisp-rust-emit", version = "1.7.2" }
+crisp-diagnostics = { path = "crates/crisp-diagnostics", version = "1.7.2" }
+crisp-reveal = { path = "crates/crisp-reveal", version = "1.7.2" }
+crisp-lsp = { path = "crates/crisp-lsp", version = "1.7.2" }
+crisp-manifest = { path = "crates/crisp-manifest", version = "1.7.2" }
 
 # External
 thiserror = "2"

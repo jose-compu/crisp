@@ -1,0 +1,8 @@
+-- Nested `use` of a type defined in a sibling module (#100).
+use fail.a { ignition }
+use fail.b { of }
+
+pub main() = {
+    print(ignition())
+    print(of())
+}

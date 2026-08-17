@@ -1,0 +1,7 @@
+use fail.a { ignition }
+use fail.b { of }
+
+pub main() = {
+    print(ignition())
+    print(of())
+}

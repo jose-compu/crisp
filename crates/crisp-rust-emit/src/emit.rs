@@ -18,6 +18,7 @@ pub struct EmitResult {
 
 pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     let mut map = EmitSourceMap::default();
+    map.set_type_modules(collect_type_modules(cir));
     let mut modules = Vec::new();
 
     if cir.modules.len() == 1 && cir.modules[0].path == "main" {
@@ -194,7 +195,11 @@ fn emit_module_items(
             } => {
                 map.record(out.len() as u32, *span);
                 let vis = if *is_pub { "pub " } else { "" };
-                let _ = writeln!(out, "{vis}type {name} = {};", format_ty(ty));
+                let _ = writeln!(
+                    out,
+                    "{vis}type {name} = {};",
+                    format_ty_in(ty, &module.path, &map.type_modules)
+                );
             }
             CirItem::Function(f) => {
                 if include_main || !f.is_main {
@@ -203,11 +208,13 @@ fn emit_module_items(
             }
             CirItem::Trait(t) => emit_user_trait(out, t, map),
             CirItem::Impl(ib) => {
+                let ty_name = qualify_type_name(&ib.ty_name, &module.path, &map.type_modules);
                 if let Some(tn) = &ib.trait_name {
-                    let args = format_ty_args(&ib.trait_args);
-                    let _ = writeln!(out, "impl {tn}{args} for {} {{", ib.ty_name);
+                    let args = format_ty_args_in(&ib.trait_args, &module.path, &map.type_modules);
+                    let qtn = qualify_type_name(tn, &module.path, &map.type_modules);
+                    let _ = writeln!(out, "impl {qtn}{args} for {ty_name} {{");
                 } else {
-                    let _ = writeln!(out, "impl {} {{", ib.ty_name);
+                    let _ = writeln!(out, "impl {ty_name} {{");
                 }
                 // Trait impl methods must not carry `pub` (E0449).
                 let allow_pub = ib.trait_name.is_none();
@@ -224,7 +231,7 @@ fn emit_module_items(
                 }
                 let _ = writeln!(out, "}}");
                 if let Some(tn) = &ib.trait_name {
-                    emit_std_trait_rust_bridge(out, tn, &ib.ty_name);
+                    emit_std_trait_rust_bridge(out, tn, &ty_name);
                 }
             }
             CirItem::Extern(ext) => emit_extern_block(out, ext, map),
@@ -236,7 +243,8 @@ fn emit_module_items(
 fn emit_user_trait(out: &mut String, t: &crisp_cir::CirTrait, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, t.span);
     let gens = format_ty_params(&t.generics);
-    let _ = writeln!(out, "trait {}{gens} {{", t.name);
+    // Nested traits must be `pub` so `pub use child::*` and `crisp test` can see them (#102).
+    let _ = writeln!(out, "pub trait {}{gens} {{", t.name);
     for m in &t.methods {
         let params: Vec<_> = m
             .params
@@ -471,13 +479,19 @@ fn emit_function(
         let _ = writeln!(out, "#[tokio::main]");
     }
     let async_kw = if f.is_async { "async " } else { "" };
-    let sig = format_fn_sig(f, trait_impl, cir);
+    let sig = format_fn_sig(f, trait_impl, cir, current_module, &map.type_modules);
     let _ = write!(out, "{vis}{async_kw}fn {}{sig} ", f.name);
     emit_block_body(out, &f.body, f.fallible, &f.ret, current_module, 0, map);
     let _ = writeln!(out);
 }
 
-fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> String {
+fn format_fn_sig(
+    f: &CirFunction,
+    trait_impl: Option<&str>,
+    cir: &CirCrate,
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
     let shape_names: std::collections::HashSet<&str> =
         cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
     let mut type_params: Vec<String> = f
@@ -511,7 +525,10 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
             } else {
                 format!(
                     "{name}<{}>",
-                    args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+                    args.iter()
+                        .map(|a| format_ty_in(a, current_module, type_modules))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 )
             };
             type_params.push(format!(
@@ -520,7 +537,7 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
             ));
             params.push(format_param_with_ty(p, &tp, trait_impl));
         } else {
-            params.push(format_param(p, trait_impl));
+            params.push(format_param(p, trait_impl, current_module, type_modules));
         }
     }
     let generics = if type_params.is_empty() {
@@ -531,7 +548,7 @@ fn format_fn_sig(f: &CirFunction, trait_impl: Option<&str>, cir: &CirCrate) -> S
     if f.is_async {
         return format!("{generics}({})", params.join(", "));
     }
-    let ret = format_ret(&f.ret, f.fallible);
+    let ret = format_ret(&f.ret, f.fallible, current_module, type_modules);
     format!("{generics}({}){}", params.join(", "), ret)
 }
 
@@ -577,7 +594,12 @@ fn format_extern_ty(ty: &CirTy) -> String {
     }
 }
 
-fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
+fn format_param(
+    p: &CirParam,
+    trait_impl: Option<&str>,
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
     if p.name == "self" {
         return match p.mode {
             OwnershipMode::Borrow => "&self".into(),
@@ -589,7 +611,11 @@ fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
         return format!("{}: &Self", p.name);
     }
     if matches!(p.ty, CirTy::Fn { .. }) {
-        return format!("{}: {}", p.name, format_ty(&p.ty));
+        return format!(
+            "{}: {}",
+            p.name,
+            format_ty_in(&p.ty, current_module, type_modules)
+        );
     }
     let lt = p
         .lifetime
@@ -602,16 +628,25 @@ fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
         {
             format!("&{lt}str")
         }
-        OwnershipMode::Borrow => format!("&{lt}{}", format_ty(&p.ty)),
-        OwnershipMode::MutBorrow => format!("&{lt}mut {}", format_ty(&p.ty)),
-        OwnershipMode::Owned => format_ty(&p.ty),
+        OwnershipMode::Borrow => {
+            format!("&{lt}{}", format_ty_in(&p.ty, current_module, type_modules))
+        }
+        OwnershipMode::MutBorrow => format!(
+            "&{lt}mut {}",
+            format_ty_in(&p.ty, current_module, type_modules)
+        ),
+        OwnershipMode::Owned => format_ty_in(&p.ty, current_module, type_modules),
     };
     format!("{}: {ty}", p.name)
 }
 
-fn format_param_with_ty(p: &CirParam, ty_name: &str, trait_impl: Option<&str>) -> String {
+fn format_param_with_ty(p: &CirParam, ty_name: &str, _trait_impl: Option<&str>) -> String {
     if p.name == "self" {
-        return format_param(p, trait_impl);
+        return match p.mode {
+            OwnershipMode::Borrow => "&self".into(),
+            OwnershipMode::MutBorrow => "&mut self".into(),
+            OwnershipMode::Owned => "self".into(),
+        };
     }
     let lt = p
         .lifetime
@@ -626,17 +661,22 @@ fn format_param_with_ty(p: &CirParam, ty_name: &str, trait_impl: Option<&str>) -
     format!("{}: {ty}", p.name)
 }
 
-fn format_ret(ret: &CirTy, fallible: bool) -> String {
+fn format_ret(
+    ret: &CirTy,
+    fallible: bool,
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
     if fallible {
         let inner = match ret {
-            CirTy::Result { ok, .. } => format_ty(ok),
-            other => format_ty(other),
+            CirTy::Result { ok, .. } => format_ty_in(ok, current_module, type_modules),
+            other => format_ty_in(other, current_module, type_modules),
         };
         format!(" -> Result<{inner}, CrispError>")
     } else if matches!(ret, CirTy::Unit) {
         String::new()
     } else {
-        format!(" -> {}", format_ty(ret))
+        format!(" -> {}", format_ty_in(ret, current_module, type_modules))
     }
 }
 
@@ -774,9 +814,9 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 emit_expr(out, right, current_module, map);
                 let _ = write!(out, ") as f64)");
             } else {
-                emit_expr(out, left, current_module, map);
+                emit_binop_operand(out, left, *op, false, current_module, map);
                 let _ = write!(out, " {} ", binop_rust(*op));
-                emit_expr(out, right, current_module, map);
+                emit_binop_operand(out, right, *op, true, current_module, map);
             }
         }
         CirExpr::Call {
@@ -812,7 +852,8 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         } => {
             map.record(out.len() as u32, *span);
             if *use_with {
-                let _ = write!(out, "{name}::with(");
+                let qname = qualify_type_name(name, current_module, &map.type_modules);
+                let _ = write!(out, "{qname}::with(");
                 let provided: std::collections::BTreeMap<_, _> = fields.iter().cloned().collect();
                 for (i, fname) in all_fields.iter().enumerate() {
                     if i > 0 {
@@ -828,7 +869,8 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 }
                 let _ = write!(out, ")");
             } else {
-                let _ = write!(out, "{name} {{ ");
+                let qname = qualify_type_name(name, current_module, &map.type_modules);
+                let _ = write!(out, "{qname} {{ ");
                 for (i, (fname, val)) in fields.iter().enumerate() {
                     if i > 0 {
                         let _ = write!(out, ", ");
@@ -877,7 +919,8 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             ..
         } => {
             map.record(out.len() as u32, *span);
-            let _ = write!(out, "{ty_name}::{variant}");
+            let qname = qualify_type_name(ty_name, current_module, &map.type_modules);
+            let _ = write!(out, "{qname}::{variant}");
             if !args.is_empty() {
                 let _ = write!(out, "(");
                 for (i, arg) in args.iter().enumerate() {
@@ -897,7 +940,8 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             ..
         } => {
             map.record(out.len() as u32, *span);
-            let _ = write!(out, "{ty_name}::{method}(");
+            let qname = qualify_type_name(ty_name, current_module, &map.type_modules);
+            let _ = write!(out, "{qname}::{method}(");
             for (i, arg) in args.iter().enumerate() {
                 if i > 0 {
                     let _ = write!(out, ", ");
@@ -1001,7 +1045,14 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "match ");
-            emit_expr(out, scrutinee, current_module, map);
+            if arms.iter().any(|a| matches!(a.pat, CirPat::Str { .. })) {
+                // Crisp `str` may be `String` or `&str`; `str::as_str` is unstable (E0658).
+                let _ = write!(out, "::std::convert::AsRef::<str>::as_ref(&(");
+                emit_expr(out, scrutinee, current_module, map);
+                let _ = write!(out, "))");
+            } else {
+                emit_expr(out, scrutinee, current_module, map);
+            }
             let _ = write!(out, " {{");
             for arm in arms {
                 emit_match_arm(out, arm, current_module, map);
@@ -1025,7 +1076,7 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             // MVP: Crisp `vec` is `Vec<i64>`; iterate by copied values so `&Vec`
             // and owned `Vec` both yield `i64` (ownership may borrow the param).
             let _ = write!(out, "for ");
-            emit_pat(out, pat);
+            emit_pat(out, pat, current_module, map);
             let _ = write!(out, " in (");
             emit_expr(out, iter, current_module, map);
             let _ = write!(out, ").iter().copied() ");
@@ -1376,7 +1427,7 @@ fn emit_match_arm(
 ) {
     map.record(out.len() as u32, arm.span);
     let _ = write!(out, " ");
-    emit_pat(out, &arm.pat);
+    emit_pat(out, &arm.pat, current_module, map);
     if let Some(g) = &arm.guard {
         let _ = write!(out, " if ");
         emit_expr(out, g, current_module, map);
@@ -1386,7 +1437,7 @@ fn emit_match_arm(
     let _ = write!(out, ",");
 }
 
-fn emit_pat(out: &mut String, pat: &CirPat) {
+fn emit_pat(out: &mut String, pat: &CirPat, current_module: &str, map: &mut EmitSourceMap) {
     match pat {
         CirPat::Wildcard { .. } => {
             let _ = write!(out, "_");
@@ -1397,8 +1448,15 @@ fn emit_pat(out: &mut String, pat: &CirPat) {
         CirPat::Int { value, .. } => {
             let _ = write!(out, "{value}");
         }
+        CirPat::Bool { value, .. } => {
+            let _ = write!(out, "{value}");
+        }
+        CirPat::Str { value, .. } => {
+            let _ = write!(out, "\"{}\"", escape_str(value));
+        }
         CirPat::Struct { name, fields, .. } => {
-            let _ = write!(out, "{name} {{ ");
+            let qname = qualify_type_name(name, current_module, &map.type_modules);
+            let _ = write!(out, "{qname} {{ ");
             for (i, (fname, fp)) in fields.iter().enumerate() {
                 if i > 0 {
                     let _ = write!(out, ", ");
@@ -1406,7 +1464,7 @@ fn emit_pat(out: &mut String, pat: &CirPat) {
                 let _ = write!(out, "{fname}");
                 if !matches!(fp, CirPat::Wildcard { .. }) {
                     let _ = write!(out, ": ");
-                    emit_pat(out, fp);
+                    emit_pat(out, fp, current_module, map);
                 }
             }
             let _ = write!(out, " }}");
@@ -1417,14 +1475,15 @@ fn emit_pat(out: &mut String, pat: &CirPat) {
             args,
             ..
         } => {
-            let _ = write!(out, "{ty_name}::{variant}");
+            let qname = qualify_type_name(ty_name, current_module, &map.type_modules);
+            let _ = write!(out, "{qname}::{variant}");
             if !args.is_empty() {
                 let _ = write!(out, "(");
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         let _ = write!(out, ", ");
                     }
-                    emit_pat(out, arg);
+                    emit_pat(out, arg, current_module, map);
                 }
                 let _ = write!(out, ")");
             }
@@ -1573,12 +1632,23 @@ fn format_ty_params_bounded(gens: &[String], bound: &str) -> String {
 }
 
 fn format_ty_args(args: &[CirTy]) -> String {
+    format_ty_args_in(args, "main", &std::collections::BTreeMap::new())
+}
+
+fn format_ty_args_in(
+    args: &[CirTy],
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
     if args.is_empty() {
         String::new()
     } else {
         format!(
             "<{}>",
-            args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+            args.iter()
+                .map(|a| format_ty_in(a, current_module, type_modules))
+                .collect::<Vec<_>>()
+                .join(", ")
         )
     }
 }
@@ -1602,6 +1672,89 @@ fn subst_shape_field_ty(ty: &CirTy, gens: &[String], args: &[CirTy]) -> CirTy {
 }
 
 pub fn format_ty(ty: &CirTy) -> String {
+    format_ty_in(ty, "main", &std::collections::BTreeMap::new())
+}
+
+fn collect_type_modules(cir: &CirCrate) -> std::collections::BTreeMap<String, String> {
+    let mut map = std::collections::BTreeMap::new();
+    for m in &cir.modules {
+        for item in &m.items {
+            match item {
+                CirItem::Struct(s) => {
+                    map.insert(s.name.clone(), m.path.clone());
+                }
+                CirItem::Enum(e) => {
+                    map.insert(e.name.clone(), m.path.clone());
+                }
+                CirItem::Alias { name, .. } => {
+                    map.insert(name.clone(), m.path.clone());
+                }
+                CirItem::Trait(t) => {
+                    map.insert(t.name.clone(), m.path.clone());
+                }
+                _ => {}
+            }
+        }
+    }
+    map
+}
+
+fn qualify_type_name(
+    name: &str,
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
+    let Some(def) = type_modules.get(name) else {
+        return name.to_string();
+    };
+    if def == current_module {
+        return name.to_string();
+    }
+    // Crate root re-exports nested `pub use child::*`; keep snapshots stable (#93).
+    if current_module == "main" {
+        return name.to_string();
+    }
+    if def == "main" {
+        return format!("crate::{name}");
+    }
+    format!("crate::{}::{name}", def.replace('.', "::"))
+}
+
+fn binop_needs_parens(child: &CirExpr, parent: CirBinOp, is_right: bool) -> bool {
+    let CirExpr::BinOp { op, .. } = child else {
+        return false;
+    };
+    if matches!(*op, CirBinOp::Pow | CirBinOp::Concat) {
+        return false;
+    }
+    let cp = op.rust_prec();
+    let pp = parent.rust_prec();
+    cp < pp || (cp == pp && is_right)
+}
+
+fn emit_binop_operand(
+    out: &mut String,
+    expr: &CirExpr,
+    parent: CirBinOp,
+    is_right: bool,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    let paren = binop_needs_parens(expr, parent, is_right);
+    if paren {
+        let _ = write!(out, "(");
+    }
+    emit_expr(out, expr, current_module, map);
+    if paren {
+        let _ = write!(out, ")");
+    }
+}
+
+fn format_ty_in(
+    ty: &CirTy,
+    current_module: &str,
+    type_modules: &std::collections::BTreeMap<String, String>,
+) -> String {
     match ty {
         CirTy::Never => "!".into(),
         CirTy::Unit => "()".into(),
@@ -1616,30 +1769,49 @@ pub fn format_ty(ty: &CirTy) -> String {
             "vec" => "Vec<i64>".into(),
             "map" => "std::collections::HashMap<String, i64>".into(),
             "set" => "std::collections::HashSet<i64>".into(),
-            other => other.to_string(),
+            other => qualify_type_name(other, current_module, type_modules),
         },
         CirTy::Named { name, args } => format!(
-            "{name}<{}>",
-            args.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+            "{}<{}>",
+            qualify_type_name(name, current_module, type_modules),
+            args.iter()
+                .map(|a| format_ty_in(a, current_module, type_modules))
+                .collect::<Vec<_>>()
+                .join(", ")
         ),
-        CirTy::Option(inner) => format!("Option<{}>", format_ty(inner)),
-        CirTy::Result { ok, err } => format!("Result<{}, {err}>", format_ty(ok)),
+        CirTy::Option(inner) => format!(
+            "Option<{}>",
+            format_ty_in(inner, current_module, type_modules)
+        ),
+        CirTy::Result { ok, err } => format!(
+            "Result<{}, {err}>",
+            format_ty_in(ok, current_module, type_modules)
+        ),
         CirTy::Ref { mutable, inner } => {
             if *mutable {
-                format!("&mut {}", format_ty(inner))
+                format!("&mut {}", format_ty_in(inner, current_module, type_modules))
             } else {
-                format!("&{}", format_ty(inner))
+                format!("&{}", format_ty_in(inner, current_module, type_modules))
             }
         }
-        CirTy::Boxed(inner) => format!("Box<{}>", format_ty(inner)),
+        CirTy::Boxed(inner) => {
+            format!("Box<{}>", format_ty_in(inner, current_module, type_modules))
+        }
         CirTy::Tuple(ts) => format!(
             "({})",
-            ts.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+            ts.iter()
+                .map(|t| format_ty_in(t, current_module, type_modules))
+                .collect::<Vec<_>>()
+                .join(", ")
         ),
         CirTy::Fn { params, ret } => format!(
             "impl Fn({}) -> {}",
-            params.iter().map(format_ty).collect::<Vec<_>>().join(", "),
-            format_ty(ret)
+            params
+                .iter()
+                .map(|p| format_ty_in(p, current_module, type_modules))
+                .collect::<Vec<_>>()
+                .join(", "),
+            format_ty_in(ret, current_module, type_modules)
         ),
         CirTy::Error => "_".into(),
     }

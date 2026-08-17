@@ -195,3 +195,26 @@ pub enum BinaryOp {
     Shr,
     Concat,
 }
+
+impl BinaryOp {
+    /// Higher binds tighter. Mirrors Rust so probe/harness emit can keep source grouping (#99).
+    pub fn rust_prec(self) -> u8 {
+        match self {
+            BinaryOp::Pow => 8,
+            BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => 7,
+            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Concat => 6,
+            BinaryOp::Shl | BinaryOp::Shr => 5,
+            BinaryOp::BitAnd => 4,
+            BinaryOp::BitXor => 3,
+            BinaryOp::BitOr => 2,
+            BinaryOp::Eq
+            | BinaryOp::Ne
+            | BinaryOp::Lt
+            | BinaryOp::Le
+            | BinaryOp::Gt
+            | BinaryOp::Ge => 2,
+            BinaryOp::And => 1,
+            BinaryOp::Or => 0,
+        }
+    }
+}

@@ -74,6 +74,7 @@ fn crisp_check_all_examples() {
         "abnormal_suite",
         "design_patterns",
         "nested_math",
+        "nested_types",
         "vec2_methods",
         "point_impl",
         "feature_gallery",

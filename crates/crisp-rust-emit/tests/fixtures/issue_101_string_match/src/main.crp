@@ -1,0 +1,10 @@
+-- String match arms must not lower to `_` (#101).
+pub parse(name: str) = match name {
+    "h2" -> 1
+    "ch4" -> 2
+    _ -> 0
+}
+
+pub main() = {
+    print(parse("ch4"))
+}

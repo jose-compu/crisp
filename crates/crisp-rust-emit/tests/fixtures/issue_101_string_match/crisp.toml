@@ -1,0 +1,4 @@
+[package]
+name = "issue_101_string_match"
+version = "0.1.0"
+edition = "2026"

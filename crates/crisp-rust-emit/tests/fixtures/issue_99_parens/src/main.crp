@@ -1,0 +1,9 @@
+-- Source grouping must survive emit (#99).
+pub mid(lo: float, hi: float) = (lo + hi) / 2.0
+
+pub grouped(a: float, b: float, c: float, d: float) = (a + b) * (c - d)
+
+pub main() = {
+    print(mid(2.0, 10.0))
+    print(grouped(1.0, 2.0, 5.0, 1.0))
+}

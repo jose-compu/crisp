@@ -122,6 +122,11 @@ fn issue_96_bisection_emits_if_assign_and_builds() {
         out.lib_rs
     );
     assert!(
+        out.lib_rs.contains("(lo + hi)"),
+        "bisection midpoint must keep (lo + hi) grouping (#99):\n{}",
+        out.lib_rs
+    );
+    assert!(
         out.lib_rs.contains("fn bisection_width"),
         "missing bisection_width:\n{}",
         out.lib_rs

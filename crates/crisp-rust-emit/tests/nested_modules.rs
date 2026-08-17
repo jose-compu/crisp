@@ -77,6 +77,10 @@ fn nested_emit_declares_parent_and_child_mods() {
         "nested-to-nested use must emit crate:: (#93):\n{double}"
     );
     assert!(
+        double.contains("crate::math::vector::Vec2"),
+        "nested type use must emit crate::math::vector::Vec2 (#100):\n{double}"
+    );
+    assert!(
         !double.contains("fn twice<"),
         "twice must infer float from scale, not generalize to T: Clone:\n{double}"
     );

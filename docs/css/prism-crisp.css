@@ -176,6 +176,28 @@ pre.pipe > code,
   color: #0d6ebd;
 }
 
+/* White pipes: interpolation body must not keep the dark-theme near-white ink. */
+.band-light .pipe .token.interpolation {
+  color: #15202b;
+}
+.band-light .pipe .token.interpolation .token.punctuation {
+  color: #0d6ebd;
+}
+.band-light .pipe .token.interpolation .token.operator {
+  color: #4a5d70;
+}
+.band-light .pipe .token.interpolation .token.function,
+.band-light .pipe .token.interpolation .token.class-name {
+  color: #8a5a18;
+}
+.band-light .pipe .token.interpolation .token.number {
+  color: #9a6220;
+}
+.band-light .pipe .token.interpolation .token.keyword,
+.band-light .pipe .token.interpolation .token.boolean {
+  color: #0d6ebd;
+}
+
 /* Snippet galleries: always keep bright-on-slate tokens. */
 .band-light .code-window code[class*="language-"] {
   color: #f5f8fc;

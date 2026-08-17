@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.6.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -61,7 +61,7 @@
     <div class="wrap content">
       <h2>At a glance</h2>
       <ul>
-        <li><strong>Functions</strong> — one callable kind: <code>name(args) = expr</code>, <code>|x| …</code>, holes / trailing blocks / <code>.field</code> (<code>examples/closures</code>)</li>
+        <li><strong>Functions</strong> — one callable kind: <code>name(args) = expr</code>, <code>|x| …</code>, holes / trailing blocks / <code>.field</code> / <code>.m()</code> (<code>examples/closures</code>)</li>
         <li><strong>Bindings</strong> — <code>x := value</code></li>
         <li><strong>Types</strong> — inferred; annotate when needed (<code>int</code>, <code>str</code>, <code>float</code>, …)</li>
         <li><strong>Structs</strong> — <code>type T = { … }</code> with field defaults</li>
@@ -127,6 +127,34 @@ pub main() = {
     print(apply(double, 21))
     print(apply(_ * 2, 21))
     print(inc(41))
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Implicit closures</span><span>examples/closures</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>apply(f, x) = f(x)
+run(f) = f(21)
+label(g, p) = g(p)
+
+type Person = { name: str }
+type Vec2 = {
+    x: float
+    y: float
+}
+impl Vec2 = {
+    new(x, y) = Vec2 {
+        x: x
+        y: y
+    }
+    magnitude(self) = (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+}
+
+pub main() = {
+    print(run { |x| x * 2 })
+    print(label(.name, Person { name: "Ada" }))
+    print(apply(.magnitude(), Vec2.new(3.0, 4.0)))
 }</pre>
           </div>
         </div>
@@ -273,7 +301,7 @@ test_compile_fail "unknown" = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

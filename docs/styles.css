@@ -647,6 +647,9 @@ a:hover { color: var(--accent-soft); }
   color: var(--light-fg);
   font-weight: 600;
 }
+.tutorial-step .tech code {
+  color: var(--light-fg);
+}
 .tutorial-step .try {
   margin-top: 0.75rem;
   font-size: 0.92rem;

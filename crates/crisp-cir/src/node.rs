@@ -335,6 +335,18 @@ pub enum CirExpr {
         ty: CirTy,
         span: Span,
     },
+    Index {
+        base: Box<CirExpr>,
+        index: Box<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
+    IndexAssign {
+        base: Box<CirExpr>,
+        index: Box<CirExpr>,
+        value: Box<CirExpr>,
+        span: Span,
+    },
     While {
         cond: Box<CirExpr>,
         body: Box<CirExpr>,

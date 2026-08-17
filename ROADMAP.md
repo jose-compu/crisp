@@ -352,7 +352,8 @@ Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123
 - [x] **Record `:=`** — `Copy` on all-Copy fields; clone-at-bind when the source is reused ([#118](https://github.com/jose-compu/crisp/issues/118))
 - [x] **Test harness `&`** — call args from CIR ownership, not an AST heuristic ([#114](https://github.com/jose-compu/crisp/issues/114))
 - [x] **Implicit `vec<T>`** — `new`/`push`/`[ ]` infer the element type ([#119](https://github.com/jose-compu/crisp/issues/119))
-- [ ] **Indexing `xs[i]`** — typeck, CIR, emit ([#120](https://github.com/jose-compu/crisp/issues/120))
+- [x] **Indexing `xs[i]`** — typeck, CIR, emit ([#120](https://github.com/jose-compu/crisp/issues/120))
+- [ ] **Math prelude** — `exp` / `sin` / `cos` / `tanh` / `sqrt` ([#115](https://github.com/jose-compu/crisp/issues/115))
 
 GitHub follow-up when the API recovers:
 
@@ -414,4 +415,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (indexing #120).*
+*Last updated: 2026-08-17 — v1.8.0 in progress (math prelude #115).*

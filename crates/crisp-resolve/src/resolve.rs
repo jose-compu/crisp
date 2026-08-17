@@ -764,6 +764,11 @@ impl Resolver {
                 self.check_expr(scope, base)?;
                 self.check_expr(scope, index)
             }
+            ExprKind::IndexAssign { base, index, value } => {
+                self.check_expr(scope, base)?;
+                self.check_expr(scope, index)?;
+                self.check_expr(scope, value)
+            }
             ExprKind::Array(elems) => {
                 for e in elems {
                     self.check_expr(scope, e)?;

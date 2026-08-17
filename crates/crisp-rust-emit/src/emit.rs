@@ -1159,6 +1159,34 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 let _ = write!(out, "]");
             }
         }
+        CirExpr::Index {
+            base,
+            index,
+            ty,
+            span,
+        } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, base, current_module, map);
+            let _ = write!(out, "[");
+            emit_expr(out, index, current_module, map);
+            let _ = write!(out, " as usize]");
+            if !cir_ty_is_copy(ty) {
+                let _ = write!(out, ".clone()");
+            }
+        }
+        CirExpr::IndexAssign {
+            base,
+            index,
+            value,
+            span,
+        } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, base, current_module, map);
+            let _ = write!(out, "[");
+            emit_expr(out, index, current_module, map);
+            let _ = write!(out, " as usize] = ");
+            emit_expr(out, value, current_module, map);
+        }
         CirExpr::Loop { body, span } => {
             map.record(out.len() as u32, *span);
             let _ = write!(out, "loop ");
@@ -1265,14 +1293,15 @@ fn emit_expr_block(
 }
 
 fn is_vec_new_expr(expr: &CirExpr) -> bool {
-    matches!(
-        expr,
-        CirExpr::Call {
-            callee,
-            module,
-            ..
-        } if callee == "new" && module.starts_with("std.vec")
-    )
+    matches!(expr, CirExpr::Array { .. })
+        || matches!(
+            expr,
+            CirExpr::Call {
+                callee,
+                module,
+                ..
+            } if callee == "new" && module.starts_with("std.vec")
+        )
 }
 
 fn emit_vec_receiver(

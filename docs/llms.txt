@@ -2,7 +2,7 @@
 
 > Crisp is a systems programming language that transpiles compact `.crp` source to Rust. The `crisp` toolchain infers types, ownership, and errors; `rustc` remains the soundness boundary.
 
-Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.7.0. Repository: https://github.com/jose-compu/crisp
+Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.7.1. Repository: https://github.com/jose-compu/crisp
 
 ## Docs
 

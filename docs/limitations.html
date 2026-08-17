@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -53,7 +53,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the v1.7.0 public release versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.7.1 public release versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
@@ -73,6 +73,7 @@
         <li>Editor VSIX via <code>./scripts/package-vsix.sh</code>; Marketplace listing optional (#57)</li>
         <li>Install: <code>cargo install crisp-lang --locked</code> (#66).</li>
       </ul>
+      <p><strong>Shipped in v1.7.1:</strong> nested-module <code>crate::</code> paths (#93), float <code>**</code> / <code>powf</code> (#94), interpolation E0035 spans (#95), while/if assignment (#96).</p>
       <p><strong>Shipped in v1.7.0:</strong> first-class function values and implicit-closure sugar — holes, trailing last-arg, field/method sections (<code>examples/closures</code>, #72 / #87–#89).</p>
       <p><strong>Shipped in v1.6.1:</strong> inferred bounds on generic <code>T</code> from use (#84) — operators → <code>Add</code>/<code>Sub</code>/<code>Mul</code>/<code>Div</code>; unique methods → <code>T: Show</code> / <code>T: Measure</code>; <code>E0084</code> on bad instantiations.</p>
       <p><strong>Shipped in v1.6.0:</strong> implicit generics (preferred), parametric shapes, <code>pub</code> schemes in <code>crisp.lock</code> — on top of v1.5 loops / LSP / shapes and v1.4 interop.</p>
@@ -108,7 +109,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

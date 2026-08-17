@@ -279,3 +279,41 @@ fn issue_120_emit_index() {
         out.lib_rs
     );
 }
+
+#[test]
+fn issue_115_emit_math_prelude() {
+    let cir = CirBuilder::build_crate(&example("math")).expect("cir #115");
+    let out = emit_crate(&cir);
+    let floats = out
+        .modules
+        .iter()
+        .find(|(p, _)| p == "floats")
+        .map(|(_, s)| s.as_str())
+        .unwrap_or(&out.lib_rs);
+    eprintln!("#115 floats.rs:\n{floats}");
+    for name in ["exp", "sin", "cos", "tanh", "sqrt"] {
+        let needle = format!("f64::{name}");
+        assert!(floats.contains(&needle), "missing {needle}:\n{floats}");
+    }
+}
+
+#[test]
+fn issue_115_runtime_tests() {
+    match run_tests(&example("math")) {
+        Ok(r) => {
+            eprintln!(
+                "#115 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert!(
+                r.runtime_passed >= 12,
+                "expected math prelude tests, got {}",
+                r.runtime_passed
+            );
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_115 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_115 harness: {e}"),
+    }
+}

@@ -2703,6 +2703,13 @@ fn vec_elem_uninferred(ty: &Ty) -> bool {
     )
 }
 
+fn float_unop() -> Ty {
+    Ty::Fn {
+        params: vec![Ty::Float],
+        ret: Box::new(Ty::Float),
+    }
+}
+
 fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
     vec![
         (
@@ -2726,6 +2733,11 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
                 ret: Box::new(Ty::Str),
             },
         ),
+        ("exp", float_unop()),
+        ("sin", float_unop()),
+        ("cos", float_unop()),
+        ("tanh", float_unop()),
+        ("sqrt", float_unop()),
     ]
 }
 

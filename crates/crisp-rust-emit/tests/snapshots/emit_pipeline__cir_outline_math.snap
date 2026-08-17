@@ -15,5 +15,10 @@ module floats
   fn avg2(a, b)
   fn lap3(um, uc, up, dx)
   fn add_mix(a, n)
+  fn e0()
+  fn s0()
+  fn c0()
+  fn th0()
+  fn q4()
 module main
   fn main()

@@ -47,6 +47,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Record `:=` / Copy | §7, §0.1 | All-Copy records derive `Copy`; other records clone at `:=` when the source is reused — [#118](https://github.com/jose-compu/crisp/issues/118) |
 | Test harness args | §19 | Call `&` follows CIR ownership (same as `emit_call_arg`), not an AST heuristic — [#114](https://github.com/jose-compu/crisp/issues/114) |
 | Collections | §3 arrays, §15 `vec<T>` | `new`/`push`/`len` and `[1.0, 2.0]` infer `vec<T>` ([#119](https://github.com/jose-compu/crisp/issues/119)). `xs[i]` / `xs[i] = v` emit `xs[i as usize]` ([#120](https://github.com/jose-compu/crisp/issues/120)). |
+| Math prelude | §15 | `exp` / `sin` / `cos` / `tanh` / `sqrt` → `f64::{…}` ([#115](https://github.com/jose-compu/crisp/issues/115)). |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)

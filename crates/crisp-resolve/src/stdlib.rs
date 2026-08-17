@@ -54,6 +54,31 @@ pub fn std_functions() -> &'static [StdFn] {
             name: "parse_ip",
             rust_path: "std::net::parse_ip",
         },
+        StdFn {
+            module: "std.math",
+            name: "exp",
+            rust_path: "f64::exp",
+        },
+        StdFn {
+            module: "std.math",
+            name: "sin",
+            rust_path: "f64::sin",
+        },
+        StdFn {
+            module: "std.math",
+            name: "cos",
+            rust_path: "f64::cos",
+        },
+        StdFn {
+            module: "std.math",
+            name: "tanh",
+            rust_path: "f64::tanh",
+        },
+        StdFn {
+            module: "std.math",
+            name: "sqrt",
+            rust_path: "f64::sqrt",
+        },
     ]
 }
 

@@ -220,6 +220,41 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "exp",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "exp",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sin",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sin",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cos",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "cos",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "tanh",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "tanh",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sqrt",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sqrt",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Option",
                     symbol: SymbolKey {
                         module: "std.option",
@@ -300,6 +335,11 @@ ResolvedCrate {
                 "sleep_ms",
                 "new_int",
                 "parse_ip",
+                "exp",
+                "sin",
+                "cos",
+                "tanh",
+                "sqrt",
                 "Option",
                 "Result",
                 "String",
@@ -524,6 +564,41 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "exp",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "exp",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sin",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sin",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cos",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "cos",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "tanh",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "tanh",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sqrt",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sqrt",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Option",
                     symbol: SymbolKey {
                         module: "std.option",
@@ -604,6 +679,11 @@ ResolvedCrate {
                 "sleep_ms",
                 "new_int",
                 "parse_ip",
+                "exp",
+                "sin",
+                "cos",
+                "tanh",
+                "sqrt",
                 "Option",
                 "Result",
                 "String",
@@ -828,6 +908,41 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "exp",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "exp",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sin",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sin",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cos",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "cos",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "tanh",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "tanh",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "sqrt",
+                    symbol: SymbolKey {
+                        module: "std.math",
+                        name: "sqrt",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Option",
                     symbol: SymbolKey {
                         module: "std.option",
@@ -922,6 +1037,11 @@ ResolvedCrate {
                 "sleep_ms",
                 "new_int",
                 "parse_ip",
+                "exp",
+                "sin",
+                "cos",
+                "tanh",
+                "sqrt",
                 "Option",
                 "Result",
                 "String",
@@ -934,7 +1054,7 @@ ResolvedCrate {
             ],
         },
     ],
-    symbol_count: 39,
+    symbol_count: 44,
     rust_imports: [],
     warnings: [],
 }

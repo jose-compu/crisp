@@ -1,0 +1,56 @@
+-- #114: harness call args must match production ownership (no extra `&`).
+
+type YT = {
+    y: float
+    t: float
+}
+
+type Fuel = {
+    name: str
+}
+
+pub unburnt_yt() = YT {
+    y: 1.0
+    t: 0.0
+}
+
+pub hold_0d(s0: YT, steps: int, dt: float) = s0
+
+pub step(s: YT) = s
+
+lap3(a: float, b: float, c: float, d: float) = a + b + c + d
+
+upwind(a: float, b: float, c: float, d: float) = a - b + c - d
+
+rhs_point(a: float, b: float, lap: float, up: float) = a + b + lap + up
+
+fuel_ch4() = Fuel {
+    name: "ch4"
+}
+
+describe(f: Fuel) = f.name
+
+pub main() = {
+    s := hold_0d(unburnt_yt(), 40, 0.0002)
+    print(s.y)
+}
+
+test "cold" = {
+    s := hold_0d(unburnt_yt(), 40, 0.0002)
+    assert_eq(s.y, 1.0)
+}
+
+test "rhs nested float" = {
+    a := rhs_point(0.0, 1.0, lap3(0.0, 1.0, 0.0, 1.0), upwind(0.0, 1.0, 1.0, 1.0))
+    assert_eq(a, 2.0)
+}
+
+test "step ident" = {
+    u := unburnt_yt()
+    s := step(u)
+    assert_eq(s.y, 1.0)
+}
+
+test "borrow nested record" = {
+    assert_eq(describe(fuel_ch4()), "ch4")
+}

@@ -9,7 +9,9 @@ use anyhow::{Context, Result};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{Item, TestDef};
 use crisp_ast::pat::PatKind;
+use crisp_cir::{CirCrate, CirFunction, CirItem};
 use crisp_manifest::{read_manifest, resolve_dependencies};
+use crisp_ownership::OwnershipMode;
 use crisp_resolve::module::load_module_graph;
 use crisp_typeck::TypeChecker;
 use std::collections::HashSet;
@@ -72,6 +74,12 @@ fn collected_from(module: &str, t: &TestDef, compile_fail: bool) -> CollectedTes
 }
 
 pub fn emit_test_module(tests: &[CollectedTest]) -> String {
+    emit_test_module_with_cir(tests, None)
+}
+
+/// Same as [`emit_test_module`], but argument `&` follows CIR ownership modes
+/// (`emit_call_arg`) instead of the old AST heuristic (#114).
+pub fn emit_test_module_with_cir(tests: &[CollectedTest], cir: Option<&CirCrate>) -> String {
     let runtime: Vec<_> = tests.iter().filter(|t| !t.compile_fail).collect();
     if runtime.is_empty() {
         return String::new();
@@ -82,13 +90,78 @@ pub fn emit_test_module(tests: &[CollectedTest]) -> String {
     let mut used = HashSet::new();
     for t in runtime {
         let fn_name = unique_test_fn_name(&mut used, &t.module, &t.name);
+        let ctx = HarnessCtx {
+            cir,
+            module: &t.module,
+        };
         let _ = writeln!(out, "    #[test]");
         let _ = writeln!(out, "    fn {fn_name}() {{");
-        emit_block(&mut out, &t.body, 2);
+        emit_block(&mut out, &t.body, 2, &ctx);
         let _ = writeln!(out, "    }}\n");
     }
     out.push_str("}\n");
     out
+}
+
+struct HarnessCtx<'a> {
+    cir: Option<&'a CirCrate>,
+    module: &'a str,
+}
+
+impl HarnessCtx<'_> {
+    fn ident_param_mode(&self, callee: &str, index: usize) -> OwnershipMode {
+        match self.cir {
+            None => OwnershipMode::Owned,
+            Some(cir) => cir_fn_param_mode(cir, self.module, callee, index, false)
+                .unwrap_or(OwnershipMode::Borrow),
+        }
+    }
+
+    fn method_param_mode(&self, method: &str, index: usize, instance: bool) -> OwnershipMode {
+        match self.cir {
+            None => OwnershipMode::Owned,
+            Some(cir) => cir_fn_param_mode(cir, self.module, method, index, instance)
+                .unwrap_or(OwnershipMode::Borrow),
+        }
+    }
+}
+
+fn cir_fn_param_mode(
+    cir: &CirCrate,
+    prefer_module: &str,
+    name: &str,
+    index: usize,
+    skip_self: bool,
+) -> Option<OwnershipMode> {
+    let mut fallback: Option<&CirFunction> = None;
+    for m in &cir.modules {
+        for item in &m.items {
+            let candidates: Vec<&CirFunction> = match item {
+                CirItem::Function(f) if f.name == name => vec![f],
+                CirItem::Impl(imp) => imp.functions.iter().filter(|f| f.name == name).collect(),
+                CirItem::Extern(ext) => {
+                    if let Some(ef) = ext.functions.iter().find(|f| f.name == name) {
+                        let offset = if skip_self { 1 } else { 0 };
+                        return ef.params.get(index + offset).map(|p| p.mode);
+                    }
+                    Vec::new()
+                }
+                _ => Vec::new(),
+            };
+            for f in candidates {
+                if m.path == prefer_module {
+                    return param_mode_at(f, index, skip_self);
+                }
+                fallback = Some(f);
+            }
+        }
+    }
+    fallback.and_then(|f| param_mode_at(f, index, skip_self))
+}
+
+fn param_mode_at(f: &CirFunction, index: usize, skip_self: bool) -> Option<OwnershipMode> {
+    let offset = if skip_self { 1 } else { 0 };
+    f.params.get(index + offset).map(|p| p.mode)
 }
 
 fn unique_test_fn_name(used: &mut HashSet<String>, module: &str, name: &str) -> String {
@@ -142,16 +215,16 @@ fn sanitize_test_name(module: &str, name: &str) -> String {
     }
 }
 
-fn emit_block(out: &mut String, block: &Block, indent: usize) {
+fn emit_block(out: &mut String, block: &Block, indent: usize, ctx: &HarnessCtx<'_>) {
     let pad = " ".repeat(indent);
     for stmt in &block.stmts {
         match stmt {
             Stmt::Expr(e) => {
-                let _ = writeln!(out, "{pad}{};", emit_expr(e));
+                let _ = writeln!(out, "{pad}{};", emit_expr(ctx, e));
             }
             Stmt::Bind { pat, value, .. } => {
                 let name = pat_name(pat);
-                let rhs = emit_expr(value);
+                let rhs = emit_expr(ctx, value);
                 let _ = writeln!(out, "{pad}let {name} = {rhs};");
             }
             Stmt::Assign { target, value } => {
@@ -159,13 +232,13 @@ fn emit_block(out: &mut String, block: &Block, indent: usize) {
                     out,
                     "{pad}let mut {name} = {rhs};",
                     name = target.name,
-                    rhs = emit_expr(value)
+                    rhs = emit_expr(ctx, value)
                 );
             }
         }
     }
     if let Some(tail) = &block.tail {
-        let _ = writeln!(out, "{pad}{};", emit_expr(tail));
+        let _ = writeln!(out, "{pad}{};", emit_expr(ctx, tail));
     }
 }
 
@@ -176,9 +249,9 @@ fn pat_name(pat: &crisp_ast::pat::Pat) -> String {
     }
 }
 
-fn emit_expr(expr: &Expr) -> String {
+fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
     if let Some(lifted) = crisp_ast::lift_holes(expr) {
-        return emit_expr(&lifted);
+        return emit_expr(ctx, &lifted);
     }
     match &expr.kind {
         ExprKind::Int(n) => n.to_string(),
@@ -204,7 +277,6 @@ fn emit_expr(expr: &Expr) -> String {
         ExprKind::Call { func, args } => {
             // Associated fn / enum ctor / instance method: Field under Call.
             if let ExprKind::Field { base, field } = &func.kind {
-                let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
                 if let ExprKind::Ident(ty) = &base.kind
                     && ty
                         .name
@@ -212,29 +284,54 @@ fn emit_expr(expr: &Expr) -> String {
                         .next()
                         .is_some_and(|c| c.is_ascii_uppercase())
                 {
+                    let arg_strs: Vec<_> = args
+                        .iter()
+                        .enumerate()
+                        .map(|(i, a)| {
+                            emit_call_arg_for_test(
+                                ctx,
+                                a,
+                                ctx.method_param_mode(&field.name, i, false),
+                            )
+                        })
+                        .collect();
                     return format!("{}::{}({})", ty.name, field.name, arg_strs.join(", "));
                 }
                 // Instance: recv.method(args) — including chained AssocCall receivers.
                 // Eq.equal / Ord.compare take `&Self`.
                 let args_fmt = if matches!(field.name.as_str(), "equal" | "compare") {
                     args.iter()
-                        .map(|a| format!("&{}", emit_expr(a)))
+                        .map(|a| format!("&{}", emit_expr(ctx, a)))
                         .collect::<Vec<_>>()
                         .join(", ")
                 } else {
-                    arg_strs.join(", ")
+                    args.iter()
+                        .enumerate()
+                        .map(|(i, a)| {
+                            emit_call_arg_for_test(
+                                ctx,
+                                a,
+                                ctx.method_param_mode(&field.name, i, true),
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 };
-                return format!("{}.{}({})", emit_expr(base), field.name, args_fmt);
+                return format!("{}.{}({})", emit_expr(ctx, base), field.name, args_fmt);
             }
             let callee = match &func.kind {
                 ExprKind::Ident(id) => id.name.clone(),
-                _ => format!("({})", emit_expr(func)),
+                _ => format!("({})", emit_expr(ctx, func)),
             };
             if callee == "assert_eq" {
-                let arg_strs: Vec<_> = args.iter().map(emit_expr).collect();
+                let arg_strs: Vec<_> = args.iter().map(|a| emit_expr(ctx, a)).collect();
                 return emit_assert_eq(args, &arg_strs);
             }
-            let arg_strs: Vec<_> = args.iter().map(emit_call_arg_for_test).collect();
+            let arg_strs: Vec<_> = args
+                .iter()
+                .enumerate()
+                .map(|(i, a)| emit_call_arg_for_test(ctx, a, ctx.ident_param_mode(&callee, i)))
+                .collect();
             format!("{}({})", callee, arg_strs.join(", "))
         }
         ExprKind::Binary { op, left, right } => {
@@ -258,15 +355,15 @@ fn emit_expr(expr: &Expr) -> String {
             if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
                 format!(
                     "(({}) as f64).powf(({}) as f64)",
-                    emit_expr(left),
-                    emit_expr(right)
+                    emit_expr(ctx, left),
+                    emit_expr(ctx, right)
                 )
             } else {
                 format!(
                     "{} {} {}",
-                    emit_binop_operand(left, *op, false),
+                    emit_binop_operand(ctx, left, *op, false),
                     op_str,
-                    emit_binop_operand(right, *op, true)
+                    emit_binop_operand(ctx, right, *op, true)
                 )
             }
         }
@@ -275,7 +372,7 @@ fn emit_expr(expr: &Expr) -> String {
                 crisp_ast::expr::UnaryOp::Neg => "-",
                 crisp_ast::expr::UnaryOp::Not => "!",
             };
-            let inner_s = emit_expr(inner);
+            let inner_s = emit_expr(ctx, inner);
             if matches!(inner.kind, ExprKind::Binary { .. }) {
                 format!("{op_s}({inner_s})")
             } else {
@@ -290,11 +387,11 @@ fn emit_expr(expr: &Expr) -> String {
                 }
                 _ => "f64",
             };
-            format!("({}) as {rust_ty}", emit_expr(inner))
+            format!("({}) as {rust_ty}", emit_expr(ctx, inner))
         }
         ExprKind::Block(b) => {
             let mut inner = String::new();
-            emit_block(&mut inner, b, 0);
+            emit_block(&mut inner, b, 0, ctx);
             format!("{{ {inner} }}")
         }
         ExprKind::Field { base, field } => {
@@ -308,7 +405,7 @@ fn emit_expr(expr: &Expr) -> String {
             {
                 format!("{}::{}", ty.name, field.name)
             } else {
-                format!("{}.{}", emit_expr(base), field.name)
+                format!("{}.{}", emit_expr(ctx, base), field.name)
             }
         }
         ExprKind::StructLit { name, fields } => {
@@ -318,7 +415,7 @@ fn emit_expr(expr: &Expr) -> String {
                 let parts: Vec<_> = fields
                     .iter()
                     .map(|f| {
-                        let val = emit_expr(&f.value);
+                        let val = emit_expr(ctx, &f.value);
                         let val = if matches!(f.value.kind, ExprKind::Str(_)) {
                             format!("{val}.to_string()")
                         } else {
@@ -332,14 +429,19 @@ fn emit_expr(expr: &Expr) -> String {
         }
         ExprKind::Lambda { params, body } => {
             let names: Vec<_> = params.iter().map(|p| p.name.name.as_str()).collect();
-            format!("move |{}| {}", names.join(", "), emit_expr(body))
+            format!("move |{}| {}", names.join(", "), emit_expr(ctx, body))
         }
         _ => "()".into(),
     }
 }
 
-fn emit_binop_operand(expr: &Expr, parent: crisp_ast::expr::BinaryOp, is_right: bool) -> String {
-    let inner = emit_expr(expr);
+fn emit_binop_operand(
+    ctx: &HarnessCtx<'_>,
+    expr: &Expr,
+    parent: crisp_ast::expr::BinaryOp,
+    is_right: bool,
+) -> String {
+    let inner = emit_expr(ctx, expr);
     if ast_binop_needs_parens(expr, parent, is_right) {
         format!("({inner})")
     } else {
@@ -418,39 +520,33 @@ fn contains_float_literal(expr: &Expr) -> bool {
     }
 }
 
-fn emit_call_arg_for_test(expr: &Expr) -> String {
+fn emit_call_arg_for_test(ctx: &HarnessCtx<'_>, expr: &Expr, mode: OwnershipMode) -> String {
     match &expr.kind {
-        // Copy scalars emit by value in CIR/Rust (Owned); do not borrow literals.
+        // Copy scalars emit by value in CIR/Rust (Owned); do not borrow int/bool/char lits.
         ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
-            if f.fract() == 0.0 {
+            let s = if f.fract() == 0.0 {
                 format!("{f}.0_f64")
             } else {
                 format!("{f}_f64")
+            };
+            if matches!(mode, OwnershipMode::Borrow) {
+                format!("&{s}")
+            } else {
+                s
             }
         }
-        ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(expr),
-        // Prefer `&ident` for stringish/`&T` params; copy locals still coerce via Copy.
-        ExprKind::Ident(id) => format!("&{}", id.name),
-        // Enum values are owned; pass by reference for `&Color` params.
-        ExprKind::Field { base, .. } if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase())) =>
-        {
-            format!("&{}", emit_expr(expr))
+        ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(ctx, expr),
+        // String literals already type as `&str` (same as emit_call_arg).
+        ExprKind::Str(_) => emit_expr(ctx, expr),
+        _ => {
+            let inner = emit_expr(ctx, expr);
+            if matches!(mode, OwnershipMode::Borrow) {
+                format!("&{inner}")
+            } else {
+                inner
+            }
         }
-        ExprKind::Call { func, .. }
-            if matches!(
-                &func.kind,
-                ExprKind::Field { base, .. }
-                    if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase()))
-            ) =>
-        {
-            format!("&{}", emit_expr(expr))
-        }
-        // Nested calls that return user types (`parse_fuel("ch4")`) need `&` like CIR (#102).
-        ExprKind::Call { func, .. } if matches!(&func.kind, ExprKind::Ident(_)) => {
-            format!("&{}", emit_expr(expr))
-        }
-        _ => emit_expr(expr),
     }
 }
 
@@ -463,19 +559,19 @@ pub fn run_tests(crate_root: &Path) -> Result<TestRunReport, TestHarnessError> {
         run_compile_fail_test(t)?;
     }
 
-    let emitted_tests = emit_test_module(&tests);
     let runtime_count = tests.iter().filter(|t| !t.compile_fail).count();
 
     if runtime_count == 0 {
         return Ok(TestRunReport {
             runtime_passed: 0,
             compile_fail_passed: compile_fail.len(),
-            emitted_tests,
+            emitted_tests: emit_test_module(&tests),
         });
     }
 
     with_emit_dir_lock(crate_root, || {
         let cir = analyze_and_build_cir(crate_root)?;
+        let emitted_tests = emit_test_module_with_cir(&tests, Some(&cir));
         let manifest = read_manifest(crate_root).context("read crisp.toml")?;
         let deps = resolve_dependencies(&manifest);
         let emitted = emit_crate(&cir);

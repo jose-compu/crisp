@@ -17,6 +17,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Unary `-` on a float stays `float`; float `assert_eq` parenthesizes the RHS (`(left - (right)).abs() < 1e-9`) ([#113](https://github.com/jose-compu/crisp/issues/113)).
 - `int` widens to `float` in a checking position (annotated param, field, return, or a binop whose other operand is already `float`). Int literals in a float slot emit as float literals. Postfix `as float` / `as int`. Non-literal `int` → `float` is **W0087** (silence with `as float`). `float` never narrows implicitly ([#112](https://github.com/jose-compu/crisp/issues/112)).
 - Records whose fields are all `Copy` derive `Copy`; other records clone at `:=` when the source is used again ([#118](https://github.com/jose-compu/crisp/issues/118)).
+- `crisp test` call arguments follow CIR ownership modes (same as production emit). Nested owned calls and idents are not wrapped in an extra `&` ([#114](https://github.com/jose-compu/crisp/issues/114)).
 
 ## [1.7.3] — 2026-08-17
 

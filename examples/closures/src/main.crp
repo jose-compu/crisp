@@ -28,6 +28,23 @@ type Person = {
     name: str
 }
 
+type Vec2 = {
+    x: float
+    y: float
+}
+
+impl Vec2 = {
+    new(x, y) = Vec2 {
+        x: x
+        y: y
+    }
+    magnitude(self) = (self.x ** 2.0 + self.y ** 2.0) ** 0.5
+    scale(self, f) = Vec2 {
+        x: self.x * f
+        y: self.y * f
+    }
+}
+
 label(f, p) = f(p)
 
 sample() = {
@@ -68,6 +85,14 @@ test "field section" = {
     assert_eq(label(.name, Person { name: "Ada" }), "Ada")
 }
 
+test "method section" = {
+    v := Vec2.new(3.0, 4.0)
+    assert_eq(apply(.magnitude(), v), 5.0)
+    s := apply(.scale(2.0), Vec2.new(1.0, 2.0))
+    assert_eq(s.x, 2.0)
+    assert_eq(s.y, 4.0)
+}
+
 test "map with hole" = {
     xs := sample()
     mapped := map_int(xs, _ * 2)
@@ -85,6 +110,7 @@ pub main() = {
     print(apply(make_adder(10), 5))
     p := Person { name: "Ada" }
     print(label(.name, p))
+    print(apply(.magnitude(), Vec2.new(3.0, 4.0)))
     xs := sample()
     print(sum_vec(map_int(xs, _ * 2)))
 }

@@ -60,6 +60,33 @@ fn parse_field_section() {
 }
 
 #[test]
+fn parse_method_section() {
+    let e = parse_fn_body(".magnitude()");
+    let ExprKind::Lambda { params, body, .. } = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    assert_eq!(params.len(), 1);
+    let ExprKind::Call { func, args } = body.kind else {
+        panic!("{:?}", body.kind);
+    };
+    assert!(args.is_empty());
+    assert!(matches!(func.kind, ExprKind::Field { .. }));
+}
+
+#[test]
+fn parse_method_section_baked_args() {
+    let e = parse_fn_body(".scale(2.0)");
+    let ExprKind::Lambda { params, body, .. } = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    assert_eq!(params.len(), 1);
+    let ExprKind::Call { args, .. } = body.kind else {
+        panic!("{:?}", body.kind);
+    };
+    assert_eq!(args.len(), 1);
+}
+
+#[test]
 fn parse_parenthesized_lambda() {
     let e = parse_fn_body("(|x| x + 1)");
     assert!(matches!(e.kind, ExprKind::Lambda { .. }), "{:?}", e.kind);

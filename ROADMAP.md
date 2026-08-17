@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.6.1**. Active milestones:
+Current compiler: **v1.7.0**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -329,12 +329,25 @@ Current compiler: **v1.6.1**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io republish (v1.6.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
-| **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (implemented on `feature/1.7.0-closures`) |
+| **P1** | crates.io publish (v1.7.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### Shipped — v1.7.0 (function values)
+
+One callable kind. Named items and `|x| …` are the same values. Implicit sugar when a function is expected.
+
+- [x] **Function values / closures** (spec §5.2–§5.3) — CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
+- [x] **Holes** — `_ * 2` left-to-right; E0085 / E0086 — [#87](https://github.com/jose-compu/crisp/issues/87)
+- [x] **Trailing last-arg** — `run { |x| … }` — [#88](https://github.com/jose-compu/crisp/issues/88)
+- [x] **Point-free sections** — `.name`, `.magnitude()`, `.scale(2.0)` (baked extra args; not a two-arg function) — [#89](https://github.com/jose-compu/crisp/issues/89)
+
+**Design note (#72, thanks [@aurelianito](https://github.com/aurelianito)):** Crisp should have **only closures** (first-class function values). Named “functions” are the same values bound to a name when useful — not a Ruby-style function-vs-closure split, and not a Java anonymous-inner-class escape hatch. Capture is lexical; ownership decides borrow/`move`. Emit may lower top-level named bindings to Rust `fn` and locals to Rust closures as a specialization, not as two language concepts.
+
+Remaining after this milestone: operator sections (`+ 1`) by default out; `dyn Fn` with other `dyn` work (#59).
 
 ### Shipped — v1.6.1 (bound instantiation)
 
@@ -356,15 +369,6 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 - [x] **Publication schemes** — internal mono vs `pub` lock — [#76](https://github.com/jose-compu/crisp/issues/76)
 - [x] **Defaults** — value restriction, reveal `T: Clone`, E0080 — [#78](https://github.com/jose-compu/crisp/issues/78)
 
-### Planned — v1.7.0 (closures)
-
-- [x] **Function values / closures** (spec §5.2–§5.3) — **one** callable kind; naming optional (`|x| …` or `f := …` / top-level sugar); lexical capture; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
-- [x] **Implicit closures** — holes (`_ * 2`), trailing last-arg (`run { |x| … }`), field sections (`.name`) — [#87](https://github.com/jose-compu/crisp/issues/87) [#88](https://github.com/jose-compu/crisp/issues/88) [#89](https://github.com/jose-compu/crisp/issues/89)
-
-**Design note (#72, thanks [@aurelianito](https://github.com/aurelianito)):** Crisp should have **only closures** (first-class function values). Named “functions” are the same values bound to a name when useful — not a Ruby-style function-vs-closure split, and not a Java anonymous-inner-class escape hatch. Capture is lexical; ownership decides borrow/`move`. Emit may lower top-level named bindings to Rust `fn` and locals to Rust closures as a specialization, not as two language concepts.
-
-Remaining on this milestone: operator sections (`+ 1`) by default out; `dyn Fn` with other `dyn` work (#59).
-
 ---
 
-*Last updated: 2026-08-17 — v1.7.0 function values + implicit-closure sugar on `feature/1.7.0-closures`.*
+*Last updated: 2026-08-17 — v1.7.0 function values, implicit-closure sugar, method sections.*

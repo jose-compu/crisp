@@ -9,10 +9,12 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-08-17
+
 ### Added
 
 - First-class **function values** (#72): `|x| …` and named items are the same callable kind. CIR + Rust emit (`move` closures / `impl Fn`); `examples/closures`.
-- Implicit-closure sugar: holes `apply(_ * 2, n)`, trailing last-arg `run { |x| x * 2 }`, field sections `.name` (#87–#89). **E0085** hole arity; **E0086** misplaced `_`.
+- Implicit-closure sugar: holes `apply(_ * 2, n)`, trailing last-arg `run { |x| x * 2 }`, field sections `.name`, method sections `.magnitude()` / `.scale(2.0)` (#87–#89). Extra method args are baked into the section. **E0085** hole arity; **E0086** misplaced `_`. Operator sections (`+ 1`) are not shipped.
 
 ## [1.6.1] — 2026-08-15
 
@@ -199,7 +201,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/jose-compu/crisp/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/jose-compu/crisp/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/jose-compu/crisp/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/jose-compu/crisp/compare/v1.5.1...v1.5.2

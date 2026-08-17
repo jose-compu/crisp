@@ -580,6 +580,8 @@ apply(_ * 2, n)           -- holes (#87): `_` left-to-right → `|x| x * 2`
 combine(_ + _, a, b)      -- two holes → `|x, y| x + y`
 run { |x| x * 2 }         -- trailing last argument (#88)
 label(.name, person)      -- field section (#89) → `|p| p.name`
+apply(.magnitude(), v)    -- method section (#89) → `|v| v.magnitude()`
+apply(.scale(2.0), v)     -- extra args baked in → `|v| v.scale(2.0)`
 map_int(xs) { |x| x * 2 } -- trailing after a partial call
 ```
 
@@ -590,6 +592,10 @@ a hole in a non-function position is **E0086**. `_` in a pattern remains a wildc
 
 A trailing `{ |…| … }` is parsed as an extra last argument. It does not steal struct
 literals (`Guest { name: "x" }`) or `if` / `while` / `for` bodies.
+
+A field section `.name` is `|recv| recv.name`. A method section `.m(args)` is
+`|recv| recv.m(args)`: the section consumes the receiver; extra arguments are baked
+in and are not extra lambda parameters. `.scale(2.0)` is not a two-argument function.
 
 Operator sections such as `+ 1` are not part of this edition; use holes (`_ + 1`).
 

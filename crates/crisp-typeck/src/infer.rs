@@ -2,6 +2,7 @@ use crate::display::format_ty;
 use crate::env::{TypeEnv, collect_free_vars, generalize, instantiate, scheme, substitute_var};
 use crate::types::{InferContext, InferredSig, Scheme, Ty, is_arith_bound};
 use crate::unify::{UnifyError, unify};
+use crate::warning::TypeWarning;
 use crisp_ast::Span;
 use crisp_ast::count_holes;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
@@ -54,8 +55,25 @@ pub enum TypeError {
         "[E0086] hole `_` is only valid where a function value is expected; write `|x| …` or use `_` as a call argument"
     )]
     HoleMisplaced { span: Span },
+    #[error("[E0087] cannot cast `{from}` as `{to}`; only `int` and `float`")]
+    InvalidCast {
+        from: String,
+        to: String,
+        span: Span,
+    },
     #[error("unification error: {message}")]
     UnifyAt { message: String, span: Span },
+}
+
+/// Inserted `int` → `float` (or explicit `as`) recorded for CIR / reveal (#112).
+#[derive(Debug, Clone)]
+pub struct NumericCoercion {
+    pub span: Span,
+    /// True when the source is an int literal (including `-2`). Emit a float literal, no lint.
+    pub literal: bool,
+    /// Explicit `as float` / `as int` — no W0087.
+    pub explicit: bool,
+    pub to_float: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -67,6 +85,9 @@ pub struct TypedCrate {
     pub rust_imports: Vec<ResolvedRustImport>,
     /// `module::Trait for Type` → inferred trait args when the impl omitted `<>` (#77).
     pub impl_trait_args: BTreeMap<String, Vec<Ty>>,
+    /// Checking-position numeric coercions (#112).
+    pub coercions: Vec<NumericCoercion>,
+    pub warnings: Vec<crate::warning::TypeWarning>,
 }
 
 #[derive(Debug, Clone)]
@@ -114,6 +135,8 @@ pub struct TypeChecker {
     arith_vars: BTreeMap<u32, BTreeSet<String>>,
     /// `TypeName` → traits implemented in this crate (`Point` → `Show`).
     trait_impls: BTreeMap<String, BTreeSet<String>>,
+    coercions: Vec<NumericCoercion>,
+    warnings: Vec<crate::warning::TypeWarning>,
 }
 
 impl TypeChecker {
@@ -143,6 +166,8 @@ impl TypeChecker {
             inherent_methods: checker.inherent_methods,
             rust_imports: resolved.rust_imports,
             impl_trait_args: checker.impl_trait_args,
+            coercions: checker.coercions,
+            warnings: checker.warnings,
         })
     }
 
@@ -166,6 +191,8 @@ impl TypeChecker {
             arith_named: BTreeMap::new(),
             arith_vars: BTreeMap::new(),
             trait_impls: BTreeMap::new(),
+            coercions: Vec::new(),
+            warnings: Vec::new(),
         }
     }
 
@@ -745,7 +772,7 @@ impl TypeChecker {
             .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
             .collect();
         let ret = if let Some(ann) = ret_ann {
-            unify(&mut self.ctx, &body_ty, &ann)?;
+            self.unify_checking(&f.body, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
                 unify(&mut self.ctx, &body_ty, stub_r)?;
             }
@@ -897,7 +924,7 @@ impl TypeChecker {
         let ret_ann = f.ret_type.as_ref().map(|t| self.ast_type(t)).transpose()?;
         let body_ty = self.infer_expr(&mut local, &f.body)?;
         let ret = if let Some(ann) = ret_ann {
-            unify(&mut self.ctx, &body_ty, &ann)?;
+            self.unify_checking(&f.body, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
                 unify(&mut self.ctx, &body_ty, stub_r)?;
             }
@@ -1136,7 +1163,7 @@ impl TypeChecker {
                 }
                 for (arg, pty) in args.iter().zip(params.iter()) {
                     let aty = self.infer_call_arg(env, arg, pty)?;
-                    self.unify_or_shape(&aty, pty)?;
+                    self.unify_or_shape_checking(arg, &aty, pty)?;
                 }
                 if let ExprKind::Ident(id) = &func.kind {
                     let applied: Vec<Ty> = params.iter().map(|p| self.ctx.apply(p)).collect();
@@ -1216,6 +1243,7 @@ impl TypeChecker {
                     }
                 }
             },
+            ExprKind::Cast { expr: inner, ty } => self.infer_cast(env, expr.span, inner, ty),
             ExprKind::Binary { op, left, right } => self.infer_binary(env, *op, left, right),
             ExprKind::StructLit { name, fields } => self.check_struct_lit(env, name, fields),
             ExprKind::Bind { pat, value, .. } => {
@@ -1346,10 +1374,11 @@ impl TypeChecker {
             ExprKind::Assign { target, value } => {
                 let expected = self.lookup(env, &target.name, target.span)?;
                 let got = self.infer_value(env, value)?;
-                unify(&mut self.ctx, &got, &expected).map_err(|e| TypeError::UnifyAt {
-                    message: e.to_string(),
-                    span: expr.span,
-                })?;
+                self.unify_checking(value, &got, &expected)
+                    .map_err(|e| TypeError::UnifyAt {
+                        message: e.to_string(),
+                        span: expr.span,
+                    })?;
                 Ok(Ty::Unit)
             }
             _ => Ok(self.ctx.fresh()),
@@ -1377,6 +1406,16 @@ impl TypeChecker {
                 Ok(Ty::Int)
             }
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
+                let l = self.ctx.apply(&lt);
+                let r = self.ctx.apply(&rt);
+                if matches!(l, Ty::Float) && matches!(r, Ty::Int | Ty::UInt) {
+                    self.record_int_to_float(right, false);
+                    return Ok(Ty::Float);
+                }
+                if matches!(r, Ty::Float) && matches!(l, Ty::Int | Ty::UInt) {
+                    self.record_int_to_float(left, false);
+                    return Ok(Ty::Float);
+                }
                 unify(&mut self.ctx, &lt, &rt)?;
                 let t = self.ctx.apply(&lt);
                 let r = self.ctx.apply(&rt);
@@ -1395,8 +1434,8 @@ impl TypeChecker {
                 }
             }
             BinaryOp::Pow => {
-                unify(&mut self.ctx, &lt, &Ty::Float)?;
-                unify(&mut self.ctx, &rt, &Ty::Float)?;
+                self.unify_checking(left, &lt, &Ty::Float)?;
+                self.unify_checking(right, &rt, &Ty::Float)?;
                 Ok(Ty::Float)
             }
             BinaryOp::Eq
@@ -1405,6 +1444,16 @@ impl TypeChecker {
             | BinaryOp::Le
             | BinaryOp::Gt
             | BinaryOp::Ge => {
+                let l = self.ctx.apply(&lt);
+                let r = self.ctx.apply(&rt);
+                if matches!(l, Ty::Float) && matches!(r, Ty::Int | Ty::UInt) {
+                    self.record_int_to_float(right, false);
+                    return Ok(Ty::Bool);
+                }
+                if matches!(r, Ty::Float) && matches!(l, Ty::Int | Ty::UInt) {
+                    self.record_int_to_float(left, false);
+                    return Ok(Ty::Bool);
+                }
                 unify(&mut self.ctx, &lt, &rt)?;
                 Ok(Ty::Bool)
             }
@@ -1476,7 +1525,7 @@ impl TypeChecker {
                 Stmt::Assign { target, value } => {
                     let expected = self.lookup(&local, &target.name, target.span)?;
                     let got = self.infer_value(&mut local, value)?;
-                    unify(&mut self.ctx, &got, &expected)?;
+                    self.unify_checking(value, &got, &expected)?;
                 }
                 Stmt::Expr(e) => {
                     self.infer_expr(&mut local, e)?;
@@ -1590,7 +1639,7 @@ impl TypeChecker {
             .collect::<Result<_, _>>()?;
         for (field, expected) in fields.iter().zip(field_types) {
             let got = self.infer_expr(env, &field.value)?;
-            unify(&mut self.ctx, &got, &expected)?;
+            self.unify_checking(&field.value, &got, &expected)?;
         }
         let args: Vec<Ty> = gens
             .iter()
@@ -1641,7 +1690,7 @@ impl TypeChecker {
             }
             for (arg, (_, pty)) in args.iter().zip(sig.params.iter()) {
                 let aty = self.infer_expr(env, arg)?;
-                unify(&mut self.ctx, &aty, pty)?;
+                self.unify_checking(arg, &aty, pty)?;
             }
             return Ok(Some(self.ctx.apply(&sig.ret)));
         }
@@ -1713,7 +1762,7 @@ impl TypeChecker {
         }
         for (arg, pty) in args.iter().zip(param_tys) {
             let aty = self.infer_expr(env, arg)?;
-            unify(&mut self.ctx, &aty, pty)?;
+            self.unify_checking(arg, &aty, pty)?;
         }
         Ok(Some(self.ctx.apply(&sig.ret)))
     }
@@ -1770,6 +1819,94 @@ impl TypeChecker {
             name: field.to_string(),
             span,
         })
+    }
+
+    fn is_int_literal(expr: &Expr) -> bool {
+        match &expr.kind {
+            ExprKind::Int(_) => true,
+            ExprKind::Unary {
+                op: UnaryOp::Neg,
+                expr,
+            } => Self::is_int_literal(expr),
+            _ => false,
+        }
+    }
+
+    fn record_int_to_float(&mut self, expr: &Expr, explicit: bool) {
+        let literal = Self::is_int_literal(expr);
+        self.coercions.push(NumericCoercion {
+            span: expr.span,
+            literal,
+            explicit,
+            to_float: true,
+        });
+        if !literal && !explicit {
+            self.warnings
+                .push(TypeWarning::IntToFloat { span: expr.span });
+        }
+    }
+
+    fn unify_checking(&mut self, expr: &Expr, got: &Ty, expected: &Ty) -> Result<(), TypeError> {
+        let got = self.ctx.apply(got);
+        let expected = self.ctx.apply(expected);
+        if matches!(expected, Ty::Float) && matches!(got, Ty::Int | Ty::UInt) {
+            self.record_int_to_float(expr, false);
+            return Ok(());
+        }
+        unify(&mut self.ctx, &got, &expected)?;
+        Ok(())
+    }
+
+    fn unify_or_shape_checking(
+        &mut self,
+        expr: &Expr,
+        actual: &Ty,
+        expected: &Ty,
+    ) -> Result<(), TypeError> {
+        let got = self.ctx.apply(actual);
+        let expected_ty = self.ctx.apply(expected);
+        if matches!(expected_ty, Ty::Float) && matches!(got, Ty::Int | Ty::UInt) {
+            self.record_int_to_float(expr, false);
+            return Ok(());
+        }
+        self.unify_or_shape(actual, expected)
+    }
+
+    fn infer_cast(
+        &mut self,
+        env: &mut TypeEnv,
+        span: Span,
+        inner: &Expr,
+        ty: &Type,
+    ) -> Result<Ty, TypeError> {
+        let from = self.infer_expr(env, inner)?;
+        let to = self.ast_type(ty)?;
+        let from = self.ctx.apply(&from);
+        let to = self.ctx.apply(&to);
+        match (&from, &to) {
+            (Ty::Int | Ty::UInt | Ty::Float, Ty::Float) => {
+                if matches!(from, Ty::Int | Ty::UInt) {
+                    self.record_int_to_float(inner, true);
+                }
+                Ok(Ty::Float)
+            }
+            (Ty::Int | Ty::UInt | Ty::Float, Ty::Int) => {
+                if matches!(from, Ty::Float) {
+                    self.coercions.push(NumericCoercion {
+                        span: inner.span,
+                        literal: false,
+                        explicit: true,
+                        to_float: false,
+                    });
+                }
+                Ok(Ty::Int)
+            }
+            _ => Err(TypeError::InvalidCast {
+                from: format_ty(&from),
+                to: format_ty(&to),
+                span,
+            }),
+        }
     }
 
     /// Unify normally, or accept structural match when the expected type is a shape (§3.5).

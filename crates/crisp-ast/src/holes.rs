@@ -91,7 +91,8 @@ fn count_in(expr: &Expr, n: &mut usize) {
         | ExprKind::Spawn(inner)
         | ExprKind::Unsafe(inner)
         | ExprKind::Try(inner)
-        | ExprKind::Unary { expr: inner, .. } => count_in(inner, n),
+        | ExprKind::Unary { expr: inner, .. }
+        | ExprKind::Cast { expr: inner, .. } => count_in(inner, n),
         ExprKind::Call { func, .. } => count_in(func, n),
         ExprKind::MethodCall { receiver, .. } => count_in(receiver, n),
         ExprKind::Field { base, .. } => count_in(base, n),
@@ -211,6 +212,10 @@ fn replace_holes(expr: &Expr, i: &mut usize) -> Expr {
         ExprKind::Unary { op, expr: inner } => ExprKind::Unary {
             op: *op,
             expr: Box::new(replace_holes(inner, i)),
+        },
+        ExprKind::Cast { expr: inner, ty } => ExprKind::Cast {
+            expr: Box::new(replace_holes(inner, i)),
+            ty: ty.clone(),
         },
         ExprKind::Binary { op, left, right } => ExprKind::Binary {
             op: *op,

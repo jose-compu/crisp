@@ -167,6 +167,7 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
             walk_expr(right, offset, best);
         }
         ExprKind::Unary { expr: inner, .. } => walk_expr(inner, offset, best),
+        ExprKind::Cast { expr: inner, .. } => walk_expr(inner, offset, best),
         ExprKind::StructLit { name, fields } => {
             if name.span.contains(offset) {
                 consider(best, offset, name.span, Located::Ident(name));

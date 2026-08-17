@@ -1,6 +1,5 @@
 ---
 source: crates/crisp-rust-emit/tests/emit_pipeline.rs
-assertion_line: 144
 expression: cir_outline(&cir)
 ---
 package math
@@ -15,5 +14,6 @@ module floats
   fn square(x)
   fn avg2(a, b)
   fn lap3(um, uc, up, dx)
+  fn add_mix(a, n)
 module main
   fn main()

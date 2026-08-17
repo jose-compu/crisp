@@ -1,0 +1,5 @@
+pub bad(b: bool) = b as float
+
+pub main() = {
+    print(bad(true))
+}

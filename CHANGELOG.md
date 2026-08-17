@@ -15,6 +15,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Record / shape / type fields accept optional commas (and trailing commas); newlines remain valid ([#111](https://github.com/jose-compu/crisp/issues/111)). See `examples/shapes`.
 - Parse and lex errors report `file:line:col` with a source snippet; the byte offset is a note ([#109](https://github.com/jose-compu/crisp/issues/109)).
 - Unary `-` on a float stays `float`; float `assert_eq` parenthesizes the RHS (`(left - (right)).abs() < 1e-9`) ([#113](https://github.com/jose-compu/crisp/issues/113)).
+- `int` widens to `float` in a checking position (annotated param, field, return, or a binop whose other operand is already `float`). Int literals in a float slot emit as float literals. Postfix `as float` / `as int`. Non-literal `int` → `float` is **W0087** (silence with `as float`). `float` never narrows implicitly ([#112](https://github.com/jose-compu/crisp/issues/112)).
 
 ## [1.7.3] — 2026-08-17
 

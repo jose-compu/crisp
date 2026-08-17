@@ -1,0 +1,22 @@
+pub type Grid1d = {
+    nx: int = 256
+    length: float = 12.0
+}
+
+pub dx_of(g: Grid1d) = g.length / (g.nx + 0.0)
+
+pub scale(x: float) = x * 2.0
+
+pub use_scale() = scale(1)
+
+pub id(x) = x
+
+pub use_id() = id(1)
+
+pub to_f(n: int) = n as float
+
+pub to_i(x: float) = x as int
+
+pub main() = {
+    print(dx_of(Grid1d {}))
+}

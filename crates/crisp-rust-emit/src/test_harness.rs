@@ -282,6 +282,16 @@ fn emit_expr(expr: &Expr) -> String {
                 format!("{op_s}{inner_s}")
             }
         }
+        ExprKind::Cast { expr: inner, ty } => {
+            let rust_ty = match &ty.kind {
+                crisp_ast::ty::TypeKind::Named(id) if id.name == "float" => "f64",
+                crisp_ast::ty::TypeKind::Named(id) if id.name == "int" || id.name == "uint" => {
+                    "i64"
+                }
+                _ => "f64",
+            };
+            format!("({}) as {rust_ty}", emit_expr(inner))
+        }
         ExprKind::Block(b) => {
             let mut inner = String::new();
             emit_block(&mut inner, b, 0);
@@ -389,7 +399,9 @@ fn contains_float_literal(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Float(_) => true,
         ExprKind::Call { args, .. } => args.iter().any(contains_float_literal),
-        ExprKind::Unary { expr: inner, .. } => contains_float_literal(inner),
+        ExprKind::Unary { expr: inner, .. } | ExprKind::Cast { expr: inner, .. } => {
+            contains_float_literal(inner)
+        }
         ExprKind::Binary { left, right, .. } => {
             contains_float_literal(left) || contains_float_literal(right)
         }

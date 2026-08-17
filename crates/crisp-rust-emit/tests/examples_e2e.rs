@@ -123,8 +123,8 @@ fn generics_pub_lock_verifies() {
 #[test]
 fn math_has_tests_in_arith_module() {
     let tests = collect_tests(&example("math")).unwrap();
-    assert_eq!(tests.len(), 10);
-    assert_eq!(tests.iter().filter(|t| !t.compile_fail).count(), 8);
+    assert_eq!(tests.len(), 11);
+    assert_eq!(tests.iter().filter(|t| !t.compile_fail).count(), 9);
 }
 
 #[test]

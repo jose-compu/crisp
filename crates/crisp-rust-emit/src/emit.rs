@@ -833,6 +833,23 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             let _ = write!(out, "{op_s}");
             emit_unary_operand(out, inner, current_module, map);
         }
+        CirExpr::Cast {
+            expr: inner,
+            ty,
+            span,
+        } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, inner, current_module, map);
+            match ty {
+                CirTy::Float => {
+                    let _ = write!(out, " as f64");
+                }
+                CirTy::Int | CirTy::UInt => {
+                    let _ = write!(out, " as i64");
+                }
+                _ => {}
+            }
+        }
         CirExpr::Call {
             callee,
             module: callee_module,
@@ -1744,6 +1761,8 @@ fn binop_needs_parens(child: &CirExpr, parent: CirBinOp, is_right: bool) -> bool
             let pp = parent.rust_prec();
             cp < pp || (cp == pp && is_right)
         }
+        // `as` binds looser than `+`/`*` in Rust.
+        CirExpr::Cast { .. } => true,
         _ => false,
     }
 }
@@ -1754,7 +1773,7 @@ fn emit_unary_operand(
     current_module: &str,
     map: &mut EmitSourceMap,
 ) {
-    let paren = matches!(expr, CirExpr::BinOp { .. });
+    let paren = matches!(expr, CirExpr::BinOp { .. } | CirExpr::Cast { .. });
     if paren {
         let _ = write!(out, "(");
     }

@@ -59,3 +59,13 @@ fn reveal_types_shows_pub_scheme_and_clone() {
         "once scheme + inst: {out}"
     );
 }
+
+#[test]
+fn reveal_types_shows_int_float_coercions() {
+    let out = reveal_types(&example("math")).unwrap();
+    eprintln!("reveal types math:\n{out}");
+    assert!(
+        out.contains("coercion") && out.contains("as float"),
+        "inserted int→float coercions must be visible in reveal types: {out}"
+    );
+}

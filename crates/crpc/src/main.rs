@@ -106,9 +106,12 @@ fn main() -> anyhow::Result<()> {
                 }
                 Ok(resolved) => print_resolve_warnings(&resolved.warnings),
             }
-            if let Err(e) = TypeChecker::check_crate(&root) {
-                print_type_diagnostic(&root, &e);
-                return Err(e.into());
+            match TypeChecker::check_crate(&root) {
+                Err(e) => {
+                    print_type_diagnostic(&root, &e);
+                    return Err(e.into());
+                }
+                Ok(typed) => print_type_warnings(&root, &typed.warnings),
             }
             match resolve_rustc_fallbacks(&root) {
                 Ok(_) => {}
@@ -209,6 +212,26 @@ fn print_parse_error(file: &Path, source: &str, err: &ParseError) {
 fn print_resolve_warnings(warnings: &[crisp_resolve::ResolveWarning]) {
     for w in warnings {
         eprintln!("warning: {w}");
+    }
+}
+
+fn print_type_warnings(root: &Path, warnings: &[crisp_typeck::TypeWarning]) {
+    for w in warnings {
+        if let Some((file, source)) = source_for_span(root, w.span()) {
+            let rendered = format_diagnostic_at(
+                &file,
+                &source,
+                w.code(),
+                &w.to_string().replacen(&format!("[{}] ", w.code()), "", 1),
+                w.span(),
+                Severity::Warning,
+                &[],
+            )
+            .rendered;
+            eprintln!("{rendered}");
+        } else {
+            eprintln!("warning: {w}");
+        }
     }
 }
 
@@ -319,6 +342,22 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
                     &source,
                     "E0041",
                     message,
+                    *span,
+                    Severity::Error,
+                    &[],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        TypeError::InvalidCast { span, .. } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0087",
+                    &err.to_string().replacen("[E0087] ", "", 1),
                     *span,
                     Severity::Error,
                     &[],

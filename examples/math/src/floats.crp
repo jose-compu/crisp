@@ -16,6 +16,9 @@ pub avg2(a: float, b: float) = {
 -- Discrete Laplacian (#113): unary minus on a float stays float.
 pub lap3(um: float, uc: float, up: float, dx: float) = (um + up - 2.0 * uc) / (dx * dx)
 
+-- Checking-position int → float (#112).
+pub add_mix(a: float, n: int) = a + n
+
 test "float add" = {
     assert_eq(add(1.5, 2.5), 4.0)
 }
@@ -38,6 +41,10 @@ test "lap3 spike binop rhs" = {
     assert_eq(a, 0.0 - 2.0)
 }
 
-test_compile_fail "float int mix" = {
-    add(1.0, 1)
+test "int widens to float" = {
+    assert_eq(add_mix(1.0, 1), 2.0)
+}
+
+test_compile_fail "float bool mix" = {
+    add(1.0, true)
 }

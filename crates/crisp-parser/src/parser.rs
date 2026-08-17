@@ -1125,6 +1125,18 @@ impl Parser {
                         span,
                     };
                 }
+                TokenKind::Kw(Kw::As) => {
+                    self.advance();
+                    let ty = self.parse_type()?;
+                    let span = expr.span.merge(ty.span);
+                    expr = Expr {
+                        kind: ExprKind::Cast {
+                            expr: Box::new(expr),
+                            ty,
+                        },
+                        span,
+                    };
+                }
                 _ => break,
             }
         }

@@ -347,11 +347,12 @@ Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123
 - [x] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
 - [x] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
 - [x] **Parse/lex `file:line:col`** — snippets instead of byte offsets ([#109](https://github.com/jose-compu/crisp/issues/109))
-- [ ] **Unary minus** — float `Neg`, CIR `Unary`, harness parenthesizes `assert_eq` RHS ([#113](https://github.com/jose-compu/crisp/issues/113))
+- [x] **Unary minus** — float `Neg`, CIR `Unary`, harness parenthesizes `assert_eq` RHS ([#113](https://github.com/jose-compu/crisp/issues/113))
+- [ ] **int → float** — checking-position widening, `as float` / `as int`, W0087, reveal coercions ([#112](https://github.com/jose-compu/crisp/issues/112))
 
 GitHub follow-up when the API recovers:
 
-- Label `release:v1.8.0` on #112 and comment `Child of Epic 2 (#123)`
+- Label `release:v1.8.0` on remaining story issues and comment `Child of Epic N`
 
 ---
 
@@ -409,4 +410,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (unary minus #113).*
+*Last updated: 2026-08-17 — v1.8.0 in progress (int→float #112).*

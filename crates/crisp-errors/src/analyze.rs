@@ -258,6 +258,9 @@ fn walk_expr(
         ExprKind::Unary { expr: inner, .. } => {
             walk_expr(module, inner, fn_defs, callee_sigs, rust_imports, out)
         }
+        ExprKind::Cast { expr: inner, .. } => {
+            walk_expr(module, inner, fn_defs, callee_sigs, rust_imports, out)
+        }
         ExprKind::Field { base, .. } => {
             walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out)
         }

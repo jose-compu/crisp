@@ -3,9 +3,12 @@ use crate::env::{TypeEnv, collect_free_vars, generalize, instantiate, scheme, su
 use crate::types::{InferContext, InferredSig, Scheme, Ty, is_arith_bound};
 use crate::unify::{UnifyError, unify};
 use crisp_ast::Span;
+use crisp_ast::count_holes;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, FieldInit, Stmt, UnaryOp};
 use crisp_ast::ident::Ident;
+use crisp_ast::is_hole_ident;
 use crisp_ast::item::{ExternBlock, FunctionDef, ImplBlock, Item, SourceFile, TypeBody};
+use crisp_ast::lift_holes;
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
@@ -39,6 +42,18 @@ pub enum TypeError {
         bound: String,
         span: Span,
     },
+    #[error(
+        "[E0085] implicit closure has {found} hole(s) `_` but a function of {expected} parameter(s) is expected; write `|x, y| …`"
+    )]
+    HoleArity {
+        expected: usize,
+        found: usize,
+        span: Span,
+    },
+    #[error(
+        "[E0086] hole `_` is only valid where a function value is expected; write `|x| …` or use `_` as a call argument"
+    )]
+    HoleMisplaced { span: Span },
 }
 
 #[derive(Debug, Clone)]
@@ -945,6 +960,9 @@ impl TypeChecker {
             ExprKind::Char(_) => Ok(Ty::Char),
             ExprKind::Str(_) => Ok(Ty::Str),
             ExprKind::Unit => Ok(Ty::Unit),
+            ExprKind::Ident(id) if is_hole_ident(&id.name) => {
+                Err(TypeError::HoleMisplaced { span: id.span })
+            }
             ExprKind::Ident(id) => self.lookup(env, &id.name, id.span),
             ExprKind::Block(b) => self.infer_block(env, b),
             ExprKind::If {
@@ -1038,7 +1056,7 @@ impl TypeChecker {
                     }));
                 }
                 for (arg, pty) in args.iter().zip(params.iter()) {
-                    let aty = self.infer_expr(env, arg)?;
+                    let aty = self.infer_call_arg(env, arg, pty)?;
                     self.unify_or_shape(&aty, pty)?;
                 }
                 if let ExprKind::Ident(id) = &func.kind {
@@ -1115,7 +1133,7 @@ impl TypeChecker {
             ExprKind::Binary { op, left, right } => self.infer_binary(env, *op, left, right),
             ExprKind::StructLit { name, fields } => self.check_struct_lit(env, name, fields),
             ExprKind::Bind { pat, value, .. } => {
-                let ty = self.infer_expr(env, value)?;
+                let ty = self.infer_value(env, value)?;
                 let mut local = env.clone();
                 self.infer_pat(&mut local, pat, &ty)?;
                 Ok(Ty::Unit)
@@ -1304,17 +1322,65 @@ impl TypeChecker {
         }
     }
 
+    fn infer_value(&mut self, env: &mut TypeEnv, expr: &Expr) -> Result<Ty, TypeError> {
+        if count_holes(expr) > 0 {
+            self.infer_hole_lambda(env, expr, None)
+        } else {
+            self.infer_expr(env, expr)
+        }
+    }
+
+    fn infer_call_arg(
+        &mut self,
+        env: &mut TypeEnv,
+        arg: &Expr,
+        expected: &Ty,
+    ) -> Result<Ty, TypeError> {
+        let expected = self.ctx.apply(expected);
+        if count_holes(arg) > 0 {
+            return self.infer_hole_lambda(env, arg, Some(&expected));
+        }
+        self.infer_expr(env, arg)
+    }
+
+    fn infer_hole_lambda(
+        &mut self,
+        env: &mut TypeEnv,
+        expr: &Expr,
+        expected: Option<&Ty>,
+    ) -> Result<Ty, TypeError> {
+        let found = count_holes(expr);
+        if found == 0 {
+            return self.infer_expr(env, expr);
+        }
+        if let Some(exp) = expected {
+            match self.ctx.apply(exp) {
+                Ty::Fn { params, .. } if params.len() != found => {
+                    return Err(TypeError::HoleArity {
+                        expected: params.len(),
+                        found,
+                        span: expr.span,
+                    });
+                }
+                Ty::Fn { .. } => {}
+                _ => return Err(TypeError::HoleMisplaced { span: expr.span }),
+            }
+        }
+        let lifted = lift_holes(expr).expect("count_holes > 0");
+        self.infer_expr(env, &lifted)
+    }
+
     fn infer_block(&mut self, env: &mut TypeEnv, block: &Block) -> Result<Ty, TypeError> {
         let mut local = env.clone();
         for stmt in &block.stmts {
             match stmt {
                 Stmt::Bind { pat, value, .. } => {
-                    let ty = self.infer_expr(&mut local, value)?;
+                    let ty = self.infer_value(&mut local, value)?;
                     self.infer_pat(&mut local, pat, &ty)?;
                 }
                 Stmt::Assign { target, value } => {
                     let expected = self.lookup(&local, &target.name, target.span)?;
-                    let got = self.infer_expr(&mut local, value)?;
+                    let got = self.infer_value(&mut local, value)?;
                     unify(&mut self.ctx, &got, &expected)?;
                 }
                 Stmt::Expr(e) => {

@@ -588,6 +588,9 @@ fn format_param(p: &CirParam, trait_impl: Option<&str>) -> String {
     if matches!(trait_impl, Some("Eq") | Some("Ord")) {
         return format!("{}: &Self", p.name);
     }
+    if matches!(p.ty, CirTy::Fn { .. }) {
+        return format!("{}: {}", p.name, format_ty(&p.ty));
+    }
     let lt = p
         .lifetime
         .as_ref()
@@ -1067,6 +1070,37 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             map.record(out.len() as u32, *span);
             let _ = write!(out, "tokio::spawn(");
             emit_expr(out, expr, current_module, map);
+            let _ = write!(out, ")");
+        }
+        CirExpr::Lambda {
+            params, body, span, ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let _ = write!(out, "move |{}| ", params.join(", "));
+            emit_expr(out, body, current_module, map);
+        }
+        CirExpr::Apply {
+            func, args, span, ..
+        } => {
+            map.record(out.len() as u32, *span);
+            let wrap = !matches!(
+                func.as_ref(),
+                CirExpr::Ident { .. } | CirExpr::Lambda { .. }
+            );
+            if wrap {
+                let _ = write!(out, "(");
+            }
+            emit_expr(out, func, current_module, map);
+            if wrap {
+                let _ = write!(out, ")");
+            }
+            let _ = write!(out, "(");
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                emit_expr(out, arg, current_module, map);
+            }
             let _ = write!(out, ")");
         }
         CirExpr::Block(b) => {
@@ -1602,6 +1636,11 @@ pub fn format_ty(ty: &CirTy) -> String {
         CirTy::Tuple(ts) => format!(
             "({})",
             ts.iter().map(format_ty).collect::<Vec<_>>().join(", ")
+        ),
+        CirTy::Fn { params, ret } => format!(
+            "impl Fn({}) -> {}",
+            params.iter().map(format_ty).collect::<Vec<_>>().join(", "),
+            format_ty(ret)
         ),
         CirTy::Error => "_".into(),
     }

@@ -59,6 +59,8 @@ fn parse_all_examples() {
         "shapes_user",
         "generics_implicit",
         "generics_pub",
+        "loops",
+        "closures",
     ] {
         eprintln!("=== {name} ===");
         parse_crate(name);

@@ -1,0 +1,90 @@
+-- Function values (#72) and implicit-closure sugar (#87–#89).
+-- Named items and `|x| …` are the same kind of callable.
+
+apply(f, x) = f(x)
+combine(f, a, b) = f(a, b)
+run(f) = f(21)
+double(n) = n * 2
+add(a, b) = a + b
+make_adder(n) = |x| x + n
+
+map_int(xs, f) = {
+    out := new()
+    for x in xs {
+        push(out, f(x))
+    }
+    out
+}
+
+sum_vec(xs) = {
+    total mut:= 0
+    for x in xs {
+        total = total + x
+    }
+    total
+}
+
+type Person = {
+    name: str
+}
+
+label(f, p) = f(p)
+
+sample() = {
+    xs := new()
+    push(xs, 1)
+    push(xs, 2)
+    push(xs, 3)
+    xs
+}
+
+test "named function as value" = {
+    assert_eq(apply(double, 21), 42)
+}
+
+test "lambda literal" = {
+    inc := |x| x + 1
+    assert_eq(inc(41), 42)
+    assert_eq(apply(|n| n * 2, 21), 42)
+}
+
+test "capture" = {
+    assert_eq(apply(make_adder(10), 5), 15)
+}
+
+test "holes" = {
+    assert_eq(apply(_ * 2, 21), 42)
+    assert_eq(combine(_ + _, 20, 22), 42)
+}
+
+test "trailing last-arg lambda" = {
+    assert_eq(run { |x| x * 2 }, 42)
+    xs := sample()
+    mapped := map_int(xs) { |x| x * 2 }
+    assert_eq(sum_vec(mapped), 12)
+}
+
+test "field section" = {
+    assert_eq(label(.name, Person { name: "Ada" }), "Ada")
+}
+
+test "map with hole" = {
+    xs := sample()
+    mapped := map_int(xs, _ * 2)
+    assert_eq(sum_vec(mapped), 12)
+}
+
+pub main() = {
+    inc := |x| x + 1
+    print(inc(41))
+    print(apply(double, 21))
+    print(apply(|n| n * 2, 21))
+    print(apply(_ * 2, 21))
+    print(combine(_ + _, 20, 22))
+    print(run { |x| x * 2 })
+    print(apply(make_adder(10), 5))
+    p := Person { name: "Ada" }
+    print(label(.name, p))
+    xs := sample()
+    print(sum_vec(map_int(xs, _ * 2)))
+}

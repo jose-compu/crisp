@@ -564,7 +564,34 @@ shows capture modes.
 
 A local `|x| x` follows the same scheme rule as a named item: it generalizes only
 if the closure **escapes** (is returned or stored where callers can instantiate it);
-otherwise it is monomorphized at its use sites. First-class closure emit is [#72](https://github.com/jose-compu/crisp/issues/72) (v1.7.0).
+otherwise it is monomorphized at its use sites.
+
+**One callable kind.** `|x| …`, `f := |x| …`, and `greet(name) = …` are the same
+function values. Naming is optional. Do not teach “functions vs closures” as two
+features. Emit may lower top-level named bindings to Rust `fn` and locals to Rust
+closures as a specialization.
+
+### 5.3.1 Implicit closures
+
+When a **function value** is expected, the following are sugar for the same `|params|` form:
+
+```rust
+apply(_ * 2, n)           -- holes (#87): `_` left-to-right → `|x| x * 2`
+combine(_ + _, a, b)      -- two holes → `|x, y| x + y`
+run { |x| x * 2 }         -- trailing last argument (#88)
+label(.name, person)      -- field section (#89) → `|p| p.name`
+map_int(xs) { |x| x * 2 } -- trailing after a partial call
+```
+
+Holes are valid only where a function is expected (call argument of function type, or
+a bound value that is itself a hole-expression). Too many or too few holes is **E0085**;
+a hole in a non-function position is **E0086**. `_` in a pattern remains a wildcard
+(§4.3), not a hole.
+
+A trailing `{ |…| … }` is parsed as an extra last argument. It does not steal struct
+literals (`Guest { name: "x" }`) or `if` / `while` / `for` bodies.
+
+Operator sections such as `+ 1` are not part of this edition; use holes (`_ + 1`).
 
 ### 5.4 Methods
 

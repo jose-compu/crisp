@@ -352,6 +352,20 @@ pub enum CirExpr {
         span: Span,
     },
     Block(CirBlock),
+    /// Anonymous / local function value. Emits a Rust closure.
+    Lambda {
+        params: Vec<String>,
+        body: Box<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
+    /// Call a function value (local binding or lambda), not a named item.
+    Apply {
+        func: Box<CirExpr>,
+        args: Vec<CirExpr>,
+        ty: CirTy,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone)]

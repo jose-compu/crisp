@@ -1014,6 +1014,32 @@ impl Parser {
                         span,
                     };
                 }
+                TokenKind::LBrace if self.peek_kind_at(1) == TokenKind::Pipe => {
+                    let start = self.current_start();
+                    self.advance();
+                    let lam = self.parse_lambda(start)?;
+                    self.expect(TokenKind::RBrace)?;
+                    let span = expr.span.merge(lam.span);
+                    expr = match expr.kind {
+                        ExprKind::Call { func, mut args } => {
+                            args.push(lam);
+                            Expr {
+                                kind: ExprKind::Call { func, args },
+                                span,
+                            }
+                        }
+                        kind => Expr {
+                            kind: ExprKind::Call {
+                                func: Box::new(Expr {
+                                    kind,
+                                    span: expr.span,
+                                }),
+                                args: vec![lam],
+                            },
+                            span,
+                        },
+                    };
+                }
                 TokenKind::Dot => {
                     self.advance();
                     let field = self.expect_ident()?;
@@ -1126,6 +1152,13 @@ impl Parser {
                 }
                 let id = self.expect_ident_or_kw_as_ident()?;
                 let span = id.span;
+                // Trailing last-arg lambda: `run { |x| … }` — not a struct literal (#88).
+                if self.check(TokenKind::LBrace) && self.peek_kind_at(1) == TokenKind::Pipe {
+                    return Ok(Expr {
+                        kind: ExprKind::Ident(id),
+                        span,
+                    });
+                }
                 // struct literal: Name { ... } (disabled in if/while/for heads)
                 if self.allow_struct_lit && self.check(TokenKind::LBrace) {
                     return self.parse_struct_lit(id);
@@ -1139,6 +1172,35 @@ impl Parser {
                 kind: ExprKind::Block(self.parse_block()?),
                 span: Span::new(start, self.previous_end()),
             }),
+            TokenKind::Dot => {
+                // Point-free field section: `.name` → `| _sec | _sec.name` (#89).
+                self.advance();
+                let field = self.expect_ident()?;
+                let recv = Ident::new("_sec", Span::new(start, field.span.end));
+                let body = Expr {
+                    kind: ExprKind::Field {
+                        base: Box::new(Expr {
+                            kind: ExprKind::Ident(recv.clone()),
+                            span: recv.span,
+                        }),
+                        field,
+                    },
+                    span: Span::new(start, self.previous_end()),
+                };
+                Ok(Expr {
+                    kind: ExprKind::Lambda {
+                        params: vec![Param {
+                            lifetime: None,
+                            ownership: None,
+                            name: recv,
+                            ty: None,
+                            span: Span::new(start, self.previous_end()),
+                        }],
+                        body: Box::new(body),
+                    },
+                    span: Span::new(start, self.previous_end()),
+                })
+            }
             TokenKind::LParen => {
                 self.advance();
                 if self.check(TokenKind::RParen) {
@@ -1151,13 +1213,28 @@ impl Parser {
                 if self.check(TokenKind::Pipe)
                     || (self.is_ident() && self.peek_kind_at(1) == TokenKind::Pipe)
                 {
-                    return self.parse_lambda(start);
+                    let lam = self.parse_lambda(start)?;
+                    self.expect(TokenKind::RParen)?;
+                    return Ok(lam);
                 }
                 let expr = self.parse_expr()?;
                 self.expect(TokenKind::RParen)?;
                 Ok(expr)
             }
             TokenKind::Pipe => self.parse_lambda(start),
+            TokenKind::Or => {
+                // `|| expr` lexes as one `Or` token; treat as a nullary lambda.
+                self.advance();
+                let body = self.parse_expr()?;
+                let end = body.span.end;
+                Ok(Expr {
+                    kind: ExprKind::Lambda {
+                        params: Vec::new(),
+                        body: Box::new(body),
+                    },
+                    span: Span::new(start, end),
+                })
+            }
             _ => Err(self.unexpected("expression", self.peek_kind())),
         }
     }
@@ -1187,7 +1264,11 @@ impl Parser {
 
     fn parse_lambda(&mut self, start: u32) -> Result<Expr, ParseError> {
         self.expect(TokenKind::Pipe)?;
-        let params = self.parse_params()?;
+        let params = if self.check(TokenKind::Pipe) {
+            Vec::new()
+        } else {
+            self.parse_params()?
+        };
         self.expect(TokenKind::Pipe)?;
         let body = self.parse_expr()?;
         let end = body.span.end;

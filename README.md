@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.6.1-0A66C2.svg)](CHANGELOG.md)
 [![Rust](https://img.shields.io/badge/rustc-1.85%2B-orange.svg)](Cargo.toml)
-[![Tests](https://img.shields.io/badge/tests-271-brightgreen.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-280-brightgreen.svg)](.github/workflows/ci.yml)
 [![Spec](https://img.shields.io/badge/spec-v0.2.0--draft-lightgrey.svg)](docs/spec/CrispLang-SPECS-0.2.0.md)
 [![Docs](https://img.shields.io/badge/docs-online-informational.svg)](https://crisp-lang.org/)
 
@@ -87,7 +87,7 @@ Rust emission  ──►  rustc  ──►  native binary
 
 | Area | Surface | Lowers to |
 |------|---------|-----------|
-| Functions | `name(args) = expr` or `{ … }` block | `fn` with inferred/annotated params |
+| Functions | named `f(x) = …` or `|x| …`; holes / trailing last-arg / `.field` | Rust `fn` or `move` closure / `impl Fn` |
 | Bindings | `x := value` | `let` / `let mut` |
 | Types | `type T = { … }`, `float`, `int`, `str`, … | Rust structs / aliases / `f64` / `i64` / `String` |
 | Generics | Prefer `id(x: T)`, `type Pair = { left: A, right: B }`; `<>` pins / applies | Rust type params (`T: Clone` on emit) |
@@ -100,7 +100,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.6.1** — inferred bounds on generic `T` from use (#84): operators → `Add`/`Sub`/`Mul`/`Div`; unique methods → `T: Show` / `T: Measure`; typeck **E0084** on unsatisfied instantiations. Closures (#72) remain scheduled for v1.7.0.
+**v1.6.1** — inferred bounds on generic `T` from use (#84). **Unreleased (v1.7.0):** first-class function values and implicit-closure sugar (`examples/closures`, #72 / #87–#89).
 
 **Still open:** crates.io republish ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); trait bounds / `dyn Trait` remain partial ([#59](https://github.com/jose-compu/crisp/issues/59)). See [ROADMAP.md](ROADMAP.md).
 

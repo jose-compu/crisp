@@ -6,6 +6,7 @@ use crate::synthesize::{lower_enum, lower_struct, synthesize_shape_trait};
 use crate::ty::CirTy;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart};
 use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
+use crisp_ast::lift_holes;
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_errors::{ErrorPass, ErrorResult};
 use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipPass, OwnershipResult};
@@ -573,7 +574,10 @@ fn lower_function(
             CirParam {
                 name: name.clone(),
                 ty: ty.clone(),
-                mode: if sig_param_is_copy_generic(tsig, i) || sig_param_is_impl_self(tsig, i) {
+                mode: if matches!(ty, CirTy::Fn { .. })
+                    || sig_param_is_copy_generic(tsig, i)
+                    || sig_param_is_impl_self(tsig, i)
+                {
                     OwnershipMode::Owned
                 } else {
                     *mode
@@ -827,6 +831,20 @@ fn lower_expr(
     ctx: LowerCtx,
 ) -> CirExpr {
     use crate::node::{CirExpr as E, CirFormatPart};
+    if let Some(lifted) = lift_holes(expr) {
+        return lower_expr(
+            &lifted,
+            module,
+            osig,
+            typed,
+            ownership,
+            errors,
+            locals,
+            struct_fields,
+            fn_modules,
+            ctx,
+        );
+    }
     match &expr.kind {
         ExprKind::Ident(id) => E::Ident {
             name: id.name.clone(),
@@ -1126,6 +1144,47 @@ fn lower_expr(
                 };
             }
             if let ExprKind::Ident(id) = &func.kind {
+                if locals.contains_key(&id.name) {
+                    let func_e = lower_expr(
+                        func,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        ctx,
+                    );
+                    let call_args: Vec<CirExpr> = args
+                        .iter()
+                        .map(|arg| {
+                            lower_expr(
+                                arg,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
+                            )
+                        })
+                        .collect();
+                    let ty = match locals.get(&id.name) {
+                        Some(CirTy::Fn { ret, .. }) => ret.as_ref().clone(),
+                        other => other.cloned().unwrap_or(CirTy::Error),
+                    };
+                    return E::Apply {
+                        func: Box::new(func_e),
+                        args: call_args,
+                        ty,
+                        span: expr.span,
+                    };
+                }
                 if (id.name == "print" || id.name == "log") && args.len() == 1 {
                     let arg = lower_expr(
                         &args[0],
@@ -1184,7 +1243,10 @@ fn lower_expr(
                             fn_modules,
                             ctx,
                         );
-                        let mode = if callee_param_is_copy_generic(typed, &id.name, i) {
+                        let mode = if callee_param_is_copy_generic(typed, &id.name, i)
+                            || matches!(lowered, E::Lambda { .. })
+                            || matches!(cir_expr_value_ty(&lowered), Some(CirTy::Fn { .. }))
+                        {
                             OwnershipMode::Owned
                         } else {
                             callee_osig
@@ -1193,6 +1255,7 @@ fn lower_expr(
                         };
                         if matches!(mode, OwnershipMode::Borrow)
                             && matches!(lowered, E::Ident { .. })
+                            && !matches!(cir_expr_value_ty(&lowered), Some(CirTy::Fn { .. }))
                         {
                             lowered = E::Borrow {
                                 expr: Box::new(lowered),
@@ -1217,7 +1280,45 @@ fn lower_expr(
                     span: expr.span,
                 };
             }
-            E::Unit { span: expr.span }
+            let func_e = lower_expr(
+                func,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            let call_args: Vec<CirExpr> = args
+                .iter()
+                .map(|arg| {
+                    lower_expr(
+                        arg,
+                        module,
+                        osig,
+                        typed,
+                        ownership,
+                        errors,
+                        locals,
+                        struct_fields,
+                        fn_modules,
+                        ctx,
+                    )
+                })
+                .collect();
+            let ty = match cir_expr_value_ty(&func_e) {
+                Some(CirTy::Fn { ret, .. }) => *ret,
+                other => other.unwrap_or(CirTy::Error),
+            };
+            E::Apply {
+                func: Box::new(func_e),
+                args: call_args,
+                ty,
+                span: expr.span,
+            }
         }
         ExprKind::StructLit { name, fields } => {
             let all = struct_fields
@@ -1608,6 +1709,35 @@ fn lower_expr(
             ctx.extern_fns,
             ctx.shape_fields,
         )),
+        ExprKind::Lambda { params, body } => {
+            let mut local = locals.clone();
+            for p in params {
+                local.insert(p.name.name.clone(), CirTy::Error);
+            }
+            let body_e = lower_expr(
+                body,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                &local,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            let ret = cir_expr_value_ty(&body_e).unwrap_or(CirTy::Error);
+            let ptys: Vec<CirTy> = params.iter().map(|_| CirTy::Error).collect();
+            E::Lambda {
+                params: params.iter().map(|p| p.name.name.clone()).collect(),
+                body: Box::new(body_e),
+                ty: CirTy::Fn {
+                    params: ptys,
+                    ret: Box::new(ret),
+                },
+                span: expr.span,
+            }
+        }
         _ => E::Unit { span: expr.span },
     }
 }
@@ -1681,7 +1811,9 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::StructLit { ty, .. }
         | CirExpr::BinOp { ty, .. }
         | CirExpr::If { ty, .. }
-        | CirExpr::Match { ty, .. } => Some(ty.clone()),
+        | CirExpr::Match { ty, .. }
+        | CirExpr::Lambda { ty, .. }
+        | CirExpr::Apply { ty, .. } => Some(ty.clone()),
         CirExpr::Int { .. } => Some(CirTy::Int),
         CirExpr::Float { .. } => Some(CirTy::Float),
         CirExpr::Bool { .. } => Some(CirTy::Bool),

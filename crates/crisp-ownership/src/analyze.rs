@@ -420,8 +420,16 @@ impl<'a> Collector<'a> {
                     }
                 } else {
                     self.walk_expr(func);
+                    let callee_is_value = matches!(
+                        &func.kind,
+                        ExprKind::Ident(id) if self.locals.contains(&id.name)
+                    ) || matches!(&func.kind, ExprKind::Lambda { .. });
                     for arg in args {
-                        self.walk_expr(arg);
+                        if callee_is_value {
+                            self.apply_mode_to_expr(arg, OwnershipMode::Owned);
+                        } else {
+                            self.walk_expr(arg);
+                        }
                     }
                 }
             }
@@ -512,6 +520,14 @@ impl<'a> Collector<'a> {
             ExprKind::Loop(body) => self.walk_expr(body),
             ExprKind::Break(Some(v)) => self.walk_expr(v),
             ExprKind::Break(None) | ExprKind::Continue => {}
+            ExprKind::Lambda { params, body } => {
+                let saved = self.locals.clone();
+                for p in params {
+                    self.locals.insert(p.name.name.clone());
+                }
+                self.walk_expr(body);
+                self.locals = saved;
+            }
             _ => {}
         }
     }

@@ -330,7 +330,7 @@ Current compiler: **v1.6.1**. Active milestones:
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
 | **P1** | crates.io republish (v1.6.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
-| **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) |
+| **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (implemented on `feature/1.7.0-closures`) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
@@ -358,10 +358,13 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ### Planned — v1.7.0 (closures)
 
-- [ ] **Function values / closures** (spec §5.2–§5.3) — **one** callable kind; naming optional (`|x| …` or `f := …` / top-level sugar); lexical capture; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
+- [x] **Function values / closures** (spec §5.2–§5.3) — **one** callable kind; naming optional (`|x| …` or `f := …` / top-level sugar); lexical capture; CIR + emit; `examples/closures` — [#72](https://github.com/jose-compu/crisp/issues/72)
+- [x] **Implicit closures** — holes (`_ * 2`), trailing last-arg (`run { |x| … }`), field sections (`.name`) — [#87](https://github.com/jose-compu/crisp/issues/87) [#88](https://github.com/jose-compu/crisp/issues/88) [#89](https://github.com/jose-compu/crisp/issues/89)
 
 **Design note (#72, thanks [@aurelianito](https://github.com/aurelianito)):** Crisp should have **only closures** (first-class function values). Named “functions” are the same values bound to a name when useful — not a Ruby-style function-vs-closure split, and not a Java anonymous-inner-class escape hatch. Capture is lexical; ownership decides borrow/`move`. Emit may lower top-level named bindings to Rust `fn` and locals to Rust closures as a specialization, not as two language concepts.
 
+Remaining on this milestone: operator sections (`+ 1`) by default out; `dyn Fn` with other `dyn` work (#59).
+
 ---
 
-*Last updated: 2026-08-15 — v1.6.1 infers bounds on `T` from use (#84); closures (#72) remain v1.7.0.*
+*Last updated: 2026-08-17 — v1.7.0 function values + implicit-closure sugar on `feature/1.7.0-closures`.*

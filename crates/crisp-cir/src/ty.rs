@@ -16,6 +16,7 @@ pub enum CirTy {
     Ref { mutable: bool, inner: Box<CirTy> },
     Boxed(Box<CirTy>),
     Tuple(Vec<CirTy>),
+    Fn { params: Vec<CirTy>, ret: Box<CirTy> },
     Var(u32),
     Error,
 }
@@ -41,6 +42,10 @@ impl CirTy {
             Ty::Named { name, args } => CirTy::Named {
                 name: name.clone(),
                 args: args.iter().map(CirTy::from_ty).collect(),
+            },
+            Ty::Fn { params, ret } => CirTy::Fn {
+                params: params.iter().map(CirTy::from_ty).collect(),
+                ret: Box::new(CirTy::from_ty(ret)),
             },
             Ty::Error => CirTy::Error,
             _ => CirTy::Error,

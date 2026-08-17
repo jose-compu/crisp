@@ -627,6 +627,11 @@ fn emit_expr_inner(
         ExprKind::Throw(_) => {
             let _ = write!(out, "unimplemented!()");
         }
+        ExprKind::Lambda { params, body } => {
+            let names: Vec<_> = params.iter().map(|p| p.name.name.as_str()).collect();
+            let _ = write!(out, "move |{}| ", names.join(", "));
+            emit_expr(out, body, osig, ownership);
+        }
         _ => {
             let _ = write!(out, "unimplemented!()");
         }

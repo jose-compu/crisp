@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.6.x)
+# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.6.x / unreleased 1.7.0)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,7 +23,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (through 1.6.x) |
+| Feature | Spec | Impl (through 1.6.x / unreleased 1.7.0 closures) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
@@ -31,7 +31,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
 | Traits / `impl Trait for` | §3.6 | Method traits + literal/simple defaults (`examples/show_trait`, `trait_defaults`); bounds / dyn still limited — [#59](https://github.com/jose-compu/crisp/issues/59) |
 | Rust crate imports | §14.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; stubs for `serde_json` / `ureq`; known Result APIs → `CrispError::Thrown` + `?` (#55) |
-| Closures / lambdas | §5.3 | Parse + partial typeck; **no CIR/emit** — first-class values + lexical capture planned [#72](https://github.com/jose-compu/crisp/issues/72) (**v1.7.0**) |
+| Closures / lambdas | §5.3 | Function values + implicit sugar (holes, trailing last-arg, `.field`) — `examples/closures` (#72, #87–#89). No operator sections; no `dyn Fn` |
 | Shapes | §3.5 | Data shapes + parametric `shape Name<T>` (`examples/shapes`, `examples/generics`, `examples/shapes_generic`); method/anonymous shapes still limited ([#61](https://github.com/jose-compu/crisp/issues/61), [#70](https://github.com/jose-compu/crisp/issues/70)) |
 | User generics | §3 / §5 | **Prefer implicit binders** (`examples/generics_implicit`) — [#75](https://github.com/jose-compu/crisp/issues/75); explicit pins (`examples/generics`) — [#71](https://github.com/jose-compu/crisp/issues/71); inferred `impl Trait for Type` args + `+` bounds — [#77](https://github.com/jose-compu/crisp/issues/77); unannotated `id(x)=x` generalizes; internal single-use monomorphizes; `pub` schemes seal in `crisp.lock` (`examples/generics_pub`) — [#76](https://github.com/jose-compu/crisp/issues/76); value restriction + reveal `T: Clone` — [#78](https://github.com/jose-compu/crisp/issues/78). Remaining: anonymous `{ value: T }` params, `where` / HRTB/GATs |
 | Channels | §11.4 | Not implemented |

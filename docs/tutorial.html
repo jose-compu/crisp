@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.6.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -102,19 +102,25 @@ pub main() = {
           <p>Most Crisp looks like “small math and logging.” A function is a <strong>value</strong>. Naming it at the top level (<code>double(n) = …</code>) or writing <code>|n| …</code> is the same kind of callable — not two features. Locals are introduced once with <code>:=</code>; later assignment uses <code>=</code> (and needs <code>mut:=</code> if you will reassign — see loops).</p>
           <pre class="pipe">double(n) = n + n
 apply(f, x) = f(x)
+run(f) = f(21)
+label(g, p) = g(p)
+
+type Person = { name: str }
 
 pub main() = {
     x := double(5)
     inc := |n| n + 1
     log("x={x} twice={apply(double, x)} next={inc(x)}")
-    log("hole={apply(_ * 2, 21)}")
+    log("hole={apply(_ * 2, 21)} trail={run { |x| x * 2 }}")
+    log("field={label(.name, Person { name: "Ada" })}")
 }</pre>
           <ul>
             <li><code>pub</code> exports the item from the module (needed for <code>main</code> and for other files to <code>use</code> it).</li>
             <li><code>print</code> / <code>log</code> both write to stdout; prefer <code>log</code> when interpolating.</li>
             <li>Omit types while the shape of the program is clear; add them when APIs should be stable.</li>
-            <li>Holes (<code>_ * 2</code>), trailing last-arg blocks (<code>run { |x| … }</code>), and field sections (<code>.name</code>) are sugar for the same function values. See <code>examples/closures</code>.</li>
+            <li>Holes (<code>_ * 2</code>), trailing last-arg (<code>run { |x| … }</code>), field sections (<code>.name</code>), and method sections (<code>.magnitude()</code>) are sugar for the same function values. See <code>examples/closures</code>.</li>
           </ul>
+          <p class="try">Try: <code>crisp test examples/closures</code></p>
           <p class="tech"><strong>Under the hood:</strong> HM-style type inference plus a separate ownership pass. Named items often emit as Rust <code>fn</code>; locals and <code>|…|</code> emit as <code>move</code> closures / <code>impl Fn</code>. Silence means “infer”; an annotation is a hard constraint the solver must satisfy.</p>
         </article>
 
@@ -307,13 +313,15 @@ impl Vec2 = {
 
 pub main() = {
     v := Vec2.new(3.0, 4.0)
-    log("mag={v.magnitude()}")
+    mag := .magnitude()
+    log("mag={v.magnitude()} via={mag(v)}")
 }</pre>
           <ul>
             <li><code>**</code> is exponentiation (lowers to a float power call).</li>
             <li>Call associated items as <code>Vec2.new(…)</code>; call methods as <code>v.magnitude()</code>.</li>
+            <li>A method section <code>.magnitude()</code> is the function value <code>|v| v.magnitude()</code>. Extra args bake in: <code>.scale(2.0)</code> is <code>|v| v.scale(2.0)</code>, not a two-argument function.</li>
           </ul>
-          <p class="try">See also: <code>examples/vec2_methods</code></p>
+          <p class="try">See also: <code>examples/vec2_methods</code>, <code>examples/closures</code></p>
           <p class="tech"><strong>Under the hood:</strong> Inherent methods become Rust <code>impl Type { … }</code>. Receiver mode (<code>&amp;self</code> vs owned) is chosen by the ownership pass from how <code>self</code> is used.</p>
         </article>
 
@@ -516,7 +524,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.6.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

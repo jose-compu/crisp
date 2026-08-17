@@ -37,7 +37,7 @@ fn missing_use_fixture_still_typechecks_after_import_fix() {
 }
 
 #[test]
-fn interpolation_unresolved_span_is_on_the_string_not_use() {
+fn issue_95_interpolation_unresolved_span_is_on_the_string_not_use() {
     let root = fixture("interp_unresolved");
     let err = Resolver::resolve_crate(&root).expect_err("unresolved interpolation ident");
     let msg = err.to_string();

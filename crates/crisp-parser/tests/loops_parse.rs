@@ -1,4 +1,4 @@
-//! Parser coverage for loop constructs (spec §6.3).
+//! Parser coverage for loop constructs (spec §6.3) and v1.7.1 #96.
 
 use crisp_ast::expr::{ExprKind, Stmt};
 use crisp_ast::item::Item;
@@ -98,7 +98,7 @@ fn parse_continue() {
 }
 
 #[test]
-fn parse_while_then_paren_tail_is_not_a_call() {
+fn issue_96_while_then_paren_tail_is_not_a_call() {
     let e = parse_fn_body("{ while i < n { i = i + 1 } (lo + hi) / 2.0 }");
     let ExprKind::Block(b) = e.kind else {
         panic!("{:?}", e.kind);
@@ -117,5 +117,35 @@ fn parse_while_then_paren_tail_is_not_a_call() {
         matches!(tail.kind, ExprKind::Binary { .. }),
         "tail should be (lo + hi) / 2.0, got {:?}",
         tail.kind
+    );
+}
+
+#[test]
+fn issue_96_if_then_assign_parses_as_assign_expr() {
+    let e = parse_fn_body("{ if ignites(mid, 0.8) then hi = mid else lo = mid }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let iff = match b.stmts.first() {
+        Some(Stmt::Expr(e)) => e,
+        _ => b.tail.as_ref().expect("if"),
+    };
+    let ExprKind::If {
+        then_branch,
+        else_branch: Some(else_branch),
+        ..
+    } = &iff.kind
+    else {
+        panic!("{:?}", iff.kind);
+    };
+    assert!(
+        matches!(then_branch.kind, ExprKind::Assign { .. }),
+        "then: {:?}",
+        then_branch.kind
+    );
+    assert!(
+        matches!(else_branch.kind, ExprKind::Assign { .. }),
+        "else: {:?}",
+        else_branch.kind
     );
 }

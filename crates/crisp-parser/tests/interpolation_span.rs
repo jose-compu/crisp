@@ -1,9 +1,11 @@
+//! String interpolation spans (#95).
+
 use crisp_ast::expr::{ExprKind, StringPart};
 use crisp_ast::item::Item;
 use crisp_parser::Parser;
 
 #[test]
-fn interpolation_ident_span_is_inside_the_string() {
+fn issue_95_interpolation_ident_span_is_inside_the_string() {
     let src = "use math.add { add }\n\npub main() = {\n    print(\"speed={s}\")\n}\n";
     let mut parser = Parser::new(src).expect("lex");
     let file = parser.parse_file().expect("parse");

@@ -1,0 +1,9 @@
+pub root_ratio() = (1.0 / 0.3) ** 0.5
+
+pub pow_half(x: float) = x ** 0.5
+
+pub main() = {
+    x := (1.0 / 0.3) ** 0.5
+    print(x)
+    print(pow_half(x))
+}

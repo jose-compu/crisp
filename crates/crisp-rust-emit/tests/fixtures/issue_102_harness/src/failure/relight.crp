@@ -1,0 +1,6 @@
+pub relight_line() = "FLASHBACK"
+
+test "wide kernel ignites" = {
+    s := relight_line()
+    assert_eq(s, "FLASHBACK")
+}

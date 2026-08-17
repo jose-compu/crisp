@@ -389,6 +389,14 @@ pub enum CirPat {
         value: i64,
         span: Span,
     },
+    Bool {
+        value: bool,
+        span: Span,
+    },
+    Str {
+        value: String,
+        span: Span,
+    },
     Struct {
         name: String,
         fields: Vec<(String, CirPat)>,
@@ -424,6 +432,25 @@ pub enum CirBinOp {
     Ge,
     And,
     Or,
+}
+
+impl CirBinOp {
+    /// Higher binds tighter. Used to restore grouping that emit would otherwise drop (#99).
+    pub fn rust_prec(self) -> u8 {
+        match self {
+            CirBinOp::Pow => 8,
+            CirBinOp::Mul | CirBinOp::Div => 7,
+            CirBinOp::Add | CirBinOp::Sub | CirBinOp::Concat => 6,
+            CirBinOp::Eq
+            | CirBinOp::Ne
+            | CirBinOp::Lt
+            | CirBinOp::Le
+            | CirBinOp::Gt
+            | CirBinOp::Ge => 3,
+            CirBinOp::And => 2,
+            CirBinOp::Or => 1,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

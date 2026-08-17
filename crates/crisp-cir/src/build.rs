@@ -483,16 +483,35 @@ fn lower_pat(pat: &Pat) -> CirPat {
             name: id.name.clone(),
             span: pat.span,
         },
-        PatKind::Literal(expr) => {
-            if let ExprKind::Int(n) = &expr.kind {
-                P::Int {
-                    value: *n,
-                    span: pat.span,
+        PatKind::Literal(expr) => match &expr.kind {
+            ExprKind::Int(n) => P::Int {
+                value: *n,
+                span: pat.span,
+            },
+            ExprKind::Bool(b) => P::Bool {
+                value: *b,
+                span: pat.span,
+            },
+            ExprKind::Str(parts) => {
+                let mut value = String::new();
+                let mut only_lit = true;
+                for p in &parts.0 {
+                    match p {
+                        StringPart::Lit(l) => value.push_str(l),
+                        _ => only_lit = false,
+                    }
                 }
-            } else {
-                P::Wildcard { span: pat.span }
+                if only_lit {
+                    P::Str {
+                        value,
+                        span: pat.span,
+                    }
+                } else {
+                    P::Wildcard { span: pat.span }
+                }
             }
-        }
+            _ => P::Wildcard { span: pat.span },
+        },
         PatKind::Struct { name, fields, .. } => P::Struct {
             name: name.name.clone(),
             fields: fields

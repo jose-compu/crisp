@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default)]
 pub struct EmitSourceMap {
     entries: BTreeMap<u32, Span>,
+    /// Type/enum/alias/trait name → defining module path (`fail.a`). Used to emit `crate::` (#100).
+    pub(crate) type_modules: BTreeMap<String, String>,
 }
 
 impl EmitSourceMap {
@@ -25,5 +27,9 @@ impl EmitSourceMap {
 
     pub fn entries(&self) -> &BTreeMap<u32, Span> {
         &self.entries
+    }
+
+    pub(crate) fn set_type_modules(&mut self, type_modules: BTreeMap<String, String>) {
+        self.type_modules = type_modules;
     }
 }

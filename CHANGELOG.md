@@ -9,6 +9,15 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.7.2] — 2026-08-17
+
+### Fixed
+
+- Binop emit keeps source grouping: `(lo + hi) / 2` is no longer `lo + hi / 2` ([#99](https://github.com/jose-compu/crisp/issues/99)).
+- Nested `use` of types/enums emits `crate::fail::a::Verdict` the same way functions already used `crate::` ([#100](https://github.com/jose-compu/crisp/issues/100)). See `examples/nested_types` and `examples/nested_math` (`use math.vector { Vec2 }`).
+- String `match` arms are kept (`"ch4" =>`) and matched via `AsRef::<str>`, not rewritten to `_` ([#101](https://github.com/jose-compu/crisp/issues/101)).
+- `crisp test`: unique `fn` names per module; `assert_eq` on bool/str/comparisons is `assert_eq!` even when a nested float is present; nested `trait Show` is `pub`; call-result args are borrowed like CIR ([#102](https://github.com/jose-compu/crisp/issues/102)).
+
 ## [1.7.1] — 2026-08-17
 
 ### Fixed
@@ -210,7 +219,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/jose-compu/crisp/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/jose-compu/crisp/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/jose-compu/crisp/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/jose-compu/crisp/compare/v1.6.0...v1.6.1

@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.7.1**. Active milestones:
+Current compiler: **v1.7.2**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -323,6 +323,7 @@ Current compiler: **v1.7.1**. Active milestones:
 | **v1.6.1** | patch | Inferred bounds on `T`; E0084 on unsatisfied instantiations | label `release:v1.6.1` |
 | **v1.7.0** | minor | First-class closures / function values (#72) | label `release:v1.7.0` |
 | **v1.7.1** | patch | Nested emit, float powf, interpolation spans, while/if assign | label `release:v1.7.1` |
+| **v1.7.2** | patch | Binop parens, nested type paths, string match, test harness | label `release:v1.7.2` |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -330,12 +331,19 @@ Current compiler: **v1.7.1**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.7.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io publish (v1.7.2) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### Shipped — v1.7.2 (compiler bugfixes)
+
+- [x] **Binop grouping** — `(lo + hi) / 2` keeps parentheses ([#99](https://github.com/jose-compu/crisp/issues/99))
+- [x] **Nested type `use`** — `crate::fail::a::Verdict` ([#100](https://github.com/jose-compu/crisp/issues/100)); `examples/nested_types`
+- [x] **String `match`** — literal arms kept, not `_` ([#101](https://github.com/jose-compu/crisp/issues/101))
+- [x] **`crisp test` harness** — unique names, bool/str `assert_eq!`, `pub trait Show` ([#102](https://github.com/jose-compu/crisp/issues/102))
 
 ### Shipped — v1.7.1 (compiler bugfixes)
 
@@ -379,4 +387,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.7.1 nested emit / powf / interpolation spans / while-if assign.*
+*Last updated: 2026-08-17 — v1.7.2 binop parens / nested types / string match / test harness.*

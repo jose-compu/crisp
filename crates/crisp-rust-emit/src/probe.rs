@@ -458,7 +458,7 @@ fn emit_expr_inner(
                 let _ = write!(out, ") as f64)");
                 return;
             }
-            emit_expr(out, left, osig, ownership);
+            emit_binop_operand(out, left, *op, false, osig, ownership);
             let op_s = match op {
                 crisp_ast::expr::BinaryOp::Add => "+",
                 crisp_ast::expr::BinaryOp::Sub => "-",
@@ -470,7 +470,7 @@ fn emit_expr_inner(
                 _ => "+",
             };
             let _ = write!(out, " {op_s} ");
-            emit_expr(out, right, osig, ownership);
+            emit_binop_operand(out, right, *op, true, osig, ownership);
         }
         ExprKind::Call { func, args } => {
             if let ExprKind::Field { base, field } = &func.kind
@@ -640,6 +640,36 @@ fn emit_expr_inner(
         _ => {
             let _ = write!(out, "unimplemented!()");
         }
+    }
+}
+
+fn emit_binop_operand(
+    out: &mut String,
+    expr: &Expr,
+    parent: crisp_ast::expr::BinaryOp,
+    is_right: bool,
+    osig: &OwnershipSignature,
+    ownership: Option<&OwnershipResult>,
+) {
+    let paren = match &expr.kind {
+        ExprKind::Binary { op, .. }
+            if !matches!(
+                op,
+                crisp_ast::expr::BinaryOp::Pow | crisp_ast::expr::BinaryOp::Concat
+            ) =>
+        {
+            let cp = op.rust_prec();
+            let pp = parent.rust_prec();
+            cp < pp || (cp == pp && is_right)
+        }
+        _ => false,
+    };
+    if paren {
+        let _ = write!(out, "(");
+    }
+    emit_expr(out, expr, osig, ownership);
+    if paren {
+        let _ = write!(out, ")");
     }
 }
 

@@ -1,0 +1,5 @@
+pub type Verdict =
+    | Ignition
+    | Fail
+
+pub ignition() = Verdict.Ignition

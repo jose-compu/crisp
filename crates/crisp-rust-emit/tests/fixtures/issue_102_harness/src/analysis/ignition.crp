@@ -1,0 +1,5 @@
+pub ignites(width: float, wCrit: float) = width > wCrit
+
+test "wide kernel ignites" = {
+    assert_eq(ignites(1.2, 0.8), true)
+}

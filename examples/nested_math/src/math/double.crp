@@ -1,4 +1,10 @@
--- Sibling nested `use` of another nested module (#93).
+-- Sibling nested `use` of another nested module (#93) and of a type (#100).
 use math.scale { scale }
+use math.vector { Vec2 }
 
 pub twice(x) = scale(x, 2.0)
+
+pub origin_vec() = Vec2 {
+    x: 0.0
+    y: 0.0
+}

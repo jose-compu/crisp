@@ -12,6 +12,7 @@ use crisp_ast::pat::PatKind;
 use crisp_manifest::{read_manifest, resolve_dependencies};
 use crisp_resolve::module::load_module_graph;
 use crisp_typeck::TypeChecker;
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::path::Path;
 use thiserror::Error;
@@ -75,9 +76,12 @@ pub fn emit_test_module(tests: &[CollectedTest]) -> String {
     if runtime.is_empty() {
         return String::new();
     }
-    let mut out = String::from("\n#[cfg(test)]\nmod crisp_tests {\n    use super::*;\n\n");
+    let mut out = String::from(
+        "\n#[cfg(test)]\nmod crisp_tests {\n    use super::*;\n    #[allow(unused_imports)]\n    use crate::Show;\n    #[allow(unused_imports)]\n    use crate::Eq;\n    #[allow(unused_imports)]\n    use crate::Ord;\n\n",
+    );
+    let mut used = HashSet::new();
     for t in runtime {
-        let fn_name = sanitize_test_name(&t.name);
+        let fn_name = unique_test_fn_name(&mut used, &t.module, &t.name);
         let _ = writeln!(out, "    #[test]");
         let _ = writeln!(out, "    fn {fn_name}() {{");
         emit_block(&mut out, &t.body, 2);
@@ -87,26 +91,54 @@ pub fn emit_test_module(tests: &[CollectedTest]) -> String {
     out
 }
 
-fn sanitize_test_name(name: &str) -> String {
+fn unique_test_fn_name(used: &mut HashSet<String>, module: &str, name: &str) -> String {
+    let base = sanitize_test_name(module, name);
+    if used.insert(base.clone()) {
+        return base;
+    }
+    let mut i = 2u32;
+    loop {
+        let candidate = format!("{base}_{i}");
+        if used.insert(candidate.clone()) {
+            return candidate;
+        }
+        i += 1;
+    }
+}
+
+fn sanitize_ident_part(name: &str) -> String {
     let mut out = String::new();
     for ch in name.chars() {
         if ch.is_ascii_alphanumeric() {
             out.push(ch.to_ascii_lowercase());
-        } else if (ch.is_whitespace() || ch == '-' || ch == '_')
+        } else if (ch.is_whitespace() || ch == '-' || ch == '_' || ch == '.')
             && !out.ends_with('_')
             && !out.is_empty()
         {
             out.push('_');
         }
     }
+    out
+}
+
+fn sanitize_test_name(module: &str, name: &str) -> String {
+    let mod_s = sanitize_ident_part(module);
+    let name_s = sanitize_ident_part(name);
+    let combined = if mod_s.is_empty() {
+        name_s
+    } else if name_s.is_empty() {
+        mod_s
+    } else {
+        format!("{mod_s}_{name_s}")
+    };
     // Prefix so generated `fn` names cannot shadow `use super::*` items
     // (e.g. test "proxy demo" vs `pub fn proxy_demo`).
-    if out.is_empty() {
+    if combined.is_empty() {
         "test_unnamed".into()
-    } else if out.starts_with("test_") {
-        out
+    } else if combined.starts_with("test_") {
+        combined
     } else {
-        format!("test_{out}")
+        format!("test_{combined}")
     }
 }
 
@@ -230,7 +262,12 @@ fn emit_expr(expr: &Expr) -> String {
                     emit_expr(right)
                 )
             } else {
-                format!("{} {} {}", emit_expr(left), op_str, emit_expr(right))
+                format!(
+                    "{} {} {}",
+                    emit_binop_operand(left, *op, false),
+                    op_str,
+                    emit_binop_operand(right, *op, true)
+                )
             }
         }
         ExprKind::Block(b) => {
@@ -279,13 +316,61 @@ fn emit_expr(expr: &Expr) -> String {
     }
 }
 
+fn emit_binop_operand(expr: &Expr, parent: crisp_ast::expr::BinaryOp, is_right: bool) -> String {
+    let inner = emit_expr(expr);
+    if ast_binop_needs_parens(expr, parent, is_right) {
+        format!("({inner})")
+    } else {
+        inner
+    }
+}
+
+fn ast_binop_needs_parens(expr: &Expr, parent: crisp_ast::expr::BinaryOp, is_right: bool) -> bool {
+    let ExprKind::Binary { op, .. } = &expr.kind else {
+        return false;
+    };
+    if matches!(
+        op,
+        crisp_ast::expr::BinaryOp::Pow | crisp_ast::expr::BinaryOp::Concat
+    ) {
+        return false;
+    }
+    let cp = op.rust_prec();
+    let pp = parent.rust_prec();
+    cp < pp || (cp == pp && is_right)
+}
+
 fn emit_assert_eq(args: &[Expr], emitted: &[String]) -> String {
-    // Float equality: small absolute epsilon when a float literal is involved.
-    if emitted.len() >= 2 && args.iter().any(contains_float_literal) {
+    // Epsilon only for numeric floats. A nested float must not force `.abs()` on
+    // bool / str / comparison (`assert_eq(ignites(1.2, 0.8), true)`, #102).
+    if emitted.len() >= 2
+        && args.iter().any(contains_float_literal)
+        && !args.iter().any(is_non_numeric_eq_side)
+    {
         format!("assert!(({} - {}).abs() < 1e-9)", emitted[0], emitted[1])
     } else {
         format!("assert_eq!({})", emitted.join(", "))
     }
+}
+
+fn is_non_numeric_eq_side(expr: &Expr) -> bool {
+    matches!(
+        &expr.kind,
+        ExprKind::Bool(_)
+            | ExprKind::Str(_)
+            | ExprKind::Char(_)
+            | ExprKind::Binary {
+                op: crisp_ast::expr::BinaryOp::Eq
+                    | crisp_ast::expr::BinaryOp::Ne
+                    | crisp_ast::expr::BinaryOp::Lt
+                    | crisp_ast::expr::BinaryOp::Le
+                    | crisp_ast::expr::BinaryOp::Gt
+                    | crisp_ast::expr::BinaryOp::Ge
+                    | crisp_ast::expr::BinaryOp::And
+                    | crisp_ast::expr::BinaryOp::Or,
+                ..
+            }
+    )
 }
 
 fn contains_float_literal(expr: &Expr) -> bool {
@@ -334,6 +419,10 @@ fn emit_call_arg_for_test(expr: &Expr) -> String {
                     if matches!(&base.kind, ExprKind::Ident(ty) if ty.name.chars().next().is_some_and(|c| c.is_ascii_uppercase()))
             ) =>
         {
+            format!("&{}", emit_expr(expr))
+        }
+        // Nested calls that return user types (`parse_fuel("ch4")`) need `&` like CIR (#102).
+        ExprKind::Call { func, .. } if matches!(&func.kind, ExprKind::Ident(_)) => {
             format!("&{}", emit_expr(expr))
         }
         _ => emit_expr(expr),
@@ -489,10 +578,23 @@ mod tests {
 
     #[test]
     fn sanitize_names() {
-        assert_eq!(sanitize_test_name("greet works"), "test_greet_works");
-        assert_eq!(sanitize_test_name("A-B"), "test_a_b");
-        assert_eq!(sanitize_test_name("proxy demo"), "test_proxy_demo");
-        assert_eq!(sanitize_test_name("test_already"), "test_already");
+        assert_eq!(
+            sanitize_test_name("main", "greet works"),
+            "test_main_greet_works"
+        );
+        assert_eq!(sanitize_test_name("main", "A-B"), "test_main_a_b");
+        assert_eq!(
+            sanitize_test_name("main", "proxy demo"),
+            "test_main_proxy_demo"
+        );
+        assert_eq!(
+            sanitize_test_name("analysis.ignition", "wide kernel ignites"),
+            "test_analysis_ignition_wide_kernel_ignites"
+        );
+        assert_eq!(
+            sanitize_test_name("main", "test_already"),
+            "test_main_test_already"
+        );
     }
 
     #[test]
@@ -530,7 +632,7 @@ mod tests {
         }];
         let out = emit_test_module(&tests);
         assert!(out.contains("assert_eq!"));
-        assert!(out.contains("fn test_addition"));
+        assert!(out.contains("fn test_main_addition"));
     }
 
     #[test]
@@ -568,6 +670,118 @@ mod tests {
         }];
         let out = emit_test_module(&tests);
         assert!(out.contains(".abs() < 1e-9"));
-        assert!(out.contains("fn test_float_add"));
+        assert!(out.contains("fn test_main_float_add"));
+    }
+
+    fn ident_expr(name: &str) -> Expr {
+        Expr {
+            kind: ExprKind::Ident(crisp_ast::ident::Ident {
+                name: name.into(),
+                span: Default::default(),
+            }),
+            span: Default::default(),
+        }
+    }
+
+    fn call_assert_eq(args: Vec<Expr>) -> Stmt {
+        Stmt::Expr(Expr {
+            kind: ExprKind::Call {
+                func: Box::new(ident_expr("assert_eq")),
+                args,
+            },
+            span: Default::default(),
+        })
+    }
+
+    #[test]
+    fn duplicate_titles_get_module_prefixed_names() {
+        let tests = vec![
+            CollectedTest {
+                module: "analysis.ignition".into(),
+                name: "wide kernel ignites".into(),
+                compile_fail: false,
+                body: Block {
+                    stmts: vec![],
+                    tail: None,
+                    span: Default::default(),
+                },
+            },
+            CollectedTest {
+                module: "failure.relight".into(),
+                name: "wide kernel ignites".into(),
+                compile_fail: false,
+                body: Block {
+                    stmts: vec![],
+                    tail: None,
+                    span: Default::default(),
+                },
+            },
+        ];
+        let out = emit_test_module(&tests);
+        assert!(out.contains("fn test_analysis_ignition_wide_kernel_ignites"));
+        assert!(out.contains("fn test_failure_relight_wide_kernel_ignites"));
+    }
+
+    #[test]
+    fn assert_eq_bool_with_nested_float_is_not_epsilon() {
+        let tests = vec![CollectedTest {
+            module: "main".into(),
+            name: "bool".into(),
+            compile_fail: false,
+            body: Block {
+                stmts: vec![call_assert_eq(vec![
+                    Expr {
+                        kind: ExprKind::Call {
+                            func: Box::new(ident_expr("ignites")),
+                            args: vec![
+                                Expr {
+                                    kind: ExprKind::Float(1.2),
+                                    span: Default::default(),
+                                },
+                                Expr {
+                                    kind: ExprKind::Float(0.8),
+                                    span: Default::default(),
+                                },
+                            ],
+                        },
+                        span: Default::default(),
+                    },
+                    Expr {
+                        kind: ExprKind::Bool(true),
+                        span: Default::default(),
+                    },
+                ])],
+                tail: None,
+                span: Default::default(),
+            },
+        }];
+        let out = emit_test_module(&tests);
+        assert!(out.contains("assert_eq!"), "{out}");
+        assert!(!out.contains(".abs()"), "{out}");
+    }
+
+    #[test]
+    fn assert_eq_str_is_not_epsilon() {
+        let tests = vec![CollectedTest {
+            module: "main".into(),
+            name: "str".into(),
+            compile_fail: false,
+            body: Block {
+                stmts: vec![call_assert_eq(vec![
+                    ident_expr("s"),
+                    Expr {
+                        kind: ExprKind::Str(crisp_ast::expr::StringParts(vec![
+                            crisp_ast::expr::StringPart::Lit("FLASHBACK".into()),
+                        ])),
+                        span: Default::default(),
+                    },
+                ])],
+                tail: None,
+                span: Default::default(),
+            },
+        }];
+        let out = emit_test_module(&tests);
+        assert!(out.contains("assert_eq!"), "{out}");
+        assert!(!out.contains(".abs()"), "{out}");
     }
 }

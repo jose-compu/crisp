@@ -1,0 +1,3 @@
+use fail.a { Verdict }
+
+pub of() = Verdict.Ignition

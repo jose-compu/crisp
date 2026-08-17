@@ -1,0 +1,3 @@
+use math.scale { scale }
+
+pub twice(x) = scale(x, 2.0)

@@ -76,6 +76,10 @@ fn nested_emit_declares_parent_and_child_mods() {
         double.contains("crate::math::scale::scale"),
         "nested-to-nested use must emit crate:: (#93):\n{double}"
     );
+    assert!(
+        !double.contains("fn twice<"),
+        "twice must infer float from scale, not generalize to T: Clone:\n{double}"
+    );
     insta::assert_snapshot!("emit_nested_math_main", out.lib_rs);
 }
 

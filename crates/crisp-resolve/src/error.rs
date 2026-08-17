@@ -14,7 +14,11 @@ pub enum ResolveError {
         source: std::io::Error,
     },
     #[error("parse error in {path}: {message}")]
-    Parse { path: String, message: String },
+    Parse {
+        path: String,
+        message: String,
+        pos: u32,
+    },
     #[error("[E0034] duplicate definition of `{name}` in module `{module}`")]
     DuplicateDef {
         name: String,

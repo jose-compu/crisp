@@ -20,7 +20,7 @@ use thiserror::Error;
 pub enum ParseError {
     #[error("lex error: {0}")]
     Lex(#[from] crisp_lexer::LexError),
-    #[error("{}", format_unexpected(.expected, .found, .pos, .help))]
+    #[error("{}", format_unexpected(.expected, .found, .help))]
     Unexpected {
         expected: &'static str,
         found: TokenKind,
@@ -28,18 +28,50 @@ pub enum ParseError {
         help: Option<&'static str>,
     },
     #[error("unexpected end of file, expected {expected}")]
-    UnexpectedEof { expected: &'static str },
-    #[error("invalid pattern at byte {pos}")]
+    UnexpectedEof { expected: &'static str, pos: u32 },
+    #[error("invalid pattern")]
     InvalidPat { pos: u32 },
+}
+
+impl ParseError {
+    pub fn byte_pos(&self) -> u32 {
+        match self {
+            ParseError::Lex(e) => e.byte_pos(),
+            ParseError::Unexpected { pos, .. }
+            | ParseError::UnexpectedEof { pos, .. }
+            | ParseError::InvalidPat { pos } => *pos,
+        }
+    }
+
+    pub fn diagnostic_code(&self) -> &'static str {
+        match self {
+            ParseError::Lex(_) => "E0011",
+            _ => "E0010",
+        }
+    }
+
+    pub fn primary_message(&self) -> String {
+        self.to_string()
+            .lines()
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    }
+
+    pub fn help(&self) -> Option<&'static str> {
+        match self {
+            ParseError::Unexpected { help, .. } => *help,
+            _ => None,
+        }
+    }
 }
 
 fn format_unexpected(
     expected: &&'static str,
     found: &TokenKind,
-    pos: &u32,
     help: &Option<&'static str>,
 ) -> String {
-    let mut msg = format!("unexpected token {found:?} at byte {pos}, expected {expected}");
+    let mut msg = format!("unexpected token {}, expected {expected}", found.describe());
     if let Some(h) = help {
         msg.push_str("\nhelp: ");
         msg.push_str(h);

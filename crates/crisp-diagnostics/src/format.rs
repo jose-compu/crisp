@@ -177,3 +177,26 @@ pub fn format_type_mismatch(
         &[],
     )
 }
+
+/// Parse or lex error at a byte offset, rendered as `file:line:col` (#109).
+pub fn format_parse_error(
+    file: &str,
+    source: &str,
+    code: &str,
+    message: &str,
+    pos: u32,
+    extra_notes: &[String],
+) -> FormattedDiagnostic {
+    let mut notes = vec![format!("note: byte offset {pos}")];
+    notes.extend_from_slice(extra_notes);
+    let end = pos.saturating_add(1).min(source.len() as u32);
+    format_diagnostic_at(
+        file,
+        source,
+        code,
+        message,
+        Span::new(pos, end),
+        Severity::Error,
+        &notes,
+    )
+}

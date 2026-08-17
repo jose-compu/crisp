@@ -158,18 +158,23 @@ crisp run .
 ```crisp
 double(n) = n + n
 apply(f, x) = f(x)
+run(f) = f(21)
+label(g, p) = g(p)
+
+type Person = { name: str }
 
 pub main() = {
     x := double(5)
     inc := |n| n + 1
     log("x={x} next={inc(x)} twice={apply(_ * 2, x)}")
+    log("trail={run { |x| x * 2 }} field={label(.name, Person { name: "Ada" })}")
 }
 ```
 
 - `=` defines a named function (the same kind of value as `|x| …`).
 - `:=` binds a local variable (including a function value: `inc := |n| n + 1`).
 - Pass a named item where a function is expected: `apply(double, 21)`.
-- Sugar: holes (`apply(_ * 2, n)`), trailing last-arg (`run { |x| x * 2 }`), field sections (`.name`). See `examples/closures`.
+- Sugar: holes (`apply(_ * 2, n)`), trailing last-arg (`run { |x| x * 2 }`), field/method sections (`.name`, `.magnitude()`). See `examples/closures`.
 - `pub` exports an item from the module.
 - `print` / `log` emit to stdout (via Rust `println!`).
 
@@ -446,7 +451,7 @@ Dev symlink / F5: see [`editors/vscode-crisp/README.md`](editors/vscode-crisp/RE
 | `shapes_generic` | `shape Boxy`, `shape HasPosition` + squared Euclidean distance (#70) |
 | `shapes_user` | `HasPosition<T>` + inferred user `Measure` bound (not int/float `+`) (#84) |
 | `loops` | `while` / `for` / `loop` + `break`/`continue` (§6.3) |
-| `closures` | Function values, holes, trailing last-arg, field sections (#72 / #87–#89) |
+| `closures` | Function values, holes, trailing last-arg, field/method sections (#72 / #87–#89) |
 | `trait_defaults` | Trait default method bodies (§3.6 / #59) |
 | `std_traits` | Prelude Show/Eq/Ord → Display/PartialEq/Ord (§15.4 / #27) |
 | `net_http` | `parse_ip` + `ureq` GET via `rust = true` (§15.2 / #28) |

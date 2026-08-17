@@ -1172,35 +1172,7 @@ impl Parser {
                 kind: ExprKind::Block(self.parse_block()?),
                 span: Span::new(start, self.previous_end()),
             }),
-            TokenKind::Dot => {
-                // Point-free field section: `.name` → `| _sec | _sec.name` (#89).
-                self.advance();
-                let field = self.expect_ident()?;
-                let recv = Ident::new("_sec", Span::new(start, field.span.end));
-                let body = Expr {
-                    kind: ExprKind::Field {
-                        base: Box::new(Expr {
-                            kind: ExprKind::Ident(recv.clone()),
-                            span: recv.span,
-                        }),
-                        field,
-                    },
-                    span: Span::new(start, self.previous_end()),
-                };
-                Ok(Expr {
-                    kind: ExprKind::Lambda {
-                        params: vec![Param {
-                            lifetime: None,
-                            ownership: None,
-                            name: recv,
-                            ty: None,
-                            span: Span::new(start, self.previous_end()),
-                        }],
-                        body: Box::new(body),
-                    },
-                    span: Span::new(start, self.previous_end()),
-                })
-            }
+            TokenKind::Dot => self.parse_point_free_section(start),
             TokenKind::LParen => {
                 self.advance();
                 if self.check(TokenKind::RParen) {
@@ -1877,6 +1849,53 @@ match (Name { field: value }) { ... }",
 
     fn previous_span(&self) -> Span {
         Span::new(self.previous_start(), self.previous_end())
+    }
+
+    /// Point-free section (#89): `.name` → `|_sec| _sec.name`;
+    /// `.magnitude()` / `.scale(2.0)` → `|_sec| _sec.magnitude()` / `|_sec| _sec.scale(2.0)`.
+    /// Extra method args are baked into the section; they are not extra lambda params.
+    fn parse_point_free_section(&mut self, start: u32) -> Result<Expr, ParseError> {
+        self.advance();
+        let field = self.expect_ident()?;
+        let recv = Ident::new("_sec", Span::new(start, field.span.end));
+        let field_expr = Expr {
+            kind: ExprKind::Field {
+                base: Box::new(Expr {
+                    kind: ExprKind::Ident(recv.clone()),
+                    span: recv.span,
+                }),
+                field,
+            },
+            span: Span::new(start, self.previous_end()),
+        };
+        let body = if self.check(TokenKind::LParen) {
+            self.advance();
+            let args = self.parse_args()?;
+            self.expect(TokenKind::RParen)?;
+            Expr {
+                kind: ExprKind::Call {
+                    func: Box::new(field_expr),
+                    args,
+                },
+                span: Span::new(start, self.previous_end()),
+            }
+        } else {
+            field_expr
+        };
+        let span = Span::new(start, self.previous_end());
+        Ok(Expr {
+            kind: ExprKind::Lambda {
+                params: vec![Param {
+                    lifetime: None,
+                    ownership: None,
+                    name: recv,
+                    ty: None,
+                    span,
+                }],
+                body: Box::new(body),
+            },
+            span,
+        })
     }
 
     fn unexpected(&self, expected: &'static str, found: TokenKind) -> ParseError {

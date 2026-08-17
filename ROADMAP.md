@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.7.3**. Active milestones:
+Current compiler: **v1.8.0**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -325,7 +325,7 @@ Current compiler: **v1.7.3**. Active milestones:
 | **v1.7.1** | patch | Nested emit, float powf, interpolation spans, while/if assign | label `release:v1.7.1` |
 | **v1.7.2** | patch | Binop parens, nested type paths, string match, test harness | label `release:v1.7.2` |
 | **v1.7.3** | patch | `crisp.toml` path deps; `crisp run` cwd = crate root | label `release:v1.7.3` |
-| **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
+| **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` (shipped) | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -333,16 +333,18 @@ Current compiler: **v1.7.3**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.7.3) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io publish (v1.8.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-### In progress — v1.8.0
+### Shipped — v1.8.0 (parser DX, numeric widening, collections, interop)
 
 Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123](https://github.com/jose-compu/crisp/issues/123) numeric typeck · [#124](https://github.com/jose-compu/crisp/issues/124) ownership · [#110](https://github.com/jose-compu/crisp/issues/110) collections · [#125](https://github.com/jose-compu/crisp/issues/125) stdlib/interop · [#126](https://github.com/jose-compu/crisp/issues/126) release.
+
+Site, git tag, and crates.io are deferred (docs branch later; [#66](https://github.com/jose-compu/crisp/issues/66)).
 
 - [x] **`else if`** — chained then-form and brace-form ([#117](https://github.com/jose-compu/crisp/issues/117))
 - [x] **Record commas** — optional `,` in type/shape/literal fields ([#111](https://github.com/jose-compu/crisp/issues/111))
@@ -355,12 +357,6 @@ Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123
 - [x] **Indexing `xs[i]`** — typeck, CIR, emit ([#120](https://github.com/jose-compu/crisp/issues/120))
 - [x] **Math prelude** — `exp` / `sin` / `cos` / `tanh` / `sqrt` ([#115](https://github.com/jose-compu/crisp/issues/115))
 - [x] **`extern rust` scalars** — typed signatures ([#116](https://github.com/jose-compu/crisp/issues/116))
-
-GitHub follow-up when the API recovers:
-
-- Label `release:v1.8.0` on remaining story issues and comment `Child of Epic N`
-
----
 
 ### Shipped — v1.7.3 (path deps + run cwd)
 

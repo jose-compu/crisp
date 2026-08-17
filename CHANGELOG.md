@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-08-17
+
 ### Fixed
 
 - Chained `else if` parses as a nested If else-branch (then-form and brace-form), not as an If used as the condition ([#117](https://github.com/jose-compu/crisp/issues/117)). See `examples/loops`.
@@ -246,7 +248,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.3...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/jose-compu/crisp/compare/v1.7.3...v1.8.0
 [1.7.3]: https://github.com/jose-compu/crisp/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/jose-compu/crisp/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/jose-compu/crisp/compare/v1.7.0...v1.7.1

@@ -59,7 +59,7 @@ pub(crate) fn write_cargo_project_unlocked(
     let src = out_dir.join("src");
     fs::create_dir_all(&src)?;
 
-    let cargo_toml = format_cargo_toml(manifest, extra_deps);
+    let cargo_toml = format_cargo_toml(manifest, extra_deps, crate_root);
     atomic_write(&out_dir.join("Cargo.toml"), &cargo_toml)?;
 
     let mut main_rs = emitted.lib_rs.clone();
@@ -95,7 +95,11 @@ fn atomic_write(path: &Path, contents: &str) -> Result<()> {
     Ok(())
 }
 
-fn format_cargo_toml(manifest: &CrateManifest, extra_deps: &[ResolvedDependency]) -> String {
+fn format_cargo_toml(
+    manifest: &CrateManifest,
+    extra_deps: &[ResolvedDependency],
+    crate_root: &Path,
+) -> String {
     let mut out = format!(
         r#"[package]
 name = "{name}"
@@ -118,13 +122,30 @@ path = "src/main.rs"
     if !deps.is_empty() {
         out.push_str("\n[dependencies]\n");
         for dep in deps {
-            out.push_str(&format_dep_line(dep));
+            out.push_str(&format_dep_line(dep, crate_root));
         }
     }
     out
 }
 
-fn format_dep_line(dep: &ResolvedDependency) -> String {
+fn format_dep_line(dep: &ResolvedDependency, crate_root: &Path) -> String {
+    if let Some(spec_path) = &dep.path {
+        let rel = path_dep_for_emit(crate_root, spec_path);
+        let mut fields = vec![format!("path = \"{}\"", toml_escape(&rel))];
+        if !dep.version.is_empty() && dep.version != "*" {
+            fields.push(format!("version = \"{}\"", toml_escape(&dep.version)));
+        }
+        if !dep.features.is_empty() {
+            let features = dep
+                .features
+                .iter()
+                .map(|f| format!("\"{f}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
+            fields.push(format!("features = [{features}]"));
+        }
+        return format!("{} = {{ {} }}\n", dep.name, fields.join(", "));
+    }
     if dep.features.is_empty() {
         format!("{} = \"{}\"\n", dep.name, dep.version)
     } else {
@@ -141,6 +162,63 @@ fn format_dep_line(dep: &ResolvedDependency) -> String {
     }
 }
 
+fn toml_escape(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+/// Rewrite a `crisp.toml` path (relative to the Crisp crate root) so Cargo can
+/// resolve it from `target/rust/Cargo.toml` (#105).
+pub(crate) fn path_dep_for_emit(crate_root: &Path, spec_path: &str) -> String {
+    let spec = Path::new(spec_path);
+    if spec.is_absolute() {
+        return spec.to_string_lossy().replace('\\', "/");
+    }
+    let emit = crate_root.join("target").join("rust");
+    let dest = crate_root.join(spec);
+    relative_path(&emit, &dest)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn lexical_normalize(path: &Path) -> PathBuf {
+    use std::path::Component;
+    let mut out = PathBuf::new();
+    for c in path.components() {
+        match c {
+            Component::ParentDir => {
+                if !out.pop() {
+                    out.push("..");
+                }
+            }
+            Component::CurDir => {}
+            other => out.push(other.as_os_str()),
+        }
+    }
+    out
+}
+
+fn relative_path(from_dir: &Path, to: &Path) -> PathBuf {
+    let from = lexical_normalize(from_dir);
+    let to = lexical_normalize(to);
+    let from_c: Vec<_> = from.components().collect();
+    let to_c: Vec<_> = to.components().collect();
+    let mut i = 0;
+    while i < from_c.len() && i < to_c.len() && from_c[i] == to_c[i] {
+        i += 1;
+    }
+    let mut rel = PathBuf::new();
+    for _ in i..from_c.len() {
+        rel.push("..");
+    }
+    for c in &to_c[i..] {
+        rel.push(c.as_os_str());
+    }
+    if rel.as_os_str().is_empty() {
+        rel.push(".");
+    }
+    rel
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,10 +228,24 @@ mod tests {
     fn cargo_toml_includes_tokio_from_manifest() {
         let m = read_manifest(&hello_root()).unwrap();
         let deps = resolve_dependencies(&m);
-        let toml = format_cargo_toml(&m, &deps);
+        let toml = format_cargo_toml(&m, &deps, &hello_root());
         assert!(toml.contains("name = \"hello\""));
         assert!(toml.contains("tokio"));
         assert!(toml.contains("features"));
+    }
+
+    #[test]
+    fn path_dep_is_rewritten_relative_to_emit_dir() {
+        let crate_root = PathBuf::from("/tmp/app");
+        assert_eq!(
+            path_dep_for_emit(&crate_root, "../local_core"),
+            "../../../local_core"
+        );
+        assert_eq!(
+            path_dep_for_emit(&crate_root, "vendor/local_core"),
+            "../../vendor/local_core"
+        );
+        assert_eq!(path_dep_for_emit(&crate_root, "/abs/core"), "/abs/core");
     }
 
     fn hello_root() -> PathBuf {

@@ -2477,6 +2477,7 @@ fn rust_import_fn_type(crate_name: &str, item: &str) -> (Vec<Ty>, Ty) {
         // Type-like imports (e.g. `Value as JsonValue`) — not callable; placeholder unit fn.
         ("serde_json", "Value") => (vec![], json_value),
         ("ureq", "get") => (vec![Ty::Str], Ty::Str),
+        ("local_core", "answer") => (vec![], Ty::Int),
         _ => (
             vec![Ty::Str],
             Ty::Named {

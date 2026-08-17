@@ -9,6 +9,16 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.7.3] — 2026-08-17
+
+### Added
+
+- `crisp.toml` `[dependencies]` accepts Cargo **path** deps (`local_core = { rust = true, path = "../local_core" }` or `{ path = "vendor/local_core" }`, which implies `rust = true`). Emit rewrites the path relative to `target/rust/` so Makefile inject is not required ([#105](https://github.com/jose-compu/crisp/issues/105)). See `examples/path_dep`.
+
+### Fixed
+
+- `crisp run` / `check` / `build` / `test` invoke cargo with `--manifest-path target/rust/Cargo.toml` and **cwd = crate root** (the directory with `crisp.toml`), not `target/rust`. Relative `.git` / metadata / `git` lookups work; `CRISP_CRATE_ROOT` is set to the absolute crate root ([#106](https://github.com/jose-compu/crisp/issues/106)).
+
 ## [1.7.2] — 2026-08-17
 
 ### Fixed
@@ -219,7 +229,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.2...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.7.3...HEAD
+[1.7.3]: https://github.com/jose-compu/crisp/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/jose-compu/crisp/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/jose-compu/crisp/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/jose-compu/crisp/compare/v1.6.1...v1.7.0

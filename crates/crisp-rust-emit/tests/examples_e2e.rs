@@ -61,6 +61,7 @@ const EXAMPLES: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "path_dep",
     "loops",
     "closures",
 ];
@@ -216,6 +217,7 @@ fn runnable_examples_build_and_run() {
         "rust_import",
         "rust_shadow",
         "net_http",
+        "path_dep",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -397,6 +399,7 @@ const BUILDABLE: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "path_dep",
     "loops",
     "closures",
 ];

@@ -1,0 +1,10 @@
+-- examples/path_dep — local Cargo crate via crisp.toml `path` (#105)
+--
+-- `local_core` lives in vendor/ and is rewritten into target/rust/Cargo.toml
+-- as `{ path = "../../vendor/local_core" }` so Makefile inject is not required.
+
+use local_core { answer }
+
+pub main() = {
+    print(answer())
+}

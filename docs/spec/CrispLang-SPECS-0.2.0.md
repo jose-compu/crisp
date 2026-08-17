@@ -1486,6 +1486,8 @@ http = "1.2"
 json = { version = "0.5", features = ["pretty"] }
 # direct Rust crates are allowed and imported via `use rust::...`
 serde_json = { rust = true, version = "1" }
+# local Cargo crate; path is relative to this crisp.toml (rewritten for target/rust/)
+local_core = { rust = true, path = "../local_core" }
 ```
 
 ### 18.3 Commands
@@ -1502,6 +1504,8 @@ reveal rust src/  -- (new) emitted Rust for the project
 
 `crisp` invokes the system `rustc`/`cargo`; the emitted crate is an ordinary Cargo
 project under `target/rust/`, so the generated output is itself buildable and auditable.
+`crisp run` / `test` keep the process working directory at the Crisp crate root
+(the directory with `crisp.toml`), not `target/rust/`.
 
 ---
 

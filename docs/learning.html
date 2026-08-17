@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.3</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.8.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -103,12 +103,14 @@
         <ul>
           <li><code>examples/closures</code> — function values, holes, trailing last-arg, field/method sections</li>
           <li><code>examples/hello</code> — shapes, implicit generics, field defaults</li>
-          <li><code>examples/math</code>, <code>examples/float_demo</code> — numbers and modules</li>
+          <li><code>examples/math</code>, <code>examples/float_demo</code> — numbers, prelude <code>exp</code>/<code>sin</code>/<code>cos</code>/<code>tanh</code>/<code>sqrt</code></li>
+          <li><code>examples/loops</code> — <code>while</code> / <code>for</code> / <code>loop</code> and chained <code>else if</code></li>
+          <li><code>examples/vec_ops</code> — implicit <code>vec&lt;T&gt;</code> and <code>xs[i]</code></li>
           <li><code>examples/fallible</code> — ambient errors with <code>!</code>, <code>throw</code>, <code>catch</code></li>
           <li><code>examples/show_trait</code>, <code>examples/trait_defaults</code>, <code>examples/std_traits</code> — traits, defaults, Show/Eq/Ord</li>
           <li><code>examples/shapes</code> — data shapes → generated traits</li>
           <li><code>examples/generics_implicit</code> (preferred), <code>examples/generics</code>, <code>examples/shapes_generic</code>, <code>examples/shapes_user</code>, <code>examples/generics_pub</code> — implicit binders, pins, inferred <code>T</code> bounds (#84), pub schemes</li>
-          <li><code>examples/rust_import</code>, <code>examples/net_http</code> — Rust crate interop</li>
+          <li><code>examples/rust_import</code>, <code>examples/net_http</code>, <code>examples/path_dep</code> — Rust crate interop, path deps, <code>extern rust</code></li>
           <li><code>examples/async_hello</code> — async / Tokio</li>
           <li><code>examples/ffi</code> — <code>extern "C"</code></li>
           <li><code>examples/nested_math</code>, <code>examples/nested_types</code> — nested modules; type <code>use</code> emits <code>crate::</code></li>
@@ -117,7 +119,7 @@
 
       <div id="limits" class="content" style="margin-top:2.5rem">
         <h2>Honest limits</h2>
-        <p>This is a Rust-hosted bootstrap (<strong>v1.7.3</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>. Function values remain from v1.7.0 (<code>examples/closures</code>). See <a href="limitations.html">limitations</a>.</p>
+        <p>This is a Rust-hosted bootstrap (<strong>v1.8.0</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>. Function values remain from v1.7.0 (<code>examples/closures</code>). See <a href="limitations.html">limitations</a>.</p>
       </div>
     </div>
   </section>
@@ -146,7 +148,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.3 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

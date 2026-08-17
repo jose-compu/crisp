@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.3</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.8.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -70,8 +70,10 @@
         <li><strong>Traits</strong> — <code>trait</code> / <code>impl Trait for Type</code>; literal/simple default bodies</li>
         <li><strong>Shapes</strong> — data <code>shape</code> → generated traits + structural calls (<code>examples/shapes</code>)</li>
         <li><strong>Generics</strong> — prefer implicit binders (<code>id(x: T)</code>); <code>&lt;&gt;</code> pins and applies. Operators / unique methods on <code>T</code> infer bounds (<code>examples/generics_implicit</code>, <code>examples/shapes_generic</code>)</li>
-        <li><strong>Loops</strong> — <code>while</code>, <code>for … in</code> (vec MVP), <code>loop</code>, <code>break</code> / <code>continue</code>, value <code>break expr</code> (<code>examples/loops</code>)</li>
-        <li><strong>Rust crates</strong> — <code>rust = true</code> deps, including local <code>path = "…"</code> (#105, <code>examples/path_dep</code>); <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
+        <li><strong>Loops</strong> — <code>while</code>, <code>for … in</code> (vec MVP), <code>loop</code>, <code>break</code> / <code>continue</code>, value <code>break expr</code>; chained <code>else if</code> (#117, <code>examples/loops</code>)</li>
+        <li><strong>Collections</strong> — implicit <code>vec&lt;T&gt;</code> from <code>new</code>/<code>push</code>/<code>[1.0, 2.0]</code>; indexing <code>xs[i]</code> / <code>xs[i] = v</code> (#119 / #120, <code>examples/vec_ops</code>)</li>
+        <li><strong>Numbers</strong> — <code>int</code> widens to <code>float</code> in a checking position; postfix <code>as float</code> / <code>as int</code>; unary <code>-</code> on float stays float (#112 / #113). Prelude <code>exp</code>/<code>sin</code>/<code>cos</code>/<code>tanh</code>/<code>sqrt</code> (#115, <code>examples/math</code>)</li>
+        <li><strong>Rust crates</strong> — <code>rust = true</code> deps, including local <code>path = "…"</code> (#105); typed <code>extern rust crate { … }</code> / <code>.crpi</code> sidecars (#116, <code>examples/path_dep</code>); <code>use serde_json { … }</code> (or <code>use rust.…</code>)</li>
         <li><strong>Errors</strong> — ambient <code>!</code>, <code>throw</code>, <code>catch</code> → <code>Result&lt;T, CrispError&gt;</code></li>
         <li><strong>Modules</strong> — one file = one module; nested <code>use</code> of functions and types emits <code>crate::</code> (<code>examples/nested_math</code>, <code>examples/nested_types</code>)</li>
         <li><strong>Tests</strong> — <code>test</code>, <code>test_compile_fail</code>; names are unique per module (#102)</li>
@@ -301,7 +303,7 @@ test_compile_fail "unknown" = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.3 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

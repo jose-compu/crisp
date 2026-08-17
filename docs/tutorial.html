@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.3</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.8.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -148,10 +148,13 @@ pub main() = {
           <div class="step-label">Step 04</div>
           <h2>Types when you need them</h2>
           <p>Inference is the default, not a limitation. Annotate when two interpretations are possible, when you design a public boundary, or when you want the compiler to reject silent widening.</p>
-          <pre class="pipe">port(host: str, n: int) = n</pre>
+          <pre class="pipe">port(host: str, n: int) = n
+scale(x: float) = x * 2.0
+-- scale(3) is ok: int widens to float in a checking position (#112)</pre>
           <ul>
             <li>Common primitives: <code>int</code>, <code>uint</code>, <code>float</code>, <code>bool</code>, <code>char</code>, <code>str</code>.</li>
             <li>Return types can be written <code>-&gt; T</code> on functions when you want them explicit.</li>
+            <li><code>int</code> widens to <code>float</code> only in a checking position; write <code>as float</code> / <code>as int</code> when you want the conversion explicit. Unary <code>-</code> on a float stays <code>float</code>.</li>
           </ul>
           <p class="tech"><strong>Under the hood:</strong> <code>int</code>/<code>uint</code>/<code>float</code> map to Rust <code>i64</code>/<code>u64</code>/<code>f64</code> in the current bootstrap. Annotations feed the same constraint solver as inferred uses — they are not a second type system.</p>
         </article>
@@ -290,8 +293,9 @@ countdown_stop(start, stop) = {
             <li><code>mut:=</code> introduces a mutable binding; later updates use plain <code>=</code>.</li>
             <li><code>break expr</code> exits a <code>loop</code> with a value — the whole <code>loop</code> expression yields that value.</li>
             <li><code>for</code> MVP iterates Crisp <code>vec</code>; richer iterators are still growing (see limitations).</li>
+            <li>Chained <code>else if</code> works in then-form and brace-form (#117). Growable vecs: <code>new()</code>, <code>push</code>, <code>[1.0, 2.0]</code>, and <code>xs[i]</code> (#119 / #120, <code>examples/vec_ops</code>).</li>
           </ul>
-          <p class="try">Try: <code>crisp test examples/loops</code></p>
+          <p class="try">Try: <code>crisp test examples/loops</code> · also <code>examples/vec_ops</code></p>
           <p class="tech"><strong>Under the hood:</strong> Loops lower to Rust <code>while</code> / <code>loop</code> / <code>for</code> with mutable locals. Parser disables struct-literal greed in <code>if</code>/<code>while</code>/<code>for</code> heads (Rust-style) so <code>while i &lt; n { … }</code> parses cleanly.</p>
         </article>
 
@@ -427,7 +431,7 @@ distance(a: HasPosition&lt;T&gt;, b: HasPosition&lt;T&gt;) = {
         <article class="tutorial-step" id="rust-import">
           <div class="step-label">Step 15</div>
           <h2>Import a Rust crate</h2>
-          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package. A local crate can use <code>path = "…"</code> (implies <code>rust = true</code>); the compiler rewrites it for <code>target/rust/</code> (#105).</p>
+          <p>Crisp is meant to sit on the Rust ecosystem. Declare a Cargo dependency with <code>rust = true</code> in <code>crisp.toml</code>, then <code>use</code> items much like TypeScript importing a package. A local crate can use <code>path = "…"</code> (implies <code>rust = true</code>); the compiler rewrites it for <code>target/rust/</code> (#105). Other crates need an <code>extern rust</code> block (or a <code>src/*.crpi</code> sidecar) so calls are typed (#116).</p>
           <pre class="pipe">-- crisp.toml
 -- [dependencies]
 -- serde_json = { version = "1", rust = true }
@@ -442,6 +446,7 @@ pub main() = {
           <ul>
             <li>Compat path: <code>use rust.serde_json { … }</code> if you prefer an explicit namespace.</li>
             <li>Known <code>Result</code>-returning APIs can surface as Crisp ambient errors (<code>?</code> / <code>catch</code>) — see <a href="limitations.html">limitations</a>.</li>
+            <li>Declare scalar signatures with <code>extern rust local_core { answer() -&gt; int }</code> (or <code>src/local_core.crpi</code>). Undeclared imports are <code>E0089</code>.</li>
           </ul>
           <p class="try">Try: <code>crisp run examples/rust_import</code> · also <code>examples/path_dep</code></p>
           <p class="tech"><strong>Under the hood:</strong> Dependencies with <code>rust = true</code> are forwarded into the emitted <code>Cargo.toml</code>. Path deps are rewritten relative to <code>target/rust/</code>. <code>crisp run</code> keeps cwd at the crate root (#106). Crisp does not reimplement those crates — it generates ordinary Rust uses against them.</p>
@@ -527,7 +532,7 @@ pub main() = {
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.3 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.0 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

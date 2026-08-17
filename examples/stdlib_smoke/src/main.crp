@@ -1,5 +1,7 @@
+empty_ints() -> vec<int> = new()
+
 pub main() = {
-    xs := new()
+    xs := empty_ints()
     n := len(xs)
     print("empty-len={n}")
 }

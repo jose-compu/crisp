@@ -222,3 +222,43 @@ fn issue_114_runtime_tests() {
         Err(e) => panic!("issue_114 harness: {e}"),
     }
 }
+
+fn example(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name)
+}
+
+#[test]
+fn issue_119_emit_vec_t() {
+    let cir = CirBuilder::build_crate(&example("vec_ops")).expect("cir #119");
+    let out = emit_crate(&cir);
+    eprintln!("#119 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("Vec::<i64>::new()") || out.lib_rs.contains("Vec::<i64>"),
+        "int vec emit:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("vec![") && out.lib_rs.contains("1.0_f64"),
+        "float vec literal emit:\n{}",
+        out.lib_rs
+    );
+}
+
+#[test]
+fn issue_119_runtime_tests() {
+    match run_tests(&example("vec_ops")) {
+        Ok(r) => {
+            eprintln!(
+                "#119 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert_eq!(r.runtime_passed, 3, "got {}", r.runtime_passed);
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_119 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_119 harness: {e}"),
+    }
+}

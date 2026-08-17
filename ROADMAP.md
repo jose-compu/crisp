@@ -350,7 +350,9 @@ Epics: [#122](https://github.com/jose-compu/crisp/issues/122) parser/DX · [#123
 - [x] **Unary minus** — float `Neg`, CIR `Unary`, harness parenthesizes `assert_eq` RHS ([#113](https://github.com/jose-compu/crisp/issues/113))
 - [x] **int → float** — checking-position widening, `as float` / `as int`, W0087, reveal coercions ([#112](https://github.com/jose-compu/crisp/issues/112))
 - [x] **Record `:=`** — `Copy` on all-Copy fields; clone-at-bind when the source is reused ([#118](https://github.com/jose-compu/crisp/issues/118))
-- [ ] **Test harness `&`** — call args from CIR ownership, not an AST heuristic ([#114](https://github.com/jose-compu/crisp/issues/114))
+- [x] **Test harness `&`** — call args from CIR ownership, not an AST heuristic ([#114](https://github.com/jose-compu/crisp/issues/114))
+- [x] **Implicit `vec<T>`** — `new`/`push`/`[ ]` infer the element type ([#119](https://github.com/jose-compu/crisp/issues/119))
+- [ ] **Indexing `xs[i]`** — typeck, CIR, emit ([#120](https://github.com/jose-compu/crisp/issues/120))
 
 GitHub follow-up when the API recovers:
 
@@ -412,4 +414,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (test harness #114).*
+*Last updated: 2026-08-17 — v1.8.0 in progress (indexing #120).*

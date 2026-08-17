@@ -1371,9 +1371,10 @@ fn lower_expr_raw(
                         .map(|s| s.fallible)
                         .unwrap_or(false);
                 let ret_ty = typed
-                    .signatures
-                    .get(&key)
-                    .map(|s| CirTy::from_ty(&s.ret))
+                    .expr_tys
+                    .get(&expr.span)
+                    .map(CirTy::from_ty)
+                    .or_else(|| typed.signatures.get(&key).map(|s| CirTy::from_ty(&s.ret)))
                     .unwrap_or(CirTy::Unit);
                 let callee_osig = ownership.signatures.get(&key);
                 let call_args: Vec<CirCallArg> = args
@@ -1718,23 +1719,25 @@ fn lower_expr_raw(
         },
         ExprKind::For { pat, iter, body } => {
             let mut for_locals = locals.clone();
+            let iter_lowered = lower_expr(
+                iter,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            );
+            let elem_ty = vec_elem_cir_ty(iter, locals, typed).unwrap_or(CirTy::Int);
             if let PatKind::Ident(id) = &pat.kind {
-                for_locals.insert(id.name.clone(), CirTy::Int);
+                for_locals.insert(id.name.clone(), elem_ty.clone());
             }
             E::For {
                 pat: lower_pat(pat),
-                iter: Box::new(lower_expr(
-                    iter,
-                    module,
-                    osig,
-                    typed,
-                    ownership,
-                    errors,
-                    locals,
-                    struct_fields,
-                    fn_modules,
-                    ctx,
-                )),
+                iter: Box::new(iter_lowered),
                 body: Box::new(lower_expr(
                     body,
                     module,
@@ -1747,6 +1750,7 @@ fn lower_expr_raw(
                     fn_modules,
                     ctx,
                 )),
+                elem_ty,
                 span: expr.span,
             }
         }
@@ -1907,7 +1911,59 @@ fn lower_expr_raw(
                 span: expr.span,
             }
         }
+        ExprKind::Array(elems) => {
+            let ty = typed
+                .expr_tys
+                .get(&expr.span)
+                .map(CirTy::from_ty)
+                .unwrap_or(CirTy::Named {
+                    name: "vec".into(),
+                    args: vec![CirTy::Int],
+                });
+            E::Array {
+                elems: elems
+                    .iter()
+                    .map(|e| {
+                        lower_expr(
+                            e,
+                            module,
+                            osig,
+                            typed,
+                            ownership,
+                            errors,
+                            locals,
+                            struct_fields,
+                            fn_modules,
+                            ctx,
+                        )
+                    })
+                    .collect(),
+                ty,
+                span: expr.span,
+            }
+        }
         _ => E::Unit { span: expr.span },
+    }
+}
+
+fn vec_elem_cir_ty(
+    iter: &Expr,
+    locals: &BTreeMap<String, CirTy>,
+    typed: &TypedCrate,
+) -> Option<CirTy> {
+    if let Some(ty) = typed.expr_tys.get(&iter.span) {
+        if let CirTy::Named { name, args } = CirTy::from_ty(ty)
+            && name == "vec"
+        {
+            return args.into_iter().next();
+        }
+    }
+    match &iter.kind {
+        ExprKind::Ident(id) => match locals.get(&id.name) {
+            Some(CirTy::Named { name, args }) if name == "vec" => args.first().cloned(),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -1985,7 +2041,8 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::If { ty, .. }
         | CirExpr::Match { ty, .. }
         | CirExpr::Lambda { ty, .. }
-        | CirExpr::Apply { ty, .. } => Some(ty.clone()),
+        | CirExpr::Apply { ty, .. }
+        | CirExpr::Array { ty, .. } => Some(ty.clone()),
         CirExpr::Int { .. } => Some(CirTy::Int),
         CirExpr::Float { .. } => Some(CirTy::Float),
         CirExpr::Bool { .. } => Some(CirTy::Bool),

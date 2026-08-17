@@ -1,0 +1,4 @@
+pub main() = {
+    xs := new()
+    print(len(xs))
+}

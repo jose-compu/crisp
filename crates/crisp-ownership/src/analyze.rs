@@ -461,6 +461,11 @@ impl<'a> Collector<'a> {
                 self.walk_expr(base);
                 self.walk_expr(index);
             }
+            ExprKind::Array(elems) => {
+                for e in elems {
+                    self.walk_expr(e);
+                }
+            }
             ExprKind::Assign { target, value } => {
                 self.record_use(&target.name, Usage::Mutate, target.span);
                 self.walk_expr(value);

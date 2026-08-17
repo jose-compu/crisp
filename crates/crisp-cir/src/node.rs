@@ -327,6 +327,12 @@ pub enum CirExpr {
         pat: CirPat,
         iter: Box<CirExpr>,
         body: Box<CirExpr>,
+        elem_ty: CirTy,
+        span: Span,
+    },
+    Array {
+        elems: Vec<CirExpr>,
+        ty: CirTy,
         span: Span,
     },
     While {

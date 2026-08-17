@@ -26,6 +26,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0085 | typeck | Implicit-closure hole count does not match the expected function arity — write `|x, y| …` ([#87](https://github.com/jose-compu/crisp/issues/87)) |
 | E0086 | typeck | Hole `_` used where a function value is not expected — write `|x| …` or pass `_` as a function argument |
 | E0087 | typeck | Invalid `as` target — only `int` and `float` ([#112](https://github.com/jose-compu/crisp/issues/112)) |
+| E0088 | typeck | Cannot infer `vec` element type — pin (`-> vec<float> = new()`, or `push`) ([#119](https://github.com/jose-compu/crisp/issues/119)) |
 | W0087 | typeck | Non-literal `int` → `float` may lose precision above 2^53 — write `as float` to silence ([#112](https://github.com/jose-compu/crisp/issues/112)) |
 | E0050 | ownership | Ownership contradicts explicit annotation — adjust `own`/`&`/`&mut` or usage |
 | E0051 | ownership | Ownership analysis failed |

@@ -10,8 +10,16 @@ build_seq() = {
 
 seq_len() = len(build_seq())
 
+float_seq() = [1.0, 2.0, 3.0]
+
+float_len() = len(float_seq())
+
 test "build seq len" = {
     assert_eq(seq_len(), 3)
+}
+
+test "float literal len" = {
+    assert_eq(float_len(), 3)
 }
 
 test "triple three" = {

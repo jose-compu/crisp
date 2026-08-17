@@ -1270,6 +1270,26 @@ impl Parser {
                 Ok(expr)
             }
             TokenKind::Pipe => self.parse_lambda(start),
+            TokenKind::LBracket => {
+                self.advance();
+                let mut elems = Vec::new();
+                if !self.check(TokenKind::RBracket) {
+                    loop {
+                        elems.push(self.parse_expr()?);
+                        if !self.match_token(TokenKind::Comma) {
+                            break;
+                        }
+                        if self.check(TokenKind::RBracket) {
+                            break;
+                        }
+                    }
+                }
+                self.expect(TokenKind::RBracket)?;
+                Ok(Expr {
+                    kind: ExprKind::Array(elems),
+                    span: Span::new(start, self.previous_end()),
+                })
+            }
             TokenKind::Or => {
                 // `|| expr` lexes as one `Or` token; treat as a nullary lambda.
                 self.advance();

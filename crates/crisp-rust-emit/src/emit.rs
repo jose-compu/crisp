@@ -879,6 +879,7 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             fallible,
             propagate_error,
             is_extern,
+            ty,
             span,
             ..
         } => {
@@ -888,6 +889,7 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 callee,
                 callee_module,
                 args,
+                ty,
                 *fallible,
                 *propagate_error,
                 *is_extern,
@@ -1123,17 +1125,39 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
             pat,
             iter,
             body,
+            elem_ty,
             span,
         } => {
             map.record(out.len() as u32, *span);
-            // MVP: Crisp `vec` is `Vec<i64>`; iterate by copied values so `&Vec`
-            // and owned `Vec` both yield `i64` (ownership may borrow the param).
             let _ = write!(out, "for ");
             emit_pat(out, pat, current_module, map);
             let _ = write!(out, " in (");
             emit_expr(out, iter, current_module, map);
-            let _ = write!(out, ").iter().copied() ");
+            if cir_ty_is_copy(elem_ty) {
+                let _ = write!(out, ").iter().copied() ");
+            } else {
+                let _ = write!(out, ").iter().cloned() ");
+            }
             emit_expr_block(out, body, current_module, map);
+        }
+        CirExpr::Array { elems, ty, span } => {
+            map.record(out.len() as u32, *span);
+            if elems.is_empty() {
+                let _ = write!(
+                    out,
+                    "Vec::<{}>::new()",
+                    vec_elem_rust(ty, current_module, map)
+                );
+            } else {
+                let _ = write!(out, "vec![");
+                for (i, e) in elems.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_expr(out, e, current_module, map);
+                }
+                let _ = write!(out, "]");
+            }
         }
         CirExpr::Loop { body, span } => {
             map.record(out.len() as u32, *span);
@@ -1273,6 +1297,7 @@ fn emit_call_expr(
     callee: &str,
     callee_module: &str,
     args: &[crisp_cir::CirCallArg],
+    ty: &CirTy,
     fallible: bool,
     propagate_error: bool,
     is_extern: bool,
@@ -1294,7 +1319,11 @@ fn emit_call_expr(
     if let Some(path) = std_rust_path(callee_module, callee) {
         match path {
             "Vec::new" => {
-                let _ = write!(out, "Vec::<i64>::new()");
+                let _ = write!(
+                    out,
+                    "Vec::<{}>::new()",
+                    vec_elem_rust(ty, current_module, map)
+                );
             }
             "Vec::push" if args.len() >= 2 => {
                 emit_vec_receiver(out, &args[0].expr, current_module, map);
@@ -1838,6 +1867,13 @@ fn format_ty_in(
         CirTy::Char => "char".into(),
         CirTy::Str => "String".into(),
         CirTy::Var(_) => "String".into(),
+        CirTy::Named { name, args } if name == "vec" => {
+            let inner = args
+                .first()
+                .map(|a| format_ty_in(a, current_module, type_modules))
+                .unwrap_or_else(|| "i64".into());
+            format!("Vec<{inner}>")
+        }
         CirTy::Named { name, args } if args.is_empty() => match name.as_str() {
             "vec" => "Vec<i64>".into(),
             "map" => "std::collections::HashMap<String, i64>".into(),
@@ -1887,6 +1923,16 @@ fn format_ty_in(
             format_ty_in(ret, current_module, type_modules)
         ),
         CirTy::Error => "_".into(),
+    }
+}
+
+fn vec_elem_rust(ty: &CirTy, current_module: &str, map: &EmitSourceMap) -> String {
+    match ty {
+        CirTy::Named { name, args } if name == "vec" => args
+            .first()
+            .map(|a| format_ty_in(a, current_module, &map.type_modules))
+            .unwrap_or_else(|| "i64".into()),
+        _ => format_ty_in(ty, current_module, &map.type_modules),
     }
 }
 

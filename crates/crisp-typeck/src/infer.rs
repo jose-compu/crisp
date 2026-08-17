@@ -14,7 +14,7 @@ use crisp_ast::pat::{Pat, PatKind};
 use crisp_ast::ty::{Type, TypeKind};
 use crisp_resolve::module::load_module_graph;
 use crisp_resolve::{ResolvedRustImport, Resolver};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 use thiserror::Error;
 
@@ -61,6 +61,10 @@ pub enum TypeError {
         to: String,
         span: Span,
     },
+    #[error(
+        "[E0088] cannot infer element type of `vec`; pin it (`xs: vec<float> := new()`, or `-> vec<int> = new()`)"
+    )]
+    UninferredVec { span: Span },
     #[error("unification error: {message}")]
     UnifyAt { message: String, span: Span },
 }
@@ -88,6 +92,8 @@ pub struct TypedCrate {
     /// Checking-position numeric coercions (#112).
     pub coercions: Vec<NumericCoercion>,
     pub warnings: Vec<crate::warning::TypeWarning>,
+    /// Instantiated types of selected exprs (calls, array lits) for CIR emit (#119).
+    pub expr_tys: HashMap<Span, Ty>,
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +143,8 @@ pub struct TypeChecker {
     trait_impls: BTreeMap<String, BTreeSet<String>>,
     coercions: Vec<NumericCoercion>,
     warnings: Vec<crate::warning::TypeWarning>,
+    expr_tys: HashMap<Span, Ty>,
+    fn_vec_tys: Vec<(Span, Ty)>,
 }
 
 impl TypeChecker {
@@ -161,6 +169,11 @@ impl TypeChecker {
         // Otherwise `math.double` (before `math.scale`) publishes `twice<T>(x: float) -> T`.
         checker.seal_open_signatures();
         checker.specialize_internal_functions()?;
+        let expr_tys = checker
+            .expr_tys
+            .iter()
+            .map(|(s, t)| (*s, checker.ctx.apply(t)))
+            .collect();
         Ok(TypedCrate {
             signatures: checker.signatures,
             inherent_methods: checker.inherent_methods,
@@ -168,6 +181,7 @@ impl TypeChecker {
             impl_trait_args: checker.impl_trait_args,
             coercions: checker.coercions,
             warnings: checker.warnings,
+            expr_tys,
         })
     }
 
@@ -193,6 +207,8 @@ impl TypeChecker {
             trait_impls: BTreeMap::new(),
             coercions: Vec::new(),
             warnings: Vec::new(),
+            expr_tys: HashMap::new(),
+            fn_vec_tys: Vec::new(),
         }
     }
 
@@ -300,6 +316,33 @@ impl TypeChecker {
         };
         let print_scheme = generalize(&self.env, &mut self.ctx, &print_ty);
         self.env.insert("print", print_scheme);
+
+        {
+            let t = self.ctx.fresh();
+            let vt = vec_of(t.clone());
+            let new_ty = Ty::Fn {
+                params: vec![],
+                ret: Box::new(vt),
+            };
+            self.env
+                .insert("new", generalize(&self.env, &mut self.ctx, &new_ty));
+            let t = self.ctx.fresh();
+            let vt = vec_of(t.clone());
+            let push_ty = Ty::Fn {
+                params: vec![vt, t],
+                ret: Box::new(Ty::Unit),
+            };
+            self.env
+                .insert("push", generalize(&self.env, &mut self.ctx, &push_ty));
+            let t = self.ctx.fresh();
+            let vt = vec_of(t);
+            let len_ty = Ty::Fn {
+                params: vec![vt],
+                ret: Box::new(Ty::Int),
+            };
+            self.env
+                .insert("len", generalize(&self.env, &mut self.ctx, &len_ty));
+        }
 
         for (name, ty) in stdlib_fn_types() {
             self.env.insert(name, scheme(ty));
@@ -862,6 +905,7 @@ impl TypeChecker {
         name: &str,
         body: &Block,
     ) -> Result<(), TypeError> {
+        self.fn_vec_tys.clear();
         let mut local = self.env.clone();
         let body_ty = self.infer_block(&mut local, body)?;
         unify(&mut self.ctx, &body_ty, &Ty::Unit)?;
@@ -883,12 +927,14 @@ impl TypeChecker {
                 op_bounds: BTreeMap::new(),
             },
         );
+        self.reject_uninferred_vec(&[])?;
         Ok(())
     }
 
     fn check_function(&mut self, module: &str, f: &FunctionDef) -> Result<(), TypeError> {
         self.arith_named.clear();
         self.arith_vars.clear();
+        self.fn_vec_tys.clear();
         let gens: Vec<String> = f.generics.iter().map(|g| g.name.clone()).collect();
         let saved = self.bind_rigid_generics(&gens);
         // Reuse stub param/ret vars so call-site unifications from earlier modules stick.
@@ -1003,6 +1049,7 @@ impl TypeChecker {
             },
         );
         self.generic_params = saved;
+        self.reject_uninferred_vec(&gens)?;
         Ok(())
     }
 
@@ -1178,7 +1225,9 @@ impl TypeChecker {
                             });
                     }
                 }
-                Ok(self.ctx.apply(&ret))
+                let ret = self.ctx.apply(&ret);
+                self.record_expr_ty(expr.span, ret.clone());
+                Ok(ret)
             }
             ExprKind::Field { base, field } => {
                 // Enum variants: Color.Red (unit) / Color.Custom (ctor fn type)
@@ -1334,18 +1383,12 @@ impl TypeChecker {
             }
             ExprKind::For { pat, iter, body } => {
                 let iter_ty = self.infer_expr(env, iter)?;
-                let vec_ty = Ty::Named {
-                    name: "vec".into(),
-                    args: vec![],
-                };
-                // MVP: `for` iterates `vec` (emits `Vec<i64>`). Unify unconstrained
-                // iterators with `vec`; element type is `int`.
+                let elem = self.ctx.fresh();
+                let vec_ty = vec_of(elem.clone());
+                unify(&mut self.ctx, &iter_ty, &vec_ty)?;
                 let item_ty = match self.ctx.apply(&iter_ty) {
-                    Ty::Named { name, .. } if name == "vec" => Ty::Int,
-                    other => {
-                        unify(&mut self.ctx, &other, &vec_ty)?;
-                        Ty::Int
-                    }
+                    Ty::Named { name, args } if name == "vec" && args.len() == 1 => args[0].clone(),
+                    _ => self.ctx.apply(&elem),
                 };
                 let mut local = env.clone();
                 self.infer_pat(&mut local, pat, &item_ty)?;
@@ -1380,6 +1423,16 @@ impl TypeChecker {
                         span: expr.span,
                     })?;
                 Ok(Ty::Unit)
+            }
+            ExprKind::Array(elems) => {
+                let elem = self.ctx.fresh();
+                for e in elems {
+                    let et = self.infer_expr(env, e)?;
+                    self.unify_checking(e, &et, &elem)?;
+                }
+                let ty = vec_of(self.ctx.apply(&elem));
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
             }
             _ => Ok(self.ctx.fresh()),
         }
@@ -1981,6 +2034,27 @@ impl TypeChecker {
         Ok(instantiate(&mut self.ctx, scheme))
     }
 
+    fn record_expr_ty(&mut self, span: Span, ty: Ty) {
+        if matches!(&ty, Ty::Named { name, .. } if name == "vec") {
+            self.fn_vec_tys.push((span, ty.clone()));
+        }
+        self.expr_tys.insert(span, ty);
+    }
+
+    fn reject_uninferred_vec(&mut self, gens: &[String]) -> Result<(), TypeError> {
+        let pending = std::mem::take(&mut self.fn_vec_tys);
+        if !gens.is_empty() {
+            return Ok(());
+        }
+        for (span, ty) in pending {
+            let t = self.ctx.apply(&ty);
+            if vec_elem_uninferred(&t) {
+                return Err(TypeError::UninferredVec { span });
+            }
+        }
+        Ok(())
+    }
+
     fn record_arith(&mut self, ty: &Ty, op: &str) {
         self.record_bound(ty, op);
     }
@@ -2549,41 +2623,24 @@ fn generalize_named_params(ty: &Ty, gens: &[String], ctx: &mut InferContext) -> 
     }
 }
 
+fn vec_of(elem: Ty) -> Ty {
+    Ty::Named {
+        name: "vec".into(),
+        args: vec![elem],
+    }
+}
+
+fn vec_elem_uninferred(ty: &Ty) -> bool {
+    matches!(
+        ty,
+        Ty::Named { name, args }
+            if name == "vec"
+                && (args.is_empty() || matches!(args.first(), Some(Ty::Var(_))))
+    )
+}
+
 fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
     vec![
-        (
-            "new",
-            Ty::Fn {
-                params: vec![],
-                ret: Box::new(Ty::Named {
-                    name: "vec".into(),
-                    args: vec![],
-                }),
-            },
-        ),
-        (
-            "push",
-            Ty::Fn {
-                params: vec![
-                    Ty::Named {
-                        name: "vec".into(),
-                        args: vec![],
-                    },
-                    Ty::Int,
-                ],
-                ret: Box::new(Ty::Unit),
-            },
-        ),
-        (
-            "len",
-            Ty::Fn {
-                params: vec![Ty::Named {
-                    name: "vec".into(),
-                    args: vec![],
-                }],
-                ret: Box::new(Ty::Int),
-            },
-        ),
         (
             "read_to_string",
             Ty::Fn {

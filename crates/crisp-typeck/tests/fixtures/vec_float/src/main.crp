@@ -1,0 +1,14 @@
+floats() = [1.0, 2.0, 3.0]
+
+ints() = {
+    xs := new()
+    push(xs, 1)
+    push(xs, 2)
+    xs
+}
+
+empty_f() -> vec<float> = new()
+
+pub main() = {
+    print(len(floats()))
+}

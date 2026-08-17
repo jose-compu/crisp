@@ -100,6 +100,11 @@ fn count_in(expr: &Expr, n: &mut usize) {
             count_in(base, n);
             count_in(index, n);
         }
+        ExprKind::Array(elems) => {
+            for e in elems {
+                count_in(e, n);
+            }
+        }
         ExprKind::Binary { left, right, .. } | ExprKind::Pipe { left, right } => {
             count_in(left, n);
             count_in(right, n);
@@ -209,6 +214,9 @@ fn replace_holes(expr: &Expr, i: &mut usize) -> Expr {
             base: Box::new(replace_holes(base, i)),
             index: Box::new(replace_holes(index, i)),
         },
+        ExprKind::Array(elems) => {
+            ExprKind::Array(elems.iter().map(|e| replace_holes(e, i)).collect())
+        }
         ExprKind::Unary { op, expr: inner } => ExprKind::Unary {
             op: *op,
             expr: Box::new(replace_holes(inner, i)),

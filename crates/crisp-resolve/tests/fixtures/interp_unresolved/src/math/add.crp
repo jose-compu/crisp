@@ -1,0 +1,1 @@
+pub add(a, b) = a + b

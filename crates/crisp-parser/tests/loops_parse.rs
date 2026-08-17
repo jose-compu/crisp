@@ -96,3 +96,26 @@ fn parse_continue() {
     };
     assert!(matches!(c_kind, ExprKind::Continue));
 }
+
+#[test]
+fn parse_while_then_paren_tail_is_not_a_call() {
+    let e = parse_fn_body("{ while i < n { i = i + 1 } (lo + hi) / 2.0 }");
+    let ExprKind::Block(b) = e.kind else {
+        panic!("{:?}", e.kind);
+    };
+    let w = b.stmts.iter().find_map(|s| match s {
+        Stmt::Expr(e) if matches!(e.kind, ExprKind::While { .. }) => Some(e),
+        _ => None,
+    });
+    assert!(
+        w.is_some(),
+        "while must be a statement, not a callee (#96): {:?}",
+        b
+    );
+    let tail = b.tail.as_ref().expect("parenthesized tail");
+    assert!(
+        matches!(tail.kind, ExprKind::Binary { .. }),
+        "tail should be (lo + hi) / 2.0, got {:?}",
+        tail.kind
+    );
+}

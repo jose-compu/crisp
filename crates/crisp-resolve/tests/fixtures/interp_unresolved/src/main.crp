@@ -1,0 +1,7 @@
+use math.add { add }
+
+pub main() = {
+    print("speed={s}")
+}
+
+add_demo() = add(1, 2)

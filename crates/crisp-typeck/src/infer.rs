@@ -54,6 +54,8 @@ pub enum TypeError {
         "[E0086] hole `_` is only valid where a function value is expected; write `|x| …` or use `_` as a call argument"
     )]
     HoleMisplaced { span: Span },
+    #[error("unification error: {message}")]
+    UnifyAt { message: String, span: Span },
 }
 
 #[derive(Debug, Clone)]
@@ -1043,10 +1045,10 @@ impl TypeChecker {
                         (ps, Box::new(ret))
                     }
                     other => {
-                        return Err(TypeError::Unify(UnifyError::Mismatch {
-                            expected: "function".into(),
-                            found: format!("{other:?}"),
-                        }));
+                        return Err(TypeError::UnifyAt {
+                            message: format!("type mismatch: expected function, found {other:?}"),
+                            span: expr.span,
+                        });
                     }
                 };
                 if args.len() != params.len() {
@@ -1257,6 +1259,15 @@ impl TypeChecker {
                 Ok(Ty::Never)
             }
             ExprKind::Continue => Ok(Ty::Never),
+            ExprKind::Assign { target, value } => {
+                let expected = self.lookup(env, &target.name, target.span)?;
+                let got = self.infer_value(env, value)?;
+                unify(&mut self.ctx, &got, &expected).map_err(|e| TypeError::UnifyAt {
+                    message: e.to_string(),
+                    span: expr.span,
+                })?;
+                Ok(Ty::Unit)
+            }
             _ => Ok(self.ctx.fresh()),
         }
     }

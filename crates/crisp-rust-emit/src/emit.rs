@@ -742,11 +742,7 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         }
         CirExpr::Float { value, span } => {
             map.record(out.len() as u32, *span);
-            if value.fract() == 0.0 {
-                let _ = write!(out, "{value}.0");
-            } else {
-                let _ = write!(out, "{value}");
-            }
+            write_float_lit(out, *value);
         }
         CirExpr::Str { value, span } => {
             map.record(out.len() as u32, *span);
@@ -771,11 +767,12 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 emit_expr(out, right, current_module, map);
                 let _ = write!(out, ")");
             } else if *op == CirBinOp::Pow {
-                let _ = write!(out, "(");
+                // Crisp `float` is f64; suffix/cast so rustc does not see `{float}.powf` (E0689, #94).
+                let _ = write!(out, "((");
                 emit_expr(out, left, current_module, map);
-                let _ = write!(out, ").powf(");
+                let _ = write!(out, ") as f64).powf((");
                 emit_expr(out, right, current_module, map);
-                let _ = write!(out, ")");
+                let _ = write!(out, ") as f64)");
             } else {
                 emit_expr(out, left, current_module, map);
                 let _ = write!(out, " {} ", binop_rust(*op));
@@ -1250,9 +1247,10 @@ fn emit_call_expr(
         return;
     } else {
         if callee_module != current_module && !callee_module.starts_with("std.") {
-            // Crisp `math.vector` → Rust `math::vector` (#35).
+            // Intra-crate paths need `crate::` so nested modules do not look up
+            // an external crate named `math` (rustc E0433, #93).
             let rust_path = callee_module.replace('.', "::");
-            let _ = write!(out, "{rust_path}::");
+            let _ = write!(out, "crate::{rust_path}::");
         }
         let _ = write!(out, "{callee}(");
         for (i, arg) in args.iter().enumerate() {
@@ -1457,11 +1455,8 @@ fn emit_call_arg(
         }
         if let CirExpr::Float { value, span } = expr {
             map.record(out.len() as u32, *span);
-            if value.fract() == 0.0 {
-                let _ = write!(out, "&{value}.0");
-            } else {
-                let _ = write!(out, "&{value}");
-            }
+            let _ = write!(out, "&");
+            write_float_lit(out, *value);
             return;
         }
         let _ = write!(out, "&");
@@ -1520,15 +1515,19 @@ fn emit_expr_inline_to(out: &mut String, expr: &CirExpr) {
             let _ = write!(out, "{value}");
         }
         CirExpr::Float { value, .. } => {
-            if value.fract() == 0.0 {
-                let _ = write!(out, "{value}.0");
-            } else {
-                let _ = write!(out, "{value}");
-            }
+            write_float_lit(out, *value);
         }
         _ => {
             let _ = write!(out, "Default::default()");
         }
+    }
+}
+
+fn write_float_lit(out: &mut String, value: f64) {
+    if value.fract() == 0.0 {
+        let _ = write!(out, "{value}.0_f64");
+    } else {
+        let _ = write!(out, "{value}_f64");
     }
 }
 

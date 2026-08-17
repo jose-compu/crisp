@@ -35,3 +35,36 @@ fn missing_use_fixture_still_typechecks_after_import_fix() {
     let util = fixture("missing_use").join("src/util.crp");
     assert!(util.exists());
 }
+
+#[test]
+fn interpolation_unresolved_span_is_on_the_string_not_use() {
+    let root = fixture("interp_unresolved");
+    let err = Resolver::resolve_crate(&root).expect_err("unresolved interpolation ident");
+    let msg = err.to_string();
+    assert!(msg.contains("E0035"), "{msg}");
+    assert!(msg.contains("`s`"), "{msg}");
+    let crisp_resolve::ResolveError::UnresolvedName { span, name, .. } = err else {
+        panic!("expected UnresolvedName, got {err}");
+    };
+    assert_eq!(name, "s");
+    let src = std::fs::read_to_string(root.join("src/main.crp")).expect("read main");
+    let start = span.start as usize;
+    let end = span.end as usize;
+    assert!(end <= src.len(), "span {start}..{end} vs len {}", src.len());
+    assert_eq!(
+        &src[start..end],
+        "s",
+        "span should cover interpolation ident"
+    );
+    let line = src[..start].bytes().filter(|b| *b == b'\n').count() + 1;
+    assert!(
+        line > 1,
+        "E0035 must not point at the first `use` line; got line {line}, span {span:?}"
+    );
+    assert!(
+        src.lines()
+            .nth(line - 1)
+            .is_some_and(|l| l.contains("speed=")),
+        "caret should land on the interpolation line, got line {line}"
+    );
+}

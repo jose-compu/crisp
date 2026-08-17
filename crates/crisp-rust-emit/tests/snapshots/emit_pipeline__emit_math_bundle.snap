@@ -21,12 +21,12 @@ pub use arith::*;
 mod floats;
 pub use floats::*;
 pub fn main() {
-    println!("{}", format!("sum(2,3)={}", arith::sum(2, 3)));
-    println!("{}", format!("double(5)={}", arith::double(5)));
-    println!("{}", format!("add(1.5,2.5)={}", floats::add(1.5, 2.5)));
-    println!("{}", format!("avg2(1.0,3.0)={}", floats::avg2(1.0, 3.0)));
-    println!("{}", format!("square(4.0)={}", floats::square(4.0)));
-    println!("{}", format!("mul(0.5,8.0)={}", floats::mul(0.5, 8.0)));
+    println!("{}", format!("sum(2,3)={}", crate::arith::sum(2, 3)));
+    println!("{}", format!("double(5)={}", crate::arith::double(5)));
+    println!("{}", format!("add(1.5,2.5)={}", crate::floats::add(1.5_f64, 2.5_f64)));
+    println!("{}", format!("avg2(1.0,3.0)={}", crate::floats::avg2(1.0_f64, 3.0_f64)));
+    println!("{}", format!("square(4.0)={}", crate::floats::square(4.0_f64)));
+    println!("{}", format!("mul(0.5,8.0)={}", crate::floats::mul(0.5_f64, 8.0_f64)));
 }
 // === mod arith ===
 pub fn double<T: Clone + Copy + std::ops::Add<Output = T>>(n: T) -> T {
@@ -49,9 +49,9 @@ pub fn div(a: f64, b: f64) -> f64 {
     a / b
 }
 pub fn square(x: f64) -> f64 {
-    (x).powf(2.0)
+    ((x) as f64).powf((2.0_f64) as f64)
 }
 pub fn avg2(a: f64, b: f64) -> f64 {
     let s = a + b;
-    s / 2.0
+    s / 2.0_f64
 }

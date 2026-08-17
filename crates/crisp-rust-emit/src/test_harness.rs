@@ -152,9 +152,9 @@ fn emit_expr(expr: &Expr) -> String {
         ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
-                format!("{f}.0")
+                format!("{f}.0_f64")
             } else {
-                format!("{f}")
+                format!("{f}_f64")
             }
         }
         ExprKind::Bool(b) => b.to_string(),
@@ -224,7 +224,11 @@ fn emit_expr(expr: &Expr) -> String {
                 _ => "+",
             };
             if matches!(op, crisp_ast::expr::BinaryOp::Pow) {
-                format!("({}).powf({})", emit_expr(left), emit_expr(right))
+                format!(
+                    "(({}) as f64).powf(({}) as f64)",
+                    emit_expr(left),
+                    emit_expr(right)
+                )
             } else {
                 format!("{} {} {}", emit_expr(left), op_str, emit_expr(right))
             }
@@ -310,9 +314,9 @@ fn emit_call_arg_for_test(expr: &Expr) -> String {
         ExprKind::Int(n) => n.to_string(),
         ExprKind::Float(f) => {
             if f.fract() == 0.0 {
-                format!("{f}.0")
+                format!("{f}.0_f64")
             } else {
-                format!("{f}")
+                format!("{f}_f64")
             }
         }
         ExprKind::Bool(_) | ExprKind::Char(_) => emit_expr(expr),

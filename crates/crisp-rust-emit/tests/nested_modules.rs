@@ -38,8 +38,8 @@ fn nested_emit_declares_parent_and_child_mods() {
         "must not emit invalid dotted mod"
     );
     assert!(
-        out.lib_rs.contains("math::vector::") || out.lib_rs.contains("origin"),
-        "qualified calls should use :: path separators:\n{}",
+        out.lib_rs.contains("crate::math::vector::") || out.lib_rs.contains("origin"),
+        "intra-crate paths need crate:: so nested modules compile (#93):\n{}",
         out.lib_rs
     );
     assert!(
@@ -54,6 +54,8 @@ fn nested_emit_declares_parent_and_child_mods() {
         .map(|(_, s)| s.as_str())
         .expect("parent math module source");
     assert!(math.contains("pub mod vector;"), "math.rs:\n{math}");
+    assert!(math.contains("pub mod double;"), "math.rs:\n{math}");
+    assert!(math.contains("pub mod scale;"), "math.rs:\n{math}");
     let vector = out
         .modules
         .iter()
@@ -63,6 +65,16 @@ fn nested_emit_declares_parent_and_child_mods() {
     assert!(
         vector.contains("fn origin") || vector.contains("struct Vec2"),
         "{vector}"
+    );
+    let double = out
+        .modules
+        .iter()
+        .find(|(p, _)| p == "math.double")
+        .map(|(_, s)| s.as_str())
+        .expect("math.double source");
+    assert!(
+        double.contains("crate::math::scale::scale"),
+        "nested-to-nested use must emit crate:: (#93):\n{double}"
     );
     insta::assert_snapshot!("emit_nested_math_main", out.lib_rs);
 }
@@ -96,7 +108,10 @@ fn nested_math_builds_with_cargo() {
 #[test]
 fn nested_math_run_prints_sum() {
     match run_emitted(&nested_root()) {
-        Ok(stdout) => assert!(stdout.contains("sum=3"), "stdout: {stdout}"),
+        Ok(stdout) => {
+            assert!(stdout.contains("sum=3"), "stdout: {stdout}");
+            assert!(stdout.contains("twice=6"), "stdout: {stdout}");
+        }
         Err(PipelineError::ToolchainUnavailable) => {
             eprintln!("SKIP nested_math_run_prints_sum: cargo not on PATH");
         }

@@ -19,6 +19,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Records whose fields are all `Copy` derive `Copy`; other records clone at `:=` when the source is used again ([#118](https://github.com/jose-compu/crisp/issues/118)).
 - `crisp test` call arguments follow CIR ownership modes (same as production emit). Nested owned calls and idents are not wrapped in an extra `&` ([#114](https://github.com/jose-compu/crisp/issues/114)).
 
+### Added
+
+- `new` / `push` / `len` infer `vec<T>` from use; `[1.0, 2.0]` is a growable vec literal. Emit `Vec::<T>::new()` / `vec![…]`. Unconstrained `new()` is **E0088** ([#119](https://github.com/jose-compu/crisp/issues/119)). See `examples/vec_ops`.
+
 ## [1.7.3] — 2026-08-17
 
 ### Added

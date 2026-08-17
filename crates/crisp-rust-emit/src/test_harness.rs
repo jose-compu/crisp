@@ -427,6 +427,14 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                 format!("{} {{ {} }}", name.name, parts.join(", "))
             }
         }
+        ExprKind::Array(elems) => {
+            if elems.is_empty() {
+                "Vec::new()".into()
+            } else {
+                let parts: Vec<_> = elems.iter().map(|e| emit_expr(ctx, e)).collect();
+                format!("vec![{}]", parts.join(", "))
+            }
+        }
         ExprKind::Lambda { params, body } => {
             let names: Vec<_> = params.iter().map(|p| p.name.name.as_str()).collect();
             format!("move |{}| {}", names.join(", "), emit_expr(ctx, body))

@@ -115,15 +115,24 @@ pub struct InferredSig {
 }
 
 impl InferredSig {
+    /// Named-generic substitution used when a crate-internal scheme is monomorphized (#76, #119).
+    pub fn emit_subst(&self) -> BTreeMap<String, Ty> {
+        let mut subst = BTreeMap::new();
+        let Some(args) = &self.mono_args else {
+            return subst;
+        };
+        for ((_, sty), ity) in self.params.iter().zip(args.iter()) {
+            collect_generic_subst(sty, ity, &self.generics, &mut subst);
+        }
+        subst
+    }
+
     /// Param types, return type, and generics as they should be emitted (#76).
     pub fn emit_view(&self) -> (Vec<(String, Ty)>, Ty, Vec<String>) {
         let Some(args) = &self.mono_args else {
             return (self.params.clone(), self.ret.clone(), self.generics.clone());
         };
-        let mut subst = std::collections::BTreeMap::new();
-        for ((_, sty), ity) in self.params.iter().zip(args.iter()) {
-            collect_generic_subst(sty, ity, &self.generics, &mut subst);
-        }
+        let subst = self.emit_subst();
         let params = self
             .params
             .iter()
@@ -248,7 +257,7 @@ fn collect_generic_subst(
     }
 }
 
-fn subst_named(ty: &Ty, subst: &std::collections::BTreeMap<String, Ty>) -> Ty {
+pub fn subst_named(ty: &Ty, subst: &std::collections::BTreeMap<String, Ty>) -> Ty {
     match ty {
         Ty::Named { name, args } if args.is_empty() => {
             subst.get(name).cloned().unwrap_or_else(|| ty.clone())

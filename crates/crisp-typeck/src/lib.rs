@@ -9,5 +9,5 @@ mod warning;
 
 pub use display::{format_sig, format_ty};
 pub use infer::{NumericCoercion, TypeChecker, TypeError, TypedCrate, rust_import_returns_result};
-pub use types::{InferredSig, Ty, is_arith_bound, rust_op_bound};
+pub use types::{InferredSig, Ty, is_arith_bound, rust_op_bound, subst_named};
 pub use warning::TypeWarning;

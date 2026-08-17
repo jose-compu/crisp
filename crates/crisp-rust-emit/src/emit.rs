@@ -1928,10 +1928,12 @@ fn format_ty_in(
 
 fn vec_elem_rust(ty: &CirTy, current_module: &str, map: &EmitSourceMap) -> String {
     match ty {
-        CirTy::Named { name, args } if name == "vec" => args
-            .first()
-            .map(|a| format_ty_in(a, current_module, &map.type_modules))
-            .unwrap_or_else(|| "i64".into()),
+        CirTy::Named { name, args } if name == "vec" => match args.first() {
+            Some(CirTy::Var(_)) => "i64".into(),
+            Some(a) => format_ty_in(a, current_module, &map.type_modules),
+            None => "i64".into(),
+        },
+        CirTy::Var(_) => "i64".into(),
         _ => format_ty_in(ty, current_module, &map.type_modules),
     }
 }

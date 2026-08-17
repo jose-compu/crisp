@@ -14,7 +14,7 @@ use crisp_ownership::{OwnershipMode, OwnershipPass, OwnershipResult};
 use crisp_regions::{RegionPass, RegionResult};
 use crisp_resolve::module::{ModuleGraph, load_module_graph};
 use crisp_resolve::stdlib::stdlib_fn_modules;
-use crisp_typeck::{InferredSig, Ty, TypeChecker, TypedCrate, is_arith_bound};
+use crisp_typeck::{InferredSig, Ty, TypeChecker, TypedCrate, is_arith_bound, subst_named};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -411,18 +411,28 @@ struct LowerCtx<'a> {
     propagate_errors: bool,
     extern_fns: &'a std::collections::BTreeSet<String>,
     shape_fields: &'a BTreeMap<String, Vec<String>>,
+    mono_subst: &'a BTreeMap<String, Ty>,
 }
 
 impl<'a> LowerCtx<'a> {
     fn new(
         extern_fns: &'a std::collections::BTreeSet<String>,
         shape_fields: &'a BTreeMap<String, Vec<String>>,
+        mono_subst: &'a BTreeMap<String, Ty>,
     ) -> Self {
         Self {
             propagate_errors: true,
             extern_fns,
             shape_fields,
+            mono_subst,
         }
+    }
+
+    fn expr_ty(&self, typed: &TypedCrate, span: Span) -> Option<CirTy> {
+        typed
+            .expr_tys
+            .get(&span)
+            .map(|t| CirTy::from_ty(&subst_named(t, self.mono_subst)))
     }
 }
 
@@ -635,6 +645,7 @@ fn lower_function(
         &def.body
     };
 
+    let mono_subst = tsig.emit_subst();
     let body = lower_body(
         body_src,
         module,
@@ -648,6 +659,7 @@ fn lower_function(
         fn_modules,
         extern_fns,
         shape_fields,
+        &mono_subst,
     );
 
     CirFunction {
@@ -686,6 +698,7 @@ fn lower_body(
     fn_modules: &BTreeMap<String, String>,
     extern_fns: &std::collections::BTreeSet<String>,
     shape_fields: &BTreeMap<String, Vec<String>>,
+    mono_subst: &BTreeMap<String, Ty>,
 ) -> CirBlock {
     match &expr.kind {
         ExprKind::Block(b) => lower_block(
@@ -701,6 +714,7 @@ fn lower_body(
             fn_modules,
             extern_fns,
             shape_fields,
+            mono_subst,
         ),
         other => {
             let tail = lower_expr(
@@ -716,7 +730,7 @@ fn lower_body(
                 locals,
                 struct_fields,
                 fn_modules,
-                LowerCtx::new(extern_fns, shape_fields),
+                LowerCtx::new(extern_fns, shape_fields, mono_subst),
             );
             CirBlock {
                 stmts: vec![],
@@ -741,6 +755,7 @@ fn lower_block(
     fn_modules: &BTreeMap<String, String>,
     extern_fns: &std::collections::BTreeSet<String>,
     shape_fields: &BTreeMap<String, Vec<String>>,
+    mono_subst: &BTreeMap<String, Ty>,
 ) -> CirBlock {
     let mut stmts = Vec::new();
     for stmt in &block.stmts {
@@ -762,7 +777,7 @@ fn lower_block(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::new(extern_fns, shape_fields),
+                        LowerCtx::new(extern_fns, shape_fields, mono_subst),
                     );
                     if should_clone_at_bind(osig, &name.name, value) {
                         lowered = CirExpr::Clone {
@@ -792,7 +807,7 @@ fn lower_block(
                     locals,
                     struct_fields,
                     fn_modules,
-                    LowerCtx::new(extern_fns, shape_fields),
+                    LowerCtx::new(extern_fns, shape_fields, mono_subst),
                 )));
             }
             Stmt::Assign { target, value, .. } => {
@@ -808,7 +823,7 @@ fn lower_block(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::new(extern_fns, shape_fields),
+                        LowerCtx::new(extern_fns, shape_fields, mono_subst),
                     ),
                     span: value.span,
                 });
@@ -826,7 +841,7 @@ fn lower_block(
             locals,
             struct_fields,
             fn_modules,
-            LowerCtx::new(extern_fns, shape_fields),
+            LowerCtx::new(extern_fns, shape_fields, mono_subst),
         )
     });
     let _ = fn_fallible;
@@ -1370,10 +1385,8 @@ fn lower_expr_raw(
                         .get(&key)
                         .map(|s| s.fallible)
                         .unwrap_or(false);
-                let ret_ty = typed
-                    .expr_tys
-                    .get(&expr.span)
-                    .map(CirTy::from_ty)
+                let ret_ty = ctx
+                    .expr_ty(typed, expr.span)
                     .or_else(|| typed.signatures.get(&key).map(|s| CirTy::from_ty(&s.ret)))
                     .unwrap_or(CirTy::Unit);
                 let callee_osig = ownership.signatures.get(&key);
@@ -1542,6 +1555,7 @@ fn lower_expr_raw(
                 propagate_errors: false,
                 extern_fns: ctx.extern_fns,
                 shape_fields: ctx.shape_fields,
+                mono_subst: ctx.mono_subst,
             };
             let lowered = lower_expr(
                 inner,
@@ -1569,7 +1583,7 @@ fn lower_expr_raw(
                         locals,
                         struct_fields,
                         fn_modules,
-                        LowerCtx::new(ctx.extern_fns, ctx.shape_fields),
+                        LowerCtx::new(ctx.extern_fns, ctx.shape_fields, ctx.mono_subst),
                     ),
                     span: a.span,
                 })
@@ -1731,7 +1745,8 @@ fn lower_expr_raw(
                 fn_modules,
                 ctx,
             );
-            let elem_ty = vec_elem_cir_ty(iter, locals, typed).unwrap_or(CirTy::Int);
+            let elem_ty =
+                vec_elem_cir_ty(iter, locals, typed, ctx.mono_subst).unwrap_or(CirTy::Int);
             if let PatKind::Ident(id) = &pat.kind {
                 for_locals.insert(id.name.clone(), elem_ty.clone());
             }
@@ -1881,6 +1896,7 @@ fn lower_expr_raw(
             fn_modules,
             ctx.extern_fns,
             ctx.shape_fields,
+            ctx.mono_subst,
         )),
         ExprKind::Lambda { params, body } => {
             let mut local = locals.clone();
@@ -1912,14 +1928,10 @@ fn lower_expr_raw(
             }
         }
         ExprKind::Array(elems) => {
-            let ty = typed
-                .expr_tys
-                .get(&expr.span)
-                .map(CirTy::from_ty)
-                .unwrap_or(CirTy::Named {
-                    name: "vec".into(),
-                    args: vec![CirTy::Int],
-                });
+            let ty = ctx.expr_ty(typed, expr.span).unwrap_or(CirTy::Named {
+                name: "vec".into(),
+                args: vec![CirTy::Int],
+            });
             E::Array {
                 elems: elems
                     .iter()
@@ -1950,9 +1962,10 @@ fn vec_elem_cir_ty(
     iter: &Expr,
     locals: &BTreeMap<String, CirTy>,
     typed: &TypedCrate,
+    mono_subst: &BTreeMap<String, Ty>,
 ) -> Option<CirTy> {
     if let Some(ty) = typed.expr_tys.get(&iter.span) {
-        if let CirTy::Named { name, args } = CirTy::from_ty(ty)
+        if let CirTy::Named { name, args } = CirTy::from_ty(&subst_named(ty, mono_subst))
             && name == "vec"
         {
             return args.into_iter().next();

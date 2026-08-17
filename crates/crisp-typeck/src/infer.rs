@@ -734,6 +734,11 @@ impl TypeChecker {
                 }
                 continue;
             }
+            let mut named_vars = Vec::new();
+            collect_free_vars(&fn_ty, &mut named_vars);
+            named_vars.sort_unstable();
+            named_vars.dedup();
+            self.name_expr_ty_vars(&named_vars, &inferred);
             let mut params = param_types;
             let mut named_ret = ret;
             if let Ty::Fn { params: ps, ret: r } = &named {
@@ -1010,6 +1015,7 @@ impl TypeChecker {
                     fn_ty = named;
                     gens = inferred;
                     inferred_from_use = true;
+                    self.name_expr_ty_vars(&gen_scheme.vars, &gens);
                     if let Ty::Fn { params, ret: r } = &fn_ty {
                         for (i, t) in params.iter().enumerate() {
                             if let Some(slot) = param_types.get_mut(i) {
@@ -2039,6 +2045,24 @@ impl TypeChecker {
             self.fn_vec_tys.push((span, ty.clone()));
         }
         self.expr_tys.insert(span, ty);
+    }
+
+    /// After leftover holes are named `T`/`U`/…, rewrite recorded call types so
+    /// `new()` emits `Vec::<T>` (or the mono arg) instead of `CirTy::Var` → String.
+    fn name_expr_ty_vars(&mut self, vars: &[u32], names: &[String]) {
+        for ty in self.expr_tys.values_mut() {
+            *ty = self.ctx.apply(ty);
+            for (v, name) in vars.iter().zip(names) {
+                *ty = substitute_var(
+                    ty,
+                    *v,
+                    &Ty::Named {
+                        name: name.clone(),
+                        args: vec![],
+                    },
+                );
+            }
+        }
     }
 
     fn reject_uninferred_vec(&mut self, gens: &[String]) -> Result<(), TypeError> {

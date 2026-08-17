@@ -61,7 +61,7 @@
     <div class="wrap content">
       <h2>At a glance</h2>
       <ul>
-        <li><strong>Functions</strong> — <code>name(args) = expr</code> or block</li>
+        <li><strong>Functions</strong> — one callable kind: <code>name(args) = expr</code>, <code>|x| …</code>, holes / trailing blocks / <code>.field</code> (<code>examples/closures</code>)</li>
         <li><strong>Bindings</strong> — <code>x := value</code></li>
         <li><strong>Types</strong> — inferred; annotate when needed (<code>int</code>, <code>str</code>, <code>float</code>, …)</li>
         <li><strong>Structs</strong> — <code>type T = { … }</code> with field defaults</li>
@@ -112,6 +112,21 @@ pub main() = {
 describe(c) = match c {
     Color.Red -> "red"
     Color.Custom(r, g, b) -> "rgb({r},{g},{b})"
+}</pre>
+          </div>
+        </div>
+        <div class="code-panel">
+          <div class="caption"><span>Function values</span><span>examples/closures</span></div>
+          <div class="code-window">
+            <div class="code-chrome"><span></span><span></span><span></span></div>
+            <pre>apply(f, x) = f(x)
+double(n) = n * 2
+
+pub main() = {
+    inc := |x| x + 1
+    print(apply(double, 21))
+    print(apply(_ * 2, 21))
+    print(inc(41))
 }</pre>
           </div>
         </div>

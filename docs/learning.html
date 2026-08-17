@@ -101,6 +101,7 @@
         <h2>Repository examples</h2>
         <p class="muted">Clone the repo and try these with <code>crisp run</code> / <code>crisp test</code>.</p>
         <ul>
+          <li><code>examples/closures</code> — function values, holes, trailing last-arg, field sections</li>
           <li><code>examples/hello</code> — shapes, implicit generics, field defaults</li>
           <li><code>examples/math</code>, <code>examples/float_demo</code> — numbers and modules</li>
           <li><code>examples/fallible</code> — ambient errors with <code>!</code>, <code>throw</code>, <code>catch</code></li>
@@ -116,7 +117,7 @@
 
       <div id="limits" class="content" style="margin-top:2.5rem">
         <h2>Honest limits</h2>
-        <p>This is a Rust-hosted bootstrap (<strong>v1.6.1</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>, and first-class closures (v1.7.0). Implicit generics, inferred <code>T</code> bounds (#84), loops, data shapes, stdio <code>crisp-lsp</code>, and trait defaults are in. See <a href="limitations.html">limitations</a>.</p>
+        <p>This is a Rust-hosted bootstrap (<strong>v1.6.1</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>. Function values and implicit-closure sugar are on the v1.7.0 track (<code>examples/closures</code>). See <a href="limitations.html">limitations</a>.</p>
       </div>
     </div>
   </section>

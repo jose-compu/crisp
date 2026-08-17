@@ -99,19 +99,23 @@ pub main() = {
         <article class="tutorial-step" id="bindings">
           <div class="step-label">Step 02</div>
           <h2>Functions and bindings</h2>
-          <p>Most Crisp looks like “small math and logging.” Functions are expressions. Locals are introduced once with <code>:=</code>; later assignment uses <code>=</code> (and needs <code>mut:=</code> if you will reassign — see loops).</p>
+          <p>Most Crisp looks like “small math and logging.” A function is a <strong>value</strong>. Naming it at the top level (<code>double(n) = …</code>) or writing <code>|n| …</code> is the same kind of callable — not two features. Locals are introduced once with <code>:=</code>; later assignment uses <code>=</code> (and needs <code>mut:=</code> if you will reassign — see loops).</p>
           <pre class="pipe">double(n) = n + n
+apply(f, x) = f(x)
 
 pub main() = {
     x := double(5)
-    log("x={x}")
+    inc := |n| n + 1
+    log("x={x} twice={apply(double, x)} next={inc(x)}")
+    log("hole={apply(_ * 2, 21)}")
 }</pre>
           <ul>
             <li><code>pub</code> exports the item from the module (needed for <code>main</code> and for other files to <code>use</code> it).</li>
             <li><code>print</code> / <code>log</code> both write to stdout; prefer <code>log</code> when interpolating.</li>
             <li>Omit types while the shape of the program is clear; add them when APIs should be stable.</li>
+            <li>Holes (<code>_ * 2</code>), trailing last-arg blocks (<code>run { |x| … }</code>), and field sections (<code>.name</code>) are sugar for the same function values. See <code>examples/closures</code>.</li>
           </ul>
-          <p class="tech"><strong>Under the hood:</strong> HM-style type inference plus a separate ownership pass. Silence means “infer”; an annotation is a hard constraint the solver must satisfy.</p>
+          <p class="tech"><strong>Under the hood:</strong> HM-style type inference plus a separate ownership pass. Named items often emit as Rust <code>fn</code>; locals and <code>|…|</code> emit as <code>move</code> closures / <code>impl Fn</code>. Silence means “infer”; an annotation is a hard constraint the solver must satisfy.</p>
         </article>
 
         <article class="tutorial-step" id="strings">

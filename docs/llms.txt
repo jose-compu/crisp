@@ -67,7 +67,11 @@ distance(a: HasPosition<T>, b: HasPosition<T>) = {
 label(x: T) = x.show()
 ```
 
-Pins (same meaning): `id<T>(x: T)`, `type Pair<A, B>`. Examples: `examples/generics_implicit` (preferred), `examples/generics`, `examples/generics_pub`, `examples/shapes_generic`, `examples/shapes_user`, `examples/show_trait`. Written `where` / generic trait bounds / `dyn Trait` and first-class closures (#72, v1.7.0) are still limited.
+Pins (same meaning): `id<T>(x: T)`, `type Pair<A, B>`. Examples: `examples/generics_implicit` (preferred), `examples/generics`, `examples/generics_pub`, `examples/shapes_generic`, `examples/shapes_user`, `examples/show_trait`. Written `where` / generic trait bounds / `dyn Trait` remain limited.
+
+## Function values
+
+There is one callable kind. `double(n) = n * 2`, `inc := |n| n + 1`, and passing `double` to `apply(f, x) = f(x)` are the same values. Sugar when a function is expected: holes (`apply(_ * 2, n)`), trailing last-arg (`run { |x| x * 2 }`), field sections (`label(.name, person)`). Example: `examples/closures`. Too many/few holes is E0085; `_` where a function is not expected is E0086. Operator sections (`+ 1`) and `dyn Fn` are not shipped.
 
 ## Source & package
 

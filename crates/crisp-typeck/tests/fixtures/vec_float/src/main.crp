@@ -9,6 +9,14 @@ ints() = {
 
 empty_f() -> vec<float> = new()
 
+head() = {
+    xs := [1.0, 2.0]
+    xs[0] = 3.0
+    xs[0]
+}
+
+second() = [1.0, 2.0][1]
+
 pub main() = {
     print(len(floats()))
 }

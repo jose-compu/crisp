@@ -30,6 +30,18 @@ fn issue_119_float_literal_and_push() {
         .find(|s| s.name == "empty_f")
         .expect("empty_f");
     assert_eq!(format_sig(empty_f), "empty_f() -> vec<float>");
+    let head = typed
+        .signatures
+        .values()
+        .find(|s| s.name == "head")
+        .expect("head");
+    assert_eq!(format_sig(head), "head() -> float");
+    let second = typed
+        .signatures
+        .values()
+        .find(|s| s.name == "second")
+        .expect("second");
+    assert_eq!(format_sig(second), "second() -> float");
 }
 
 #[test]

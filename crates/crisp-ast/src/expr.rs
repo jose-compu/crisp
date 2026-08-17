@@ -56,6 +56,12 @@ pub enum ExprKind {
         base: Box<Expr>,
         index: Box<Expr>,
     },
+    /// `xs[i] = v` (#120).
+    IndexAssign {
+        base: Box<Expr>,
+        index: Box<Expr>,
+        value: Box<Expr>,
+    },
     /// Growable vec literal `[1.0, 2.0]` (#119). Not a fixed array.
     Array(Vec<Expr>),
     Unary {

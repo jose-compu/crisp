@@ -254,11 +254,28 @@ fn issue_119_runtime_tests() {
                 "#119 runtime={} compile_fail={}",
                 r.runtime_passed, r.compile_fail_passed
             );
-            assert_eq!(r.runtime_passed, 3, "got {}", r.runtime_passed);
+            assert_eq!(r.runtime_passed, 5, "got {}", r.runtime_passed);
         }
         Err(e) if e.to_string().contains("cargo not on PATH") => {
             eprintln!("SKIP issue_119 run_tests: cargo not on PATH");
         }
         Err(e) => panic!("issue_119 harness: {e}"),
     }
+}
+
+#[test]
+fn issue_120_emit_index() {
+    let cir = CirBuilder::build_crate(&example("vec_ops")).expect("cir #120");
+    let out = emit_crate(&cir);
+    eprintln!("#120 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("as usize"),
+        "index emit:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("] = "),
+        "index assign emit:\n{}",
+        out.lib_rs
+    );
 }

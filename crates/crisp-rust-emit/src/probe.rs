@@ -640,6 +640,21 @@ fn emit_expr_inner(
             emit_expr(out, value, osig, ownership);
             let _ = write!(out, "; () }}");
         }
+        ExprKind::Index { base, index } => {
+            emit_expr(out, base, osig, ownership);
+            let _ = write!(out, "[");
+            emit_expr(out, index, osig, ownership);
+            let _ = write!(out, " as usize]");
+        }
+        ExprKind::IndexAssign { base, index, value } => {
+            let _ = write!(out, "{{ ");
+            emit_expr(out, base, osig, ownership);
+            let _ = write!(out, "[");
+            emit_expr(out, index, osig, ownership);
+            let _ = write!(out, " as usize] = ");
+            emit_expr(out, value, osig, ownership);
+            let _ = write!(out, "; () }}");
+        }
         // Keep both sides in the probe so arg ownership is still checked.
         ExprKind::Catch { body, arms } => {
             let _ = write!(out, "if false {{ ");

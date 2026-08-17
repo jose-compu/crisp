@@ -796,19 +796,26 @@ impl Parser {
     fn parse_assign(&mut self) -> Result<Expr, ParseError> {
         let expr = self.parse_or()?;
         if self.match_token(TokenKind::Assign) {
-            let (name, id_span) = match &expr.kind {
-                ExprKind::Ident(id) => (id.name.clone(), id.span),
-                _ => return Err(self.unexpected("assignable identifier", self.peek_kind())),
-            };
             let value = self.parse_assign()?;
-            let span = id_span.merge(value.span);
-            return Ok(Expr {
-                kind: ExprKind::Assign {
-                    target: Ident::new(name, id_span),
-                    value: Box::new(value),
-                },
-                span,
-            });
+            let span = expr.span.merge(value.span);
+            return match expr.kind {
+                ExprKind::Ident(id) => Ok(Expr {
+                    kind: ExprKind::Assign {
+                        target: id,
+                        value: Box::new(value),
+                    },
+                    span,
+                }),
+                ExprKind::Index { base, index } => Ok(Expr {
+                    kind: ExprKind::IndexAssign {
+                        base,
+                        index,
+                        value: Box::new(value),
+                    },
+                    span,
+                }),
+                _ => Err(self.unexpected("assignable identifier", self.peek_kind())),
+            };
         }
         Ok(expr)
     }

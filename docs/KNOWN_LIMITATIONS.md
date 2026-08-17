@@ -32,17 +32,17 @@ This page documents behaviors that surprise users and are **not** always full la
 
 ## Collections (spec §15 / §3 arrays)
 
-`vec<T>` is inferred from use (`new`/`push`/`[1.0, 2.0]`). Pin with `vec<float>` or a return type. Unconstrained `new()` is **E0088**. Indexing `xs[i]` is still not emitted ([#120](https://github.com/jose-compu/crisp/issues/120)). `map` / `set` remain names only.
+`vec<T>` is inferred from use (`new`/`push`/`[1.0, 2.0]`). Pin with `vec<float>` or a return type. Unconstrained `new()` is **E0088**. Indexing `xs[i]` / `xs[i] = v` is `int` → `T` ([#120](https://github.com/jose-compu/crisp/issues/120)). `map` / `set` remain names only.
 
 | Spec | 1.8.0 (in progress) |
 |---|---|
 | `vec<T>` (`vec<float>`, `vec<vec<float>>`) | `new` / `push` / `len` infer `T`; `[1.0, 2.0]` is a growable vec ([#119](https://github.com/jose-compu/crisp/issues/119)) |
 | Array / slice literals `[1.0, 2.0]` | Vec literal (not `[T; N]`) |
-| Indexing `xs[i]` / `xs[i] = v` | Parsed; typeck/CIR/emit still open — [#120](https://github.com/jose-compu/crisp/issues/120) |
+| Indexing `xs[i]` / `xs[i] = v` | `vec<T>` only; `i: int`; emit `xs[i as usize]` (Rust bounds-checked panic) ([#120](https://github.com/jose-compu/crisp/issues/120)) |
 | `map` / `set` | Names exist in the prelude type table; no ops |
 | `for x in xs` | `vec<T>`; `.iter().copied()` when `T` is Copy, else `.cloned()` |
 
-Workaround: keep arrays in a Rust path-dep, or unroll a tiny grid into named fields (`y0`, `y1`, `y2`). A 256-point float field cannot be expressed in `.crp` today.
+Workaround: slices `xs[1..4]`, `map`/`set`, and `[T; N]` are still later. A growable `vec<float>` with `xs[i]` is enough for a 1D field in `.crp`.
 
 ## Tooling
 
@@ -65,5 +65,5 @@ Workaround: keep arrays in a Rust path-dep, or unroll a tiny grid into named fie
 
 ## Stdlib
 
-- **Shipped:** `vec<T>` via `new` / `push` / `len` and `[1.0, 2.0]` ([#119](https://github.com/jose-compu/crisp/issues/119)), limited fs/async, prelude Show/Eq/Ord ([#27](https://github.com/jose-compu/crisp/issues/27)), `std.net.parse_ip`, thin HTTP via `ureq` ([#28](https://github.com/jose-compu/crisp/issues/28)), `**` (`.powf`).
-- **Not shipped:** indexing `xs[i]` ([#120](https://github.com/jose-compu/crisp/issues/120)), `exp` / `sin` / `tanh` ([#115](https://github.com/jose-compu/crisp/issues/115)), full Crisp `std.http` server API (§20), channels ([#38](https://github.com/jose-compu/crisp/issues/38) → v2.0.0), most of the §15 trait catalog beyond Show/Eq/Ord.
+- **Shipped:** `vec<T>` via `new` / `push` / `len` / `[1.0, 2.0]` and `xs[i]` ([#119](https://github.com/jose-compu/crisp/issues/119), [#120](https://github.com/jose-compu/crisp/issues/120)), limited fs/async, prelude Show/Eq/Ord ([#27](https://github.com/jose-compu/crisp/issues/27)), `std.net.parse_ip`, thin HTTP via `ureq` ([#28](https://github.com/jose-compu/crisp/issues/28)), `**` (`.powf`).
+- **Not shipped:** `exp` / `sin` / `tanh` ([#115](https://github.com/jose-compu/crisp/issues/115)), full Crisp `std.http` server API (§20), channels ([#38](https://github.com/jose-compu/crisp/issues/38) → v2.0.0), most of the §15 trait catalog beyond Show/Eq/Ord.

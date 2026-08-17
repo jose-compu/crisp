@@ -1802,6 +1802,76 @@ fn lower_expr_raw(
             span: expr.span,
         },
         ExprKind::Continue => E::Continue { span: expr.span },
+        ExprKind::Index { base, index } => {
+            let ty = ctx.expr_ty(typed, expr.span).unwrap_or(CirTy::Error);
+            E::Index {
+                base: Box::new(lower_expr(
+                    base,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                index: Box::new(lower_expr(
+                    index,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                ty,
+                span: expr.span,
+            }
+        }
+        ExprKind::IndexAssign { base, index, value } => E::IndexAssign {
+            base: Box::new(lower_expr(
+                base,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            index: Box::new(lower_expr(
+                index,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            value: Box::new(lower_expr(
+                value,
+                module,
+                osig,
+                typed,
+                ownership,
+                errors,
+                locals,
+                struct_fields,
+                fn_modules,
+                ctx,
+            )),
+            span: expr.span,
+        },
         ExprKind::Assign { target, value } => E::Block(CirBlock {
             stmts: vec![CirStmt::Assign {
                 target: target.name.clone(),
@@ -2055,7 +2125,8 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::Match { ty, .. }
         | CirExpr::Lambda { ty, .. }
         | CirExpr::Apply { ty, .. }
-        | CirExpr::Array { ty, .. } => Some(ty.clone()),
+        | CirExpr::Array { ty, .. }
+        | CirExpr::Index { ty, .. } => Some(ty.clone()),
         CirExpr::Int { .. } => Some(CirTy::Int),
         CirExpr::Float { .. } => Some(CirTy::Float),
         CirExpr::Bool { .. } => Some(CirTy::Bool),

@@ -1430,6 +1430,21 @@ impl TypeChecker {
                     })?;
                 Ok(Ty::Unit)
             }
+            ExprKind::Index { base, index } => {
+                let elem = self.infer_index(env, base, index, expr.span)?;
+                self.record_expr_ty(expr.span, elem.clone());
+                Ok(elem)
+            }
+            ExprKind::IndexAssign { base, index, value } => {
+                let elem = self.infer_index(env, base, index, expr.span)?;
+                let got = self.infer_value(env, value)?;
+                self.unify_checking(value, &got, &elem)
+                    .map_err(|e| TypeError::UnifyAt {
+                        message: e.to_string(),
+                        span: expr.span,
+                    })?;
+                Ok(Ty::Unit)
+            }
             ExprKind::Array(elems) => {
                 let elem = self.ctx.fresh();
                 for e in elems {
@@ -2038,6 +2053,31 @@ impl TypeChecker {
             span,
         })?;
         Ok(instantiate(&mut self.ctx, scheme))
+    }
+
+    fn infer_index(
+        &mut self,
+        env: &mut TypeEnv,
+        base: &Expr,
+        index: &Expr,
+        span: Span,
+    ) -> Result<Ty, TypeError> {
+        let bt = self.infer_expr(env, base)?;
+        let it = self.infer_expr(env, index)?;
+        unify(&mut self.ctx, &it, &Ty::Int).map_err(|e| TypeError::UnifyAt {
+            message: e.to_string(),
+            span: index.span,
+        })?;
+        let elem = self.ctx.fresh();
+        self.unify_checking(base, &bt, &vec_of(elem.clone()))
+            .map_err(|e| TypeError::UnifyAt {
+                message: e.to_string(),
+                span,
+            })?;
+        Ok(match self.ctx.apply(&bt) {
+            Ty::Named { name, args } if name == "vec" && args.len() == 1 => args[0].clone(),
+            _ => self.ctx.apply(&elem),
+        })
     }
 
     fn record_expr_ty(&mut self, span: Span, ty: Ty) {

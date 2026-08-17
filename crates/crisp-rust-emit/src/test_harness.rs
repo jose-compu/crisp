@@ -225,7 +225,12 @@ fn emit_block(out: &mut String, block: &Block, indent: usize, ctx: &HarnessCtx<'
             Stmt::Bind { pat, value, .. } => {
                 let name = pat_name(pat);
                 let rhs = emit_expr(ctx, value);
-                let _ = writeln!(out, "{pad}let {name} = {rhs};");
+                let mut_kw = if matches!(&value.kind, ExprKind::Array(_)) {
+                    "mut "
+                } else {
+                    ""
+                };
+                let _ = writeln!(out, "{pad}let {mut_kw}{name} = {rhs};");
             }
             Stmt::Assign { target, value } => {
                 let _ = writeln!(
@@ -435,6 +440,19 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                 format!("vec![{}]", parts.join(", "))
             }
         }
+        ExprKind::Index { base, index } => {
+            format!(
+                "{}[{} as usize]",
+                emit_expr(ctx, base),
+                emit_expr(ctx, index)
+            )
+        }
+        ExprKind::IndexAssign { base, index, value } => format!(
+            "{}[{} as usize] = {}",
+            emit_expr(ctx, base),
+            emit_expr(ctx, index),
+            emit_expr(ctx, value)
+        ),
         ExprKind::Lambda { params, body } => {
             let names: Vec<_> = params.iter().map(|p| p.name.name.as_str()).collect();
             format!("move |{}| {}", names.join(", "), emit_expr(ctx, body))

@@ -22,6 +22,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Added
 
 - `new` / `push` / `len` infer `vec<T>` from use; `[1.0, 2.0]` is a growable vec literal. Emit `Vec::<T>::new()` / `vec![…]`. Unconstrained `new()` is **E0088** ([#119](https://github.com/jose-compu/crisp/issues/119)). See `examples/vec_ops`.
+- Indexing `xs[i]` / `xs[i] = v` on `vec<T>` (`i: int`, emit `xs[i as usize]`, bounds-checked panic) ([#120](https://github.com/jose-compu/crisp/issues/120)).
 
 ## [1.7.3] — 2026-08-17
 

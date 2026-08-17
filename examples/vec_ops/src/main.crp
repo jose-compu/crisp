@@ -14,12 +14,28 @@ float_seq() = [1.0, 2.0, 3.0]
 
 float_len() = len(float_seq())
 
+at(xs, i) = xs[i]
+
+set_head() = {
+    xs := [1.0, 2.0, 3.0]
+    xs[0] = 9.0
+    xs[0]
+}
+
 test "build seq len" = {
     assert_eq(seq_len(), 3)
 }
 
 test "float literal len" = {
     assert_eq(float_len(), 3)
+}
+
+test "index read" = {
+    assert_eq(at(float_seq(), 1), 2.0)
+}
+
+test "index write" = {
+    assert_eq(set_head(), 9.0)
 }
 
 test "triple three" = {

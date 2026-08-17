@@ -40,7 +40,7 @@ fn lower_field(f: &FieldDef, inferred: Option<&Ty>) -> CirField {
 }
 
 fn lower_default_expr(expr: &crisp_ast::expr::Expr) -> CirExpr {
-    use crisp_ast::expr::{ExprKind, StringPart};
+    use crisp_ast::expr::{ExprKind, StringPart, UnaryOp};
     match &expr.kind {
         ExprKind::Str(parts) => {
             let mut s = String::new();
@@ -67,6 +67,28 @@ fn lower_default_expr(expr: &crisp_ast::expr::Expr) -> CirExpr {
             ty: CirTy::Bool,
             span: expr.span,
         },
+        ExprKind::Unary { op, expr: inner } => {
+            let lowered = lower_default_expr(inner);
+            let ty = match &lowered {
+                CirExpr::Float { .. } => CirTy::Float,
+                CirExpr::Int { .. } => CirTy::Int,
+                CirExpr::Ident {
+                    ty: CirTy::Bool, ..
+                }
+                | CirExpr::Bool { .. } => CirTy::Bool,
+                CirExpr::Unary { ty, .. } => ty.clone(),
+                _ => CirTy::Error,
+            };
+            CirExpr::Unary {
+                op: match op {
+                    UnaryOp::Neg => CirUnaryOp::Neg,
+                    UnaryOp::Not => CirUnaryOp::Not,
+                },
+                expr: Box::new(lowered),
+                ty,
+                span: expr.span,
+            }
+        }
         _ => CirExpr::Unit { span: expr.span },
     }
 }

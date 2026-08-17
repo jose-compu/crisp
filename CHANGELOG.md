@@ -14,6 +14,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 - Chained `else if` parses as a nested If else-branch (then-form and brace-form), not as an If used as the condition ([#117](https://github.com/jose-compu/crisp/issues/117)). See `examples/loops`.
 - Record / shape / type fields accept optional commas (and trailing commas); newlines remain valid ([#111](https://github.com/jose-compu/crisp/issues/111)). See `examples/shapes`.
 - Parse and lex errors report `file:line:col` with a source snippet; the byte offset is a note ([#109](https://github.com/jose-compu/crisp/issues/109)).
+- Unary `-` on a float stays `float`; float `assert_eq` parenthesizes the RHS (`(left - (right)).abs() < 1e-9`) ([#113](https://github.com/jose-compu/crisp/issues/113)).
 
 ## [1.7.3] — 2026-08-17
 

@@ -472,6 +472,21 @@ fn emit_expr_inner(
             let _ = write!(out, " {op_s} ");
             emit_binop_operand(out, right, *op, true, osig, ownership);
         }
+        ExprKind::Unary { op, expr: inner } => {
+            let op_s = match op {
+                crisp_ast::expr::UnaryOp::Neg => "-",
+                crisp_ast::expr::UnaryOp::Not => "!",
+            };
+            let _ = write!(out, "{op_s}");
+            let paren = matches!(inner.kind, ExprKind::Binary { .. });
+            if paren {
+                let _ = write!(out, "(");
+            }
+            emit_expr(out, inner, osig, ownership);
+            if paren {
+                let _ = write!(out, ")");
+            }
+        }
         ExprKind::Call { func, args } => {
             if let ExprKind::Field { base, field } = &func.kind
                 && let ExprKind::Ident(ty) = &base.kind

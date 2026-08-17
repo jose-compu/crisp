@@ -1,0 +1,102 @@
+//! v1.8.0 regressions.
+
+use crisp_cir::{CirBuilder, CirExpr, CirItem, CirUnaryOp};
+use crisp_rust_emit::{collect_tests, emit_crate, emit_test_module, run_tests};
+use std::path::PathBuf;
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
+}
+
+fn has_unary_neg(expr: &CirExpr) -> bool {
+    match expr {
+        CirExpr::Unary {
+            op: CirUnaryOp::Neg,
+            ..
+        } => true,
+        CirExpr::Unary { expr: inner, .. }
+        | CirExpr::Clone { expr: inner, .. }
+        | CirExpr::Borrow { expr: inner, .. }
+        | CirExpr::Throw { payload: inner, .. }
+        | CirExpr::Try { expr: inner, .. }
+        | CirExpr::Field { base: inner, .. }
+        | CirExpr::Print { arg: inner, .. }
+        | CirExpr::Await { expr: inner, .. } => has_unary_neg(inner),
+        CirExpr::BinOp { left, right, .. } => has_unary_neg(left) || has_unary_neg(right),
+        CirExpr::Call { args, .. } => args.iter().any(|a| has_unary_neg(&a.expr)),
+        CirExpr::If {
+            cond,
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            has_unary_neg(cond)
+                || has_unary_neg(then_branch)
+                || else_branch.as_ref().is_some_and(|e| has_unary_neg(e))
+        }
+        CirExpr::Block(b) => b.tail.as_ref().is_some_and(|t| has_unary_neg(t)),
+        _ => false,
+    }
+}
+
+#[test]
+fn issue_113_cir_lowers_unary_neg() {
+    let cir = CirBuilder::build_crate(&fixture("issue_113_unary")).expect("cir #113");
+    let main = cir.modules.iter().find(|m| m.path == "main").expect("main");
+    let negf = main
+        .items
+        .iter()
+        .find_map(|i| match i {
+            CirItem::Function(f) if f.name == "negf" => Some(f),
+            _ => None,
+        })
+        .expect("negf");
+    let tail = negf.body.tail.as_deref().expect("negf tail");
+    assert!(
+        has_unary_neg(tail),
+        "negf body should be CirExpr::Unary Neg, got {tail:?}"
+    );
+}
+
+#[test]
+fn issue_113_emit_unary_and_harness_parens() {
+    let cir = CirBuilder::build_crate(&fixture("issue_113_unary")).expect("cir #113");
+    let out = emit_crate(&cir);
+    eprintln!("#113 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("-x") || out.lib_rs.contains("- x"),
+        "unary minus should emit, got:\n{}",
+        out.lib_rs
+    );
+
+    let tests = collect_tests(&fixture("issue_113_unary")).expect("collect #113");
+    let emitted = emit_test_module(&tests);
+    eprintln!("#113 tests:\n{emitted}");
+    assert!(
+        emitted.contains("-2.0_f64"),
+        "unary minus literal in harness:\n{emitted}"
+    );
+    assert!(
+        emitted.contains("0.0_f64 - 2.0_f64") && emitted.contains(" - ("),
+        "binop RHS must be parenthesized:\n{emitted}"
+    );
+}
+
+#[test]
+fn issue_113_runtime_tests() {
+    match run_tests(&fixture("issue_113_unary")) {
+        Ok(r) => {
+            eprintln!(
+                "#113 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert_eq!(r.runtime_passed, 2, "got {}", r.runtime_passed);
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_113 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_113 harness: {e}"),
+    }
+}

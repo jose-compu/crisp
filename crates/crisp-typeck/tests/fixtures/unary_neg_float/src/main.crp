@@ -1,0 +1,9 @@
+pub lap3(um: float, uc: float, up: float, dx: float) = (um + up - 2.0 * uc) / (dx * dx)
+
+pub negf(x: float) = -x
+
+pub negi(n: int) = -n
+
+pub main() = {
+    print(lap3(0.0, 1.0, 0.0, 1.0))
+}

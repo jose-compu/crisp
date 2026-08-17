@@ -13,6 +13,9 @@ pub avg2(a: float, b: float) = {
     s / 2.0
 }
 
+-- Discrete Laplacian (#113): unary minus on a float stays float.
+pub lap3(um: float, uc: float, up: float, dx: float) = (um + up - 2.0 * uc) / (dx * dx)
+
 test "float add" = {
     assert_eq(add(1.5, 2.5), 4.0)
 }
@@ -23,6 +26,16 @@ test "float mul" = {
 
 test "float square" = {
     assert_eq(square(3.0), 9.0)
+}
+
+test "lap3 spike unary minus" = {
+    a := lap3(0.0, 1.0, 0.0, 1.0)
+    assert_eq(a, -2.0)
+}
+
+test "lap3 spike binop rhs" = {
+    a := lap3(0.0, 1.0, 0.0, 1.0)
+    assert_eq(a, 0.0 - 2.0)
 }
 
 test_compile_fail "float int mix" = {

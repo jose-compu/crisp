@@ -27,6 +27,8 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E008x` range. Pre
 | E0086 | typeck | Hole `_` used where a function value is not expected — write `|x| …` or pass `_` as a function argument |
 | E0087 | typeck | Invalid `as` target — only `int` and `float` ([#112](https://github.com/jose-compu/crisp/issues/112)) |
 | E0088 | typeck | Cannot infer `vec` element type — pin (`-> vec<float> = new()`, or `push`) ([#119](https://github.com/jose-compu/crisp/issues/119)) |
+| E0089 | typeck | Rust import not declared in `extern rust` — add a scalar signature ([#116](https://github.com/jose-compu/crisp/issues/116)) |
+| E0090 | typeck / emit | `extern rust` type is not `float`/`int`/`str`/`bool`, or rustc rejected the declared signature (user assertion, not a crisp bug) ([#116](https://github.com/jose-compu/crisp/issues/116)) |
 | W0087 | typeck | Non-literal `int` → `float` may lose precision above 2^53 — write `as float` to silence ([#112](https://github.com/jose-compu/crisp/issues/112)) |
 | E0050 | ownership | Ownership contradicts explicit annotation — adjust `own`/`&`/`&mut` or usage |
 | E0051 | ownership | Ownership analysis failed |

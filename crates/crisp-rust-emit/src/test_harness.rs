@@ -110,11 +110,20 @@ struct HarnessCtx<'a> {
 
 impl HarnessCtx<'_> {
     fn ident_param_mode(&self, callee: &str, index: usize) -> OwnershipMode {
+        if self.rust_crate_for(callee).is_some() {
+            return OwnershipMode::Owned;
+        }
         match self.cir {
             None => OwnershipMode::Owned,
             Some(cir) => cir_fn_param_mode(cir, self.module, callee, index, false)
                 .unwrap_or(OwnershipMode::Borrow),
         }
+    }
+
+    fn rust_crate_for(&self, local: &str) -> Option<&str> {
+        self.cir
+            .and_then(|c| c.rust_import_crates.get(local))
+            .map(String::as_str)
     }
 
     fn method_param_mode(&self, method: &str, index: usize, instance: bool) -> OwnershipMode {
@@ -325,7 +334,13 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                 return format!("{}.{}({})", emit_expr(ctx, base), field.name, args_fmt);
             }
             let callee = match &func.kind {
-                ExprKind::Ident(id) => id.name.clone(),
+                ExprKind::Ident(id) => {
+                    if let Some(crate_name) = ctx.rust_crate_for(&id.name) {
+                        format!("{crate_name}::{}", id.name)
+                    } else {
+                        id.name.clone()
+                    }
+                }
                 _ => format!("({})", emit_expr(ctx, func)),
             };
             if callee == "assert_eq" {
@@ -335,7 +350,13 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
             let arg_strs: Vec<_> = args
                 .iter()
                 .enumerate()
-                .map(|(i, a)| emit_call_arg_for_test(ctx, a, ctx.ident_param_mode(&callee, i)))
+                .map(|(i, a)| {
+                    let local = match &func.kind {
+                        ExprKind::Ident(id) => id.name.as_str(),
+                        _ => "",
+                    };
+                    emit_call_arg_for_test(ctx, a, ctx.ident_param_mode(local, i))
+                })
                 .collect();
             format!("{}({})", callee, arg_strs.join(", "))
         }

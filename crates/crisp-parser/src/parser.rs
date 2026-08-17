@@ -514,7 +514,17 @@ impl Parser {
 
     fn parse_extern_block(&mut self) -> Result<ExternBlock, ParseError> {
         let start = self.previous_start();
-        let abi = self.expect_string_lit()?;
+        let (abi, rust_crate) = if self.is_string() {
+            (self.expect_string_lit()?, None)
+        } else {
+            let tag = self.expect_ident()?;
+            if tag.name != "rust" {
+                return Err(
+                    self.unexpected("extern ABI `\"C\"` or `rust`", TokenKind::Ident(tag.name))
+                );
+            }
+            (String::from("rust"), Some(self.expect_ident()?))
+        };
         self.expect(TokenKind::LBrace)?;
         let mut functions = Vec::new();
         while !self.check(TokenKind::RBrace) && !self.check(TokenKind::Eof) {
@@ -528,16 +538,19 @@ impl Parser {
             } else {
                 None
             };
+            let fallible = self.match_token(TokenKind::Bang);
             functions.push(ExternFn {
                 name,
                 params,
                 ret_type,
+                fallible,
                 span: Span::new(s, self.previous_end()),
             });
         }
         self.expect(TokenKind::RBrace)?;
         Ok(ExternBlock {
             abi,
+            rust_crate,
             functions,
             span: Span::new(start, self.previous_end()),
         })

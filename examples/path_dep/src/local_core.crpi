@@ -1,0 +1,6 @@
+-- Sidecar `extern rust` decls (#116). Not a Crisp module: loaded as `__extern.local_core`.
+
+extern rust local_core {
+    answer() -> int
+    lap3(um: float, uc: float, up: float, dx: float) -> float
+}

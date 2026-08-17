@@ -3,10 +3,9 @@ use crate::result::{CrispErrorEnum, CrispErrorVariant, ErrorResult, ErrorSet, Er
 use crate::set::{absorbs_all, catch_handled_set, declared_set_from_fn, thrown_error_name};
 use crisp_ast::expr::{Block, Expr, ExprKind, Stmt};
 use crisp_ast::item::{FunctionDef, Item};
-use crisp_resolve::ResolvedRustImport;
 use crisp_resolve::module::load_module_graph;
-use crisp_typeck::{TypeChecker, rust_import_returns_result};
-use std::collections::BTreeMap;
+use crisp_typeck::TypeChecker;
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 pub struct ErrorPass;
@@ -15,7 +14,12 @@ impl ErrorPass {
     pub fn analyze_crate(crate_root: &Path) -> Result<ErrorResult, ErrorPassError> {
         let typed = TypeChecker::check_crate(crate_root)?;
         let graph = load_module_graph(crate_root)?;
-        let rust_imports = &typed.rust_imports;
+        let rust_imports: HashSet<String> = typed
+            .rust_imports
+            .iter()
+            .filter(|i| typed.rust_call_fallible(&i.crate_name, &i.item))
+            .map(|i| i.local_name.clone())
+            .collect();
 
         let mut fn_defs: BTreeMap<String, (String, FunctionDef)> = BTreeMap::new();
         for node in graph.modules.values() {
@@ -49,7 +53,7 @@ impl ErrorPass {
         for _ in 0..max_iters {
             let mut changed = false;
             for (key, (module, def)) in &fn_defs {
-                let local = collect_local_errors(module, def, &fn_defs, &sigs, rust_imports);
+                let local = collect_local_errors(module, def, &fn_defs, &sigs, &rust_imports);
                 let prev = sigs.get(key).cloned().unwrap_or_default();
                 if prev != local {
                     changed = true;
@@ -139,7 +143,7 @@ fn collect_local_errors(
     def: &FunctionDef,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
-    rust_imports: &[ResolvedRustImport],
+    rust_imports: &HashSet<String>,
 ) -> ErrorSet {
     let mut out = ErrorSet::new();
     walk_expr(
@@ -158,7 +162,7 @@ fn walk_block(
     block: &Block,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
-    rust_imports: &[ResolvedRustImport],
+    rust_imports: &HashSet<String>,
     out: &mut ErrorSet,
 ) {
     for stmt in &block.stmts {
@@ -174,7 +178,7 @@ fn walk_stmt(
     stmt: &Stmt,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
-    rust_imports: &[ResolvedRustImport],
+    rust_imports: &HashSet<String>,
     out: &mut ErrorSet,
 ) {
     match stmt {
@@ -190,7 +194,7 @@ fn walk_expr(
     expr: &Expr,
     fn_defs: &BTreeMap<String, (String, FunctionDef)>,
     callee_sigs: &BTreeMap<String, ErrorSet>,
-    rust_imports: &[ResolvedRustImport],
+    rust_imports: &HashSet<String>,
     out: &mut ErrorSet,
 ) {
     match &expr.kind {
@@ -304,16 +308,12 @@ fn walk_expr(
     }
 }
 
-fn propagate_rust_import_errors(
-    func: &Expr,
-    rust_imports: &[ResolvedRustImport],
-    out: &mut ErrorSet,
-) {
+fn propagate_rust_import_errors(func: &Expr, rust_imports: &HashSet<String>, out: &mut ErrorSet) {
     let ExprKind::Ident(id) = &func.kind else {
         return;
     };
-    for imp in rust_imports {
-        if imp.local_name == id.name && rust_import_returns_result(&imp.crate_name, &imp.item) {
+    for name in rust_imports {
+        if name == &id.name {
             out.insert("Thrown");
             return;
         }

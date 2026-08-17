@@ -367,6 +367,38 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
                 return;
             }
         }
+        TypeError::UndeclaredRustImport { span, .. } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0089",
+                    &err.to_string().replacen("[E0089] ", "", 1),
+                    *span,
+                    Severity::Error,
+                    &["help: declare it in `extern rust <crate> { item(…) -> … }` or a `.crpi` sidecar".into()],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        TypeError::InvalidExternRustTy { span, .. } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0090",
+                    &err.to_string().replacen("[E0090] ", "", 1),
+                    *span,
+                    Severity::Error,
+                    &[],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
         _ => {}
     }
     eprintln!("{err}");

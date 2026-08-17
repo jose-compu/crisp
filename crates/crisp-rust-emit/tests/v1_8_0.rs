@@ -317,3 +317,46 @@ fn issue_115_runtime_tests() {
         Err(e) => panic!("issue_115 harness: {e}"),
     }
 }
+
+#[test]
+fn issue_116_emit_extern_rust_call() {
+    let cir = CirBuilder::build_crate(&example("path_dep")).expect("cir #116");
+    let out = emit_crate(&cir);
+    eprintln!("#116 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("local_core::answer"),
+        "missing answer call:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("local_core::lap3"),
+        "missing lap3 call:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        !out.lib_rs.contains("extern \"rust\""),
+        "must not emit FFI extern rust:\n{}",
+        out.lib_rs
+    );
+}
+
+#[test]
+fn issue_116_runtime_tests() {
+    match run_tests(&example("path_dep")) {
+        Ok(r) => {
+            eprintln!(
+                "#116 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert!(
+                r.runtime_passed >= 2,
+                "expected path_dep extern rust tests, got {}",
+                r.runtime_passed
+            );
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_116 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_116 harness: {e}"),
+    }
+}

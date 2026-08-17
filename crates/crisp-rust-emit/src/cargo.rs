@@ -21,6 +21,13 @@ pub enum CargoError {
         span: Option<crisp_ast::Span>,
         summary: String,
     },
+    #[error(
+        "[E0090] rustc rejected this `extern rust` signature — that is a user assertion, not a crisp bug (rustc: {summary})"
+    )]
+    ExternRustMismatch {
+        span: Option<crisp_ast::Span>,
+        summary: String,
+    },
 }
 
 pub fn cargo_check(
@@ -75,6 +82,12 @@ fn run_cargo(
                 .unwrap_or("cargo build failed")
                 .to_string();
             if let Some(span) = map_rustc_failure(&stderr, main_source, source_map) {
+                if source_map.is_extern_rust_span(span) {
+                    return Err(CargoError::ExternRustMismatch {
+                        span: Some(span),
+                        summary,
+                    });
+                }
                 return Err(CargoError::Ice {
                     span: Some(span),
                     summary,

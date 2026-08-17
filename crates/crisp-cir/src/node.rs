@@ -11,6 +11,10 @@ pub struct CirCrate {
     pub crisp_error: CrispErrorEnum,
     pub shape_traits: Vec<CirShapeTrait>,
     pub source_map: crate::source_map::SourceMap,
+    /// `extern rust` item spans for rustc blame (#116).
+    pub rust_extern_spans: std::collections::BTreeMap<(String, String), Span>,
+    /// Local binding → Rust crate name for harness emit (#116).
+    pub rust_import_crates: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone)]

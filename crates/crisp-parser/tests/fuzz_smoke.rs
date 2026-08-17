@@ -50,6 +50,7 @@ fn fuzz_parse_valid_fragments() {
         "greet(x) = x",
         "type T = { a: int }",
         "extern \"C\" { abs(x: int) -> int }",
+        "extern rust foo { bar(x: float) -> float }",
         "test \"t\" = { assert_eq(1, 1) }",
         "f() = match 1 { x -> \"ok\" }",
         "f() = if true then 1 else 0",

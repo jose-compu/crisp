@@ -156,6 +156,7 @@ fn examples_with_tests_pass_crpc_test() {
         "feature_gallery",
         "loops",
         "closures",
+        "path_dep",
     ] {
         let root = example(name);
         eprintln!("crisp test: {name}");

@@ -189,6 +189,14 @@ fn is_clone_ty(ty: &Ty, gens: &[String]) -> bool {
         || ty.is_stringish()
         || matches!(ty, Ty::Var(_))
         || matches!(ty, Ty::Named { name, args } if args.is_empty() && gens.iter().any(|g| g == name))
+        || matches!(ty, Ty::Named { name, args } if args.is_empty() && is_user_record(name))
+}
+
+fn is_user_record(name: &str) -> bool {
+    !matches!(
+        name,
+        "vec" | "map" | "set" | "Future" | "JoinHandle" | "Option" | "Result"
+    )
 }
 
 fn type_for_binding(

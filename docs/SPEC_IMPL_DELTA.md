@@ -38,7 +38,10 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Std Show/Eq/Ord | §15.4 | Prelude shims + Display/PartialEq/Ord bridges (`examples/std_traits`) — [#27](https://github.com/jose-compu/crisp/issues/27). Add/Sub/Mul/Div inferred from operators on `T`; typeck E0084 on bad instantiations; unique method → nullary trait bound (`examples/shapes_generic`, `examples/show_trait`, `examples/shapes_user`) — [#84](https://github.com/jose-compu/crisp/issues/84) |
 | Std net/http | §15.2 | `std.net.parse_ip` + thin `ureq` GET (`examples/net_http`); full `std.http` server API deferred — [#28](https://github.com/jose-compu/crisp/issues/28) |
 | Nested modules | §12 | Resolve + emit nest `a.b` as `mod a` / `a/b.rs`; intra-crate functions and types use `crate::` (`examples/nested_math`, `examples/nested_types`) |
-| Loops | §6.3 | `while` / `for` / `loop` + `break`/`continue` / value `break` (`examples/loops`); `for` MVP over `vec` only; no labels / `enumerate` yet |
+| Loops | §6.3 | `while` / `for` / `loop` + `break`/`continue` / value `break` (`examples/loops`); `for` MVP over i64 `vec` only; no labels / `enumerate` yet |
+| `if` / `else if` | §6.1 | `if then else` and `else { if … }` work; **`else if` is a parse error** — [#117](https://github.com/jose-compu/crisp/issues/117) |
+| Record `:=` / Copy | §7, §0.1 | Float `:=` chains work; record `k1 := s` moves; rustc E0382 if `s` is used again — [#118](https://github.com/jose-compu/crisp/issues/118) |
+| Collections | §3 arrays, §15 `vec<T>` | **i64-only** `new`/`push`/`len`; indexing parsed not emitted; no `vec<float>` — [#110](https://github.com/jose-compu/crisp/issues/110) |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)

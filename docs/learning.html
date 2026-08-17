@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.7.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.7.2</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -111,13 +111,13 @@
           <li><code>examples/rust_import</code>, <code>examples/net_http</code> — Rust crate interop</li>
           <li><code>examples/async_hello</code> — async / Tokio</li>
           <li><code>examples/ffi</code> — <code>extern "C"</code></li>
-          <li><code>examples/design_patterns</code> — multi-module patterns</li>
+          <li><code>examples/nested_math</code>, <code>examples/nested_types</code> — nested modules; type <code>use</code> emits <code>crate::</code></li>
         </ul>
       </div>
 
       <div id="limits" class="content" style="margin-top:2.5rem">
         <h2>Honest limits</h2>
-        <p>This is a Rust-hosted bootstrap (<strong>v1.7.1</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>. Function values and implicit-closure sugar ship in this release (<code>examples/closures</code>). See <a href="limitations.html">limitations</a>.</p>
+        <p>This is a Rust-hosted bootstrap (<strong>v1.7.2</strong> public release) — not self-hosted yet. Sharp edges today: method/anonymous shapes, written generic trait bounds / <code>dyn Trait</code>. Function values remain from v1.7.0 (<code>examples/closures</code>). See <a href="limitations.html">limitations</a>.</p>
       </div>
     </div>
   </section>
@@ -146,7 +146,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.1 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.7.2 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

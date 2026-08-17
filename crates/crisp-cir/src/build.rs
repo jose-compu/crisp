@@ -1414,7 +1414,11 @@ fn lower_expr_raw(
                         } else {
                             callee_osig
                                 .and_then(|c| c.params.get(i).map(|(_, m)| *m))
-                                .unwrap_or(OwnershipMode::Borrow)
+                                .unwrap_or(if callee_module == "std.math" {
+                                    OwnershipMode::Owned
+                                } else {
+                                    OwnershipMode::Borrow
+                                })
                         };
                         if matches!(mode, OwnershipMode::Borrow)
                             && matches!(lowered, E::Ident { .. })

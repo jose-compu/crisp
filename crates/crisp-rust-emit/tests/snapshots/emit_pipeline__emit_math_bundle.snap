@@ -27,6 +27,8 @@ pub fn main() {
     println!("{}", format!("avg2(1.0,3.0)={}", crate::floats::avg2(1.0_f64, 3.0_f64)));
     println!("{}", format!("square(4.0)={}", crate::floats::square(4.0_f64)));
     println!("{}", format!("mul(0.5,8.0)={}", crate::floats::mul(0.5_f64, 8.0_f64)));
+    println!("{}", format!("exp(0)={}", crate::floats::e0()));
+    println!("{}", format!("sqrt(4)={}", crate::floats::q4()));
 }
 // === mod arith ===
 pub fn double<T: Clone + Copy + std::ops::Add<Output = T>>(n: T) -> T {
@@ -60,4 +62,19 @@ pub fn lap3(um: f64, uc: f64, up: f64, dx: f64) -> f64 {
 }
 pub fn add_mix(a: f64, n: i64) -> f64 {
     a + (n as f64)
+}
+pub fn e0() -> f64 {
+    f64::exp(0.0_f64)
+}
+pub fn s0() -> f64 {
+    f64::sin(0.0_f64)
+}
+pub fn c0() -> f64 {
+    f64::cos(0.0_f64)
+}
+pub fn th0() -> f64 {
+    f64::tanh(0.0_f64)
+}
+pub fn q4() -> f64 {
+    f64::sqrt(4.0_f64)
 }

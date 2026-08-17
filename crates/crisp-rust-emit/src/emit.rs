@@ -345,7 +345,11 @@ fn emit_struct(out: &mut String, s: &CirStruct, map: &mut EmitSourceMap) {
     map.record(out.len() as u32, s.span);
     let vis = if s.is_pub { "pub " } else { "" };
     let gens = format_ty_params(&s.generics);
-    let _ = writeln!(out, "#[derive(Debug, Clone)]");
+    if struct_fields_are_copy(s) {
+        let _ = writeln!(out, "#[derive(Debug, Clone, Copy)]");
+    } else {
+        let _ = writeln!(out, "#[derive(Debug, Clone)]");
+    }
     let _ = write!(out, "{vis}struct {}{gens} {{", s.name);
     for (i, f) in s.fields.iter().enumerate() {
         if i > 0 {
@@ -357,6 +361,24 @@ fn emit_struct(out: &mut String, s: &CirStruct, map: &mut EmitSourceMap) {
     if let Some(with_fn) = &s.with_fn {
         emit_with_fn(out, s, with_fn, map);
     }
+}
+
+fn cir_ty_is_copy(ty: &CirTy) -> bool {
+    match ty {
+        CirTy::Int
+        | CirTy::UInt
+        | CirTy::Float
+        | CirTy::Bool
+        | CirTy::Char
+        | CirTy::Unit
+        | CirTy::Never => true,
+        CirTy::Tuple(ts) => ts.iter().all(cir_ty_is_copy),
+        _ => false,
+    }
+}
+
+fn struct_fields_are_copy(s: &CirStruct) -> bool {
+    s.fields.iter().all(|f| cir_ty_is_copy(&f.ty))
 }
 
 fn emit_with_fn(out: &mut String, s: &CirStruct, with_fn: &CirWithFn, map: &mut EmitSourceMap) {

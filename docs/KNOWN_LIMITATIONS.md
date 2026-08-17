@@ -1,6 +1,6 @@
 # Known limitations (Crisp v1.7.3)
 
-This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), collections ([#110](https://github.com/jose-compu/crisp/issues/110)), record `:=` moves ([#118](https://github.com/jose-compu/crisp/issues/118)).
+This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)), collections ([#110](https://github.com/jose-compu/crisp/issues/110)).
 
 ## Bootstrap status
 
@@ -28,7 +28,7 @@ This page documents behaviors that surprise users and are **not** always full la
 - Multi-module crates emit main-module enums/structs alongside nested `mod` trees.
 - **Record literals** accept commas or newlines (`Point { x: 1.0, y: 2.0 }` and the stacked form). Trailing commas are allowed ([#111](https://github.com/jose-compu/crisp/issues/111)).
 - **`int` widens to `float` in a checking position** (param, field, return, or `+` `-` `*` `/` when the other side is already `float`). `2` in a float slot is a float literal. Non-literal conversion is **W0087**; write `as float` to silence. There is no implicit `float` → `int` ([#112](https://github.com/jose-compu/crisp/issues/112)).
-- **Sequential `:=` of floats is fine** (`a := 1.0` / `b := a + 1.0` / `a + b`). **Record binds are not:** `k1 := s` emits `let k1 = s` (move). A later use of `s` or `k1` after another call is rustc **E0382**. Records derive `Clone` only, not `Copy`, even when every field is `float`. Workaround: one bind per function, or stop using the source after the bind ([#118](https://github.com/jose-compu/crisp/issues/118)). Underscore names (`w_lo`, `ym`) lex as a single Ident on 1.7.3; `{w_lo}` interpolates.
+- **Record `:=`:** all-`Copy` fields (`float`/`int`/`bool`/`char`) derive `Copy`, so `k1 := s` copies. Other records clone the source when it is used again (`let k1 = s.clone()`) ([#118](https://github.com/jose-compu/crisp/issues/118)). Underscore names (`w_lo`, `ym`) lex as a single Ident; `{w_lo}` interpolates.
 
 ## Collections (spec §15 / §3 arrays)
 

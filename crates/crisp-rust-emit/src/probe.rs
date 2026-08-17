@@ -320,13 +320,6 @@ fn emit_stmt(
 }
 
 fn should_clone_at_bind(osig: &OwnershipSignature, binding: &str, value: &Expr) -> bool {
-    if !osig
-        .applied_fallbacks
-        .iter()
-        .any(|f| f.kind == FallbackKind::CloneAtMove)
-    {
-        return false;
-    }
     if let ExprKind::Ident(src) = &value.kind {
         return osig.auto_clones.iter().any(|ac| ac.binding == src.name);
     }

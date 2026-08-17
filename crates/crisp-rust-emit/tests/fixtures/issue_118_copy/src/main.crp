@@ -1,0 +1,41 @@
+type YT = {
+    y: float
+    t: float
+}
+
+type Label = {
+    name: str
+}
+
+add(s: YT, o: YT) = YT {
+    y: s.y + o.y
+    t: s.t + o.t
+}
+
+step(s: YT) = {
+    k1 := s
+    k2 := add(s, k1)
+    add(k1, k2)
+}
+
+echo(l: Label) = {
+    a := l
+    print(a.name)
+    print(l.name)
+    a.name
+}
+
+pub main() = {
+    u := YT {
+        y: 1.0
+        t: 0.0
+    }
+    v := step(u)
+    print(v.y)
+    print(echo(Label { name: "ok" }))
+}
+
+test "rk4-style bind" = {
+    v := step(YT { y: 1.0, t: 0.0 })
+    assert_eq(v.y, 3.0)
+}

@@ -10,7 +10,7 @@ use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
 use crisp_ast::lift_holes;
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_errors::{ErrorPass, ErrorResult};
-use crisp_ownership::{FallbackKind, OwnershipMode, OwnershipPass, OwnershipResult};
+use crisp_ownership::{OwnershipMode, OwnershipPass, OwnershipResult};
 use crisp_regions::{RegionPass, RegionResult};
 use crisp_resolve::module::{ModuleGraph, load_module_graph};
 use crisp_resolve::stdlib::stdlib_fn_modules;
@@ -2045,13 +2045,6 @@ fn should_clone_at_bind(
     binding: &str,
     value: &Expr,
 ) -> bool {
-    if !osig
-        .applied_fallbacks
-        .iter()
-        .any(|f| f.kind == FallbackKind::CloneAtMove)
-    {
-        return false;
-    }
     if let ExprKind::Ident(src) = &value.kind {
         return osig.auto_clones.iter().any(|ac| ac.binding == src.name);
     }

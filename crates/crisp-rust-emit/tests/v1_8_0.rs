@@ -134,3 +134,44 @@ fn issue_112_runtime_tests() {
         Err(e) => panic!("issue_112 harness: {e}"),
     }
 }
+
+#[test]
+fn issue_118_copy_records_and_clone_at_bind() {
+    let cir = CirBuilder::build_crate(&fixture("issue_118_copy")).expect("cir #118");
+    let out = emit_crate(&cir);
+    eprintln!("#118 lib.rs:\n{}", out.lib_rs);
+    assert!(
+        out.lib_rs.contains("#[derive(Debug, Clone, Copy)]") && out.lib_rs.contains("struct YT"),
+        "all-Copy record should derive Copy:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains("struct Label")
+            && out.lib_rs.contains("#[derive(Debug, Clone)]")
+            && !out.lib_rs.contains("Copy)]\nstruct Label"),
+        "string record must not be Copy:\n{}",
+        out.lib_rs
+    );
+    assert!(
+        out.lib_rs.contains(".clone()"),
+        "reuse after bind should clone-at-bind:\n{}",
+        out.lib_rs
+    );
+}
+
+#[test]
+fn issue_118_runtime_tests() {
+    match run_tests(&fixture("issue_118_copy")) {
+        Ok(r) => {
+            eprintln!(
+                "#118 runtime={} compile_fail={}",
+                r.runtime_passed, r.compile_fail_passed
+            );
+            assert_eq!(r.runtime_passed, 1, "got {}", r.runtime_passed);
+        }
+        Err(e) if e.to_string().contains("cargo not on PATH") => {
+            eprintln!("SKIP issue_118 run_tests: cargo not on PATH");
+        }
+        Err(e) => panic!("issue_118 harness: {e}"),
+    }
+}

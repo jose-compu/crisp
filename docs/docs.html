@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.8.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.8.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -68,8 +68,8 @@
     <div class="wrap" style="padding-top:0">
       <div class="version-box">
         <h2>Latest version</h2>
-        <div class="ver">✓ v1.8.0 (public release)</div>
-        <p class="muted">Requires Rust 1.85+. Install with <code>cargo install crisp-lang --locked</code>. Spec remains <strong>v0.2.0-draft</strong> — treat “spec-complete” claims cautiously. v1.8.0: <code>else if</code>, optional record commas, parse/lex <code>file:line:col</code>, unary <code>-</code> on float, checking-position <code>int</code>→<code>float</code>, Copy records, harness args from CIR, implicit <code>vec&lt;T&gt;</code> and <code>xs[i]</code>, prelude <code>exp</code>/<code>sin</code>/<code>cos</code>/<code>tanh</code>/<code>sqrt</code>, <code>extern rust</code> scalars (#109–#120). v1.7.3: path deps (#105); <code>crisp run</code> cwd is the crate root (#106).</p>
+        <div class="ver">✓ v1.8.1 (public release)</div>
+        <p class="muted">Requires Rust 1.85+. Install with <code>cargo install crisp-lang --locked</code>. Spec remains <strong>v0.2.0-draft</strong> — treat “spec-complete” claims cautiously. v1.8.1: <code>as float + expr</code> (#140); unbraced <code>else</code> newline (#145); parenthesized index emit (#142); <code>let mut</code> / <code>mut</code> params for index writes (#141); harness <code>.len()</code> (#144); nested-module tests (#143); module-qualified fn stubs (#146). v1.8.0: <code>else if</code>, optional record commas, parse/lex <code>file:line:col</code>, unary <code>-</code> on float, checking-position <code>int</code>→<code>float</code>, Copy records, harness args from CIR, implicit <code>vec&lt;T&gt;</code> and <code>xs[i]</code>, prelude <code>exp</code>/<code>sin</code>/<code>cos</code>/<code>tanh</code>/<code>sqrt</code>, <code>extern rust</code> scalars (#109–#120). v1.7.3: path deps (#105); <code>crisp run</code> cwd is the crate root (#106).</p>
         <div class="doc-links">
           <a href="language.html">Language summary<span>Syntax surface and lowering overview</span></a>
           <a href="cli.html">CLI reference<span>crisp check, emit, build, run, test</span></a>
@@ -114,7 +114,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

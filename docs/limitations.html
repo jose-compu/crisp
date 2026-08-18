@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.8.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.8.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -53,7 +53,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the v1.8.0 public release versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.8.1 public release versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
@@ -73,6 +73,7 @@
         <li>Editor VSIX via <code>./scripts/package-vsix.sh</code>; Marketplace listing optional (#57)</li>
         <li>Install: <code>cargo install crisp-lang --locked</code> (#66).</li>
       </ul>
+      <p><strong>Shipped in v1.8.1:</strong> postfix <code>as float</code> does not eat a following <code>+</code> (#140); unbraced <code>else (expr)</code> does not treat the next line as a call (#145); index emit parenthesizes <code>[(index) as usize]</code> (#142); <code>let mut</code> / <code>mut</code> params for <code>xs[i] = v</code> (#141); harness <code>.len()</code> / <code>.push</code> / <code>Vec::new()</code> (#144); nested-module tests see private helpers (#143); function stubs keyed <code>{module}::{name}</code> (#146).</p>
       <p><strong>Shipped in v1.8.0:</strong> chained <code>else if</code> (#117); optional record commas (#111); parse/lex <code>file:line:col</code> (#109); unary <code>-</code> on float (#113); checking-position <code>int</code>→<code>float</code> and <code>as float</code>/<code>as int</code> (#112); <code>Copy</code> records / clone-at-bind (#118); harness args from CIR (#114); implicit <code>vec&lt;T&gt;</code> and <code>xs[i]</code> (#119 / #120, <code>examples/vec_ops</code>); prelude <code>exp</code>/<code>sin</code>/<code>cos</code>/<code>tanh</code>/<code>sqrt</code> (#115); <code>extern rust</code> scalars (#116).</p>
       <p><strong>Shipped in v1.7.3:</strong> <code>crisp.toml</code> path deps (<code>foo = { path = "…" }</code>, rewritten into <code>target/rust/Cargo.toml</code>, #105, <code>examples/path_dep</code>); <code>crisp run</code> / <code>test</code> cwd is the crate root, not <code>target/rust</code> (<code>CRISP_CRATE_ROOT</code>, #106).</p>
       <p><strong>Shipped in v1.7.2:</strong> binop grouping <code>(lo + hi) / 2</code> (#99), nested type <code>use</code> emits <code>crate::</code> (#100, <code>examples/nested_types</code>), string <code>match</code> arms (#101), <code>crisp test</code> unique names / bool-str <code>assert_eq!</code> / <code>pub trait Show</code> (#102).</p>
@@ -112,7 +113,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.8.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

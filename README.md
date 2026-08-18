@@ -228,3 +228,8 @@ cargo clippy --workspace -- -D warnings
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Spec conformance and e2e coverage live under `crates/crisp-rust-emit/tests/` and `crates/crpc/tests/`.
+
+
+## examples: Annotate examples/hello with teaching comments for newcomers
+
+Documentation reference and guidelines for #44.

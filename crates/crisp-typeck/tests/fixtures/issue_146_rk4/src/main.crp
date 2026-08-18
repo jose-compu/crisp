@@ -1,0 +1,4 @@
+use core.a { step_a }
+use core.b { step_b }
+
+pub main() = print(step_a() + step_b())

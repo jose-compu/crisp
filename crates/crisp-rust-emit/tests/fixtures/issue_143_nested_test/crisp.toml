@@ -1,0 +1,4 @@
+[package]
+name = "issue_143_nested_test"
+version = "0.1.0"
+edition = "2026"

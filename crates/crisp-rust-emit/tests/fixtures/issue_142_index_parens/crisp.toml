@@ -1,0 +1,4 @@
+[package]
+name = "issue_142_index_parens"
+version = "0.1.0"
+edition = "2026"

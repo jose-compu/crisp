@@ -1,0 +1,10 @@
+frac_of(a: float, den: float, i: int) = {
+    frac := if a > 0.0 then a / den else (0.5 - a) / den
+    ((i as float) + 0.5) / den + frac
+}
+
+test "else does not eat next line" = {
+    assert_eq(frac_of(0.0, 2.0, 1), 1.0)
+}
+
+pub main() = print(frac_of(0.0, 2.0, 1))

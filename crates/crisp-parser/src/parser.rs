@@ -85,6 +85,9 @@ pub struct Parser {
     /// When false, `Name { … }` is not parsed as a struct literal (Rust-style
     /// restriction for `if`/`while`/`for` conditions so `{` can start the body).
     allow_struct_lit: bool,
+    /// Original source (unshifted). Used to detect newlines skipped by the lexer (#145).
+    source: String,
+    span_base: u32,
 }
 
 impl Parser {
@@ -105,7 +108,26 @@ impl Parser {
             tokens,
             pos: 0,
             allow_struct_lit: true,
+            source: source.to_string(),
+            span_base: base,
         })
+    }
+
+    /// True when the gap before the current token contains a newline (lexer-skipped).
+    fn gap_contains_newline(&self) -> bool {
+        if self.pos == 0 {
+            return false;
+        }
+        let prev = self.previous_end();
+        let cur = self.current_start();
+        if cur <= prev {
+            return false;
+        }
+        let start = prev.saturating_sub(self.span_base) as usize;
+        let end = cur.saturating_sub(self.span_base) as usize;
+        self.source
+            .get(start..end)
+            .is_some_and(|s| s.contains('\n'))
     }
 
     fn with_no_struct_lit<T>(
@@ -683,6 +705,29 @@ impl Parser {
         Ok(ty)
     }
 
+    /// Cast target: named / primary type plus optional `<>`, but not `+` bounds (#140).
+    /// `n as float + 1.0` is `(n as float) + 1.0`, not `n as (float + 1.0)`.
+    fn parse_cast_target(&mut self) -> Result<Type, ParseError> {
+        let start = self.current_start();
+        let base = self.parse_type_primary()?;
+        let mut ty = base;
+        if self.match_token(TokenKind::Lt) {
+            let mut args = vec![self.parse_type()?];
+            while self.match_token(TokenKind::Comma) {
+                args.push(self.parse_type()?);
+            }
+            self.expect(TokenKind::Gt)?;
+            ty = Type {
+                kind: TypeKind::Generic {
+                    base: Box::new(ty),
+                    args,
+                },
+                span: Span::new(start, self.previous_end()),
+            };
+        }
+        Ok(ty)
+    }
+
     fn parse_type_primary(&mut self) -> Result<Type, ParseError> {
         let start = self.current_start();
         if let Some(kw) = self.match_kw_opt() {
@@ -1070,6 +1115,11 @@ impl Parser {
         loop {
             match self.peek_kind() {
                 TokenKind::LParen => {
+                    // `else (0.5 - a) / den` then a following `((i as float)+…)` is a
+                    // sibling, not a postfix call of `den` (#145). Same-line `foo(1)` stays a call.
+                    if self.gap_contains_newline() {
+                        break;
+                    }
                     self.advance();
                     let args = self.parse_args()?;
                     self.expect(TokenKind::RParen)?;
@@ -1147,7 +1197,7 @@ impl Parser {
                 }
                 TokenKind::Kw(Kw::As) => {
                     self.advance();
-                    let ty = self.parse_type()?;
+                    let ty = self.parse_cast_target()?;
                     let span = expr.span.merge(ty.span);
                     expr = Expr {
                         kind: ExprKind::Cast {

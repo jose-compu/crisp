@@ -326,6 +326,7 @@ Current compiler: **v1.8.0**. Active milestones:
 | **v1.7.2** | patch | Binop parens, nested type paths, string match, test harness | label `release:v1.7.2` |
 | **v1.7.3** | patch | `crisp.toml` path deps; `crisp run` cwd = crate root | label `release:v1.7.3` |
 | **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` (shipped) | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
+| **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (in progress) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -339,6 +340,16 @@ Current compiler: **v1.8.0**. Active milestones:
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### In progress — v1.8.1 (compiler bugs)
+
+- [x] **`as float + expr`** — cast target is a named type, not `T + Bound` ([#140](https://github.com/jose-compu/crisp/issues/140))
+- [x] **Unbraced `else` newline** — next-line `(` is not a call of the else-tail ([#145](https://github.com/jose-compu/crisp/issues/145))
+- [x] **Index parens** — `[(index) as usize]` ([#142](https://github.com/jose-compu/crisp/issues/142))
+- [x] **`let mut` / `mut` params** — index writes on helper-returned and param vecs ([#141](https://github.com/jose-compu/crisp/issues/141))
+- [x] **Harness `len`** — `.len()` like production ([#144](https://github.com/jose-compu/crisp/issues/144))
+- [x] **Nested-module tests** — appended to that module’s `.rs` ([#143](https://github.com/jose-compu/crisp/issues/143))
+- [x] **Module-qualified stubs** — `{module}::{name}` ([#146](https://github.com/jose-compu/crisp/issues/146))
 
 ### Shipped — v1.8.0 (parser DX, numeric widening, collections, interop)
 
@@ -410,4 +421,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-17 — v1.8.0 in progress (release bump).*
+*Last updated: 2026-08-18 — v1.8.1 in progress (compiler bugs #140–#146).*

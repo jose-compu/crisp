@@ -1,0 +1,9 @@
+use core.a { step_a }
+use core.b { step_b }
+
+test "module-local helpers" = {
+    assert_eq(step_a(), 1.0)
+    assert_eq(step_b(), 2.0)
+}
+
+pub main() = print(step_a() + step_b())

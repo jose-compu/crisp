@@ -2,8 +2,9 @@
 
 > Crisp is a systems programming language that transpiles compact `.crp` source to Rust. The `crisp` toolchain infers types, ownership, and errors; `rustc` remains the soundness boundary.
 
-Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.8.0. Repository: https://github.com/jose-compu/crisp
+Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.8.1. Repository: https://github.com/jose-compu/crisp
 
+v1.8.1: `as float + expr` (#140); unbraced `else` newline (#145); parenthesized index emit (#142); `let mut` / `mut` params for index writes (#141); harness `.len()` (#144); nested-module tests (#143); module-qualified fn stubs (#146).
 v1.8.0: `else if` (#117); optional record commas (#111); parse/lex `file:line:col` (#109); unary `-` on float (#113); checking-position `int`→`float` / `as float` (#112); Copy records (#118); harness CIR args (#114); implicit `vec<T>` and `xs[i]` (#119 / #120); prelude `exp`/`sin`/`cos`/`tanh`/`sqrt` (#115); `extern rust` scalars (#116).
 v1.7.3: `crisp.toml` path deps (`foo = { path = "…" }`, #105, `examples/path_dep`); `crisp run` cwd is the crate root, not `target/rust` (`CRISP_CRATE_ROOT`, #106).
 v1.7.2 compiler fixes: binop grouping (`(lo + hi) / 2`, #99), nested type `use` (`crate::…::Verdict`, #100), string `match` arms (#101), `crisp test` unique names / bool-str `assert_eq!` (#102).

@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.8.0)
+# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.8.1)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,7 +23,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (through 1.8.0) |
+| Feature | Spec | Impl (through 1.8.1) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |

@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.8.0)
+# Known limitations (Crisp v1.8.1)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
@@ -34,7 +34,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 `vec<T>` is inferred from use (`new`/`push`/`[1.0, 2.0]`). Pin with `vec<float>` or a return type. Unconstrained `new()` is **E0088**. Indexing `xs[i]` / `xs[i] = v` is `int` → `T` ([#120](https://github.com/jose-compu/crisp/issues/120)). `map` / `set` remain names only.
 
-| Spec | 1.8.0 (in progress) |
+| Spec | 1.8.1 |
 |---|---|
 | `vec<T>` (`vec<float>`, `vec<vec<float>>`) | `new` / `push` / `len` infer `T`; `[1.0, 2.0]` is a growable vec ([#119](https://github.com/jose-compu/crisp/issues/119)) |
 | Array / slice literals `[1.0, 2.0]` | Vec literal (not `[T; N]`) |

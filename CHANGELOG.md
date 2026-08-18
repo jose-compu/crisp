@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.8.1] — 2026-08-18
+
 ### Fixed
 
 - `n as float + expr` is `(n as float) + expr`; `+` is not a trait bound on the cast target ([#140](https://github.com/jose-compu/crisp/issues/140)).
@@ -258,7 +260,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/jose-compu/crisp/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/jose-compu/crisp/compare/v1.7.3...v1.8.0
 [1.7.3]: https://github.com/jose-compu/crisp/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/jose-compu/crisp/compare/v1.7.1...v1.7.2

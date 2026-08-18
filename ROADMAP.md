@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.8.0**. Active milestones:
+Current compiler: **v1.8.1**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -326,7 +326,7 @@ Current compiler: **v1.8.0**. Active milestones:
 | **v1.7.2** | patch | Binop parens, nested type paths, string match, test harness | label `release:v1.7.2` |
 | **v1.7.3** | patch | `crisp.toml` path deps; `crisp run` cwd = crate root | label `release:v1.7.3` |
 | **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` (shipped) | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
-| **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (in progress) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
+| **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (shipped) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -334,14 +334,14 @@ Current compiler: **v1.8.0**. Active milestones:
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
 | **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.8.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io publish (v1.8.1) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
 
-### In progress — v1.8.1 (compiler bugs)
+### Shipped — v1.8.1 (compiler bugs)
 
 - [x] **`as float + expr`** — cast target is a named type, not `T + Bound` ([#140](https://github.com/jose-compu/crisp/issues/140))
 - [x] **Unbraced `else` newline** — next-line `(` is not a call of the else-tail ([#145](https://github.com/jose-compu/crisp/issues/145))
@@ -421,4 +421,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-08-18 — v1.8.1 in progress (compiler bugs #140–#146).*
+*Last updated: 2026-08-18 — v1.8.1 shipped.*

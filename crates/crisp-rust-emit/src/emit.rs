@@ -8,6 +8,7 @@ use crisp_cir::{
 use crisp_errors::format_crisp_error_enum;
 use crisp_ownership::OwnershipMode;
 use crisp_resolve::stdlib::std_rust_path;
+use std::collections::HashSet;
 use std::fmt::Write;
 
 pub struct EmitResult {
@@ -502,10 +503,20 @@ fn emit_function(
         let _ = writeln!(out, "#[tokio::main]");
     }
     let async_kw = if f.is_async { "async " } else { "" };
-    let sig = format_fn_sig(f, trait_impl, cir, current_module, &map.type_modules);
+    let mut_names = index_assign_idents(&f.body);
+    let saved = std::mem::replace(&mut map.index_mut_names, mut_names.clone());
+    let sig = format_fn_sig(
+        f,
+        trait_impl,
+        cir,
+        current_module,
+        &map.type_modules,
+        &mut_names,
+    );
     let _ = write!(out, "{vis}{async_kw}fn {}{sig} ", f.name);
     emit_block_body(out, &f.body, f.fallible, &f.ret, current_module, 0, map);
     let _ = writeln!(out);
+    map.index_mut_names = saved;
 }
 
 fn format_fn_sig(
@@ -514,6 +525,7 @@ fn format_fn_sig(
     cir: &CirCrate,
     current_module: &str,
     type_modules: &std::collections::BTreeMap<String, String>,
+    mut_names: &HashSet<String>,
 ) -> String {
     let shape_names: std::collections::HashSet<&str> =
         cir.shape_traits.iter().map(|s| s.name.as_str()).collect();
@@ -560,7 +572,13 @@ fn format_fn_sig(
             ));
             params.push(format_param_with_ty(p, &tp, trait_impl));
         } else {
-            params.push(format_param(p, trait_impl, current_module, type_modules));
+            params.push(format_param(
+                p,
+                trait_impl,
+                current_module,
+                type_modules,
+                mut_names,
+            ));
         }
     }
     let generics = if type_params.is_empty() {
@@ -622,6 +640,7 @@ fn format_param(
     trait_impl: Option<&str>,
     current_module: &str,
     type_modules: &std::collections::BTreeMap<String, String>,
+    mut_names: &HashSet<String>,
 ) -> String {
     if p.name == "self" {
         return match p.mode {
@@ -660,7 +679,12 @@ fn format_param(
         ),
         OwnershipMode::Owned => format_ty_in(&p.ty, current_module, type_modules),
     };
-    format!("{}: {ty}", p.name)
+    let mut_kw = if matches!(p.mode, OwnershipMode::Owned) && mut_names.contains(&p.name) {
+        "mut "
+    } else {
+        ""
+    };
+    format!("{mut_kw}{}: {ty}", p.name)
 }
 
 fn format_param_with_ty(p: &CirParam, ty_name: &str, _trait_impl: Option<&str>) -> String {
@@ -758,7 +782,11 @@ fn emit_stmt(
             span,
         } => {
             map.record(out.len() as u32, *span);
-            let mut_kw = if *mutable || is_vec_new_expr(value) {
+            let mut_kw = if *mutable
+                || is_vec_new_expr(value)
+                || cir_expr_is_vec(value)
+                || map.index_mut_names.contains(name)
+            {
                 "mut "
             } else {
                 ""
@@ -1168,9 +1196,9 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         } => {
             map.record(out.len() as u32, *span);
             emit_expr(out, base, current_module, map);
-            let _ = write!(out, "[");
+            let _ = write!(out, "[(");
             emit_expr(out, index, current_module, map);
-            let _ = write!(out, " as usize]");
+            let _ = write!(out, ") as usize]");
             if !cir_ty_is_copy(ty) {
                 let _ = write!(out, ".clone()");
             }
@@ -1183,10 +1211,16 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         } => {
             map.record(out.len() as u32, *span);
             emit_expr(out, base, current_module, map);
-            let _ = write!(out, "[");
+            let _ = write!(out, "[(");
             emit_expr(out, index, current_module, map);
-            let _ = write!(out, " as usize] = ");
+            let _ = write!(out, ") as usize] = ");
             emit_expr(out, value, current_module, map);
+            if matches!(
+                value.as_ref(),
+                CirExpr::Ident { .. } | CirExpr::Borrow { .. }
+            ) {
+                let _ = write!(out, ".clone()");
+            }
         }
         CirExpr::Loop { body, span } => {
             map.record(out.len() as u32, *span);
@@ -1303,6 +1337,168 @@ fn is_vec_new_expr(expr: &CirExpr) -> bool {
                 ..
             } if callee == "new" && module.starts_with("std.vec")
         )
+}
+
+fn cir_ty_is_vec(ty: &CirTy) -> bool {
+    match ty {
+        CirTy::Named { name, .. } if name == "vec" => true,
+        CirTy::Ref { inner, .. } => cir_ty_is_vec(inner),
+        _ => false,
+    }
+}
+
+fn cir_expr_is_vec(expr: &CirExpr) -> bool {
+    match expr {
+        CirExpr::Ident { ty, .. } | CirExpr::Call { ty, .. } | CirExpr::Array { ty, .. } => {
+            cir_ty_is_vec(ty)
+        }
+        CirExpr::Clone { expr, .. } | CirExpr::Borrow { expr, .. } => cir_expr_is_vec(expr),
+        _ => false,
+    }
+}
+
+fn index_assign_idents(block: &CirBlock) -> HashSet<String> {
+    let mut names = HashSet::new();
+    walk_block_index_assign(block, &mut names);
+    names
+}
+
+fn walk_block_index_assign(block: &CirBlock, names: &mut HashSet<String>) {
+    for s in &block.stmts {
+        match s {
+            CirStmt::Let { value, .. } | CirStmt::Assign { value, .. } => {
+                walk_expr_index_assign(value, names);
+            }
+            CirStmt::Expr(e) => walk_expr_index_assign(e, names),
+        }
+    }
+    if let Some(t) = &block.tail {
+        walk_expr_index_assign(t, names);
+    }
+}
+
+fn walk_expr_index_assign(expr: &CirExpr, names: &mut HashSet<String>) {
+    if let CirExpr::IndexAssign { base, .. } = expr
+        && let CirExpr::Ident { name, .. } = base.as_ref()
+    {
+        names.insert(name.clone());
+    }
+    match expr {
+        CirExpr::BinOp { left, right, .. } => {
+            walk_expr_index_assign(left, names);
+            walk_expr_index_assign(right, names);
+        }
+        CirExpr::Unary { expr, .. }
+        | CirExpr::Cast { expr, .. }
+        | CirExpr::Throw { payload: expr, .. }
+        | CirExpr::Try { expr, .. }
+        | CirExpr::Clone { expr, .. }
+        | CirExpr::Borrow { expr, .. }
+        | CirExpr::Field { base: expr, .. }
+        | CirExpr::Print { arg: expr, .. }
+        | CirExpr::Await { expr, .. }
+        | CirExpr::Spawn { expr, .. }
+        | CirExpr::Lambda { body: expr, .. }
+        | CirExpr::Async { body: expr, .. }
+        | CirExpr::Unsafe { body: expr, .. }
+        | CirExpr::Loop { body: expr, .. } => walk_expr_index_assign(expr, names),
+        CirExpr::Call { args, .. } => {
+            for a in args {
+                walk_expr_index_assign(&a.expr, names);
+            }
+        }
+        CirExpr::StructLit { fields, .. } => {
+            for (_, e) in fields {
+                walk_expr_index_assign(e, names);
+            }
+        }
+        CirExpr::Catch { expr, arms, .. } => {
+            walk_expr_index_assign(expr, names);
+            for a in arms {
+                walk_expr_index_assign(&a.body, names);
+            }
+        }
+        CirExpr::EnumVariant { args, .. } | CirExpr::AssocCall { args, .. } => {
+            for a in args {
+                walk_expr_index_assign(a, names);
+            }
+        }
+        CirExpr::MethodCall { receiver, args, .. } => {
+            walk_expr_index_assign(receiver, names);
+            for a in args {
+                walk_expr_index_assign(a, names);
+            }
+        }
+        CirExpr::Format { parts, .. } => {
+            for p in parts {
+                if let crisp_cir::CirFormatPart::Expr(e) = p {
+                    walk_expr_index_assign(e, names);
+                }
+            }
+        }
+        CirExpr::If {
+            cond,
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            walk_expr_index_assign(cond, names);
+            walk_expr_index_assign(then_branch, names);
+            if let Some(e) = else_branch {
+                walk_expr_index_assign(e, names);
+            }
+        }
+        CirExpr::Match {
+            scrutinee, arms, ..
+        } => {
+            walk_expr_index_assign(scrutinee, names);
+            for a in arms {
+                if let Some(g) = &a.guard {
+                    walk_expr_index_assign(g, names);
+                }
+                walk_expr_index_assign(&a.body, names);
+            }
+        }
+        CirExpr::For { iter, body, .. } => {
+            walk_expr_index_assign(iter, names);
+            walk_expr_index_assign(body, names);
+        }
+        CirExpr::Array { elems, .. } => {
+            for e in elems {
+                walk_expr_index_assign(e, names);
+            }
+        }
+        CirExpr::Index { base, index, .. } | CirExpr::IndexAssign { base, index, .. } => {
+            walk_expr_index_assign(base, names);
+            walk_expr_index_assign(index, names);
+            if let CirExpr::IndexAssign { value, .. } = expr {
+                walk_expr_index_assign(value, names);
+            }
+        }
+        CirExpr::While { cond, body, .. } => {
+            walk_expr_index_assign(cond, names);
+            walk_expr_index_assign(body, names);
+        }
+        CirExpr::Break { value, .. } => {
+            if let Some(v) = value {
+                walk_expr_index_assign(v, names);
+            }
+        }
+        CirExpr::Block(b) => walk_block_index_assign(b, names),
+        CirExpr::Apply { func, args, .. } => {
+            walk_expr_index_assign(func, names);
+            for a in args {
+                walk_expr_index_assign(a, names);
+            }
+        }
+        CirExpr::Unit { .. }
+        | CirExpr::Int { .. }
+        | CirExpr::Float { .. }
+        | CirExpr::Str { .. }
+        | CirExpr::Bool { .. }
+        | CirExpr::Ident { .. }
+        | CirExpr::Continue { .. } => {}
+    }
 }
 
 fn emit_vec_receiver(
@@ -1637,6 +1833,12 @@ fn emit_call_arg(
             return;
         }
         let _ = write!(out, "&");
+    } else if matches!(mode, crisp_ownership::OwnershipMode::MutBorrow) {
+        if matches!(expr, CirExpr::Borrow { mutable: true, .. }) {
+            emit_expr(out, expr, current_module, map);
+            return;
+        }
+        let _ = write!(out, "&mut ");
     }
     emit_expr(out, expr, current_module, map);
 }

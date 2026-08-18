@@ -1,0 +1,5 @@
+spike() = 1.0
+
+test "private spike" = {
+    assert_eq(spike(), 1.0)
+}

@@ -400,11 +400,24 @@ fn collect_fn_modules(graph: &ModuleGraph) -> BTreeMap<String, String> {
     for node in graph.modules.values() {
         for item in &node.ast.items {
             if let Item::Function(f) = item {
+                map.insert(
+                    format!("{}::{}", node.module_path, f.name.name),
+                    node.module_path.clone(),
+                );
+                // Last-wins bare name for unique imports (`use core.a { step_a }`).
                 map.insert(f.name.name.clone(), node.module_path.clone());
             }
         }
     }
     map
+}
+
+fn callee_module_of(fn_modules: &BTreeMap<String, String>, current: &str, name: &str) -> String {
+    fn_modules
+        .get(&format!("{current}::{name}"))
+        .cloned()
+        .or_else(|| fn_modules.get(name).cloned())
+        .unwrap_or_else(|| current.to_string())
 }
 
 fn collect_struct_field_names(structs: &[(String, CirStruct)]) -> BTreeMap<String, Vec<String>> {
@@ -1385,10 +1398,7 @@ fn lower_expr_raw(
                         span: expr.span,
                     };
                 }
-                let callee_module = fn_modules
-                    .get(&id.name)
-                    .cloned()
-                    .unwrap_or_else(|| module.to_string());
+                let callee_module = callee_module_of(fn_modules, module, &id.name);
                 let key = format!("{callee_module}::{}", id.name);
                 let rust_result = callee_module
                     .strip_prefix("rust.")

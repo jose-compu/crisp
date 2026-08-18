@@ -1,0 +1,30 @@
+zeros(n: int) = {
+    xs := new()
+    i mut:= 0
+    while i < n {
+        push(xs, 0.0)
+        i = i + 1
+    }
+    xs
+}
+
+write_head() = {
+    xs := zeros(3)
+    xs[0] = 9.0
+    xs[0]
+}
+
+iset(xs, i, v) = {
+    xs[i] = v
+    xs[i]
+}
+
+test "helper-returned vec write" = {
+    assert_eq(write_head(), 9.0)
+}
+
+test "param index write" = {
+    assert_eq(iset(zeros(3), 0, 7.0), 7.0)
+}
+
+pub main() = print(write_head())

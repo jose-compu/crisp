@@ -1,0 +1,5 @@
+test "len in harness" = {
+    assert_eq(len([1.0, 2.0, 3.0]), 3)
+}
+
+pub main() = print(len([1.0, 2.0]))

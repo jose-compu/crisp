@@ -13,8 +13,9 @@ use crisp_cir::{CirCrate, CirFunction, CirItem};
 use crisp_manifest::{read_manifest, resolve_dependencies};
 use crisp_ownership::OwnershipMode;
 use crisp_resolve::module::load_module_graph;
+use crisp_resolve::stdlib::std_rust_path;
 use crisp_typeck::TypeChecker;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write;
 use std::path::Path;
 use thiserror::Error;
@@ -80,26 +81,43 @@ pub fn emit_test_module(tests: &[CollectedTest]) -> String {
 /// Same as [`emit_test_module`], but argument `&` follows CIR ownership modes
 /// (`emit_call_arg`) instead of the old AST heuristic (#114).
 pub fn emit_test_module_with_cir(tests: &[CollectedTest], cir: Option<&CirCrate>) -> String {
-    let runtime: Vec<_> = tests.iter().filter(|t| !t.compile_fail).collect();
-    if runtime.is_empty() {
-        return String::new();
+    emit_tests_by_module(tests, cir)
+        .into_values()
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+fn emit_tests_by_module(
+    tests: &[CollectedTest],
+    cir: Option<&CirCrate>,
+) -> BTreeMap<String, String> {
+    let mut grouped: BTreeMap<String, Vec<&CollectedTest>> = BTreeMap::new();
+    for t in tests.iter().filter(|t| !t.compile_fail) {
+        grouped.entry(t.module.clone()).or_default().push(t);
     }
-    let mut out = String::from(
-        "\n#[cfg(test)]\nmod crisp_tests {\n    use super::*;\n    #[allow(unused_imports)]\n    use crate::Show;\n    #[allow(unused_imports)]\n    use crate::Eq;\n    #[allow(unused_imports)]\n    use crate::Ord;\n\n",
-    );
-    let mut used = HashSet::new();
-    for t in runtime {
-        let fn_name = unique_test_fn_name(&mut used, &t.module, &t.name);
-        let ctx = HarnessCtx {
-            cir,
-            module: &t.module,
-        };
-        let _ = writeln!(out, "    #[test]");
-        let _ = writeln!(out, "    fn {fn_name}() {{");
-        emit_block(&mut out, &t.body, 2, &ctx);
-        let _ = writeln!(out, "    }}\n");
+    let mut out = BTreeMap::new();
+    for (module, runtime) in grouped {
+        if runtime.is_empty() {
+            continue;
+        }
+        let mut src = String::from(
+            "\n#[cfg(test)]\nmod crisp_tests {\n    use super::*;\n    #[allow(unused_imports)]\n    use crate::Show;\n    #[allow(unused_imports)]\n    use crate::Eq;\n    #[allow(unused_imports)]\n    use crate::Ord;\n\n",
+        );
+        let mut used = HashSet::new();
+        for t in runtime {
+            let fn_name = unique_test_fn_name(&mut used, &t.module, &t.name);
+            let ctx = HarnessCtx {
+                cir,
+                module: &t.module,
+            };
+            let _ = writeln!(src, "    #[test]");
+            let _ = writeln!(src, "    fn {fn_name}() {{");
+            emit_block(&mut src, &t.body, 2, &ctx);
+            let _ = writeln!(src, "    }}\n");
+        }
+        src.push_str("}\n");
+        out.insert(module, src);
     }
-    out.push_str("}\n");
     out
 }
 
@@ -226,6 +244,7 @@ fn sanitize_test_name(module: &str, name: &str) -> String {
 
 fn emit_block(out: &mut String, block: &Block, indent: usize, ctx: &HarnessCtx<'_>) {
     let pad = " ".repeat(indent);
+    let index_mut = harness_index_assign_names(block);
     for stmt in &block.stmts {
         match stmt {
             Stmt::Expr(e) => {
@@ -234,11 +253,12 @@ fn emit_block(out: &mut String, block: &Block, indent: usize, ctx: &HarnessCtx<'
             Stmt::Bind { pat, value, .. } => {
                 let name = pat_name(pat);
                 let rhs = emit_expr(ctx, value);
-                let mut_kw = if matches!(&value.kind, ExprKind::Array(_)) {
-                    "mut "
-                } else {
-                    ""
-                };
+                let mut_kw =
+                    if matches!(&value.kind, ExprKind::Array(_)) || index_mut.contains(&name) {
+                        "mut "
+                    } else {
+                        ""
+                    };
                 let _ = writeln!(out, "{pad}let {mut_kw}{name} = {rhs};");
             }
             Stmt::Assign { target, value } => {
@@ -260,6 +280,58 @@ fn pat_name(pat: &crisp_ast::pat::Pat) -> String {
     match &pat.kind {
         PatKind::Ident(id) => id.name.clone(),
         _ => "_".into(),
+    }
+}
+
+fn harness_index_assign_names(block: &Block) -> HashSet<String> {
+    let mut names = HashSet::new();
+    for stmt in &block.stmts {
+        match stmt {
+            Stmt::Expr(e) | Stmt::Bind { value: e, .. } | Stmt::Assign { value: e, .. } => {
+                harness_walk_index_assign(e, &mut names);
+            }
+        }
+    }
+    if let Some(t) = &block.tail {
+        harness_walk_index_assign(t, &mut names);
+    }
+    names
+}
+
+fn harness_walk_index_assign(expr: &Expr, names: &mut HashSet<String>) {
+    match &expr.kind {
+        ExprKind::IndexAssign { base, .. } => {
+            if let ExprKind::Ident(id) = &base.kind {
+                names.insert(id.name.clone());
+            }
+            harness_walk_index_assign(base, names);
+        }
+        ExprKind::Block(b) => {
+            names.extend(harness_index_assign_names(b));
+        }
+        ExprKind::If {
+            then_branch,
+            else_branch,
+            cond,
+            ..
+        } => {
+            harness_walk_index_assign(cond, names);
+            harness_walk_index_assign(then_branch, names);
+            if let Some(e) = else_branch {
+                harness_walk_index_assign(e, names);
+            }
+        }
+        ExprKind::Binary { left, right, .. } => {
+            harness_walk_index_assign(left, names);
+            harness_walk_index_assign(right, names);
+        }
+        ExprKind::Call { args, func, .. } => {
+            harness_walk_index_assign(func, names);
+            for a in args {
+                harness_walk_index_assign(a, names);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -346,6 +418,24 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
             if callee == "assert_eq" {
                 let arg_strs: Vec<_> = args.iter().map(|a| emit_expr(ctx, a)).collect();
                 return emit_assert_eq(args, &arg_strs);
+            }
+            if let ExprKind::Ident(id) = &func.kind
+                && let Some(path) = std_rust_path("std.vec", &id.name)
+            {
+                match path {
+                    "Vec::new" => return "Vec::new()".into(),
+                    "Vec::push" if args.len() >= 2 => {
+                        return format!(
+                            "{}.push({})",
+                            emit_expr(ctx, &args[0]),
+                            emit_expr(ctx, &args[1])
+                        );
+                    }
+                    "Vec::len" if !args.is_empty() => {
+                        return format!("{}.len() as i64", emit_expr(ctx, &args[0]));
+                    }
+                    _ => {}
+                }
             }
             let arg_strs: Vec<_> = args
                 .iter()
@@ -463,13 +553,13 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
         }
         ExprKind::Index { base, index } => {
             format!(
-                "{}[{} as usize]",
+                "{}[({}) as usize]",
                 emit_expr(ctx, base),
                 emit_expr(ctx, index)
             )
         }
         ExprKind::IndexAssign { base, index, value } => format!(
-            "{}[{} as usize] = {}",
+            "{}[({}) as usize] = {}",
             emit_expr(ctx, base),
             emit_expr(ctx, index),
             emit_expr(ctx, value)
@@ -588,7 +678,9 @@ fn emit_call_arg_for_test(ctx: &HarnessCtx<'_>, expr: &Expr, mode: OwnershipMode
         ExprKind::Str(_) => emit_expr(ctx, expr),
         _ => {
             let inner = emit_expr(ctx, expr);
-            if matches!(mode, OwnershipMode::Borrow) {
+            if matches!(mode, OwnershipMode::MutBorrow) {
+                format!("&mut {inner}")
+            } else if matches!(mode, OwnershipMode::Borrow) {
                 format!("&{inner}")
             } else {
                 inner
@@ -618,12 +710,23 @@ pub fn run_tests(crate_root: &Path) -> Result<TestRunReport, TestHarnessError> {
 
     with_emit_dir_lock(crate_root, || {
         let cir = analyze_and_build_cir(crate_root)?;
-        let emitted_tests = emit_test_module_with_cir(&tests, Some(&cir));
+        let tests_by_module = emit_tests_by_module(&tests, Some(&cir));
+        let emitted_tests = tests_by_module
+            .values()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("");
         let manifest = read_manifest(crate_root).context("read crisp.toml")?;
         let deps = resolve_dependencies(&manifest);
         let emitted = emit_crate(&cir);
-        write_cargo_project_unlocked(crate_root, &emitted, &manifest, &deps, Some(&emitted_tests))
-            .context("write target/rust with tests")?;
+        write_cargo_project_unlocked(
+            crate_root,
+            &emitted,
+            &manifest,
+            &deps,
+            Some(&tests_by_module),
+        )
+        .context("write target/rust with tests")?;
 
         match cargo_test(crate_root) {
             Err(CargoError::NotFound) => Err(TestHarnessError::Other(anyhow::anyhow!(

@@ -27,6 +27,10 @@ impl TypeEnv {
         self.bindings.get(name)
     }
 
+    pub fn entries(&self) -> impl Iterator<Item = (&String, &Scheme)> {
+        self.bindings.iter()
+    }
+
     pub fn extend(&mut self, other: &TypeEnv) {
         self.bindings.extend(other.bindings.clone());
     }

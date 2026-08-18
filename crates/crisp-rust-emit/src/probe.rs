@@ -642,16 +642,16 @@ fn emit_expr_inner(
         }
         ExprKind::Index { base, index } => {
             emit_expr(out, base, osig, ownership);
-            let _ = write!(out, "[");
+            let _ = write!(out, "[(");
             emit_expr(out, index, osig, ownership);
-            let _ = write!(out, " as usize]");
+            let _ = write!(out, ") as usize]");
         }
         ExprKind::IndexAssign { base, index, value } => {
             let _ = write!(out, "{{ ");
             emit_expr(out, base, osig, ownership);
-            let _ = write!(out, "[");
+            let _ = write!(out, "[(");
             emit_expr(out, index, osig, ownership);
-            let _ = write!(out, " as usize] = ");
+            let _ = write!(out, ") as usize] = ");
             emit_expr(out, value, osig, ownership);
             let _ = write!(out, "; () }}");
         }

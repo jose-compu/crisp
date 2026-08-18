@@ -182,6 +182,10 @@ pub struct TypeChecker {
     fn_vec_tys: Vec<(Span, Ty)>,
     extern_rust: BTreeMap<(String, String), RustExternSig>,
     undeclared_rust: BTreeMap<String, (String, String)>,
+    /// Module currently being checked (`core.a`). Bare calls look up `{current}::{name}` (#146).
+    current_module: String,
+    /// Crisp `use path { name }` aliases for the module being checked (#146).
+    imported: TypeEnv,
 }
 
 impl TypeChecker {
@@ -252,6 +256,8 @@ impl TypeChecker {
             fn_vec_tys: Vec::new(),
             extern_rust: BTreeMap::new(),
             undeclared_rust: BTreeMap::new(),
+            current_module: String::new(),
+            imported: TypeEnv::new(),
         }
     }
 
@@ -644,7 +650,7 @@ impl TypeChecker {
                         ret: Box::new(ret),
                     };
                     self.env.insert(
-                        f.name.name.clone(),
+                        format!("{}::{}", module, f.name.name),
                         generalize_named_params(&fn_ty, &gens, &mut self.ctx),
                     );
                     self.generic_params = saved;
@@ -788,16 +794,61 @@ impl TypeChecker {
     }
 
     fn check_module(&mut self, module: &str, file: &SourceFile) -> Result<(), TypeError> {
+        let saved_mod = std::mem::replace(&mut self.current_module, module.to_string());
+        let imports = self.collect_crisp_imports(file);
+        let saved_imp = std::mem::replace(&mut self.imported, imports);
+        let result = (|| {
+            for item in &file.items {
+                match item {
+                    Item::Function(f) => self.check_function(module, f)?,
+                    Item::Impl(ib) => self.check_impl(module, ib)?,
+                    Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
+                    Item::TestCompileFail(_) | Item::Extern(_) => {}
+                    _ => {}
+                }
+            }
+            Ok(())
+        })();
+        self.current_module = saved_mod;
+        self.imported = saved_imp;
+        result
+    }
+
+    fn collect_crisp_imports(&self, file: &SourceFile) -> TypeEnv {
+        let mut env = TypeEnv::new();
         for item in &file.items {
-            match item {
-                Item::Function(f) => self.check_function(module, f)?,
-                Item::Impl(ib) => self.check_impl(module, ib)?,
-                Item::Test(t) => self.check_test_block(module, &t.name, &t.body)?,
-                Item::TestCompileFail(_) | Item::Extern(_) => {}
-                _ => {}
+            let Item::Use(u) = item else {
+                continue;
+            };
+            if u.path.first().is_some_and(|p| p.name == "rust") {
+                continue;
+            }
+            let path = u
+                .path
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>()
+                .join(".");
+            if let Some(imports) = &u.imports {
+                for imp in imports {
+                    let local = imp.alias.as_ref().unwrap_or(&imp.name).name.clone();
+                    let q = format!("{}::{}", path, imp.name.name);
+                    if let Some(s) = self.env.get(&q) {
+                        env.insert(local, s.clone());
+                    }
+                }
+            } else {
+                let prefix = format!("{path}::");
+                for (k, s) in self.env.entries() {
+                    if let Some(bare) = k.strip_prefix(&prefix)
+                        && !bare.contains("::")
+                    {
+                        env.insert(bare.to_string(), s.clone());
+                    }
+                }
             }
         }
-        Ok(())
+        env
     }
 
     /// Env used to decide which holes may be named now. Skip this item (its own
@@ -806,12 +857,14 @@ impl TypeChecker {
     fn env_for_generalize(&self, self_name: &str) -> TypeEnv {
         let mut env = self.env.clone();
         env.remove(self_name);
+        env.remove(&format!("{}::{self_name}", self.current_module));
         for sig in self.signatures.values() {
             if sig.impl_ty.is_some() || sig.name.starts_with("test::") {
                 continue;
             }
             if sig.name != self_name {
                 env.remove(&sig.name);
+                env.remove(&format!("{}::{}", sig.module, sig.name));
             }
         }
         env
@@ -1059,9 +1112,10 @@ impl TypeChecker {
         let saved = self.bind_rigid_generics(&gens);
         // Reuse stub param/ret vars so call-site unifications from earlier modules stick.
         // Explicit generics are instantiated per call; the body is checked with rigid names.
+        let stub_key = format!("{module}::{}", f.name.name);
         let stub = if gens.is_empty() {
             self.env
-                .get(&f.name.name)
+                .get(&stub_key)
                 .map(|s| instantiate(&mut self.ctx, s))
                 .map(|t| self.ctx.apply(&t))
         } else {
@@ -1162,7 +1216,7 @@ impl TypeChecker {
             },
         );
         self.env.insert(
-            f.name.name.clone(),
+            format!("{module}::{}", f.name.name),
             if gens.is_empty() {
                 scheme(fn_ty)
             } else {
@@ -1185,7 +1239,7 @@ impl TypeChecker {
             let Some(sig) = self.signatures.get(&key) else {
                 continue;
             };
-            if let Some(uses) = insts.get(&sig.name) {
+            if let Some(uses) = insts.get(&key).or_else(|| insts.get(&sig.name)) {
                 let mut labels: Vec<String> = uses
                     .iter()
                     .map(|u| u.args.iter().map(format_ty).collect::<Vec<_>>().join(", "))
@@ -1206,7 +1260,7 @@ impl TypeChecker {
             {
                 continue;
             }
-            let Some(uses) = insts.get(&sig.name) else {
+            let Some(uses) = insts.get(&key).or_else(|| insts.get(&sig.name)) else {
                 continue;
             };
             if uses.is_empty() {
@@ -1346,8 +1400,9 @@ impl TypeChecker {
                     let applied: Vec<Ty> = params.iter().map(|p| self.ctx.apply(p)).collect();
                     if applied.iter().all(ty_is_ground) {
                         self.propagate_callee_bounds(&id.name, &applied);
+                        let inst_key = format!("{}::{}", self.current_module, id.name);
                         self.fn_instantiations
-                            .entry(id.name.clone())
+                            .entry(inst_key)
                             .or_default()
                             .push(CallInst {
                                 args: applied,
@@ -2172,10 +2227,17 @@ impl TypeChecker {
     }
 
     fn lookup(&mut self, env: &TypeEnv, name: &str, span: Span) -> Result<Ty, TypeError> {
-        let scheme = env.get(name).ok_or_else(|| TypeError::UnknownName {
-            name: name.to_string(),
-            span,
-        })?;
+        let scheme = env
+            .get(name)
+            .or_else(|| self.imported.get(name))
+            .or_else(|| {
+                let q = format!("{}::{name}", self.current_module);
+                env.get(&q).or_else(|| self.env.get(&q))
+            })
+            .ok_or_else(|| TypeError::UnknownName {
+                name: name.to_string(),
+                span,
+            })?;
         Ok(instantiate(&mut self.ctx, scheme))
     }
 
@@ -2369,6 +2431,10 @@ impl TypeChecker {
     }
 
     fn free_fn_sig(&self, name: &str) -> Option<&InferredSig> {
+        let q = format!("{}::{name}", self.current_module);
+        if let Some(s) = self.signatures.get(&q).filter(|s| s.impl_ty.is_none()) {
+            return Some(s);
+        }
         self.signatures
             .values()
             .find(|s| s.name == name && s.impl_ty.is_none())
@@ -2402,7 +2468,11 @@ impl TypeChecker {
         insts: &BTreeMap<String, Vec<CallInst>>,
     ) -> Result<(), TypeError> {
         for (fname, uses) in insts {
-            let Some(sig) = self.free_fn_sig(fname) else {
+            let Some(sig) = self
+                .signatures
+                .get(fname)
+                .or_else(|| self.free_fn_sig(fname))
+            else {
                 continue;
             };
             if sig.op_bounds.is_empty() || sig.generics.is_empty() {

@@ -3,7 +3,7 @@
 use crate::emit::EmitResult;
 use anyhow::{Context, Result};
 use crisp_manifest::{CrateManifest, ResolvedDependency};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -43,8 +43,13 @@ pub fn write_cargo_project(
     extra_deps: &[ResolvedDependency],
     test_rs: Option<&str>,
 ) -> Result<PathBuf> {
+    let map = test_rs.map(|s| {
+        let mut m = BTreeMap::new();
+        m.insert("main".to_string(), s.to_string());
+        m
+    });
     with_emit_dir_lock(crate_root, || {
-        write_cargo_project_unlocked(crate_root, emitted, manifest, extra_deps, test_rs)
+        write_cargo_project_unlocked(crate_root, emitted, manifest, extra_deps, map.as_ref())
     })
 }
 
@@ -53,7 +58,7 @@ pub(crate) fn write_cargo_project_unlocked(
     emitted: &EmitResult,
     manifest: &CrateManifest,
     extra_deps: &[ResolvedDependency],
-    test_rs: Option<&str>,
+    tests_by_module: Option<&BTreeMap<String, String>>,
 ) -> Result<PathBuf> {
     let out_dir = emit_dir(crate_root);
     let src = out_dir.join("src");
@@ -63,7 +68,9 @@ pub(crate) fn write_cargo_project_unlocked(
     atomic_write(&out_dir.join("Cargo.toml"), &cargo_toml)?;
 
     let mut main_rs = emitted.lib_rs.clone();
-    if let Some(tests) = test_rs {
+    if let Some(map) = tests_by_module
+        && let Some(tests) = map.get("main")
+    {
         main_rs.push_str(tests);
     }
     atomic_write(&src.join("main.rs"), &main_rs)?;
@@ -75,7 +82,13 @@ pub(crate) fn write_cargo_project_unlocked(
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
-        atomic_write(&path, content)?;
+        let mut body = content.clone();
+        if let Some(map) = tests_by_module
+            && let Some(tests) = map.get(mod_name)
+        {
+            body.push_str(tests);
+        }
+        atomic_write(&path, &body)?;
     }
 
     Ok(out_dir)

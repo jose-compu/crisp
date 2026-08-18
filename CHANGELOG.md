@@ -9,6 +9,16 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Fixed
+
+- `n as float + expr` is `(n as float) + expr`; `+` is not a trait bound on the cast target ([#140](https://github.com/jose-compu/crisp/issues/140)).
+- Unbraced `else (…)/den` then a following `((i as float)+…)` is a sibling statement, not a postfix call of `den` ([#145](https://github.com/jose-compu/crisp/issues/145)).
+- Index emit parenthesizes the index: `xs[(s * n + i) as usize]` ([#142](https://github.com/jose-compu/crisp/issues/142)).
+- `let mut` / `mut` params for `xs[i] = v` when the base is a `vec` or an `IndexAssign` target ([#141](https://github.com/jose-compu/crisp/issues/141)).
+- `crisp test` harness emits `xs.len()` / `.push` / `Vec::new()`, matching production ([#144](https://github.com/jose-compu/crisp/issues/144)).
+- Nested-module `test` items are appended to that module’s `.rs` so private helpers are visible ([#143](https://github.com/jose-compu/crisp/issues/143)).
+- Function stubs are keyed `{module}::{name}`, so private helpers of the same name in sibling modules do not unify ([#146](https://github.com/jose-compu/crisp/issues/146)).
+
 ## [1.8.0] — 2026-08-17
 
 ### Fixed

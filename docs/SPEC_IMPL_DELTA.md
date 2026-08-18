@@ -46,7 +46,9 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | int / float mix | §3 | Checking-position `int` → `float`; postfix `as float` / `as int`; W0087 on non-literal widen; no implicit narrow — [#112](https://github.com/jose-compu/crisp/issues/112) |
 | Record `:=` / Copy | §7, §0.1 | All-Copy records derive `Copy`; other records clone at `:=` when the source is reused — [#118](https://github.com/jose-compu/crisp/issues/118) |
 | Test harness args | §19 | Call `&` follows CIR ownership (same as `emit_call_arg`), not an AST heuristic — [#114](https://github.com/jose-compu/crisp/issues/114) |
-| Collections | §3 arrays, §15 `vec<T>` | `new`/`push`/`len` and `[1.0, 2.0]` infer `vec<T>` ([#119](https://github.com/jose-compu/crisp/issues/119)). `xs[i]` / `xs[i] = v` emit `xs[i as usize]` ([#120](https://github.com/jose-compu/crisp/issues/120)). |
+| Collections | §3 arrays, §15 `vec<T>` | `new`/`push`/`len` and `[1.0, 2.0]` infer `vec<T>` ([#119](https://github.com/jose-compu/crisp/issues/119)). `xs[i]` / `xs[i] = v` emit `xs[(i) as usize]` ([#120](https://github.com/jose-compu/crisp/issues/120), [#142](https://github.com/jose-compu/crisp/issues/142)); index writes are `let mut` / `mut` params ([#141](https://github.com/jose-compu/crisp/issues/141)). |
+| Cast / `else` newline | §3, §6.1 | `as float + expr` is a binop, not a bound ([#140](https://github.com/jose-compu/crisp/issues/140)). Unbraced `else` does not eat the next line as a call ([#145](https://github.com/jose-compu/crisp/issues/145)). |
+| Nested tests / stubs | §12, §19 | Tests append to the defining module’s `.rs` ([#143](https://github.com/jose-compu/crisp/issues/143)). Fn stubs are `{module}::{name}` ([#146](https://github.com/jose-compu/crisp/issues/146)). Harness `len` is `.len()` ([#144](https://github.com/jose-compu/crisp/issues/144)). |
 | Math prelude | §15 | `exp` / `sin` / `cos` / `tanh` / `sqrt` → `f64::{…}` ([#115](https://github.com/jose-compu/crisp/issues/115)). |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
 

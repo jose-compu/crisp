@@ -1,0 +1,7 @@
+at(xs, s, n, i) = xs[s * n + i]
+
+test "index expr parens" = {
+    assert_eq(at([1.0, 2.0, 3.0, 4.0], 1, 2, 0), 3.0)
+}
+
+pub main() = print(at([1.0, 2.0, 3.0, 4.0], 1, 2, 0))

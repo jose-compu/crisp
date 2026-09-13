@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.9.0] — 2026-09-13
+
 ### Added
 
 - `extern rust` accepts `vec<float>` / `vec<int>` (call emit `.as_slice()`, owned return `Vec<f64>` / `Vec<i64>`). `map` and other types stay **E0090** ([#153](https://github.com/jose-compu/crisp/issues/153)). See `examples/path_dep`.
@@ -266,7 +268,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/jose-compu/crisp/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/jose-compu/crisp/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/jose-compu/crisp/compare/v1.7.3...v1.8.0
 [1.7.3]: https://github.com/jose-compu/crisp/compare/v1.7.2...v1.7.3

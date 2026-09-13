@@ -103,7 +103,12 @@ fn all_examples_emit() {
         eprintln!("emit: {name}");
         let out = emit_to_target(&root).unwrap_or_else(|e| panic!("{name} emit: {e}"));
         assert!(out.out_dir.join("Cargo.toml").exists());
-        assert!(out.out_dir.join("src/main.rs").exists());
+        let has_bin = out.out_dir.join("src/main.rs").exists();
+        let has_lib = out.out_dir.join("src/lib.rs").exists();
+        assert!(
+            has_bin || has_lib,
+            "{name} emit produced neither src/main.rs nor src/lib.rs"
+        );
         let cargo = std::fs::read_to_string(out.out_dir.join("Cargo.toml")).unwrap();
         let manifest = read_manifest(&root).unwrap();
         assert!(cargo.contains(&format!("name = \"{}\"", manifest.name)));

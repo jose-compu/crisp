@@ -192,6 +192,69 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "fs_write",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "fs_write",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "create_dir_all",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "create_dir_all",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_var",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_var",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_or",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_or",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cwd",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "cwd",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_join",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_join",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_parent",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_parent",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_file",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_file",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_dir",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_dir",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "stdin_line",
                     symbol: SymbolKey {
                         module: "std.io",
@@ -331,6 +394,15 @@ ResolvedCrate {
                 "push",
                 "len",
                 "read_to_string",
+                "fs_write",
+                "create_dir_all",
+                "env_var",
+                "env_or",
+                "cwd",
+                "path_join",
+                "path_parent",
+                "path_is_file",
+                "path_is_dir",
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
@@ -536,6 +608,69 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "fs_write",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "fs_write",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "create_dir_all",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "create_dir_all",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_var",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_var",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_or",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_or",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cwd",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "cwd",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_join",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_join",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_parent",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_parent",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_file",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_file",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_dir",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_dir",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "stdin_line",
                     symbol: SymbolKey {
                         module: "std.io",
@@ -675,6 +810,15 @@ ResolvedCrate {
                 "push",
                 "len",
                 "read_to_string",
+                "fs_write",
+                "create_dir_all",
+                "env_var",
+                "env_or",
+                "cwd",
+                "path_join",
+                "path_parent",
+                "path_is_file",
+                "path_is_dir",
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
@@ -880,6 +1024,69 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "fs_write",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "fs_write",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "create_dir_all",
+                    symbol: SymbolKey {
+                        module: "std.fs",
+                        name: "create_dir_all",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_var",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_var",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "env_or",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "env_or",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "cwd",
+                    symbol: SymbolKey {
+                        module: "std.env",
+                        name: "cwd",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_join",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_join",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_parent",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_parent",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_file",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_file",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "path_is_dir",
+                    symbol: SymbolKey {
+                        module: "std.path",
+                        name: "path_is_dir",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "stdin_line",
                     symbol: SymbolKey {
                         module: "std.io",
@@ -1033,6 +1240,15 @@ ResolvedCrate {
                 "push",
                 "len",
                 "read_to_string",
+                "fs_write",
+                "create_dir_all",
+                "env_var",
+                "env_or",
+                "cwd",
+                "path_join",
+                "path_parent",
+                "path_is_file",
+                "path_is_dir",
                 "stdin_line",
                 "sleep_ms",
                 "new_int",
@@ -1054,7 +1270,7 @@ ResolvedCrate {
             ],
         },
     ],
-    symbol_count: 44,
+    symbol_count: 53,
     rust_imports: [],
     warnings: [],
 }

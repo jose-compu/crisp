@@ -15,6 +15,8 @@ pub struct CirCrate {
     pub rust_extern_spans: std::collections::BTreeMap<(String, String), Span>,
     /// Local binding → Rust crate name for harness emit (#116).
     pub rust_import_crates: std::collections::BTreeMap<String, String>,
+    /// `extern rust` param index is `vec<float>`/`vec<int>` → emit `.as_slice()` (#153).
+    pub rust_extern_vec_params: std::collections::BTreeMap<(String, String), Vec<bool>>,
 }
 
 #[derive(Debug, Clone)]

@@ -376,7 +376,7 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
                     &err.to_string().replacen("[E0089] ", "", 1),
                     *span,
                     Severity::Error,
-                    &["help: declare it in `extern rust <crate> { item(…) -> … }` or a `.crpi` sidecar".into()],
+                    &["help: declare it in `extern rust <crate> { item(…) -> … }` or a `.crpi` sidecar (`float`/`int`/`str`/`bool`/`vec<float>`/`vec<int>`)".into()],
                 )
                 .rendered;
                 eprintln!("{rendered}");

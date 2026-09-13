@@ -4,11 +4,14 @@
 -- as `{ path = "../../vendor/local_core" }` so Makefile inject is not required.
 -- Typed imports come from `src/local_core.crpi` (`extern rust`, #116).
 
-use local_core { answer, lap3 }
+use local_core { answer, lap3, sum_f64, ones, plot_heatmap }
 
 pub main() = {
     print(answer())
     print(lap3(0.0, 1.0, 0.0, 1.0))
+    xs := ones(4)
+    print(sum_f64(xs))
+    print(plot_heatmap("out.png", 2, 2, xs, "viridis"))
 }
 
 test "answer is 42" = {
@@ -17,4 +20,15 @@ test "answer is 42" = {
 
 test "lap3 spike" = {
     assert_eq(lap3(0.0, 1.0, 0.0, 1.0), -2.0)
+}
+
+test "sum ones" = {
+    xs := ones(4)
+    assert_eq(sum_f64(xs), 4.0)
+}
+
+test "heatmap takes vec" = {
+    xs := ones(4)
+    s := plot_heatmap("out.png", 2, 2, xs, "viridis")
+    assert_eq(s, "out.png:2x2:n=4:cmap=viridis")
 }

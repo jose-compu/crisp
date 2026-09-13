@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.8.1)
+# Known limitations (Crisp v1.9.0)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)), trait bounds/`dyn` ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
@@ -11,6 +11,7 @@ This page documents behaviors that surprise users and are **not** always full la
 ## Modules
 
 - Flat `src/*.crp` modules may import each other regardless of filename order (function stubs are registered before body checking; [#13](https://github.com/jose-compu/crisp/issues/13)). Nested layouts such as `src/math/vector.crp` emit a Rust `math` / `math/vector` module tree with `crate::` paths for intra-crate **functions and types** (see `examples/nested_math`, `examples/nested_types`; [#35](https://github.com/jose-compu/crisp/issues/35), [#93](https://github.com/jose-compu/crisp/issues/93), [#100](https://github.com/jose-compu/crisp/issues/100)). Typeck keys function stubs as `{module}::{name}` so private helpers of the same name in sibling modules do not unify ([#146](https://github.com/jose-compu/crisp/issues/146)).
+- **Crate root:** `src/main.crp` is `[[bin]]`; `src/lib.crp` is `[lib]` (`examples/lib_root`, [#152](https://github.com/jose-compu/crisp/issues/152)). A lib-only crate has no dummy `main`; `crisp run` errors. `pub` items in `lib.crp` are the crate’s Rust API.
 
 ## Types and expressions
 
@@ -34,7 +35,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 `vec<T>` is inferred from use (`new`/`push`/`[1.0, 2.0]`). Pin with `vec<float>` or a return type. Unconstrained `new()` is **E0088**. Indexing `xs[i]` / `xs[i] = v` is `int` → `T` ([#120](https://github.com/jose-compu/crisp/issues/120)). `map` / `set` remain names only.
 
-| Spec | 1.8.1 |
+| Spec | 1.9.0 |
 |---|---|
 | `vec<T>` (`vec<float>`, `vec<vec<float>>`) | `new` / `push` / `len` infer `T`; `[1.0, 2.0]` is a growable vec ([#119](https://github.com/jose-compu/crisp/issues/119)) |
 | Array / slice literals `[1.0, 2.0]` | Vec literal (not `[T; N]`) |
@@ -61,9 +62,9 @@ Workaround: slices `xs[1..4]`, `map`/`set`, and `[T; N]` are still later. A grow
 - **Compat alias:** `use rust.serde_json { … }` / `use rust::<crate> { … }` still force the Cargo crate.
 - **Collision:** if a Crisp module and a Rust dep share a name, bare `use <name>` binds the **Crisp module** and emits **W0048**; use `use rust.<name> { … }` for the crate.
 - Resolve codes: `E0044`–`E0047`, `W0048`. Bindings: `ResolvedRustImport` / `SymbolKind::RustFn`.
-- **Result absorption (#55):** known stubs (`serde_json::from_str` / `to_string`, `ureq::get`) lower to `.map_err(|e| CrispError::Thrown(...))?` and mark the enclosing function fallible. Absorb with `catch`, or let `main` return `Result<(), CrispError>`. Other `rust = true` imports need `extern rust crate { item(…) -> … }` (or a `src/*.crpi` sidecar). Types: `float`, `int`, `str`, `bool`, plus `!` for `Result`. Undeclared calls are **E0089**. A signature that rustc rejects is **E0090** (user assertion; not a crisp bug) ([#116](https://github.com/jose-compu/crisp/issues/116), `examples/path_dep`).
+- **Result absorption (#55):** known stubs (`serde_json::from_str` / `to_string`, `ureq::get`) lower to `.map_err(|e| CrispError::Thrown(...))?` and mark the enclosing function fallible. Absorb with `catch`, or let `main` return `Result<(), CrispError>`. Other `rust = true` imports need `extern rust crate { item(…) -> … }` (or a `src/*.crpi` sidecar). Types: `float`, `int`, `str`, `bool`, `vec<float>`, `vec<int>`, plus `!` for `Result`. Call emit of a vec param is `.as_slice()` (`&[f64]` / `&[i64]`); a vec return is owned `Vec`. Undeclared calls are **E0089**. A signature that rustc rejects is **E0090** (user assertion; not a crisp bug) ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153), `examples/path_dep`). `map`, records, `vec<str>`, and ndarray stay E0090.
 
 ## Stdlib
 
-- **Shipped:** `vec<T>` via `new` / `push` / `len` / `[1.0, 2.0]` and `xs[i]` ([#119](https://github.com/jose-compu/crisp/issues/119), [#120](https://github.com/jose-compu/crisp/issues/120)), prelude `exp` / `sin` / `cos` / `tanh` / `sqrt` ([#115](https://github.com/jose-compu/crisp/issues/115)), `extern rust` scalar imports ([#116](https://github.com/jose-compu/crisp/issues/116)), limited fs/async, prelude Show/Eq/Ord ([#27](https://github.com/jose-compu/crisp/issues/27)), `std.net.parse_ip`, thin HTTP via `ureq` ([#28](https://github.com/jose-compu/crisp/issues/28)), `**` (`.powf`).
-- **Not shipped:** `ln` / `log` as math (prelude `log` is print), `tan` / `abs` / `floor`, full Crisp `std.http` server API (§20), channels ([#38](https://github.com/jose-compu/crisp/issues/38) → v2.0.0), most of the §15 trait catalog beyond Show/Eq/Ord. No slices, generics, or ndarray in `extern rust`.
+- **Shipped:** `vec<T>` via `new` / `push` / `len` / `[1.0, 2.0]` and `xs[i]` ([#119](https://github.com/jose-compu/crisp/issues/119), [#120](https://github.com/jose-compu/crisp/issues/120)), prelude `exp` / `sin` / `cos` / `tanh` / `sqrt` ([#115](https://github.com/jose-compu/crisp/issues/115)), `extern rust` scalars and `vec<float>` / `vec<int>` ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153)), `env_var` / `env_or` / `cwd` / `path_*` / `fs_write` / `create_dir_all` / `read_to_string` ([#151](https://github.com/jose-compu/crisp/issues/151), `examples/os_scalars`), `[lib]` from `src/lib.crp` ([#152](https://github.com/jose-compu/crisp/issues/152), `examples/lib_root`), prelude Show/Eq/Ord ([#27](https://github.com/jose-compu/crisp/issues/27)), `std.net.parse_ip`, thin HTTP via `ureq` ([#28](https://github.com/jose-compu/crisp/issues/28)), `**` (`.powf`).
+- **Not shipped:** `ln` / `log` as math (prelude `log` is print), `tan` / `abs` / `floor`, full Crisp `std.http` server API (§20), channels ([#38](https://github.com/jose-compu/crisp/issues/38) → v2.0.0), most of the §15 trait catalog beyond Show/Eq/Ord. No Crisp slices, `vec<str>`, generics, or ndarray in `extern rust`. git / process spawn stay out of the prelude.

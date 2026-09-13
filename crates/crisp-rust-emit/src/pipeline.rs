@@ -24,6 +24,8 @@ pub enum PipelineError {
     Other(#[from] anyhow::Error),
     #[error("[E0058] rustc/cargo not available")]
     ToolchainUnavailable,
+    #[error("crisp run: crate is [lib] (src/lib.crp); no bin. Use `crisp test` or `crisp check`.")]
+    NoBin,
 }
 
 pub struct EmitOutput {
@@ -80,6 +82,9 @@ pub fn build_emitted(crate_root: &Path) -> Result<std::path::PathBuf, PipelineEr
 }
 
 pub fn run_emitted(crate_root: &Path) -> Result<String, PipelineError> {
+    if crate_root.join("src/lib.crp").is_file() && !crate_root.join("src/main.crp").is_file() {
+        return Err(PipelineError::NoBin);
+    }
     with_emit_dir_lock(crate_root, || {
         let out = emit_to_target_unlocked(crate_root)?;
         match cargo_build(crate_root, &out.main_rs, &out.source_map) {

@@ -9,6 +9,12 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- `extern rust` accepts `vec<float>` / `vec<int>` (call emit `.as_slice()`, owned return `Vec<f64>` / `Vec<i64>`). `map` and other types stay **E0090** ([#153](https://github.com/jose-compu/crisp/issues/153)). See `examples/path_dep`.
+- Prelude OS scalars: `env_var` / `env_or` / `cwd`, `path_join` / `path_parent` / `path_is_file` / `path_is_dir`, `fs_write` / `create_dir_all` (plus existing `read_to_string`). Fallible items use ambient `CrispError` ([#151](https://github.com/jose-compu/crisp/issues/151)). See `examples/os_scalars`.
+- `src/lib.crp` emits Cargo `[lib]` (no dummy `[[bin]]`). `crisp run` on a lib-only crate errors; `crisp test` / `check` work ([#152](https://github.com/jose-compu/crisp/issues/152)). See `examples/lib_root`.
+
 ## [1.8.1] — 2026-08-18
 
 ### Fixed

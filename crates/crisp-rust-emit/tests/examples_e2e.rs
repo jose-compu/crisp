@@ -64,6 +64,8 @@ const EXAMPLES: &[&str] = &[
     "path_dep",
     "loops",
     "closures",
+    "os_scalars",
+    "lib_root",
 ];
 
 #[test]
@@ -157,6 +159,8 @@ fn examples_with_tests_pass_crpc_test() {
         "loops",
         "closures",
         "path_dep",
+        "os_scalars",
+        "lib_root",
     ] {
         let root = example(name);
         eprintln!("crisp test: {name}");
@@ -219,6 +223,7 @@ fn runnable_examples_build_and_run() {
         "rust_shadow",
         "net_http",
         "path_dep",
+        "os_scalars",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -403,6 +408,8 @@ const BUILDABLE: &[&str] = &[
     "path_dep",
     "loops",
     "closures",
+    "os_scalars",
+    "lib_root",
 ];
 
 #[test]

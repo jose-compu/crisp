@@ -55,6 +55,8 @@ fn parse_all_examples() {
         "rust_import",
         "rust_shadow",
         "path_dep",
+        "os_scalars",
+        "lib_root",
         "generics",
         "shapes_generic",
         "shapes_user",

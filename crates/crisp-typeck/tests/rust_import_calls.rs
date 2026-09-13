@@ -125,3 +125,54 @@ fn example_path_dep_typechecks_with_extern() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/path_dep");
     TypeChecker::check_crate(&root).expect("path_dep typeck");
 }
+
+#[test]
+fn extern_rust_vec_float_is_allowed() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_extern_fixture(
+        tmp.path(),
+        r#"
+use kernels { sum_f64 }
+
+pub main() = {
+    print(sum_f64([1.0, 2.0]))
+}
+"#,
+        r#"
+extern rust kernels {
+    sum_f64(xs: vec<float>) -> float
+}
+"#,
+    );
+    let typed = TypeChecker::check_crate(tmp.path()).expect("vec FFI #153");
+    let sig = typed
+        .signatures
+        .get("rust.kernels::sum_f64")
+        .expect("sum_f64");
+    assert!(matches!(sig.ret, crisp_typeck::Ty::Float));
+    assert_eq!(sig.params.len(), 1);
+}
+
+#[test]
+fn extern_rust_map_is_e0090() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_extern_fixture(
+        tmp.path(),
+        r#"
+use kernels { bad }
+
+pub main() = {
+    bad()
+}
+"#,
+        r#"
+extern rust kernels {
+    bad(xs: map) -> float
+}
+"#,
+    );
+    let err = TypeChecker::check_crate(tmp.path()).expect_err("map FFI");
+    let msg = err.to_string();
+    assert!(msg.contains("E0090"), "{msg}");
+    assert!(msg.contains("map"), "{msg}");
+}

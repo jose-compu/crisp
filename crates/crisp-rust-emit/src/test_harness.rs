@@ -144,6 +144,16 @@ impl HarnessCtx<'_> {
             .map(String::as_str)
     }
 
+    fn rust_extern_vec_param(&self, crate_name: &str, item: &str, i: usize) -> bool {
+        self.cir
+            .and_then(|c| {
+                c.rust_extern_vec_params
+                    .get(&(crate_name.to_string(), item.to_string()))
+            })
+            .and_then(|v| v.get(i).copied())
+            .unwrap_or(false)
+    }
+
     fn method_param_mode(&self, method: &str, index: usize, instance: bool) -> OwnershipMode {
         match self.cir {
             None => OwnershipMode::Owned,
@@ -445,6 +455,11 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                         ExprKind::Ident(id) => id.name.as_str(),
                         _ => "",
                     };
+                    if let Some(crate_name) = ctx.rust_crate_for(local)
+                        && ctx.rust_extern_vec_param(crate_name, local, i)
+                    {
+                        return format!("{}.as_slice()", emit_expr(ctx, a));
+                    }
                     emit_call_arg_for_test(ctx, a, ctx.ident_param_mode(local, i))
                 })
                 .collect();

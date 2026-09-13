@@ -327,6 +327,7 @@ Current compiler: **v1.8.1**. Active milestones:
 | **v1.7.3** | patch | `crisp.toml` path deps; `crisp run` cwd = crate root | label `release:v1.7.3` |
 | **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` (shipped) | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
 | **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (shipped) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
+| **v1.9.0** | minor | `extern rust` vec FFI, OS prelude, `[lib]` from `src/lib.crp` (in progress) | label `release:v1.9.0` · [#151](https://github.com/jose-compu/crisp/issues/151)–[#153](https://github.com/jose-compu/crisp/issues/153) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |

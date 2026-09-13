@@ -232,6 +232,19 @@ impl CirBuilder {
                 .iter()
                 .map(|i| (i.local_name.clone(), i.crate_name.clone()))
                 .collect(),
+            rust_extern_vec_params: typed
+                .rust_externs
+                .iter()
+                .map(|s| {
+                    (
+                        (s.crate_name.clone(), s.item.clone()),
+                        s.params
+                            .iter()
+                            .map(crisp_typeck::rust_extern_numeric_vec)
+                            .collect(),
+                    )
+                })
+                .collect(),
         })
     }
 }
@@ -1404,6 +1417,7 @@ fn lower_expr_raw(
                     .strip_prefix("rust.")
                     .is_some_and(|crate_name| typed.rust_call_fallible(crate_name, &id.name));
                 let fallible = rust_result
+                    || crisp_resolve::stdlib::stdlib_is_fallible(&id.name)
                     || errors
                         .signatures
                         .get(&key)

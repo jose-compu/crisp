@@ -64,16 +64,41 @@ pub(crate) fn write_cargo_project_unlocked(
     let src = out_dir.join("src");
     fs::create_dir_all(&src)?;
 
-    let cargo_toml = format_cargo_toml(manifest, extra_deps, crate_root);
+    let cargo_toml = format_cargo_toml(
+        manifest,
+        extra_deps,
+        crate_root,
+        emitted.is_lib_only,
+        emitted.lib_module_rs.is_some(),
+    );
     atomic_write(&out_dir.join("Cargo.toml"), &cargo_toml)?;
 
-    let mut main_rs = emitted.lib_rs.clone();
-    if let Some(map) = tests_by_module
-        && let Some(tests) = map.get("main")
-    {
-        main_rs.push_str(tests);
+    if emitted.is_lib_only {
+        let mut lib_rs = emitted.lib_rs.clone();
+        if let Some(map) = tests_by_module
+            && let Some(tests) = map.get("lib")
+        {
+            lib_rs.push_str(tests);
+        }
+        atomic_write(&src.join("lib.rs"), &lib_rs)?;
+    } else {
+        let mut main_rs = emitted.lib_rs.clone();
+        if let Some(map) = tests_by_module
+            && let Some(tests) = map.get("main")
+        {
+            main_rs.push_str(tests);
+        }
+        atomic_write(&src.join("main.rs"), &main_rs)?;
+        if let Some(lib_body) = &emitted.lib_module_rs {
+            let mut lib_rs = lib_body.clone();
+            if let Some(map) = tests_by_module
+                && let Some(tests) = map.get("lib")
+            {
+                lib_rs.push_str(tests);
+            }
+            atomic_write(&src.join("lib.rs"), &lib_rs)?;
+        }
     }
-    atomic_write(&src.join("main.rs"), &main_rs)?;
 
     for (mod_name, content) in &emitted.modules {
         // Dotted Crisp paths (`math.vector`) → nested Rust files (`math/vector.rs`).
@@ -112,23 +137,32 @@ fn format_cargo_toml(
     manifest: &CrateManifest,
     extra_deps: &[ResolvedDependency],
     crate_root: &Path,
+    lib_only: bool,
+    with_lib_module: bool,
 ) -> String {
     let mut out = format!(
         r#"[package]
 name = "{name}"
 version = "{version}"
 edition = "{edition}"
-
-[[bin]]
-name = "{name}"
-path = "src/main.rs"
-
-[workspace]
 "#,
         name = manifest.name,
         version = manifest.version,
         edition = manifest.rust_edition(),
     );
+    if lib_only || with_lib_module {
+        out.push_str(&format!(
+            "\n[lib]\nname = \"{name}\"\npath = \"src/lib.rs\"\n",
+            name = manifest.name.replace('-', "_"),
+        ));
+    }
+    if !lib_only {
+        out.push_str(&format!(
+            "\n[[bin]]\nname = \"{name}\"\npath = \"src/main.rs\"\n",
+            name = manifest.name,
+        ));
+    }
+    out.push_str("\n[workspace]\n");
 
     let mut deps: Vec<&ResolvedDependency> = extra_deps.iter().collect();
     deps.sort_by(|a, b| a.name.cmp(&b.name));
@@ -241,7 +275,7 @@ mod tests {
     fn cargo_toml_includes_tokio_from_manifest() {
         let m = read_manifest(&hello_root()).unwrap();
         let deps = resolve_dependencies(&m);
-        let toml = format_cargo_toml(&m, &deps, &hello_root());
+        let toml = format_cargo_toml(&m, &deps, &hello_root(), false, false);
         assert!(toml.contains("name = \"hello\""));
         assert!(toml.contains("tokio"));
         assert!(toml.contains("features"));

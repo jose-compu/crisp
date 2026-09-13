@@ -13,35 +13,48 @@ use std::fmt::Write;
 
 pub struct EmitResult {
     pub lib_rs: String,
+    /// When the crate has both `src/lib.crp` and `src/main.crp`, this is `[lib]`.
+    pub lib_module_rs: Option<String>,
+    /// `src/lib.crp` only — emit `[lib]`, no dummy `main` (#152).
+    pub is_lib_only: bool,
     pub modules: Vec<(String, String)>,
     pub source_map: EmitSourceMap,
+}
+
+fn is_crate_root_path(path: &str) -> bool {
+    path == "main" || path == "lib"
 }
 
 pub fn emit_crate(cir: &CirCrate) -> EmitResult {
     let mut map = EmitSourceMap::default();
     map.set_type_modules(collect_type_modules(cir));
     map.set_rust_extern_spans(cir.rust_extern_spans.clone());
+    map.set_rust_extern_vec_params(cir.rust_extern_vec_params.clone());
     let mut modules = Vec::new();
+    let has_main = cir.modules.iter().any(|m| m.path == "main");
+    let has_lib = cir.modules.iter().any(|m| m.path == "lib");
 
-    if cir.modules.len() == 1 && cir.modules[0].path == "main" {
+    if cir.modules.len() == 1 && is_crate_root_path(&cir.modules[0].path) {
         let mut out = String::new();
         emit_prelude(&mut out, cir);
         emit_module_items(&mut out, &cir.modules[0], cir, &mut map, true);
         return EmitResult {
             lib_rs: out,
+            lib_module_rs: None,
+            is_lib_only: cir.modules[0].path == "lib",
             modules,
             source_map: map,
         };
     }
 
-    let mut main_rs = String::new();
-    emit_prelude(&mut main_rs, cir);
+    let mut root_rs = String::new();
+    emit_prelude(&mut root_rs, cir);
 
     // Leaf bodies keyed by dotted module path (`math.vector`).
     let mut leaf_bodies: std::collections::BTreeMap<String, String> =
         std::collections::BTreeMap::new();
     for m in &cir.modules {
-        if m.path == "main" {
+        if is_crate_root_path(&m.path) {
             continue;
         }
         let mut mod_src = String::new();
@@ -77,21 +90,54 @@ pub fn emit_crate(cir: &CirCrate) -> EmitResult {
 
     // Crate root: declare only top-level modules (not `math.vector`).
     let top_level = direct_child_segments(&tree_paths, "");
-    for top in &top_level {
-        let _ = writeln!(main_rs, "mod {top};");
-        let _ = writeln!(main_rs, "pub use {top}::*;");
+    let crate_ident = cir.package_name.replace('-', "_");
+
+    let write_root = |path: &str, as_bin_using_lib: bool, map: &mut EmitSourceMap| -> String {
+        let mut out = String::new();
+        emit_prelude(&mut out, cir);
+        if as_bin_using_lib {
+            let _ = writeln!(out, "use {crate_ident}::*;");
+        } else {
+            for top in &top_level {
+                let _ = writeln!(out, "mod {top};");
+                let _ = writeln!(out, "pub use {top}::*;");
+            }
+        }
+        for m in &cir.modules {
+            if m.path == path {
+                emit_module_items(&mut out, m, cir, map, true);
+            }
+        }
+        out
+    };
+
+    if has_main && has_lib {
+        let lib_body = write_root("lib", false, &mut map);
+        let main_body = write_root("main", true, &mut map);
+        return EmitResult {
+            lib_rs: main_body,
+            lib_module_rs: Some(lib_body),
+            is_lib_only: false,
+            modules,
+            source_map: map,
+        };
     }
 
-    // Emit all main-module items (structs/enums/impls/fns). Previously only
-    // functions were written here, which dropped enums/types next to nested mods.
+    let root_path = if has_lib { "lib" } else { "main" };
+    for top in &top_level {
+        let _ = writeln!(root_rs, "mod {top};");
+        let _ = writeln!(root_rs, "pub use {top}::*;");
+    }
     for m in &cir.modules {
-        if m.path == "main" {
-            emit_module_items(&mut main_rs, m, cir, &mut map, true);
+        if m.path == root_path {
+            emit_module_items(&mut root_rs, m, cir, &mut map, true);
         }
     }
 
     EmitResult {
-        lib_rs: main_rs,
+        lib_rs: root_rs,
+        lib_module_rs: None,
+        is_lib_only: has_lib && !has_main,
         modules,
         source_map: map,
     }
@@ -132,12 +178,76 @@ fn direct_child_segments(
     children
 }
 
+fn crate_emits_crisp_error(cir: &CirCrate) -> bool {
+    fn expr_fallible(e: &CirExpr) -> bool {
+        match e {
+            CirExpr::Call { fallible: true, .. } => true,
+            CirExpr::Call { args, .. } => args.iter().any(|a| expr_fallible(&a.expr)),
+            CirExpr::Unary { expr, .. }
+            | CirExpr::Clone { expr, .. }
+            | CirExpr::Borrow { expr, .. }
+            | CirExpr::Throw { payload: expr, .. }
+            | CirExpr::Try { expr, .. }
+            | CirExpr::Field { base: expr, .. }
+            | CirExpr::Print { arg: expr, .. }
+            | CirExpr::Await { expr, .. } => expr_fallible(expr),
+            CirExpr::BinOp { left, right, .. } => expr_fallible(left) || expr_fallible(right),
+            CirExpr::Block(b) => {
+                b.stmts.iter().any(|s| match s {
+                    CirStmt::Expr(e)
+                    | CirStmt::Let { value: e, .. }
+                    | CirStmt::Assign { value: e, .. } => expr_fallible(e),
+                }) || b.tail.as_ref().is_some_and(|t| expr_fallible(t))
+            }
+            CirExpr::If {
+                cond,
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                expr_fallible(cond)
+                    || expr_fallible(then_branch)
+                    || else_branch.as_ref().is_some_and(|e| expr_fallible(e))
+            }
+            CirExpr::Catch { expr, arms, .. } => {
+                expr_fallible(expr) || arms.iter().any(|a| expr_fallible(&a.body))
+            }
+            _ => false,
+        }
+    }
+    cir.modules.iter().any(|m| {
+        m.items.iter().any(|item| match item {
+            CirItem::Function(f) => {
+                f.body.stmts.iter().any(|s| match s {
+                    CirStmt::Expr(e)
+                    | CirStmt::Let { value: e, .. }
+                    | CirStmt::Assign { value: e, .. } => expr_fallible(e),
+                }) || f.body.tail.as_ref().is_some_and(|t| expr_fallible(t))
+            }
+            _ => false,
+        })
+    })
+}
+
 fn emit_prelude(out: &mut String, cir: &CirCrate) {
     let _ = writeln!(out, "// Generated by crisp — do not edit");
     let _ = writeln!(out, "#![allow(dead_code, unused_variables, clippy::all)]");
     let _ = writeln!(out);
-    if !cir.crisp_error.variants.is_empty() {
-        let _ = writeln!(out, "{}", format_crisp_error_enum(&cir.crisp_error));
+    if !cir.crisp_error.variants.is_empty() || crate_emits_crisp_error(cir) {
+        if cir.crisp_error.variants.is_empty() {
+            let _ = writeln!(
+                out,
+                "{}",
+                format_crisp_error_enum(&crisp_errors::CrispErrorEnum {
+                    variants: vec![crisp_errors::CrispErrorVariant {
+                        name: "Thrown".into(),
+                        payload_type: "String".into(),
+                    }],
+                })
+            );
+        } else {
+            let _ = writeln!(out, "{}", format_crisp_error_enum(&cir.crisp_error));
+        }
         let _ = writeln!(out);
     }
     emit_std_trait_shims(out, cir);
@@ -1577,6 +1687,65 @@ fn emit_call_expr(
                     ".parse::<std::net::IpAddr>() {{ Ok(a) => a.to_string(), Err(_) => \"invalid\".to_string() }} }})"
                 );
             }
+            "std::env::var" if !args.is_empty() => {
+                let _ = write!(out, "std::env::var(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(out, ")");
+                emit_rust_result_absorb(out, fallible, propagate_error);
+                return;
+            }
+            "std::env::var_or" if args.len() >= 2 => {
+                let _ = write!(out, "({{ match std::env::var(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(out, ") {{ Ok(v) => v, Err(_) => (");
+                emit_call_arg(out, &args[1].expr, args[1].mode, current_module, map);
+                let _ = write!(out, ").to_string() }} }})");
+            }
+            "std::env::current_dir" => {
+                let _ = write!(
+                    out,
+                    "std::env::current_dir().map(|p| p.display().to_string())"
+                );
+                emit_rust_result_absorb(out, fallible, propagate_error);
+                return;
+            }
+            "std::path::Path::join" if args.len() >= 2 => {
+                let _ = write!(out, "std::path::Path::new(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(out, ").join(");
+                emit_call_arg(out, &args[1].expr, args[1].mode, current_module, map);
+                let _ = write!(out, ").to_string_lossy().into_owned()");
+            }
+            "std::path::Path::parent" if !args.is_empty() => {
+                let _ = write!(out, "std::path::Path::new(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(
+                    out,
+                    ").parent().map(|p| p.to_string_lossy().into_owned()).unwrap_or_default()"
+                );
+            }
+            "std::path::Path::is_file" if !args.is_empty() => {
+                let _ = write!(out, "std::path::Path::new(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(out, ").is_file()");
+            }
+            "std::path::Path::is_dir" if !args.is_empty() => {
+                let _ = write!(out, "std::path::Path::new(");
+                emit_call_arg(out, &args[0].expr, args[0].mode, current_module, map);
+                let _ = write!(out, ").is_dir()");
+            }
+            "std::fs::read_to_string" | "std::fs::write" | "std::fs::create_dir_all" => {
+                let _ = write!(out, "{path}(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+                }
+                let _ = write!(out, ")");
+                emit_rust_result_absorb(out, fallible, propagate_error);
+                return;
+            }
             other => {
                 let _ = write!(out, "{other}(");
                 for (i, arg) in args.iter().enumerate() {
@@ -1696,7 +1865,11 @@ fn emit_rust_crate_call(
                 if i > 0 {
                     let _ = write!(out, ", ");
                 }
-                emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+                if map.rust_extern_vec_param(crate_name, callee, i) {
+                    emit_rust_vec_arg(out, &arg.expr, current_module, map);
+                } else {
+                    emit_call_arg(out, &arg.expr, arg.mode, current_module, map);
+                }
             }
             let _ = write!(out, ")");
             if fallible {
@@ -1704,6 +1877,20 @@ fn emit_rust_crate_call(
             }
         }
     }
+}
+
+fn emit_rust_vec_arg(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    let inner = match expr {
+        CirExpr::Borrow { expr, .. } => expr.as_ref(),
+        other => other,
+    };
+    emit_expr(out, inner, current_module, map);
+    let _ = write!(out, ".as_slice()");
 }
 
 fn emit_rust_result_absorb(out: &mut String, fallible: bool, propagate_error: bool) {

@@ -1,0 +1,7 @@
+-- examples/lib_root — crate root is `src/lib.crp` → Cargo `[lib]` (#152)
+
+pub hello(unused: str) -> str = "ok"
+
+test "hello" = {
+    assert_eq(hello("x"), "ok")
+}

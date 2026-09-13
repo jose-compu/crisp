@@ -1,0 +1,37 @@
+-- examples/os_scalars — prelude env / path / fs write (#151)
+
+roundtrip() -> str = {
+    dir := path_join("target", "crisp_os_scalars")
+    path := path_join(dir, "hello.txt")
+    create_dir_all(dir) catch _ -> {}
+    fs_write(path, "ok") catch _ -> {}
+    read_to_string(path) catch _ -> "fail"
+}
+
+pub main() = {
+    print(env_or("CRISP_NO_SUCH_VAR_1_9_0", "fallback"))
+    print(path_join("a", "b"))
+    print(roundtrip())
+}
+
+env_default() -> str = env_or("CRISP_NO_SUCH_VAR_1_9_0", "fallback")
+
+join_parent() -> str = path_parent(path_join("root", "leaf"))
+
+missing_file() -> bool = path_is_file("no_such_crisp_os_file")
+
+test "env_or default" = {
+    assert_eq(env_default(), "fallback")
+}
+
+test "path parent of join" = {
+    assert_eq(join_parent(), "root")
+}
+
+test "path is_file missing" = {
+    assert_eq(missing_file(), false)
+}
+
+test "fs write read" = {
+    assert_eq(roundtrip(), "ok")
+}

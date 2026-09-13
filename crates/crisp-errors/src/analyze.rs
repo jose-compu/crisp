@@ -219,6 +219,7 @@ fn walk_expr(
             walk_expr(module, inner, fn_defs, callee_sigs, rust_imports, out);
             propagate_call_errors(module, inner, fn_defs, callee_sigs, out);
             propagate_rust_import_errors(inner, rust_imports, out);
+            propagate_stdlib_os_errors(inner, out);
         }
         ExprKind::Catch { body, arms } => {
             let mut inner = ErrorSet::new();
@@ -241,6 +242,7 @@ fn walk_expr(
             }
             propagate_call_errors(module, func, fn_defs, callee_sigs, out);
             propagate_rust_import_errors(func, rust_imports, out);
+            propagate_stdlib_os_errors(func, out);
         }
         ExprKind::MethodCall { receiver, args, .. } => {
             walk_expr(module, receiver, fn_defs, callee_sigs, rust_imports, out);
@@ -317,6 +319,15 @@ fn propagate_rust_import_errors(func: &Expr, rust_imports: &HashSet<String>, out
             out.insert("Thrown");
             return;
         }
+    }
+}
+
+fn propagate_stdlib_os_errors(func: &Expr, out: &mut ErrorSet) {
+    let ExprKind::Ident(id) = &func.kind else {
+        return;
+    };
+    if crisp_resolve::stdlib::stdlib_is_fallible(&id.name) {
+        out.insert("Thrown");
     }
 }
 

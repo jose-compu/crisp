@@ -9,6 +9,7 @@ pub struct EmitSourceMap {
     /// Spans of `extern rust` declarations; rustc failure here is E0090, not a crisp bug (#116).
     pub extern_rust_spans: HashSet<Span>,
     rust_extern_by_key: BTreeMap<(String, String), Span>,
+    rust_extern_vec_params: BTreeMap<(String, String), Vec<bool>>,
     /// Locals / params that are `IndexAssign` bases in the function being emitted (#141).
     pub(crate) index_mut_names: HashSet<String>,
 }
@@ -51,5 +52,19 @@ impl EmitSourceMap {
         self.rust_extern_by_key
             .get(&(crate_name.to_string(), item.to_string()))
             .copied()
+    }
+
+    pub(crate) fn set_rust_extern_vec_params(
+        &mut self,
+        params: BTreeMap<(String, String), Vec<bool>>,
+    ) {
+        self.rust_extern_vec_params = params;
+    }
+
+    pub(crate) fn rust_extern_vec_param(&self, crate_name: &str, item: &str, i: usize) -> bool {
+        self.rust_extern_vec_params
+            .get(&(crate_name.to_string(), item.to_string()))
+            .and_then(|v| v.get(i).copied())
+            .unwrap_or(false)
     }
 }

@@ -66,7 +66,7 @@ pub enum TypeError {
     )]
     UninferredVec { span: Span },
     #[error(
-        "[E0089] `{item}` is not declared in `extern rust {crate_name}`; add a scalar signature (`float`/`int`/`str`/`bool`)"
+        "[E0089] `{item}` is not declared in `extern rust {crate_name}`; add a signature (`float`/`int`/`str`/`bool` or `vec<float>`/`vec<int>`)"
     )]
     UndeclaredRustImport {
         crate_name: String,
@@ -74,7 +74,7 @@ pub enum TypeError {
         span: Span,
     },
     #[error(
-        "[E0090] `extern rust` types must be `float`, `int`, `str`, or `bool` (`{found}` is not allowed)"
+        "[E0090] `extern rust` types must be `float`, `int`, `str`, `bool`, `vec<float>`, or `vec<int>` (`{found}` is not allowed)"
     )]
     InvalidExternRustTy { found: String, span: Span },
     #[error("unification error: {message}")]
@@ -106,7 +106,7 @@ pub struct TypedCrate {
     pub warnings: Vec<crate::warning::TypeWarning>,
     /// Instantiated types of selected exprs (calls, array lits) for CIR emit (#119).
     pub expr_tys: HashMap<Span, Ty>,
-    /// `extern rust crate { item(...) }` scalar signatures (#116).
+    /// `extern rust crate { item(...) }` signatures (#116 / #153).
     pub rust_externs: Vec<RustExternSig>,
 }
 
@@ -334,7 +334,7 @@ impl TypeChecker {
                             span: p.span,
                         });
                     };
-                    if !rust_extern_scalar_ok(&ty) {
+                    if !rust_extern_ty_ok(&ty) {
                         return Err(TypeError::InvalidExternRustTy {
                             found: format_ty(&ty),
                             span: p.span,
@@ -347,7 +347,7 @@ impl TypeChecker {
                 } else {
                     Ty::Unit
                 };
-                if !rust_extern_scalar_ok(&ret) {
+                if !rust_extern_ty_ok(&ret) {
                     return Err(TypeError::InvalidExternRustTy {
                         found: format_ty(&ret),
                         span: f.span,
@@ -2914,6 +2914,69 @@ fn stdlib_fn_types() -> Vec<(&'static str, Ty)> {
             },
         ),
         (
+            "env_var",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "env_or",
+            Ty::Fn {
+                params: vec![Ty::StrSlice, Ty::StrSlice],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "cwd",
+            Ty::Fn {
+                params: vec![],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "path_join",
+            Ty::Fn {
+                params: vec![Ty::StrSlice, Ty::StrSlice],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "path_parent",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Str),
+            },
+        ),
+        (
+            "path_is_file",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Bool),
+            },
+        ),
+        (
+            "path_is_dir",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Bool),
+            },
+        ),
+        (
+            "fs_write",
+            Ty::Fn {
+                params: vec![Ty::StrSlice, Ty::StrSlice],
+                ret: Box::new(Ty::Unit),
+            },
+        ),
+        (
+            "create_dir_all",
+            Ty::Fn {
+                params: vec![Ty::StrSlice],
+                ret: Box::new(Ty::Unit),
+            },
+        ),
+        (
             "sleep_ms",
             Ty::Fn {
                 params: vec![Ty::Int],
@@ -2959,6 +3022,21 @@ fn rust_extern_scalar_ok(ty: &Ty) -> bool {
         ty,
         Ty::Float | Ty::Int | Ty::UInt | Ty::Bool | Ty::Str | Ty::StrSlice | Ty::Unit
     )
+}
+
+/// `vec<float>` / `vec<int>` cross the `extern rust` boundary as `&[f64]` / `&[i64]` (#153).
+pub fn rust_extern_numeric_vec(ty: &Ty) -> bool {
+    matches!(
+        ty,
+        Ty::Named { name, args }
+            if name == "vec"
+                && args.len() == 1
+                && matches!(args[0], Ty::Float | Ty::Int)
+    )
+}
+
+fn rust_extern_ty_ok(ty: &Ty) -> bool {
+    rust_extern_scalar_ok(ty) || rust_extern_numeric_vec(ty)
 }
 
 /// Whether a known `rust = true` import returns Rust `Result` and should lower via Crisp `?`

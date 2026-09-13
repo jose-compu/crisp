@@ -35,6 +35,51 @@ pub fn std_functions() -> &'static [StdFn] {
             rust_path: "std::fs::read_to_string",
         },
         StdFn {
+            module: "std.fs",
+            name: "fs_write",
+            rust_path: "std::fs::write",
+        },
+        StdFn {
+            module: "std.fs",
+            name: "create_dir_all",
+            rust_path: "std::fs::create_dir_all",
+        },
+        StdFn {
+            module: "std.env",
+            name: "env_var",
+            rust_path: "std::env::var",
+        },
+        StdFn {
+            module: "std.env",
+            name: "env_or",
+            rust_path: "std::env::var_or",
+        },
+        StdFn {
+            module: "std.env",
+            name: "cwd",
+            rust_path: "std::env::current_dir",
+        },
+        StdFn {
+            module: "std.path",
+            name: "path_join",
+            rust_path: "std::path::Path::join",
+        },
+        StdFn {
+            module: "std.path",
+            name: "path_parent",
+            rust_path: "std::path::Path::parent",
+        },
+        StdFn {
+            module: "std.path",
+            name: "path_is_file",
+            rust_path: "std::path::Path::is_file",
+        },
+        StdFn {
+            module: "std.path",
+            name: "path_is_dir",
+            rust_path: "std::path::Path::is_dir",
+        },
+        StdFn {
             module: "std.io",
             name: "stdin_line",
             rust_path: "std::io::stdin",
@@ -134,4 +179,12 @@ pub fn std_rust_path(module: &str, name: &str) -> Option<&'static str> {
         .iter()
         .find(|f| f.module == module && f.name == name)
         .map(|f| f.rust_path)
+}
+
+/// OS / fs prelude items that lower through `CrispError::Thrown` (#151).
+pub fn stdlib_is_fallible(name: &str) -> bool {
+    matches!(
+        name,
+        "read_to_string" | "fs_write" | "create_dir_all" | "env_var" | "cwd"
+    )
 }

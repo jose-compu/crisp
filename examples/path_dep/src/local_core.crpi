@@ -3,4 +3,7 @@
 extern rust local_core {
     answer() -> int
     lap3(um: float, uc: float, up: float, dx: float) -> float
+    sum_f64(xs: vec<float>) -> float
+    ones(n: int) -> vec<float>
+    plot_heatmap(path: str, nx: int, ny: int, data: vec<float>, cmap: str) -> str
 }

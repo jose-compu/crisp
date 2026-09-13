@@ -1,4 +1,4 @@
-# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.8.1)
+# Spec vs implementation delta (v0.2.0-draft ↔ crisp 1.9.0)
 
 This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/CrispLang-SPECS-0.2.0.md) and the current bootstrap compiler. It is not exhaustive; see also [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) and abnormal-path tests.
 
@@ -23,14 +23,14 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 
 ## Language features (high level)
 
-| Feature | Spec | Impl (through 1.8.1) |
+| Feature | Spec | Impl (through 1.9.0) |
 |---------|------|--------------|
 | Structs, defaults, sealed lock | §3.3, §12.5 | Working; examples |
 | Float + `**` | §3, operators | Working (recent); examples `math` / `float_demo` |
 | Enums + variant match | §3.3.2, §6.2, §10 | Working for unit/tuple variants + qualified patterns (`examples/enums`); exhaustiveness / recursive polish TBD |
 | Inherent `impl Type` methods | §5.4 | Working (`examples/vec2_methods`, `point_impl`); associated `new` + `self` methods |
 | Traits / `impl Trait for` | §3.6 | Method traits + literal/simple defaults (`examples/show_trait`, `trait_defaults`); bounds / dyn still limited — [#59](https://github.com/jose-compu/crisp/issues/59) |
-| Rust crate imports | §14.2 / §18.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; stubs for `serde_json` / `ureq`; known Result APIs → `CrispError::Thrown` + `?` (#55). **Path deps** (`path = "…"`) rewrite into `target/rust/Cargo.toml` (#105, `examples/path_dep`). **`extern rust crate { … }`** / `.crpi` sidecars type remaining imports as `float`/`int`/`str`/`bool` (+ `!`); undeclared is E0089; rustc mismatch is E0090 ([#116](https://github.com/jose-compu/crisp/issues/116)). |
+| Rust crate imports | §14.2 / §18.2 | Parse + resolve + call emit: bare `use crate { … }` when `rust = true`; `use rust.` alias; W0048 on name shadow; stubs for `serde_json` / `ureq`; known Result APIs → `CrispError::Thrown` + `?` (#55). **Path deps** (`path = "…"`) rewrite into `target/rust/Cargo.toml` (#105, `examples/path_dep`). **`extern rust crate { … }`** / `.crpi` sidecars type remaining imports as `float`/`int`/`str`/`bool` / `vec<float>` / `vec<int>` (+ `!`); vec params emit `.as_slice()` ([#153](https://github.com/jose-compu/crisp/issues/153)); undeclared is E0089; rustc mismatch is E0090 ([#116](https://github.com/jose-compu/crisp/issues/116)). |
 | Closures / lambdas | §5.3 | Function values + implicit sugar (holes, trailing last-arg, `.field`, `.m()`) — `examples/closures` (#72, #87–#89). No operator sections; no `dyn Fn` |
 | Shapes | §3.5 | Data shapes + parametric `shape Name<T>` (`examples/shapes`, `examples/generics`, `examples/shapes_generic`); method/anonymous shapes still limited ([#61](https://github.com/jose-compu/crisp/issues/61), [#70](https://github.com/jose-compu/crisp/issues/70)) |
 | User generics | §3 / §5 | **Prefer implicit binders** (`examples/generics_implicit`) — [#75](https://github.com/jose-compu/crisp/issues/75); explicit pins (`examples/generics`) — [#71](https://github.com/jose-compu/crisp/issues/71); inferred `impl Trait for Type` args + `+` bounds — [#77](https://github.com/jose-compu/crisp/issues/77); unannotated `id(x)=x` generalizes; internal single-use monomorphizes; `pub` schemes seal in `crisp.lock` (`examples/generics_pub`) — [#76](https://github.com/jose-compu/crisp/issues/76); value restriction + reveal `T: Clone` — [#78](https://github.com/jose-compu/crisp/issues/78). Remaining: anonymous `{ value: T }` params, `where` / HRTB/GATs |
@@ -51,6 +51,8 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Nested tests / stubs | §12, §19 | Tests append to the defining module’s `.rs` ([#143](https://github.com/jose-compu/crisp/issues/143)). Fn stubs are `{module}::{name}` ([#146](https://github.com/jose-compu/crisp/issues/146)). Harness `len` is `.len()` ([#144](https://github.com/jose-compu/crisp/issues/144)). |
 | Math prelude | §15 | `exp` / `sin` / `cos` / `tanh` / `sqrt` → `f64::{…}` ([#115](https://github.com/jose-compu/crisp/issues/115)). |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
+| OS prelude | §15.2 / §16.2 | `env_var` / `env_or` / `cwd`, `path_join` / `path_parent` / `path_is_file` / `path_is_dir`, `fs_write` / `create_dir_all` / `read_to_string` — `examples/os_scalars` ([#151](https://github.com/jose-compu/crisp/issues/151)). No git / process spawn. |
+| Crate `[lib]` | §18.1 | `src/lib.crp` emits `[lib]` `src/lib.rs`; lib-only crates have no dummy `main`. `crisp run` errors; `check` / `test` work (`examples/lib_root`, [#152](https://github.com/jose-compu/crisp/issues/152)). |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)
 

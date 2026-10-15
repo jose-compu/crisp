@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crisp Programming Language — transpile to Rust</title>
+  <title>Crisp — high-performance prototyping that compiles to Rust</title>
   <!-- SEO -->
-  <meta name="description" content="Crisp is a systems language that transpiles compact .crp source to Rust. Infer types, ownership, and errors with the crisp toolchain; rustc stays the soundness boundary." />
-  <meta name="keywords" content="Crisp, programming language, Rust transpile, systems language, crisp-lang, .crp, ownership inference" />
+  <meta name="description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
+  <meta name="keywords" content="Crisp, high-performance prototyping, implicit typing, implicit types, compile to Rust, native code, systems language, crisp-lang, .crp, type inference, rustc" />
   <meta name="author" content="Crisp / jose-compu" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="googlebot" content="index, follow, max-image-preview:large" />
@@ -16,13 +16,13 @@
   <meta property="og:site_name" content="Crisp" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content="https://crisp-lang.org/" />
-  <meta property="og:title" content="Crisp Programming Language — transpile to Rust" />
-  <meta property="og:description" content="Crisp is a systems language that transpiles compact .crp source to Rust. Infer types, ownership, and errors with the crisp toolchain; rustc stays the soundness boundary." />
+  <meta property="og:title" content="Crisp — high-performance prototyping that compiles to Rust" />
+  <meta property="og:description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
   <meta property="og:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta property="og:image:alt" content="Crisp programming language logo" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Crisp Programming Language — transpile to Rust" />
-  <meta name="twitter:description" content="Crisp is a systems language that transpiles compact .crp source to Rust. Infer types, ownership, and errors with the crisp toolchain; rustc stays the soundness boundary." />
+  <meta name="twitter:title" content="Crisp — high-performance prototyping that compiles to Rust" />
+  <meta name="twitter:description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
   <meta name="twitter:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta name="theme-color" content="#0b1220" />
   <script type="application/ld+json">
@@ -34,7 +34,7 @@
         "@id": "https://crisp-lang.org/#website",
         "url": "https://crisp-lang.org/",
         "name": "Crisp Programming Language",
-        "description": "Crisp is a systems language that transpiles compact .crp source to Rust. Infer types, ownership, and errors with the crisp toolchain; rustc stays the soundness boundary.",
+        "description": "High-performance prototyping language: compact .crp with implicit types that compiles to native Rust.",
         "inLanguage": "en",
         "publisher": {
           "@id": "https://crisp-lang.org/#org"
@@ -68,7 +68,18 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "Crisp is a systems language that transpiles compact .crp source to Rust. Infer types, ownership, and errors with the crisp toolchain; rustc stays the soundness boundary.",
+        "description": "High-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary.",
+        "keywords": "Crisp, high-performance prototyping, implicit typing, compile to Rust, native code, .crp",
+        "featureList": [
+          "Implicit type, ownership, and error inference",
+          "Compact .crp source for high-performance prototypes",
+          "Transpile to ordinary Rust; native binaries via rustc",
+          "reveal inspects inferred types and ownership"
+        ],
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Systems programmers doing high-performance prototyping"
+        },
         "author": {
           "@id": "https://crisp-lang.org/#org"
         }
@@ -80,7 +91,7 @@
         "programmingLanguage": "Rust",
         "runtimePlatform": "Rust",
         "url": "https://crisp-lang.org/",
-        "description": "Systems language that transpiles .crp to Rust."
+        "description": "High-performance prototyping language: implicit types in .crp, native Rust out."
       }
     ]
   }
@@ -115,12 +126,13 @@
       <div class="hero-copy">
         <img class="hero-brand" src="crisp-logo.jpg" alt="Crisp" width="168" height="185" />
         <p class="badge">Crisp v1.10.0 · public release</p>
-        <h1>Explicit on demand, implicit by default</h1>
+        <h1>High-performance prototypes. Implicit types. Native code.</h1>
+        <p class="hero-sub">Explicit on demand, implicit by default. Write compact <code>.crp</code> quickly; <code>crisp</code> emits ordinary Rust so the binary is native.</p>
         <ul class="hero-points">
-          <li>Compact <code>.crp</code> source; <code>crisp</code> infers types, ownership, and errors</li>
-          <li>Lowers to ordinary Rust — <code>rustc</code> stays the soundness boundary</li>
-          <li>Whole-program inference inside sealed crates</li>
-          <li>Built for systems work with a Rust-hosted bootstrap compiler</li>
+          <li>Implicit typing — plus inferred ownership and errors — so you can code directly</li>
+          <li>High-performance output: native binaries via <code>rustc</code> (the soundness boundary)</li>
+          <li>Annotate when APIs or hot paths need precision</li>
+          <li><code>reveal</code> shows the types and borrows you left unwritten</li>
         </ul>
         <p class="cta">
           <a class="btn" href="install.html">Install now →</a>
@@ -161,19 +173,19 @@ pub main() = {
   <section class="band-light">
     <div class="wrap">
       <h2 class="section-title">Why Crisp?</h2>
-      <p class="section-lede">Write less ceremony than Rust when inference is enough; annotate when APIs need precision. Emit stays auditable Rust.</p>
+      <p class="section-lede">High-performance prototyping: skip type and borrow ceremony while you iterate, then keep a native <code>rustc</code> binary. Annotate when APIs need precision. Emit stays auditable Rust.</p>
       <div class="feature-grid">
         <article class="feature">
-          <h3>Inference first</h3>
-          <p>Types, borrows, lifetimes, and error sets are inferred globally when the source stays silent. Annotations become hard constraints when you add them.</p>
+          <h3>Implicit typing</h3>
+          <p>Types, borrows, lifetimes, and error sets are inferred globally when the source stays silent. You write the algorithm; the compiler fills the signatures. Annotations become hard constraints when you add them.</p>
         </article>
         <article class="feature">
-          <h3>Rust as the back end</h3>
-          <p>Crisp is a front end that produces Rust. Memory safety and data races remain <code>rustc</code>’s job — not a parallel soundness story.</p>
+          <h3>Native performance</h3>
+          <p>Crisp is a front end that produces Rust. There is no VM or GC in the run path. Memory safety and data races remain <code>rustc</code>’s job — not a parallel soundness story.</p>
         </article>
         <article class="feature">
           <h3>Reveal what was inferred</h3>
-          <p><code>reveal</code> reconstructs signatures, ownership modes, lifetime overlays, and the error slice a function can produce.</p>
+          <p><code>reveal</code> reconstructs signatures, ownership modes, lifetime overlays, and the error slice a function can produce — so fast writing stays inspectable.</p>
         </article>
         <article class="feature">
           <h3>Sealed crates</h3>
@@ -186,7 +198,7 @@ pub main() = {
   <section class="band-dark">
     <div class="wrap">
       <h2 class="section-title">Use Crisp for</h2>
-      <p class="section-lede">Popular Rust domains — with less surface noise when Crisp’s inference fits the problem.</p>
+      <p class="section-lede">High-performance prototypes in popular Rust domains — CLI tools, services, pipelines — with implicit types and native emit.</p>
       <div class="pill-row">
         <a class="pill active" href="use-cases.html#cli">CLI tools</a>
         <a class="pill" href="use-cases.html#services">Services</a>

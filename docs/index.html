@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crisp — high-performance prototyping that compiles to Rust</title>
   <!-- SEO -->
-  <meta name="description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
+  <meta name="description" content="Crisp is a high-performance prototyping language: implicit types, native Rust. 37% fewer GPT-4 tokens than the Rust it emits. Fast to write, fast for LLM agents." />
   <meta name="keywords" content="Crisp, high-performance prototyping, implicit typing, implicit types, compile to Rust, native code, systems language, crisp-lang, .crp, type inference, rustc" />
   <meta name="author" content="Crisp / jose-compu" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -17,12 +17,12 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content="https://crisp-lang.org/" />
   <meta property="og:title" content="Crisp — high-performance prototyping that compiles to Rust" />
-  <meta property="og:description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
+  <meta property="og:description" content="Crisp is a high-performance prototyping language: implicit types, native Rust. 37% fewer GPT-4 tokens than the Rust it emits. Fast to write, fast for LLM agents." />
   <meta property="og:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta property="og:image:alt" content="Crisp programming language logo" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Crisp — high-performance prototyping that compiles to Rust" />
-  <meta name="twitter:description" content="Crisp is a high-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary. Fast to write, fast to run." />
+  <meta name="twitter:description" content="Crisp is a high-performance prototyping language: implicit types, native Rust. 37% fewer GPT-4 tokens than the Rust it emits. Fast to write, fast for LLM agents." />
   <meta name="twitter:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta name="theme-color" content="#0b1220" />
   <script type="application/ld+json">
@@ -68,11 +68,12 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "High-performance prototyping language: write compact .crp with implicit types, emit native Rust. rustc stays the soundness boundary.",
+        "description": "High-performance prototyping language: write compact .crp with implicit types, emit native Rust. 37% fewer GPT-4 tokens than emitted Rust on the v1.10.0 example corpus.",
         "keywords": "Crisp, high-performance prototyping, implicit typing, compile to Rust, native code, .crp",
         "featureList": [
           "Implicit type, ownership, and error inference",
           "Compact .crp source for high-performance prototypes",
+          "37% fewer GPT-4 tokens than emitted Rust on the v1.10.0 example corpus",
           "Transpile to ordinary Rust; native binaries via rustc",
           "reveal inspects inferred types and ownership"
         ],
@@ -131,7 +132,7 @@
         <ul class="hero-points">
           <li>Implicit typing — plus inferred ownership and errors — so you can code directly</li>
           <li>High-performance output: native binaries via <code>rustc</code> (the soundness boundary)</li>
-          <li>Annotate when APIs or hot paths need precision</li>
+          <li><strong>37% more compact</strong> than the Rust it emits (GPT-4 tokens) — less context for LLM agents</li>
           <li><code>reveal</code> shows the types and borrows you left unwritten</li>
         </ul>
         <p class="cta">
@@ -188,8 +189,8 @@ pub main() = {
           <p><code>reveal</code> reconstructs signatures, ownership modes, lifetime overlays, and the error slice a function can produce — so fast writing stays inspectable.</p>
         </article>
         <article class="feature">
-          <h3>Sealed crates</h3>
-          <p>Publish a frozen <code>pub</code> API in <code>crisp.lock</code>. Downstream code analyzes against the lockfile, not re-inferred internals.</p>
+          <h3>Fewer tokens for agents</h3>
+          <p>Same programs, <strong>37% fewer GPT-4 tokens</strong> than the Rust <code>crisp</code> emits (v1.10.0 <code>examples/</code>, <code>cl100k_base</code>). LLM agents read and generate less, so they iterate quicker. Typical crate as written: 28% fewer (median). Details: <a href="llms.txt">llms.txt</a>.</p>
         </article>
       </div>
     </div>

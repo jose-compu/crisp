@@ -254,7 +254,12 @@ fn issue_119_runtime_tests() {
                 "#119 runtime={} compile_fail={}",
                 r.runtime_passed, r.compile_fail_passed
             );
-            assert_eq!(r.runtime_passed, 5, "got {}", r.runtime_passed);
+            // v1.10.0 adds a slice runtime test (#159); count is at-least, not exact.
+            assert!(
+                r.runtime_passed >= 5,
+                "expected vec_ops tests, got {}",
+                r.runtime_passed
+            );
         }
         Err(e) if e.to_string().contains("cargo not on PATH") => {
             eprintln!("SKIP issue_119 run_tests: cargo not on PATH");

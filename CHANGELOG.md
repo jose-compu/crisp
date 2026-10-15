@@ -14,7 +14,7 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 ### Added
 
 - Range index `xs[lo..hi]` on `vec<T>` copies a subrange to a new `vec<T>` (`xs[(lo) as usize..(hi) as usize].to_vec()`). Not a borrowed view. `[T; N]` literals stay later ([#159](https://github.com/jose-compu/crisp/issues/159)). See `examples/vec_ops`.
-- `extern rust` accepts `vec<str>` (`&[String]` / `Vec<String>`) and `vec<bool>` (`&[bool]` / `Vec<bool>`). `map`, records, `vec<vec<T>>`, and ndarray stay **E0090** ([#158](https://github.com/jose-compu/crisp/issues/158)). See `examples/path_dep`.
+- `extern rust` accepts `vec<str>` (`&[String]` / `Vec<String>`) and `vec<bool>` (`&[bool]` / `Vec<bool>`). `map`, records, `vec<vec<T>>`, and ndarray stay **E0090** ([#158](https://github.com/jose-compu/crisp/issues/158)). Nested type apps `vec<vec<T>>` parse (`>>` closes two `>`). See `examples/path_dep`.
 - Trait impls must match the trait method set and signatures (**E0092**). `dyn Trait` is an explicit unsupported diagnostic (**E0091**), not silent emit. Default method bodies remain (`examples/trait_defaults`) ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
 ## [1.9.0] — 2026-09-13

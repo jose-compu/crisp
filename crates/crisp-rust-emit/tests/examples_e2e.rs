@@ -9,6 +9,14 @@ use crisp_rust_emit::{
 };
 use crisp_typeck::TypeChecker;
 use std::path::PathBuf;
+use std::sync::Mutex;
+
+/// Serialise cargo/emit against `examples/*/target/rust` (parallel tests race).
+static EXAMPLE_TARGET: Mutex<()> = Mutex::new(());
+
+fn lock_example_target() -> std::sync::MutexGuard<'static, ()> {
+    EXAMPLE_TARGET.lock().unwrap_or_else(|p| p.into_inner())
+}
 
 fn examples_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples")
@@ -98,6 +106,7 @@ fn all_examples_build_cir() {
 
 #[test]
 fn all_examples_emit() {
+    let _g = lock_example_target();
     for name in EXAMPLES {
         let root = example(name);
         eprintln!("emit: {name}");
@@ -136,6 +145,7 @@ fn math_has_tests_in_arith_module() {
 
 #[test]
 fn examples_with_tests_pass_crpc_test() {
+    let _g = lock_example_target();
     for name in [
         "with_tests",
         "math",
@@ -187,6 +197,7 @@ fn examples_with_tests_pass_crpc_test() {
 
 #[test]
 fn runnable_examples_build_and_run() {
+    let _g = lock_example_target();
     for name in [
         "hello",
         "defaults",
@@ -250,6 +261,7 @@ fn runnable_examples_build_and_run() {
 
 #[test]
 fn std_traits_example_emits_display_bridges() {
+    let _g = lock_example_target();
     let out = emit_to_target(&example("std_traits")).expect("emit std_traits");
     let main_rs = std::fs::read_to_string(out.out_dir.join("src/main.rs")).unwrap();
     assert!(main_rs.contains("pub trait Show"), "{main_rs}");
@@ -268,6 +280,7 @@ fn std_traits_example_emits_display_bridges() {
 
 #[test]
 fn net_http_example_wires_ureq_and_parse_ip() {
+    let _g = lock_example_target();
     let root = example("net_http");
     let resolved = Resolver::resolve_crate(&root).expect("resolve net_http");
     assert!(resolved.rust_imports.iter().any(|i| i.item == "get"));
@@ -289,6 +302,7 @@ fn net_http_example_wires_ureq_and_parse_ip() {
 
 #[test]
 fn rust_import_example_wires_serde_json_dep() {
+    let _g = lock_example_target();
     let root = example("rust_import");
     let resolved = Resolver::resolve_crate(&root).expect("resolve rust_import");
     assert!(resolved.rust_imports.iter().any(|i| i.item == "from_str"));
@@ -314,6 +328,7 @@ fn rust_import_example_wires_serde_json_dep() {
 
 #[test]
 fn rust_import_example_runs_json_roundtrip() {
+    let _g = lock_example_target();
     let root = example("rust_import");
     match run_emitted(&root) {
         Ok(out) => {
@@ -419,6 +434,7 @@ const BUILDABLE: &[&str] = &[
 
 #[test]
 fn all_runnable_examples_build() {
+    let _g = lock_example_target();
     for name in BUILDABLE {
         maybe_build(name);
     }

@@ -100,7 +100,7 @@ Comments: `--` and nested `{- -}`. String interpolation: `"hello {name}"`. Expon
 
 ## Status
 
-**v1.10.0** — `xs[lo..hi]` copies to `vec<T>` (#159); `extern rust` `vec<str>` (`&[String]`) / `vec<bool>` (#158); trait impl set **E0092**, `dyn Trait` **E0091** (#59). v1.9.0 FFI/OS/`[lib]` remain.
+**v1.10.0** — `xs[lo..hi]` copies to `vec<T>` (#159); `extern rust` `vec<str>` (`&[String]`) / `vec<bool>` (#158); nested `vec<vec<T>>` parses (`>>` is two `>`); trait impl set **E0092**, `dyn Trait` **E0091** (#59). v1.9.0 FFI/OS/`[lib]` remain.
 
 **Still open:** crates.io republish ([#66](https://github.com/jose-compu/crisp/issues/66)), repo visibility ([#58](https://github.com/jose-compu/crisp/issues/58)); generic trait bounds remain limited. See [ROADMAP.md](ROADMAP.md).
 

@@ -23,3 +23,23 @@ pub fn ones(n: i64) -> Vec<f64> {
 pub fn plot_heatmap(path: &str, nx: i64, ny: i64, data: &[f64], cmap: &str) -> String {
     format!("{path}:{nx}x{ny}:n={}:cmap={cmap}", data.len())
 }
+
+/// `vec<str>` param as `&[String]` (#158).
+pub fn join_names(xs: &[String]) -> String {
+    xs.join(",")
+}
+
+/// Owned `vec<str>` return (#158).
+pub fn greetings() -> Vec<String> {
+    vec!["hi".into(), "yo".into()]
+}
+
+/// `vec<bool>` param as `&[bool]` (#158).
+pub fn all_true(xs: &[bool]) -> bool {
+    xs.iter().all(|b| *b)
+}
+
+/// Owned `vec<bool>` return (#158).
+pub fn flags() -> Vec<bool> {
+    vec![true, false, true]
+}

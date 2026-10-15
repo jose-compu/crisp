@@ -646,6 +646,14 @@ fn emit_expr_inner(
             emit_expr(out, index, osig, ownership);
             let _ = write!(out, ") as usize]");
         }
+        ExprKind::Slice { base, lo, hi } => {
+            emit_expr(out, base, osig, ownership);
+            let _ = write!(out, "[(");
+            emit_expr(out, lo, osig, ownership);
+            let _ = write!(out, ") as usize..(");
+            emit_expr(out, hi, osig, ownership);
+            let _ = write!(out, ") as usize].to_vec()");
+        }
         ExprKind::IndexAssign { base, index, value } => {
             let _ = write!(out, "{{ ");
             emit_expr(out, base, osig, ownership);

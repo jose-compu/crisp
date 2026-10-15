@@ -66,7 +66,7 @@ pub enum TypeError {
     )]
     UninferredVec { span: Span },
     #[error(
-        "[E0089] `{item}` is not declared in `extern rust {crate_name}`; add a signature (`float`/`int`/`str`/`bool` or `vec<float>`/`vec<int>`)"
+        "[E0089] `{item}` is not declared in `extern rust {crate_name}`; add a signature (`float`/`int`/`str`/`bool` or `vec<float>`/`vec<int>`/`vec<str>`/`vec<bool>`)"
     )]
     UndeclaredRustImport {
         crate_name: String,
@@ -74,9 +74,15 @@ pub enum TypeError {
         span: Span,
     },
     #[error(
-        "[E0090] `extern rust` types must be `float`, `int`, `str`, `bool`, `vec<float>`, or `vec<int>` (`{found}` is not allowed)"
+        "[E0090] `extern rust` types must be `float`, `int`, `str`, `bool`, `vec<float>`, `vec<int>`, `vec<str>`, or `vec<bool>` (`{found}` is not allowed)"
     )]
     InvalidExternRustTy { found: String, span: Span },
+    #[error(
+        "[E0091] `dyn {trait_name}` is not supported; use a generic bound (`T: {trait_name}`) or a concrete type"
+    )]
+    UnsupportedDyn { trait_name: String, span: Span },
+    #[error("[E0092] {message}")]
+    TraitImpl { message: String, span: Span },
     #[error("unification error: {message}")]
     UnifyAt { message: String, span: Span },
 }
@@ -135,6 +141,7 @@ impl TypedCrate {
 struct TraitMethodStub {
     params: Vec<(String, Option<Ty>)>,
     ret: Option<Ty>,
+    has_default: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -479,6 +486,7 @@ impl TypeChecker {
                 TraitMethodStub {
                     params: vec![("self".into(), None)],
                     ret: Some(Ty::Str),
+                    has_default: false,
                 },
             )])
         });
@@ -488,6 +496,7 @@ impl TypeChecker {
                 TraitMethodStub {
                     params: vec![("self".into(), None), ("other".into(), None)],
                     ret: Some(Ty::Bool),
+                    has_default: false,
                 },
             )])
         });
@@ -497,6 +506,7 @@ impl TypeChecker {
                 TraitMethodStub {
                     params: vec![("self".into(), None), ("other".into(), None)],
                     ret: Some(Ty::Int),
+                    has_default: false,
                 },
             )])
         });
@@ -613,7 +623,14 @@ impl TypeChecker {
                         },
                         None => None,
                     };
-                    methods.insert(m.name.name.clone(), TraitMethodStub { params, ret });
+                    methods.insert(
+                        m.name.name.clone(),
+                        TraitMethodStub {
+                            params,
+                            ret,
+                            has_default: m.default_body.is_some(),
+                        },
+                    );
                 }
                 self.traits.insert(td.name.name.clone(), methods);
                 self.generic_params = saved;
@@ -936,10 +953,52 @@ impl TypeChecker {
                 });
             }
         };
+        if let Some(tn) = &ib.trait_name {
+            self.check_trait_impl_set(ib, &tn.name, &ty_name)?;
+        }
         for f in &ib.items {
-            self.check_impl_method(module, &ty_name, f)?;
+            self.check_impl_method(
+                module,
+                &ty_name,
+                f,
+                ib.trait_name.as_ref().map(|t| t.name.as_str()),
+            )?;
         }
         self.finalize_impl_trait_args(module, ib, &ty_name)?;
+        Ok(())
+    }
+
+    fn check_trait_impl_set(
+        &self,
+        ib: &ImplBlock,
+        trait_name: &str,
+        ty_name: &str,
+    ) -> Result<(), TypeError> {
+        let Some(trait_methods) = self.traits.get(trait_name) else {
+            return Ok(());
+        };
+        let impl_names: BTreeSet<String> = ib.items.iter().map(|f| f.name.name.clone()).collect();
+        for f in &ib.items {
+            if !trait_methods.contains_key(&f.name.name) {
+                return Err(TypeError::TraitImpl {
+                    message: format!(
+                        "`impl {trait_name} for {ty_name}` provides `{method}` which is not a method of `{trait_name}`",
+                        method = f.name.name
+                    ),
+                    span: f.span,
+                });
+            }
+        }
+        for (mname, stub) in trait_methods {
+            if !impl_names.contains(mname) && !stub.has_default {
+                return Err(TypeError::TraitImpl {
+                    message: format!(
+                        "`impl {trait_name} for {ty_name}` is missing required method `{mname}`"
+                    ),
+                    span: ib.span,
+                });
+            }
+        }
         Ok(())
     }
 
@@ -948,6 +1007,7 @@ impl TypeChecker {
         module: &str,
         ty_name: &str,
         f: &FunctionDef,
+        trait_name: Option<&str>,
     ) -> Result<(), TypeError> {
         let key = format!("{module}::{ty_name}::{}", f.name.name);
         let stub = self.signatures.get(&key).cloned();
@@ -990,15 +1050,62 @@ impl TypeChecker {
         let ret = if let Some(ann) = ret_ann {
             self.unify_checking(&f.body, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
-                unify(&mut self.ctx, &body_ty, stub_r)?;
+                unify(&mut self.ctx, &body_ty, stub_r).map_err(|e| {
+                    if trait_name.is_some() {
+                        TypeError::TraitImpl {
+                            message: format!(
+                                "method `{}` in `impl {trait_name} for {ty_name}` does not match the trait signature",
+                                f.name.name,
+                                trait_name = trait_name.unwrap_or("Trait")
+                            ),
+                            span: f.span,
+                        }
+                    } else {
+                        TypeError::UnifyAt {
+                            message: e.to_string(),
+                            span: f.span,
+                        }
+                    }
+                })?;
             }
             self.ctx.apply(&ann)
         } else if let Some(stub_r) = &stub_ret {
-            unify(&mut self.ctx, &body_ty, stub_r)?;
+            unify(&mut self.ctx, &body_ty, stub_r).map_err(|e| {
+                if trait_name.is_some() {
+                    TypeError::TraitImpl {
+                        message: format!(
+                            "method `{}` in `impl {trait_name} for {ty_name}` does not match the trait signature",
+                            f.name.name,
+                            trait_name = trait_name.unwrap_or("Trait")
+                        ),
+                        span: f.span,
+                    }
+                } else {
+                    TypeError::UnifyAt {
+                        message: e.to_string(),
+                        span: f.span,
+                    }
+                }
+            })?;
             self.ctx.apply(&body_ty)
         } else {
             self.ctx.apply(&body_ty)
         };
+        if let Some(tn) = trait_name
+            && let Some(methods) = self.traits.get(tn)
+            && let Some(stub) = methods.get(&f.name.name)
+            && param_types.len() != stub.params.len()
+        {
+            return Err(TypeError::TraitImpl {
+                message: format!(
+                    "method `{}` in `impl {tn} for {ty_name}` has {} parameter(s) but `{tn}` declares {}",
+                    f.name.name,
+                    param_types.len(),
+                    stub.params.len()
+                ),
+                span: f.span,
+            });
+        }
         self.signatures.insert(
             key.clone(),
             InferredSig {
@@ -1613,6 +1720,11 @@ impl TypeChecker {
                 let elem = self.infer_index(env, base, index, expr.span)?;
                 self.record_expr_ty(expr.span, elem.clone());
                 Ok(elem)
+            }
+            ExprKind::Slice { base, lo, hi } => {
+                let ty = self.infer_slice(env, base, lo, hi, expr.span)?;
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
             }
             ExprKind::IndexAssign { base, index, value } => {
                 let elem = self.infer_index(env, base, index, expr.span)?;
@@ -2266,6 +2378,39 @@ impl TypeChecker {
         })
     }
 
+    /// `xs[lo..hi]` copies to `vec<T>` (not a borrowed view) so rustc always accepts the emit (#159).
+    fn infer_slice(
+        &mut self,
+        env: &mut TypeEnv,
+        base: &Expr,
+        lo: &Expr,
+        hi: &Expr,
+        span: Span,
+    ) -> Result<Ty, TypeError> {
+        let bt = self.infer_expr(env, base)?;
+        let lt = self.infer_expr(env, lo)?;
+        let ht = self.infer_expr(env, hi)?;
+        unify(&mut self.ctx, &lt, &Ty::Int).map_err(|e| TypeError::UnifyAt {
+            message: e.to_string(),
+            span: lo.span,
+        })?;
+        unify(&mut self.ctx, &ht, &Ty::Int).map_err(|e| TypeError::UnifyAt {
+            message: e.to_string(),
+            span: hi.span,
+        })?;
+        let elem = self.ctx.fresh();
+        self.unify_checking(base, &bt, &vec_of(elem.clone()))
+            .map_err(|e| TypeError::UnifyAt {
+                message: e.to_string(),
+                span,
+            })?;
+        let applied = self.ctx.apply(&bt);
+        Ok(match &applied {
+            Ty::Named { name, args } if name == "vec" && args.len() == 1 => applied,
+            _ => vec_of(self.ctx.apply(&elem)),
+        })
+    }
+
     fn record_expr_ty(&mut self, span: Span, ty: Ty) {
         if matches!(&ty, Ty::Named { name, .. } if name == "vec") {
             self.fn_vec_tys.push((span, ty.clone()));
@@ -2700,6 +2845,20 @@ impl TypeChecker {
                 len: *len,
             }),
             TypeKind::Slice(inner) => Ok(Ty::Slice(Box::new(self.ast_type(inner)?))),
+            TypeKind::Dyn(inner) => {
+                let name = match &inner.kind {
+                    TypeKind::Named(id) => id.name.clone(),
+                    TypeKind::Generic { base, .. } => match &base.kind {
+                        TypeKind::Named(id) => id.name.clone(),
+                        _ => "Trait".into(),
+                    },
+                    _ => "Trait".into(),
+                };
+                Err(TypeError::UnsupportedDyn {
+                    trait_name: name,
+                    span: ty.span,
+                })
+            }
             TypeKind::Fn { params, ret } => Ok(Ty::Fn {
                 params: params
                     .iter()
@@ -3024,19 +3183,25 @@ fn rust_extern_scalar_ok(ty: &Ty) -> bool {
     )
 }
 
-/// `vec<float>` / `vec<int>` cross the `extern rust` boundary as `&[f64]` / `&[i64]` (#153).
-pub fn rust_extern_numeric_vec(ty: &Ty) -> bool {
+/// `vec<float>` / `vec<int>` / `vec<str>` / `vec<bool>` cross `extern rust` as
+/// `&[f64]` / `&[i64]` / `&[String]` / `&[bool]`; owned returns are `Vec<…>` (#153, #158).
+pub fn rust_extern_vec(ty: &Ty) -> bool {
     matches!(
         ty,
         Ty::Named { name, args }
             if name == "vec"
                 && args.len() == 1
-                && matches!(args[0], Ty::Float | Ty::Int)
+                && matches!(args[0], Ty::Float | Ty::Int | Ty::Bool | Ty::Str | Ty::StrSlice)
     )
 }
 
+/// Alias kept for callers that still name the 1.9.0 numeric-only helper.
+pub fn rust_extern_numeric_vec(ty: &Ty) -> bool {
+    rust_extern_vec(ty)
+}
+
 fn rust_extern_ty_ok(ty: &Ty) -> bool {
-    rust_extern_scalar_ok(ty) || rust_extern_numeric_vec(ty)
+    rust_extern_scalar_ok(ty) || rust_extern_vec(ty)
 }
 
 /// Whether a known `rust = true` import returns Rust `Result` and should lower via Crisp `?`

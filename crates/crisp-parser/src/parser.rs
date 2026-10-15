@@ -88,6 +88,8 @@ pub struct Parser {
     /// Original source (unshifted). Used to detect newlines skipped by the lexer (#145).
     source: String,
     span_base: u32,
+    /// Extra `>` closers left by treating `>>` as nested type-arg ends (`vec<vec<T>>`).
+    pending_type_gt: u32,
 }
 
 impl Parser {
@@ -110,6 +112,7 @@ impl Parser {
             allow_struct_lit: true,
             source: source.to_string(),
             span_base: base,
+            pending_type_gt: 0,
         })
     }
 
@@ -673,6 +676,17 @@ impl Parser {
             });
         }
 
+        if let TokenKind::Ident(name) = self.peek_kind()
+            && name == "dyn"
+        {
+            self.advance();
+            let inner = self.parse_type()?;
+            return Ok(Type {
+                kind: TypeKind::Dyn(Box::new(inner)),
+                span: Span::new(start, self.previous_end()),
+            });
+        }
+
         let base = self.parse_type_primary()?;
         let mut ty = base;
         if self.match_token(TokenKind::Lt) {
@@ -680,7 +694,7 @@ impl Parser {
             while self.match_token(TokenKind::Comma) {
                 args.push(self.parse_type()?);
             }
-            self.expect(TokenKind::Gt)?;
+            self.expect_type_gt()?;
             ty = Type {
                 kind: TypeKind::Generic {
                     base: Box::new(ty),
@@ -716,7 +730,7 @@ impl Parser {
             while self.match_token(TokenKind::Comma) {
                 args.push(self.parse_type()?);
             }
-            self.expect(TokenKind::Gt)?;
+            self.expect_type_gt()?;
             ty = Type {
                 kind: TypeKind::Generic {
                     base: Box::new(ty),
@@ -784,7 +798,7 @@ impl Parser {
         while self.match_token(TokenKind::Comma) {
             names.push(self.expect_ident()?);
         }
-        self.expect(TokenKind::Gt)?;
+        self.expect_type_gt()?;
         Ok(names)
     }
 
@@ -796,7 +810,7 @@ impl Parser {
         while self.match_token(TokenKind::Comma) {
             args.push(self.parse_type()?);
         }
-        self.expect(TokenKind::Gt)?;
+        self.expect_type_gt()?;
         Ok(args)
     }
 
@@ -1174,16 +1188,30 @@ impl Parser {
                 }
                 TokenKind::LBracket => {
                     self.advance();
-                    let index = self.parse_expr()?;
-                    self.expect(TokenKind::RBracket)?;
-                    let span = expr.span.merge(index.span);
-                    expr = Expr {
-                        kind: ExprKind::Index {
-                            base: Box::new(expr),
-                            index: Box::new(index),
-                        },
-                        span,
-                    };
+                    let lo = self.parse_expr()?;
+                    if self.match_token(TokenKind::DotDot) {
+                        let hi = self.parse_expr()?;
+                        self.expect(TokenKind::RBracket)?;
+                        let span = expr.span.merge(hi.span);
+                        expr = Expr {
+                            kind: ExprKind::Slice {
+                                base: Box::new(expr),
+                                lo: Box::new(lo),
+                                hi: Box::new(hi),
+                            },
+                            span,
+                        };
+                    } else {
+                        self.expect(TokenKind::RBracket)?;
+                        let span = expr.span.merge(lo.span);
+                        expr = Expr {
+                            kind: ExprKind::Index {
+                                base: Box::new(expr),
+                                index: Box::new(lo),
+                            },
+                            span,
+                        };
+                    }
                 }
                 TokenKind::Question => {
                     self.advance();
@@ -1943,6 +1971,23 @@ match (Name { field: value }) { ... }",
         } else {
             Err(self.unexpected("token", self.peek_kind()))
         }
+    }
+
+    /// Close a type-argument list. `>>` from the lexer is `Shr`; treat it as two `>`.
+    fn expect_type_gt(&mut self) -> Result<(), ParseError> {
+        if self.pending_type_gt > 0 {
+            self.pending_type_gt -= 1;
+            return Ok(());
+        }
+        if self.match_token(TokenKind::Gt) {
+            return Ok(());
+        }
+        if self.check(TokenKind::Shr) {
+            self.advance();
+            self.pending_type_gt += 1;
+            return Ok(());
+        }
+        Err(self.unexpected("token", self.peek_kind()))
     }
 
     fn match_kw(&mut self, kw: Kw) -> bool {

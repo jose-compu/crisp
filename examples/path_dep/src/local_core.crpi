@@ -6,4 +6,8 @@ extern rust local_core {
     sum_f64(xs: vec<float>) -> float
     ones(n: int) -> vec<float>
     plot_heatmap(path: str, nx: int, ny: int, data: vec<float>, cmap: str) -> str
+    join_names(xs: vec<str>) -> str
+    greetings() -> vec<str>
+    all_true(xs: vec<bool>) -> bool
+    flags() -> vec<bool>
 }

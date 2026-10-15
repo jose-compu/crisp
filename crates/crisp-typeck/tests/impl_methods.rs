@@ -1,6 +1,6 @@
 //! Inherent `impl Type` methods (§5.4 / #20).
 
-use crisp_typeck::{TypeChecker, format_sig};
+use crisp_typeck::{TypeChecker, TypeError, format_sig};
 use std::path::PathBuf;
 
 fn example(name: &str) -> PathBuf {
@@ -62,4 +62,46 @@ fn show_trait_typechecks_and_registers_methods() {
         .find(|s| s.name == "label")
         .expect("label");
     assert_eq!(format_sig(label), "label<T: Clone + Show>(x: T) -> str");
+}
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
+}
+
+#[test]
+fn issue_59_dyn_is_e0091() {
+    let err = TypeChecker::check_crate(&fixture("dyn_trait")).expect_err("E0091");
+    let msg = err.to_string();
+    eprintln!("dyn: {msg}");
+    assert!(
+        matches!(err, TypeError::UnsupportedDyn { .. }) || msg.contains("E0091"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn issue_59_extra_impl_method_is_e0092() {
+    let err = TypeChecker::check_crate(&fixture("trait_extra_method")).expect_err("E0092 extra");
+    let msg = err.to_string();
+    eprintln!("extra: {msg}");
+    assert!(
+        matches!(err, TypeError::TraitImpl { .. }) || msg.contains("E0092"),
+        "{msg}"
+    );
+    assert!(msg.contains("extra"), "{msg}");
+}
+
+#[test]
+fn issue_59_missing_impl_method_is_e0092() {
+    let err =
+        TypeChecker::check_crate(&fixture("trait_missing_method")).expect_err("E0092 missing");
+    let msg = err.to_string();
+    eprintln!("missing: {msg}");
+    assert!(
+        matches!(err, TypeError::TraitImpl { .. }) || msg.contains("E0092"),
+        "{msg}"
+    );
+    assert!(msg.contains("show"), "{msg}");
 }

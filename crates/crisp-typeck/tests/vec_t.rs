@@ -45,6 +45,23 @@ fn issue_119_float_literal_and_push() {
 }
 
 #[test]
+fn issue_159_slice_is_vec() {
+    let typed = TypeChecker::check_crate(&fixture("vec_slice")).expect("slice #159");
+    let mid = typed
+        .signatures
+        .values()
+        .find(|s| s.name == "mid")
+        .expect("mid");
+    assert_eq!(format_sig(mid), "mid(xs: vec<float>) -> vec<float>");
+    let from_lit = typed
+        .signatures
+        .values()
+        .find(|s| s.name == "from_lit")
+        .expect("from_lit");
+    assert_eq!(format_sig(from_lit), "from_lit() -> vec<float>");
+}
+
+#[test]
 fn issue_119_uninferred_new_is_e0088() {
     let err = TypeChecker::check_crate(&fixture("vec_uninferred")).expect_err("E0088");
     assert!(

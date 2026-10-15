@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.9.0**. Active milestones:
+Current compiler: **v1.10.0**. Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -328,19 +328,26 @@ Current compiler: **v1.9.0**. Active milestones:
 | **v1.8.0** | minor | Parser DX, numeric widening, implicit `vec<T>`, math / `extern rust` (shipped) | label `release:v1.8.0` · epics [#122](https://github.com/jose-compu/crisp/issues/122)–[#126](https://github.com/jose-compu/crisp/issues/126), [#110](https://github.com/jose-compu/crisp/issues/110) |
 | **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (shipped) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
 | **v1.9.0** | minor | `extern rust` vec FFI, OS prelude, `[lib]` from `src/lib.crp` (shipped) | label `release:v1.9.0` · [#151](https://github.com/jose-compu/crisp/issues/151)–[#153](https://github.com/jose-compu/crisp/issues/153) |
+| **v1.10.0** | minor | slices `xs[lo..hi]`, `extern rust` `vec<str>`/`vec<bool>`, trait impl set + `dyn` E0091 (shipped) | label `release:v1.10.0` · [#159](https://github.com/jose-compu/crisp/issues/159), [#158](https://github.com/jose-compu/crisp/issues/158), [#59](https://github.com/jose-compu/crisp/issues/59) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
 |----------|--------|----------|
 | **P0** | Public flip | [#58](https://github.com/jose-compu/crisp/issues/58) |
-| **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults landed; bounds/`dyn` remain) |
+| **P1** | Trait bounds / `dyn` polish | [#59](https://github.com/jose-compu/crisp/issues/59) (defaults + method-set E0092 + `dyn` E0091 in v1.10.0; generic trait bounds remain) |
 | **P2** | Marketplace listing, channels / self-hosting | [#57](https://github.com/jose-compu/crisp/issues/57) (VSIX script landed), [#38](https://github.com/jose-compu/crisp/issues/38), [#30](https://github.com/jose-compu/crisp/issues/30)–[#32](https://github.com/jose-compu/crisp/issues/32) |
-| **P1** | crates.io publish (v1.9.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
+| **P1** | crates.io publish (v1.10.0) | [#66](https://github.com/jose-compu/crisp/issues/66) ([CRATES_IO.md](docs/CRATES_IO.md)) |
 | **P2** | v1.7 language: first-class closures | [#72](https://github.com/jose-compu/crisp/issues/72) (shipped in v1.7.0) |
 
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### Shipped — v1.10.0 (slices, vec FFI, trait diagnostics)
+
+- [x] **`xs[lo..hi]`** — typeck, CIR, emit as a copied `vec<T>` (`…to_vec()`); `[T; N]` later ([#159](https://github.com/jose-compu/crisp/issues/159))
+- [x] **`extern rust` `vec<str>` / `vec<bool>`** — `&[String]` / `&[bool]`; owned `Vec<String>` / `Vec<bool>` ([#158](https://github.com/jose-compu/crisp/issues/158))
+- [x] **Trait method set / signatures** — extra or missing required methods are **E0092**; `dyn Trait` is **E0091** ([#59](https://github.com/jose-compu/crisp/issues/59)). Default bodies remain (`examples/trait_defaults`). Not self-hosting.
 
 ### Shipped — v1.9.0 (FFI, OS prelude, lib roots)
 
@@ -428,4 +435,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-09-13 — v1.9.0 shipped.*
+*Last updated: 2026-10-15 — v1.10.0 shipped.*

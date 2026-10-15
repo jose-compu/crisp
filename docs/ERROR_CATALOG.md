@@ -27,8 +27,10 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E009x` range. Pre
 | E0086 | typeck | Hole `_` used where a function value is not expected — write `|x| …` or pass `_` as a function argument |
 | E0087 | typeck | Invalid `as` target — only `int` and `float` ([#112](https://github.com/jose-compu/crisp/issues/112)) |
 | E0088 | typeck | Cannot infer `vec` element type — pin (`-> vec<float> = new()`, or `push`) ([#119](https://github.com/jose-compu/crisp/issues/119)) |
-| E0089 | typeck | Rust import not declared in `extern rust` — add a signature (`float`/`int`/`str`/`bool` or `vec<float>`/`vec<int>`) ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153)) |
-| E0090 | typeck / emit | `extern rust` type is not `float`/`int`/`str`/`bool`/`vec<float>`/`vec<int>`, or rustc rejected the declared signature (user assertion, not a crisp bug) ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153)) |
+| E0089 | typeck | Rust import not declared in `extern rust` — add a signature (`float`/`int`/`str`/`bool` or `vec<float>`/`vec<int>`/`vec<str>`/`vec<bool>`) ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153), [#158](https://github.com/jose-compu/crisp/issues/158)) |
+| E0090 | typeck / emit | `extern rust` type is not `float`/`int`/`str`/`bool`/`vec<float>`/`vec<int>`/`vec<str>`/`vec<bool>`, or rustc rejected the declared signature (user assertion, not a crisp bug) ([#116](https://github.com/jose-compu/crisp/issues/116), [#153](https://github.com/jose-compu/crisp/issues/153), [#158](https://github.com/jose-compu/crisp/issues/158)) |
+| E0091 | typeck | `dyn Trait` is not supported — write a generic bound (`T: Trait`) or a concrete type ([#59](https://github.com/jose-compu/crisp/issues/59)) |
+| E0092 | typeck | `impl Trait for Type` extra method, missing required method, or signature mismatch ([#59](https://github.com/jose-compu/crisp/issues/59)) |
 | W0087 | typeck | Non-literal `int` → `float` may lose precision above 2^53 — write `as float` to silence ([#112](https://github.com/jose-compu/crisp/issues/112)) |
 | E0050 | ownership | Ownership contradicts explicit annotation — adjust `own`/`&`/`&mut` or usage |
 | E0051 | ownership | Ownership analysis failed |

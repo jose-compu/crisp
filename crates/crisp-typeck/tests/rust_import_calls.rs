@@ -154,6 +154,35 @@ extern rust kernels {
 }
 
 #[test]
+fn extern_rust_vec_str_and_bool_are_allowed() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_extern_fixture(
+        tmp.path(),
+        r#"
+use kernels { join_names, greetings, all_true, flags }
+
+pub main() = {
+    print(join_names(greetings()))
+    print(all_true(flags()))
+}
+"#,
+        r#"
+extern rust kernels {
+    join_names(xs: vec<str>) -> str
+    greetings() -> vec<str>
+    all_true(xs: vec<bool>) -> bool
+    flags() -> vec<bool>
+}
+"#,
+    );
+    let typed = TypeChecker::check_crate(tmp.path()).expect("vec<str>/vec<bool> #158");
+    assert!(typed.signatures.contains_key("rust.kernels::join_names"));
+    assert!(typed.signatures.contains_key("rust.kernels::greetings"));
+    assert!(typed.signatures.contains_key("rust.kernels::all_true"));
+    assert!(typed.signatures.contains_key("rust.kernels::flags"));
+}
+
+#[test]
 fn extern_rust_map_is_e0090() {
     let tmp = tempfile::tempdir().unwrap();
     write_extern_fixture(
@@ -175,4 +204,27 @@ extern rust kernels {
     let msg = err.to_string();
     assert!(msg.contains("E0090"), "{msg}");
     assert!(msg.contains("map"), "{msg}");
+}
+
+#[test]
+fn extern_rust_nested_vec_is_e0090() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_extern_fixture(
+        tmp.path(),
+        r#"
+use kernels { bad }
+
+pub main() = {
+    bad()
+}
+"#,
+        r#"
+extern rust kernels {
+    bad(xs: vec<vec<float>>) -> float
+}
+"#,
+    );
+    let err = TypeChecker::check_crate(tmp.path()).expect_err("nested vec FFI");
+    let msg = err.to_string();
+    assert!(msg.contains("E0090"), "{msg}");
 }

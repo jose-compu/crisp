@@ -137,6 +137,20 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
                 consider(best, offset, field.span, Located::Ident(field));
             }
         }
+        ExprKind::Index { base, index } => {
+            walk_expr(base, offset, best);
+            walk_expr(index, offset, best);
+        }
+        ExprKind::Slice { base, lo, hi } => {
+            walk_expr(base, offset, best);
+            walk_expr(lo, offset, best);
+            walk_expr(hi, offset, best);
+        }
+        ExprKind::IndexAssign { base, index, value } => {
+            walk_expr(base, offset, best);
+            walk_expr(index, offset, best);
+            walk_expr(value, offset, best);
+        }
         ExprKind::Block(b) => {
             for stmt in &b.stmts {
                 walk_stmt(stmt, offset, best);

@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://crisp-lang.org/llms.txt</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://crisp-lang.org/install.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>

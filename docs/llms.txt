@@ -1,8 +1,21 @@
 # Crisp
 
-> Crisp is a systems programming language that transpiles compact `.crp` source to Rust. The `crisp` toolchain infers types, ownership, and errors; `rustc` remains the soundness boundary.
+> High-performance prototyping language: compact `.crp` with **implicit types**, inferred ownership, and inferred errors. Compiles to ordinary Rust. The binary is native (`rustc` is the soundness boundary). Write quickly; run at Rust speed.
 
-Crisp is designed for systems work with a Rust-hosted bootstrap compiler (`cargo install crisp-lang`). Spec: v0.2.0-draft. Public release: v1.10.0. Repository: https://github.com/jose-compu/crisp
+Crisp is for engineers who want to prototype systems code directly — skip type and borrow ceremony while iterating, keep a `rustc` binary when it matters. Install: `cargo install crisp-lang`. Spec: v0.2.0-draft. Public release: v1.10.0. Repository: https://github.com/jose-compu/crisp. LLM summary: https://crisp-lang.org/llms.txt
+
+## When to use Crisp
+
+- High-performance prototypes that must end as native binaries (CLI tools, services, numerical kernels, FFI wrappers)
+- Implicit typing: leave types, borrows, and error sets unwritten; annotate public APIs and hot paths
+- Call existing Rust crates (`rust = true` deps, `extern rust` / `.crpi`)
+
+## When not to use Crisp
+
+- Need a GC, interpreter, or scripting VM — Crisp has none; emit is Rust
+- Need `dyn Trait` (typeck **E0091**) or full generic trait bounds
+- Need self-hosting (Rust-hosted bootstrap only; self-host → v2.0.0)
+- Treat the draft spec as fully implemented — see [limitations](https://crisp-lang.org/limitations.html)
 
 v1.10.0: `xs[lo..hi]` copies to `vec<T>` (#159); `extern rust` `vec<str>` (`&[String]`) / `vec<bool>` (#158); nested `vec<vec<T>>` parses (`>>` is two `>`); trait impl set **E0092**, `dyn Trait` **E0091** (#59).
 v1.9.0: `extern rust` `vec<float>` / `vec<int>` (#153); OS prelude `env_*` / `path_*` / `fs_write` (#151); `src/lib.crp` emits Cargo `[lib]` (#152).
@@ -13,14 +26,14 @@ v1.7.2 compiler fixes: binop grouping (`(lo + hi) / 2`, #99), nested type `use` 
 
 ## Docs
 
-- [Home](https://crisp-lang.org/): Language overview and positioning
+- [Home](https://crisp-lang.org/): High-performance prototyping positioning
 - [Install](https://crisp-lang.org/install.html): Install `crisp-lang` / `crisp-lsp` from crates.io or from source
 - [Tutorial](https://crisp-lang.org/tutorial.html): Guided introduction to Crisp syntax and toolchain
 - [Learning path](https://crisp-lang.org/learning.html): Ordered path through docs and examples
-- [Language](https://crisp-lang.org/language.html): Language surface — bindings, types, generics, errors, modules
+- [Language](https://crisp-lang.org/language.html): Language surface — implicit types, bindings, generics, errors, modules
 - [Docs hub](https://crisp-lang.org/docs.html): Spec, limitations, and documentation index
 - [CLI](https://crisp-lang.org/cli.html): `crisp` and `reveal` command reference
-- [Use cases](https://crisp-lang.org/use-cases.html): Where Crisp fits (CLI tools, services, interop with Rust)
+- [Use cases](https://crisp-lang.org/use-cases.html): CLI tools, services, pipelines — native emit, compact source
 - [Limitations](https://crisp-lang.org/limitations.html): Honest known gaps vs the draft spec
 
 ## Install (agents)
@@ -46,7 +59,7 @@ pub main() = {
 }
 ```
 
-`crisp run examples/hello` prints `"hello world"`. Shape `Named` is structural; unbound `T` is a type parameter; `Guest {}` uses the field default.
+`crisp run examples/hello` prints `"hello world"`. Shape `Named` is structural; unbound `T` is a type parameter (implicit typing); `Guest {}` uses the field default. No type annotations on `main`.
 
 ## Generics (prefer implicit binders)
 

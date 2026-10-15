@@ -25,7 +25,7 @@ Colors and logo match the Crisp brand (slate + blue accent, `crisp-logo.jpg`). F
 | JSON-LD on `index.html` | `WebSite`, `Organization`, `SoftwareApplication`, `SoftwareSourceCode` |
 | `robots.txt` | Allow search + major AI crawlers; points at sitemap |
 | `sitemap.xml` | Index of primary pages for search engines |
-| `llms.txt` | LLM-oriented site summary ([llmstxt.org](https://llmstxt.org/)) |
+| `llms.txt` | LLM-oriented site summary ([llmstxt.org](https://llmstxt.org/)) — positioning: high-performance prototyping, implicit types, native Rust |
 
 Keep page titles/descriptions in sync when shipping major releases.
 

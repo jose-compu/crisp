@@ -171,6 +171,13 @@ a:hover { color: var(--accent-soft); }
   line-height: 1.08;
   width: 100%;
 }
+.hero-sub {
+  margin: -0.35rem 0 1.15rem;
+  max-width: 36rem;
+  color: var(--muted);
+  text-align: left;
+  line-height: 1.45;
+}
 .hero-points {
   margin: 0 0 1.5rem;
   padding-left: 1.15rem;

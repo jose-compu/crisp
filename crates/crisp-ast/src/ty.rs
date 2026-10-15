@@ -17,6 +17,8 @@ pub enum TypeKind {
         len: u64,
     },
     Slice(Box<Type>),
+    /// `dyn Trait` — parsed so typeck can emit E0091 rather than silent wrong emit (#59).
+    Dyn(Box<Type>),
     Fn {
         params: Vec<Type>,
         ret: Box<Type>,

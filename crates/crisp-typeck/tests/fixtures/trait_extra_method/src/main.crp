@@ -1,0 +1,16 @@
+trait Show = {
+    show(self) -> str
+}
+
+type Point = {
+    x: int
+}
+
+impl Show for Point = {
+    show(self) = "ok"
+    extra(self) = 1
+}
+
+pub main() = {
+    print("no")
+}

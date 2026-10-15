@@ -100,6 +100,11 @@ fn count_in(expr: &Expr, n: &mut usize) {
             count_in(base, n);
             count_in(index, n);
         }
+        ExprKind::Slice { base, lo, hi } => {
+            count_in(base, n);
+            count_in(lo, n);
+            count_in(hi, n);
+        }
         ExprKind::IndexAssign { base, index, value } => {
             count_in(base, n);
             count_in(index, n);
@@ -218,6 +223,11 @@ fn replace_holes(expr: &Expr, i: &mut usize) -> Expr {
         ExprKind::Index { base, index } => ExprKind::Index {
             base: Box::new(replace_holes(base, i)),
             index: Box::new(replace_holes(index, i)),
+        },
+        ExprKind::Slice { base, lo, hi } => ExprKind::Slice {
+            base: Box::new(replace_holes(base, i)),
+            lo: Box::new(replace_holes(lo, i)),
+            hi: Box::new(replace_holes(hi, i)),
         },
         ExprKind::IndexAssign { base, index, value } => ExprKind::IndexAssign {
             base: Box::new(replace_holes(base, i)),

@@ -1,0 +1,4 @@
+[package]
+name = "trait_missing_method"
+version = "0.1.0"
+edition = "2026"

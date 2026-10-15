@@ -16,6 +16,9 @@ float_len() = len(float_seq())
 
 at(xs, i) = xs[i]
 
+-- Copied subrange `vec<T>` (emit `xs[(lo) as usize..(hi) as usize].to_vec()`, #159).
+mid(xs) = xs[1..4]
+
 set_head() = {
     xs := [1.0, 2.0, 3.0]
     xs[0] = 9.0
@@ -36,6 +39,13 @@ test "index read" = {
 
 test "index write" = {
     assert_eq(set_head(), 9.0)
+}
+
+test "slice subrange" = {
+    ys := mid([1.0, 2.0, 3.0, 4.0, 5.0])
+    assert_eq(len(ys), 3)
+    assert_eq(ys[0], 2.0)
+    assert_eq(ys[2], 4.0)
 }
 
 test "triple three" = {

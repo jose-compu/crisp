@@ -238,10 +238,7 @@ impl CirBuilder {
                 .map(|s| {
                     (
                         (s.crate_name.clone(), s.item.clone()),
-                        s.params
-                            .iter()
-                            .map(crisp_typeck::rust_extern_numeric_vec)
-                            .collect(),
+                        s.params.iter().map(crisp_typeck::rust_extern_vec).collect(),
                     )
                 })
                 .collect(),
@@ -1875,6 +1872,49 @@ fn lower_expr_raw(
                 span: expr.span,
             }
         }
+        ExprKind::Slice { base, lo, hi } => {
+            let ty = ctx.expr_ty(typed, expr.span).unwrap_or(CirTy::Error);
+            E::Slice {
+                base: Box::new(lower_expr(
+                    base,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                lo: Box::new(lower_expr(
+                    lo,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                hi: Box::new(lower_expr(
+                    hi,
+                    module,
+                    osig,
+                    typed,
+                    ownership,
+                    errors,
+                    locals,
+                    struct_fields,
+                    fn_modules,
+                    ctx,
+                )),
+                ty,
+                span: expr.span,
+            }
+        }
         ExprKind::IndexAssign { base, index, value } => E::IndexAssign {
             base: Box::new(lower_expr(
                 base,
@@ -2168,7 +2208,8 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::Lambda { ty, .. }
         | CirExpr::Apply { ty, .. }
         | CirExpr::Array { ty, .. }
-        | CirExpr::Index { ty, .. } => Some(ty.clone()),
+        | CirExpr::Index { ty, .. }
+        | CirExpr::Slice { ty, .. } => Some(ty.clone()),
         CirExpr::Int { .. } => Some(CirTy::Int),
         CirExpr::Float { .. } => Some(CirTy::Float),
         CirExpr::Bool { .. } => Some(CirTy::Bool),

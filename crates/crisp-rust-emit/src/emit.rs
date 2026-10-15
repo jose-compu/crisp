@@ -1313,6 +1313,17 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 let _ = write!(out, ".clone()");
             }
         }
+        CirExpr::Slice {
+            base, lo, hi, span, ..
+        } => {
+            map.record(out.len() as u32, *span);
+            emit_expr(out, base, current_module, map);
+            let _ = write!(out, "[(");
+            emit_expr(out, lo, current_module, map);
+            let _ = write!(out, ") as usize..(");
+            emit_expr(out, hi, current_module, map);
+            let _ = write!(out, ") as usize].to_vec()");
+        }
         CirExpr::IndexAssign {
             base,
             index,
@@ -1459,9 +1470,10 @@ fn cir_ty_is_vec(ty: &CirTy) -> bool {
 
 fn cir_expr_is_vec(expr: &CirExpr) -> bool {
     match expr {
-        CirExpr::Ident { ty, .. } | CirExpr::Call { ty, .. } | CirExpr::Array { ty, .. } => {
-            cir_ty_is_vec(ty)
-        }
+        CirExpr::Ident { ty, .. }
+        | CirExpr::Call { ty, .. }
+        | CirExpr::Array { ty, .. }
+        | CirExpr::Slice { ty, .. } => cir_ty_is_vec(ty),
         CirExpr::Clone { expr, .. } | CirExpr::Borrow { expr, .. } => cir_expr_is_vec(expr),
         _ => false,
     }
@@ -1584,6 +1596,11 @@ fn walk_expr_index_assign(expr: &CirExpr, names: &mut HashSet<String>) {
             if let CirExpr::IndexAssign { value, .. } = expr {
                 walk_expr_index_assign(value, names);
             }
+        }
+        CirExpr::Slice { base, lo, hi, .. } => {
+            walk_expr_index_assign(base, names);
+            walk_expr_index_assign(lo, names);
+            walk_expr_index_assign(hi, names);
         }
         CirExpr::While { cond, body, .. } => {
             walk_expr_index_assign(cond, names);

@@ -546,9 +546,10 @@ impl Resolver {
                 self.check_name(scope, &id.name, id.span)?;
                 self.reject_shape_type(scope, &id.name, id.span)
             }
-            TypeKind::Option(inner) | TypeKind::Slice(inner) | TypeKind::Ref { inner, .. } => {
-                self.check_type(scope, inner)
-            }
+            TypeKind::Option(inner)
+            | TypeKind::Slice(inner)
+            | TypeKind::Dyn(inner)
+            | TypeKind::Ref { inner, .. } => self.check_type(scope, inner),
             TypeKind::Tuple(types) => {
                 for t in types {
                     self.check_type(scope, t)?;
@@ -763,6 +764,11 @@ impl Resolver {
             ExprKind::Index { base, index } => {
                 self.check_expr(scope, base)?;
                 self.check_expr(scope, index)
+            }
+            ExprKind::Slice { base, lo, hi } => {
+                self.check_expr(scope, base)?;
+                self.check_expr(scope, lo)?;
+                self.check_expr(scope, hi)
             }
             ExprKind::IndexAssign { base, index, value } => {
                 self.check_expr(scope, base)?;

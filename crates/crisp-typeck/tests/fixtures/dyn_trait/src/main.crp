@@ -1,0 +1,9 @@
+trait Show = {
+    show(self) -> str
+}
+
+label(x: dyn Show) = x.show()
+
+pub main() = {
+    print("no")
+}

@@ -461,6 +461,11 @@ impl<'a> Collector<'a> {
                 self.walk_expr(base);
                 self.walk_expr(index);
             }
+            ExprKind::Slice { base, lo, hi } => {
+                self.walk_expr(base);
+                self.walk_expr(lo);
+                self.walk_expr(hi);
+            }
             ExprKind::IndexAssign { base, index, value } => {
                 if let ExprKind::Ident(id) = &base.kind {
                     self.record_use(&id.name, Usage::Mutate, id.span);

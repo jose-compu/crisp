@@ -56,6 +56,12 @@ pub enum ExprKind {
         base: Box<Expr>,
         index: Box<Expr>,
     },
+    /// `xs[lo..hi]` on `vec<T>` — copies to a new `vec<T>` (#159).
+    Slice {
+        base: Box<Expr>,
+        lo: Box<Expr>,
+        hi: Box<Expr>,
+    },
     /// `xs[i] = v` (#120).
     IndexAssign {
         base: Box<Expr>,

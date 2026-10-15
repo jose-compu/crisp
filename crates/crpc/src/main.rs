@@ -376,7 +376,7 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
                     &err.to_string().replacen("[E0089] ", "", 1),
                     *span,
                     Severity::Error,
-                    &["help: declare it in `extern rust <crate> { item(…) -> … }` or a `.crpi` sidecar (`float`/`int`/`str`/`bool`/`vec<float>`/`vec<int>`)".into()],
+                    &["help: declare it in `extern rust <crate> { item(…) -> … }` or a `.crpi` sidecar (`float`/`int`/`str`/`bool`/`vec<float>`/`vec<int>`/`vec<str>`/`vec<bool>`)".into()],
                 )
                 .rendered;
                 eprintln!("{rendered}");
@@ -390,6 +390,38 @@ fn print_type_diagnostic(root: &Path, err: &TypeError) {
                     &source,
                     "E0090",
                     &err.to_string().replacen("[E0090] ", "", 1),
+                    *span,
+                    Severity::Error,
+                    &[],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        TypeError::UnsupportedDyn { span, .. } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0091",
+                    &err.to_string().replacen("[E0091] ", "", 1),
+                    *span,
+                    Severity::Error,
+                    &["help: write a generic parameter with a trait bound, or use a concrete type".into()],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
+        TypeError::TraitImpl { span, .. } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0092",
+                    &err.to_string().replacen("[E0092] ", "", 1),
                     *span,
                     Severity::Error,
                     &[],

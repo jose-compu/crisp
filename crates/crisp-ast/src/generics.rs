@@ -47,7 +47,10 @@ pub fn defined_type_names(items: &[Item]) -> HashSet<String> {
 pub fn collect_type_idents(ty: &Type, out: &mut Vec<Ident>) {
     match &ty.kind {
         TypeKind::Named(id) => out.push(id.clone()),
-        TypeKind::Option(inner) | TypeKind::Slice(inner) | TypeKind::Ref { inner, .. } => {
+        TypeKind::Option(inner)
+        | TypeKind::Slice(inner)
+        | TypeKind::Dyn(inner)
+        | TypeKind::Ref { inner, .. } => {
             collect_type_idents(inner, out);
         }
         TypeKind::Tuple(ts) | TypeKind::Fn { params: ts, .. } => {

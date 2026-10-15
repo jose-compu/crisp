@@ -573,6 +573,14 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                 emit_expr(ctx, index)
             )
         }
+        ExprKind::Slice { base, lo, hi } => {
+            format!(
+                "{}[({}) as usize..({}) as usize].to_vec()",
+                emit_expr(ctx, base),
+                emit_expr(ctx, lo),
+                emit_expr(ctx, hi)
+            )
+        }
         ExprKind::IndexAssign { base, index, value } => format!(
             "{}[({}) as usize] = {}",
             emit_expr(ctx, base),

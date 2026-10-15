@@ -270,6 +270,20 @@ fn walk_expr(
         ExprKind::Field { base, .. } => {
             walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out)
         }
+        ExprKind::Index { base, index } => {
+            walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, index, fn_defs, callee_sigs, rust_imports, out);
+        }
+        ExprKind::Slice { base, lo, hi } => {
+            walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, lo, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, hi, fn_defs, callee_sigs, rust_imports, out);
+        }
+        ExprKind::IndexAssign { base, index, value } => {
+            walk_expr(module, base, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, index, fn_defs, callee_sigs, rust_imports, out);
+            walk_expr(module, value, fn_defs, callee_sigs, rust_imports, out);
+        }
         ExprKind::Pipe { left, right } => {
             walk_expr(module, left, fn_defs, callee_sigs, rust_imports, out);
             walk_expr(module, right, fn_defs, callee_sigs, rust_imports, out);

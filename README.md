@@ -16,6 +16,8 @@
 
 Crisp is a systems language for **high-performance prototyping**. You write compact `.crp` with **implicit typing** (plus inferred ownership and errors); `crisp` emits ordinary Rust; `rustc` is the soundness boundary. The binary is native — fast to write, fast to run.
 
+**37% more compact than the Rust it emits** (v1.10.0 `examples/`, same program surface, GPT-4 `cl100k_base`: 10 415 vs 16 638 tokens, 1.60×). Typical crate as written: **28%** fewer tokens (median of 46). LLM agents read and generate less for the same program, so they iterate quicker. Method: [llms.txt](https://crisp-lang.org/llms.txt).
+
 **Site:** [crisp-lang.org](https://crisp-lang.org/) · [llms.txt](https://crisp-lang.org/llms.txt) for search engines and AI agents.
 
 **This is a Rust-hosted bootstrap compiler (v1.10.0) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).

@@ -12,9 +12,13 @@
   <img src="assets/crisp-logo-square.jpg" alt="Crisp logo" width="320" />
 </p>
 
-> **Explicit on demand, implicit by default.**
+> **Explicit on demand, implicit by default.** High-performance prototypes: write compact `.crp` with implicit types, ship native Rust.
 
-Crisp (`.crp`) is a systems language that transpiles to Rust. You write compact source; `crisp` infers types, ownership, and error propagation, emits Rust, and `rustc` is the soundness boundary.
+Crisp is a systems language for **high-performance prototyping**. You write compact `.crp` with **implicit typing** (plus inferred ownership and errors); `crisp` emits ordinary Rust; `rustc` is the soundness boundary. The binary is native — fast to write, fast to run.
+
+**37% more compact than the Rust it emits** (v1.10.0 `examples/`, same program surface, GPT-4 `cl100k_base`: 10 415 vs 16 638 tokens, 1.60×). Typical crate as written: **28%** fewer tokens (median of 46). LLM agents read and generate less for the same program, so they iterate quicker. Method: [llms.txt](https://crisp-lang.org/llms.txt).
+
+**Site:** [crisp-lang.org](https://crisp-lang.org/) · [llms.txt](https://crisp-lang.org/llms.txt) for search engines and AI agents.
 
 **This is a Rust-hosted bootstrap compiler (v1.10.0) — public release track.** It is **not** self-hosted yet (ROADMAP Phase 2 / milestone v2.0.0). The language document remains **[spec v0.2.0-draft](docs/spec/CrispLang-SPECS-0.2.0.md)** — treat “spec-complete” claims cautiously; see [known limitations](docs/KNOWN_LIMITATIONS.md) and [spec ↔ impl deltas](docs/SPEC_IMPL_DELTA.md).
 
@@ -22,7 +26,7 @@ Known Rust `Result` APIs from `rust = true` deps lower to Crisp ambient errors (
 
 **Spec:** [docs/spec/CrispLang-SPECS-0.2.0.md](docs/spec/CrispLang-SPECS-0.2.0.md)  
 **Quickstart:** [QUICKSTART.md](QUICKSTART.md)  
-**Web docs:** [crisp-lang.org](https://crisp-lang.org/) · branch [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
+**Pages branch:** [`docs`](https://github.com/jose-compu/crisp/tree/docs)  
 **Roadmap:** [ROADMAP.md](ROADMAP.md)  
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)  
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)  
@@ -33,17 +37,17 @@ License: **MIT OR Apache-2.0** ([LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), 
 
 ## Philosophy
 
-Crisp is optimized for **writing and local reading**. Semantics are defined by **lowering to Rust**, not by a separate runtime or VM.
+Crisp is optimized for **writing quickly and reading locally**, then keeping **native performance**. Semantics are defined by **lowering to Rust**, not by a separate runtime or VM. That is the prototype loop: compact implicit source in, `rustc` binary out.
 
 In practice that means:
 
-- Types, borrows, lifetimes, and error sets are **inferred globally** when the source stays silent.
+- Types, borrows, lifetimes, and error sets are **inferred globally** when the source stays silent — implicit typing so you can code directly instead of annotating every binding.
 - When you need precision — public APIs, performance-sensitive paths, or ambiguous usage — you annotate, and the compiler treats those annotations as hard constraints.
 - **`reveal`** is the “show your work” companion to `crisp`: it prints inferred types, ownership (`&` / `&mut`), lifetimes, error sets, traits, and the emitted Rust that compact `.crp` source leaves implicit. See [QUICKSTART §10](QUICKSTART.md#10-inspect-what-the-compiler-inferred-reveal).
 
 Crisp is a **front end that produces Rust**. Rust remains the authority on memory safety and data races. Crisp’s own borrow/region passes exist to drive good diagnostics and to decide what to emit (`&`, `&mut`, owned, `.clone()` fallbacks); they are not claimed as an independent soundness boundary. If generated Rust fails to compile, that is a **`crisp` bug**, not a user error.
 
-**Design goals:** native code via `rustc`; HM-style type inference; deterministic global ownership dataflow; ambient fallible functions lowered to a uniform `Result<T, CrispError>`; compact syntax; tooling-first ergonomics.
+**Design goals:** high-performance prototypes (native code via `rustc`); HM-style implicit type inference; deterministic global ownership dataflow; ambient fallible functions lowered to a uniform `Result<T, CrispError>`; compact syntax; tooling-first ergonomics.
 
 **Non-goals:** scripting semantics; a GC; a stable library ABI across separately compiled units; pretending Crisp’s checker replaces `rustc`; claiming full enum/trait/shape coverage while those remain incomplete.
 

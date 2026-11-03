@@ -6,7 +6,7 @@ pub fn prelude_symbols() -> Vec<Symbol> {
     let module = "std.prelude".to_string();
     let span = Span::default();
     let types = [
-        "int", "uint", "float", "bool", "char", "str", "Never", "vec", "map", "set",
+        "int", "uint", "float", "bool", "char", "str", "json", "Never", "vec", "map", "set",
     ];
     let fns = ["log", "print", "some", "none", "assert_eq"];
     // Spec §15.4 — compiler-injected shims (Show→Display, Eq→PartialEq/Eq, Ord→Ord).

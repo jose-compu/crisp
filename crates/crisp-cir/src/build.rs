@@ -400,6 +400,10 @@ fn ast_type_to_cir_ty(ty: &crisp_ast::ty::Type) -> CirTy {
         },
         TypeKind::Never => CirTy::Never,
         TypeKind::Unit => CirTy::Unit,
+        TypeKind::Array { elem, len } => CirTy::Array {
+            elem: Box::new(ast_type_to_cir_ty(elem)),
+            len: *len,
+        },
         TypeKind::Constrained { inner, .. } => ast_type_to_cir_ty(inner),
         _ => CirTy::Error,
     }
@@ -1522,6 +1526,36 @@ fn lower_expr_raw(
                 span: expr.span,
             }
         }
+        ExprKind::ObjectLit { fields } => {
+            let ty = ctx.expr_ty(typed, expr.span).unwrap_or(CirTy::Named {
+                name: "serde_json::Value".into(),
+                args: vec![],
+            });
+            E::ObjectLit {
+                fields: fields
+                    .iter()
+                    .map(|f| {
+                        (
+                            f.name.name.clone(),
+                            lower_expr(
+                                &f.value,
+                                module,
+                                osig,
+                                typed,
+                                ownership,
+                                errors,
+                                locals,
+                                struct_fields,
+                                fn_modules,
+                                ctx,
+                            ),
+                        )
+                    })
+                    .collect(),
+                ty,
+                span: expr.span,
+            }
+        }
         ExprKind::StructLit { name, fields } => {
             let all = struct_fields
                 .get(&name.name)
@@ -2148,6 +2182,10 @@ fn infer_expr_ty(
             name: name.name.clone(),
             args: vec![],
         },
+        ExprKind::ObjectLit { .. } => CirTy::Named {
+            name: "serde_json::Value".into(),
+            args: vec![],
+        },
         ExprKind::Call { func, .. } => {
             if let ExprKind::Field { base, field } = &func.kind {
                 if let ExprKind::Ident(id) = &base.kind
@@ -2200,6 +2238,7 @@ fn cir_expr_value_ty(expr: &CirExpr) -> Option<CirTy> {
         | CirExpr::MethodCall { ty, .. }
         | CirExpr::EnumVariant { ty, .. }
         | CirExpr::StructLit { ty, .. }
+        | CirExpr::ObjectLit { ty, .. }
         | CirExpr::BinOp { ty, .. }
         | CirExpr::Unary { ty, .. }
         | CirExpr::Cast { ty, .. }

@@ -52,6 +52,13 @@ ResolvedCrate {
                     },
                 },
                 ResolvedBinding {
+                    local_name: "json",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "json",
+                    },
+                },
+                ResolvedBinding {
                     local_name: "Never",
                     symbol: SymbolKey {
                         module: "std.prelude",
@@ -374,6 +381,7 @@ ResolvedCrate {
                 "bool",
                 "char",
                 "str",
+                "json",
                 "Never",
                 "vec",
                 "map",
@@ -465,6 +473,13 @@ ResolvedCrate {
                     symbol: SymbolKey {
                         module: "std.prelude",
                         name: "str",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "json",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "json",
                     },
                 },
                 ResolvedBinding {
@@ -790,6 +805,7 @@ ResolvedCrate {
                 "bool",
                 "char",
                 "str",
+                "json",
                 "Never",
                 "vec",
                 "map",
@@ -881,6 +897,13 @@ ResolvedCrate {
                     symbol: SymbolKey {
                         module: "std.prelude",
                         name: "str",
+                    },
+                },
+                ResolvedBinding {
+                    local_name: "json",
+                    symbol: SymbolKey {
+                        module: "std.prelude",
+                        name: "json",
                     },
                 },
                 ResolvedBinding {
@@ -1220,6 +1243,7 @@ ResolvedCrate {
                 "bool",
                 "char",
                 "str",
+                "json",
                 "Never",
                 "vec",
                 "map",
@@ -1270,7 +1294,7 @@ ResolvedCrate {
             ],
         },
     ],
-    symbol_count: 53,
+    symbol_count: 54,
     rust_imports: [],
     warnings: [],
 }

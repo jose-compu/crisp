@@ -74,6 +74,8 @@ const EXAMPLES: &[&str] = &[
     "closures",
     "os_scalars",
     "lib_root",
+    "json_literals",
+    "fixed_arrays",
 ];
 
 #[test]
@@ -176,6 +178,8 @@ fn examples_with_tests_pass_crpc_test() {
         "path_dep",
         "os_scalars",
         "lib_root",
+        "json_literals",
+        "fixed_arrays",
     ] {
         let root = example(name);
         eprintln!("crisp test: {name}");
@@ -240,6 +244,8 @@ fn runnable_examples_build_and_run() {
         "net_http",
         "path_dep",
         "os_scalars",
+        "json_literals",
+        "fixed_arrays",
     ] {
         let root = example(name);
         eprintln!("build+run: {name}");
@@ -430,6 +436,8 @@ const BUILDABLE: &[&str] = &[
     "closures",
     "os_scalars",
     "lib_root",
+    "json_literals",
+    "fixed_arrays",
 ];
 
 #[test]

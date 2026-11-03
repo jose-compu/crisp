@@ -95,6 +95,8 @@ fn crisp_check_all_examples() {
         "path_dep",
         "os_scalars",
         "lib_root",
+        "json_literals",
+        "fixed_arrays",
     ] {
         run_ok(
             "crisp",

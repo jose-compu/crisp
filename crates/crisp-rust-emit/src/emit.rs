@@ -1036,6 +1036,10 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
                 map,
             );
         }
+        CirExpr::ObjectLit { fields, span, .. } => {
+            map.record(out.len() as u32, *span);
+            emit_json_object(out, fields, current_module, map);
+        }
         CirExpr::StructLit {
             name,
             fields,
@@ -1281,7 +1285,19 @@ fn emit_expr(out: &mut String, expr: &CirExpr, current_module: &str, map: &mut E
         }
         CirExpr::Array { elems, ty, span } => {
             map.record(out.len() as u32, *span);
-            if elems.is_empty() {
+            if cir_ty_is_json(ty) {
+                emit_json_array(out, elems, current_module, map);
+            } else if matches!(ty, CirTy::Array { .. }) {
+                // Fixed `[T; N]` (#167).
+                let _ = write!(out, "[");
+                for (i, e) in elems.iter().enumerate() {
+                    if i > 0 {
+                        let _ = write!(out, ", ");
+                    }
+                    emit_expr(out, e, current_module, map);
+                }
+                let _ = write!(out, "]");
+            } else if elems.is_empty() {
                 let _ = write!(
                     out,
                     "Vec::<{}>::new()",
@@ -1468,6 +1484,67 @@ fn cir_ty_is_vec(ty: &CirTy) -> bool {
     }
 }
 
+fn cir_ty_is_json(ty: &CirTy) -> bool {
+    matches!(
+        ty,
+        CirTy::Named { name, args }
+            if args.is_empty() && (name == "serde_json::Value" || name == "json")
+    )
+}
+
+fn emit_json_null_or_expr(
+    out: &mut String,
+    expr: &CirExpr,
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    match expr {
+        CirExpr::Ident { name, .. } if name == "none" => {
+            let _ = write!(out, "null");
+        }
+        CirExpr::ObjectLit { fields, .. } => {
+            emit_json_object(out, fields, current_module, map);
+        }
+        CirExpr::Array { elems, ty, .. } if cir_ty_is_json(ty) => {
+            emit_json_array(out, elems, current_module, map);
+        }
+        other => emit_expr(out, other, current_module, map),
+    }
+}
+
+fn emit_json_object(
+    out: &mut String,
+    fields: &[(String, CirExpr)],
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    let _ = write!(out, "serde_json::json!({{");
+    for (i, (name, val)) in fields.iter().enumerate() {
+        if i > 0 {
+            let _ = write!(out, ", ");
+        }
+        let _ = write!(out, "\"{}\": ", escape_str(name));
+        emit_json_null_or_expr(out, val, current_module, map);
+    }
+    let _ = write!(out, "}})");
+}
+
+fn emit_json_array(
+    out: &mut String,
+    elems: &[CirExpr],
+    current_module: &str,
+    map: &mut EmitSourceMap,
+) {
+    let _ = write!(out, "serde_json::json!([");
+    for (i, e) in elems.iter().enumerate() {
+        if i > 0 {
+            let _ = write!(out, ", ");
+        }
+        emit_json_null_or_expr(out, e, current_module, map);
+    }
+    let _ = write!(out, "])");
+}
+
 fn cir_expr_is_vec(expr: &CirExpr) -> bool {
     match expr {
         CirExpr::Ident { ty, .. }
@@ -1529,7 +1606,7 @@ fn walk_expr_index_assign(expr: &CirExpr, names: &mut HashSet<String>) {
                 walk_expr_index_assign(&a.expr, names);
             }
         }
-        CirExpr::StructLit { fields, .. } => {
+        CirExpr::StructLit { fields, .. } | CirExpr::ObjectLit { fields, .. } => {
             for (_, e) in fields {
                 walk_expr_index_assign(e, names);
             }
@@ -2316,8 +2393,15 @@ fn format_ty_in(
                 .unwrap_or_else(|| "i64".into());
             format!("Vec<{inner}>")
         }
+        CirTy::Array { elem, len } => {
+            format!(
+                "[{}; {len}]",
+                format_ty_in(elem, current_module, type_modules)
+            )
+        }
         CirTy::Named { name, args } if args.is_empty() => match name.as_str() {
             "vec" => "Vec<i64>".into(),
+            "json" | "serde_json::Value" => "serde_json::Value".into(),
             "map" => "std::collections::HashMap<String, i64>".into(),
             "set" => "std::collections::HashSet<i64>".into(),
             other => qualify_type_name(other, current_module, type_modules),

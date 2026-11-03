@@ -9,6 +9,12 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Added
+
+- Implicit JSON object literals `{ k: v }` and JSON array literals `[…]` in a JSON checking position (param / return / `extern rust` `json` slot). Emit `serde_json::json!(…)`; `none` → null ([#166](https://github.com/jose-compu/crisp/issues/166), [#169](https://github.com/jose-compu/crisp/issues/169)). See `examples/json_literals`.
+- `extern rust` accepts `json` / `serde_json::Value` (emitted as `serde_json::Value`). `map`, records, `vec<vec<T>>`, and ndarray stay **E0090** ([#168](https://github.com/jose-compu/crisp/issues/168)).
+- Fixed arrays `[T; N]` type syntax and matching-length literals (leftover from [#159](https://github.com/jose-compu/crisp/issues/159)). Unannotated `[1.0, 2.0]` stays a growable `vec` ([#167](https://github.com/jose-compu/crisp/issues/167)). See `examples/fixed_arrays`. Wrong length is **E0094**; non-JSON values in a JSON slot are **E0093**.
+
 ## [1.10.0] — 2026-10-15
 
 ### Added

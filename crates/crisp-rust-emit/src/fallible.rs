@@ -381,6 +381,21 @@ fn emit_simple_expr(out: &mut String, expr: &Expr, osig: &crisp_ownership::Owner
             }
             let _ = write!(out, "}}");
         }
+        ExprKind::ObjectLit { fields } => {
+            let _ = write!(out, "serde_json::json!({{");
+            for (i, f) in fields.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                let _ = write!(out, "\"{}\": ", f.name.name);
+                if matches!(f.value.kind, ExprKind::Ident(ref id) if id.name == "none") {
+                    let _ = write!(out, "null");
+                } else {
+                    emit_simple_expr(out, &f.value, osig);
+                }
+            }
+            let _ = write!(out, "}})");
+        }
         ExprKind::Call { func, args } => {
             emit_call(
                 out,

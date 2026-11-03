@@ -125,6 +125,10 @@ fn ast_type_to_cir(ty: &Type) -> CirTy {
         },
         TypeKind::Never => CirTy::Never,
         TypeKind::Unit => CirTy::Unit,
+        TypeKind::Array { elem, len } => CirTy::Array {
+            elem: Box::new(ast_type_to_cir(elem)),
+            len: *len,
+        },
         _ => CirTy::Error,
     }
 }

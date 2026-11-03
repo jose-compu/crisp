@@ -521,7 +521,7 @@ impl<'a> Collector<'a> {
                 self.walk_expr(v);
             }
             ExprKind::Return(None) => {}
-            ExprKind::StructLit { fields, .. } => {
+            ExprKind::StructLit { fields, .. } | ExprKind::ObjectLit { fields } => {
                 for f in fields {
                     self.walk_expr(&f.value);
                 }

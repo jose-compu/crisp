@@ -57,6 +57,8 @@ fn parse_all_examples() {
         "path_dep",
         "os_scalars",
         "lib_root",
+        "json_literals",
+        "fixed_arrays",
         "generics",
         "shapes_generic",
         "shapes_user",

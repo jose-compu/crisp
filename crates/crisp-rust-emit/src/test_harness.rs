@@ -447,6 +447,27 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                     _ => {}
                 }
             }
+            // Known serde_json stubs (#55 / #166): match production emit (&Value, absorb Result).
+            if let ExprKind::Ident(id) = &func.kind
+                && ctx.rust_crate_for(&id.name) == Some("serde_json")
+            {
+                match id.name.as_str() {
+                    "from_str" if args.len() == 1 => {
+                        return format!(
+                            "serde_json::from_str::<serde_json::Value>(&{}).expect(\"serde_json\")",
+                            emit_expr(ctx, &args[0])
+                        );
+                    }
+                    "to_string" | "to_string_pretty" if args.len() == 1 => {
+                        return format!(
+                            "serde_json::{}(&{}).expect(\"serde_json\")",
+                            id.name,
+                            emit_expr(ctx, &args[0])
+                        );
+                    }
+                    _ => {}
+                }
+            }
             let arg_strs: Vec<_> = args
                 .iter()
                 .enumerate()
@@ -557,6 +578,21 @@ fn emit_expr(ctx: &HarnessCtx<'_>, expr: &Expr) -> String {
                     .collect();
                 format!("{} {{ {} }}", name.name, parts.join(", "))
             }
+        }
+        ExprKind::ObjectLit { fields } => {
+            let parts: Vec<_> = fields
+                .iter()
+                .map(|f| {
+                    let val = if matches!(f.value.kind, ExprKind::Ident(ref id) if id.name == "none")
+                    {
+                        "null".into()
+                    } else {
+                        emit_expr(ctx, &f.value)
+                    };
+                    format!("\"{}\": {val}", f.name.name)
+                })
+                .collect();
+            format!("serde_json::json!({{{}}})", parts.join(", "))
         }
         ExprKind::Array(elems) => {
             if elems.is_empty() {

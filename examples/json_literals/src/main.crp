@@ -1,0 +1,48 @@
+-- json_literals — `{ k: v }` / `[…]` in a JSON slot (#166, #168, #169)
+--
+-- Object literals are expressions (not string interpolation `{name}`).
+-- Emit uses `serde_json::json!(…)`. `none` becomes JSON null.
+-- `extern rust` accepts `json` / `serde_json::Value` (#168).
+
+use serde_json { from_str, to_string }
+
+extern rust serde_json {
+    from_str(s: str) -> json!
+    to_string(v: json) -> str!
+}
+
+payload() = {
+    by: "alice",
+    delta: 1,
+    ok: true,
+    prev: none,
+    tags: ["a", "b"],
+    meta: { seed: 7 },
+}
+
+nested_array() -> json = [1, true, "x"]
+
+roundtrip_obj() = to_string(payload())
+
+roundtrip_arr() = to_string(nested_array())
+
+test "object literal roundtrip" = {
+    s := to_string(payload())
+    v := from_str(s)
+    assert_eq(to_string(v), s)
+}
+
+test "array literal roundtrip" = {
+    s := to_string(nested_array())
+    assert_eq(s, "[1,true,\"x\"]")
+}
+
+test "nested object field" = {
+    s := to_string({ size: { nx: 64, ny: 64 }, log: false })
+    v := from_str(s)
+    assert_eq(to_string(v), s)
+}
+
+pub main() = {
+    print(roundtrip_obj())
+}

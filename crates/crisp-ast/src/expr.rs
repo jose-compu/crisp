@@ -115,6 +115,10 @@ pub enum ExprKind {
         name: Ident,
         fields: Vec<FieldInit>,
     },
+    /// Anonymous `{ k: v, … }` — JSON object when the checking position is `json` (#166).
+    ObjectLit {
+        fields: Vec<FieldInit>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]

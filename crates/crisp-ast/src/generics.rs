@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 /// Prelude / builtin names that are never implicit parameters.
 pub const PRELUDE_TYPE_NAMES: &[&str] = &[
-    "int", "uint", "float", "bool", "char", "str", "Never", "vec", "map", "set", "Self",
+    "int", "uint", "float", "bool", "char", "str", "json", "Never", "vec", "map", "set", "Self",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]

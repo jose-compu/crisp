@@ -313,7 +313,7 @@ Not committed to dates; tracked for direction only.
 
 **v1.5.0** is the first public release track. Flip visibility when ready ([#58](https://github.com/jose-compu/crisp/issues/58)).
 
-Current compiler: **v1.10.0**. Active milestones:
+Current compiler: **v1.10.0**. In progress: **v1.11.0** (JSON literals + `[T; N]`). Active milestones:
 
 | Milestone | Semver | Focus | Board |
 |-----------|--------|--------|-------|
@@ -329,6 +329,7 @@ Current compiler: **v1.10.0**. Active milestones:
 | **v1.8.1** | patch | Compiler bugs: cast `+`, else-newline, index parens / `mut`, harness `len`, nested tests, module stubs (shipped) | label `release:v1.8.1` · [#140](https://github.com/jose-compu/crisp/issues/140)–[#146](https://github.com/jose-compu/crisp/issues/146) |
 | **v1.9.0** | minor | `extern rust` vec FFI, OS prelude, `[lib]` from `src/lib.crp` (shipped) | label `release:v1.9.0` · [#151](https://github.com/jose-compu/crisp/issues/151)–[#153](https://github.com/jose-compu/crisp/issues/153) |
 | **v1.10.0** | minor | slices `xs[lo..hi]`, `extern rust` `vec<str>`/`vec<bool>`, trait impl set + `dyn` E0091 (shipped) | label `release:v1.10.0` · [#159](https://github.com/jose-compu/crisp/issues/159), [#158](https://github.com/jose-compu/crisp/issues/158), [#59](https://github.com/jose-compu/crisp/issues/59) |
+| **v1.11.0** | minor | JSON `{ k: v }` / `[…]` literals, `extern rust` `json`, fixed `[T; N]` (in progress) | label `release:v1.11.0` · [#166](https://github.com/jose-compu/crisp/issues/166)–[#169](https://github.com/jose-compu/crisp/issues/169) |
 | **v2.0.0** | major | Compiler-as-library + self-hosting (Phase 2) | [milestone](https://github.com/jose-compu/crisp/milestone/4) |
 
 | Priority | Theme | Examples |
@@ -342,6 +343,12 @@ Current compiler: **v1.10.0**. Active milestones:
 Filter: [issues with `epic:publication`](https://github.com/jose-compu/crisp/issues?q=is%3Aissue+is%3Aopen+label%3Aepic%3Apublication).
 
 ---
+
+### In progress — v1.11.0 (JSON literals, fixed arrays)
+
+- [ ] **JSON object / array literals** — `{ k: v }` / `[…]` in a `json` slot → `serde_json::json!` ([#166](https://github.com/jose-compu/crisp/issues/166), [#169](https://github.com/jose-compu/crisp/issues/169))
+- [ ] **`extern rust` `json`** — `serde_json::Value`; `map` / records stay E0090 ([#168](https://github.com/jose-compu/crisp/issues/168))
+- [ ] **`[T; N]`** — annotated fixed arrays; unconstrained `[…]` stays `vec` ([#167](https://github.com/jose-compu/crisp/issues/167))
 
 ### Shipped — v1.10.0 (slices, vec FFI, trait diagnostics)
 
@@ -435,4 +442,4 @@ Prefer implicit binders (`id(x: T)`, `type Pair = { left: A, right: B }`). `<>` 
 
 ---
 
-*Last updated: 2026-10-15 — v1.10.0 shipped.*
+*Last updated: 2026-11-03 — v1.11.0 JSON / `[T; N]` in progress.*

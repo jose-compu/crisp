@@ -288,7 +288,7 @@ fn walk_expr(
             walk_expr(module, left, fn_defs, callee_sigs, rust_imports, out);
             walk_expr(module, right, fn_defs, callee_sigs, rust_imports, out);
         }
-        ExprKind::StructLit { fields, .. } => {
+        ExprKind::StructLit { fields, .. } | ExprKind::ObjectLit { fields } => {
             for f in fields {
                 walk_expr(module, &f.value, fn_defs, callee_sigs, rust_imports, out);
             }

@@ -1,0 +1,35 @@
+-- fixed_arrays — `[T; N]` literals leftover from #159 (#167)
+--
+-- Annotated `[float; 3] = [1.0, 2.0, 3.0]` emits a Rust fixed array.
+-- Unannotated `[1.0, 2.0]` stays a growable `vec` (#119).
+
+triple() -> [float; 3] = [1.0, 2.0, 3.0]
+
+at(xs: [float; 3], i: int) = xs[i]
+
+sum3(xs: [float; 3]) = xs[0] + xs[1] + xs[2]
+
+take2(xs: [float; 2]) = xs[0]
+
+-- Still a vec when unconstrained / vec-typed.
+growable() = [1.0, 2.0, 3.0]
+
+test "fixed triple sum" = {
+    assert_eq(sum3(triple()), 6.0)
+}
+
+test "fixed index" = {
+    assert_eq(at(triple(), 1), 2.0)
+}
+
+test "growable still vec" = {
+    assert_eq(len(growable()), 3)
+}
+
+test_compile_fail "wrong length" = {
+    take2([1.0, 2.0, 3.0])
+}
+
+pub main() = {
+    print(sum3(triple()))
+}

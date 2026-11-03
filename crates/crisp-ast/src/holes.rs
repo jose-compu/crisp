@@ -126,7 +126,7 @@ fn count_in(expr: &Expr, n: &mut usize) {
                 count_in(&a.body, n);
             }
         }
-        ExprKind::StructLit { fields, .. } => {
+        ExprKind::StructLit { fields, .. } | ExprKind::ObjectLit { fields } => {
             for f in fields {
                 count_in(&f.value, n);
             }
@@ -288,6 +288,16 @@ fn replace_holes(expr: &Expr, i: &mut usize) -> Expr {
         ExprKind::Try(inner) => ExprKind::Try(Box::new(replace_holes(inner, i))),
         ExprKind::StructLit { name, fields } => ExprKind::StructLit {
             name: name.clone(),
+            fields: fields
+                .iter()
+                .map(|f| FieldInit {
+                    name: f.name.clone(),
+                    value: replace_holes(&f.value, i),
+                    span: f.span,
+                })
+                .collect(),
+        },
+        ExprKind::ObjectLit { fields } => ExprKind::ObjectLit {
             fields: fields
                 .iter()
                 .map(|f| FieldInit {

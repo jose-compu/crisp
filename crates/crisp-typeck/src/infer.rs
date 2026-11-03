@@ -74,9 +74,19 @@ pub enum TypeError {
         span: Span,
     },
     #[error(
-        "[E0090] `extern rust` types must be `float`, `int`, `str`, `bool`, `vec<float>`, `vec<int>`, `vec<str>`, or `vec<bool>` (`{found}` is not allowed)"
+        "[E0090] `extern rust` types must be `float`, `int`, `str`, `bool`, `json`, `vec<float>`, `vec<int>`, `vec<str>`, or `vec<bool>` (`{found}` is not allowed)"
     )]
     InvalidExternRustTy { found: String, span: Span },
+    #[error(
+        "[E0093] `{found}` is not a JSON value; use str/int/float/bool/none, `{{ k: v }}`, or `[…]`"
+    )]
+    InvalidJsonValue { found: String, span: Span },
+    #[error("[E0094] fixed array expected {expected} elements, found {found}")]
+    ArrayLen {
+        expected: u64,
+        found: usize,
+        span: Span,
+    },
     #[error(
         "[E0091] `dyn {trait_name}` is not supported; use a generic bound (`T: {trait_name}`) or a concrete type"
     )]
@@ -1042,13 +1052,16 @@ impl TypeChecker {
             local.insert(p.name.name.clone(), scheme(ty));
         }
         let ret_ann = f.ret_type.as_ref().map(|t| self.ast_type(t)).transpose()?;
-        let body_ty = self.infer_expr(&mut local, &f.body)?;
+        let body_ty = if let Some(ann) = &ret_ann {
+            self.check_expr_against(&mut local, &f.body, ann)?
+        } else {
+            self.infer_expr(&mut local, &f.body)?
+        };
         let param_types: Vec<(String, Ty)> = param_vars
             .iter()
             .map(|(n, t)| (n.clone(), self.ctx.apply(t)))
             .collect();
         let ret = if let Some(ann) = ret_ann {
-            self.unify_checking(&f.body, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
                 unify(&mut self.ctx, &body_ty, stub_r).map_err(|e| {
                     if trait_name.is_some() {
@@ -1249,9 +1262,12 @@ impl TypeChecker {
             local.insert(p.name.name.clone(), scheme(ty));
         }
         let ret_ann = f.ret_type.as_ref().map(|t| self.ast_type(t)).transpose()?;
-        let body_ty = self.infer_expr(&mut local, &f.body)?;
+        let body_ty = if let Some(ann) = &ret_ann {
+            self.check_expr_against(&mut local, &f.body, ann)?
+        } else {
+            self.infer_expr(&mut local, &f.body)?
+        };
         let ret = if let Some(ann) = ret_ann {
-            self.unify_checking(&f.body, &body_ty, &ann)?;
             if let Some(stub_r) = &stub_ret {
                 unify(&mut self.ctx, &body_ty, stub_r)?;
             }
@@ -1587,6 +1603,11 @@ impl TypeChecker {
             ExprKind::Cast { expr: inner, ty } => self.infer_cast(env, expr.span, inner, ty),
             ExprKind::Binary { op, left, right } => self.infer_binary(env, *op, left, right),
             ExprKind::StructLit { name, fields } => self.check_struct_lit(env, name, fields),
+            ExprKind::ObjectLit { fields } => {
+                let ty = self.check_object_lit(env, fields, expr.span)?;
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
+            }
             ExprKind::Bind { pat, value, .. } => {
                 let ty = self.infer_value(env, value)?;
                 let mut local = env.clone();
@@ -1750,6 +1771,165 @@ impl TypeChecker {
         }
     }
 
+    /// Check `expr` against an expected type so JSON / `[T; N]` literals
+    /// see the slot before defaulting to homogeneous `vec` (#166, #167, #169).
+    fn check_expr_against(
+        &mut self,
+        env: &mut TypeEnv,
+        expr: &Expr,
+        expected: &Ty,
+    ) -> Result<Ty, TypeError> {
+        let expected = self.ctx.apply(expected);
+        if is_json_ty(&expected) {
+            return self.check_json_value(env, expr);
+        }
+        if let (ExprKind::Array(elems), Ty::Array { .. }) = (&expr.kind, &expected) {
+            return self.check_array_lit(env, elems, &expected, expr.span);
+        }
+        if let ExprKind::ObjectLit { fields } = &expr.kind {
+            let got = self.check_object_lit(env, fields, expr.span)?;
+            self.unify_checking(expr, &got, &expected)?;
+            return Ok(self.ctx.apply(&expected));
+        }
+        let got = self.infer_expr(env, expr)?;
+        self.unify_checking(expr, &got, &expected)?;
+        Ok(self.ctx.apply(&expected))
+    }
+
+    fn check_object_lit(
+        &mut self,
+        env: &mut TypeEnv,
+        fields: &[FieldInit],
+        span: Span,
+    ) -> Result<Ty, TypeError> {
+        for f in fields {
+            self.check_json_value(env, &f.value)?;
+        }
+        let ty = json_ty();
+        self.record_expr_ty(span, ty.clone());
+        Ok(ty)
+    }
+
+    /// Check an expression as a JSON value (object / array / scalar / none) (#166, #169).
+    fn check_json_value(&mut self, env: &mut TypeEnv, expr: &Expr) -> Result<Ty, TypeError> {
+        match &expr.kind {
+            ExprKind::ObjectLit { fields } => self.check_object_lit(env, fields, expr.span),
+            ExprKind::Array(elems) => {
+                for e in elems {
+                    self.check_json_value(env, e)?;
+                }
+                let ty = json_ty();
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
+            }
+            ExprKind::Ident(id) if id.name == "none" => {
+                let ty = json_ty();
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
+            }
+            ExprKind::Int(_)
+            | ExprKind::Float(_)
+            | ExprKind::Bool(_)
+            | ExprKind::Str(_)
+            | ExprKind::Char(_) => {
+                let _ = self.infer_expr(env, expr)?;
+                let ty = json_ty();
+                self.record_expr_ty(expr.span, ty.clone());
+                Ok(ty)
+            }
+            _ => {
+                let got = self.infer_expr(env, expr)?;
+                let got = self.ctx.apply(&got);
+                if is_json_ty(&got)
+                    || matches!(
+                        got,
+                        Ty::Int
+                            | Ty::UInt
+                            | Ty::Float
+                            | Ty::Bool
+                            | Ty::Str
+                            | Ty::StrSlice
+                            | Ty::Char
+                    )
+                    || matches!(&got, Ty::Named { name, .. } if name == "vec")
+                    || matches!(&got, Ty::Option(_))
+                {
+                    let ty = json_ty();
+                    self.record_expr_ty(expr.span, ty.clone());
+                    Ok(ty)
+                } else if matches!(got, Ty::Var(_)) {
+                    // Forward-ref / stub returns are still free; pin to JSON (#166).
+                    let ty = json_ty();
+                    unify(&mut self.ctx, &got, &ty).map_err(|e| TypeError::UnifyAt {
+                        message: e.to_string(),
+                        span: expr.span,
+                    })?;
+                    self.record_expr_ty(expr.span, ty.clone());
+                    Ok(ty)
+                } else {
+                    Err(TypeError::InvalidJsonValue {
+                        found: format_ty(&got),
+                        span: expr.span,
+                    })
+                }
+            }
+        }
+    }
+
+    fn check_array_lit(
+        &mut self,
+        env: &mut TypeEnv,
+        elems: &[Expr],
+        expected: &Ty,
+        span: Span,
+    ) -> Result<Ty, TypeError> {
+        let expected = self.ctx.apply(expected);
+        match &expected {
+            Ty::Array { elem, len } => {
+                if elems.len() as u64 != *len {
+                    return Err(TypeError::ArrayLen {
+                        expected: *len,
+                        found: elems.len(),
+                        span,
+                    });
+                }
+                let elem = elem.as_ref().clone();
+                for e in elems {
+                    let et = self.infer_expr(env, e)?;
+                    self.unify_checking(e, &et, &elem)?;
+                }
+                let ty = Ty::Array {
+                    elem: Box::new(self.ctx.apply(&elem)),
+                    len: *len,
+                };
+                self.record_expr_ty(span, ty.clone());
+                Ok(ty)
+            }
+            _ if is_json_ty(&expected) => {
+                for e in elems {
+                    self.check_json_value(env, e)?;
+                }
+                let ty = json_ty();
+                self.record_expr_ty(span, ty.clone());
+                Ok(ty)
+            }
+            _ => {
+                let elem = self.ctx.fresh();
+                for e in elems {
+                    let et = self.infer_expr(env, e)?;
+                    self.unify_checking(e, &et, &elem)?;
+                }
+                let ty = vec_of(self.ctx.apply(&elem));
+                unify(&mut self.ctx, &ty, &expected).map_err(|e| TypeError::UnifyAt {
+                    message: e.to_string(),
+                    span,
+                })?;
+                self.record_expr_ty(span, ty.clone());
+                Ok(ty)
+            }
+        }
+    }
+
     fn infer_binary(
         &mut self,
         env: &mut TypeEnv,
@@ -1848,6 +2028,15 @@ impl TypeChecker {
         let expected = self.ctx.apply(expected);
         if count_holes(arg) > 0 {
             return self.infer_hole_lambda(env, arg, Some(&expected));
+        }
+        if is_json_ty(&expected) {
+            return self.check_json_value(env, arg);
+        }
+        if let (ExprKind::Array(elems), Ty::Array { .. }) = (&arg.kind, &expected) {
+            return self.check_array_lit(env, elems, &expected, arg.span);
+        }
+        if let ExprKind::ObjectLit { fields } = &arg.kind {
+            return self.check_object_lit(env, fields, arg.span);
         }
         self.infer_expr(env, arg)
     }
@@ -2218,6 +2407,46 @@ impl TypeChecker {
             self.record_int_to_float(expr, false);
             return Ok(());
         }
+        // Annotated / return-checked `[T; N] = [ … ]` (#167): length + elem vs vec default.
+        if let (ExprKind::Array(elems), Ty::Array { elem, len }) = (&expr.kind, &expected) {
+            if elems.len() as u64 != *len {
+                return Err(TypeError::ArrayLen {
+                    expected: *len,
+                    found: elems.len(),
+                    span: expr.span,
+                });
+            }
+            let got_elem = match &got {
+                Ty::Named { name, args } if name == "vec" && args.len() == 1 => args[0].clone(),
+                Ty::Array { elem, .. } => elem.as_ref().clone(),
+                other => other.clone(),
+            };
+            let elem_ty = self.ctx.apply(elem);
+            if matches!(elem_ty, Ty::Float) && matches!(got_elem, Ty::Int | Ty::UInt) {
+                for e in elems {
+                    if matches!(e.kind, ExprKind::Int(_)) {
+                        self.record_int_to_float(e, false);
+                    }
+                }
+            } else {
+                unify(&mut self.ctx, &got_elem, &elem_ty)?;
+            }
+            let elem_applied = self.ctx.apply(&elem_ty);
+            self.record_expr_ty(
+                expr.span,
+                Ty::Array {
+                    elem: Box::new(elem_applied),
+                    len: *len,
+                },
+            );
+            return Ok(());
+        }
+        if is_json_ty(&expected)
+            && (is_json_ty(&got)
+                || matches!(expr.kind, ExprKind::ObjectLit { .. } | ExprKind::Array(_)))
+        {
+            return Ok(());
+        }
         unify(&mut self.ctx, &got, &expected)?;
         Ok(())
     }
@@ -2366,6 +2595,10 @@ impl TypeChecker {
             message: e.to_string(),
             span: index.span,
         })?;
+        let applied = self.ctx.apply(&bt);
+        if let Ty::Array { elem, .. } = &applied {
+            return Ok(elem.as_ref().clone());
+        }
         let elem = self.ctx.fresh();
         self.unify_checking(base, &bt, &vec_of(elem.clone()))
             .map_err(|e| TypeError::UnifyAt {
@@ -2374,6 +2607,7 @@ impl TypeChecker {
             })?;
         Ok(match self.ctx.apply(&bt) {
             Ty::Named { name, args } if name == "vec" && args.len() == 1 => args[0].clone(),
+            Ty::Array { elem, .. } => *elem,
             _ => self.ctx.apply(&elem),
         })
     }
@@ -2822,6 +3056,7 @@ impl TypeChecker {
                     "bool" => Ok(Ty::Bool),
                     "char" => Ok(Ty::Char),
                     "str" => Ok(Ty::Str),
+                    "json" => Ok(json_ty()),
                     other => Ok(Ty::Named {
                         name: other.to_string(),
                         args: vec![],
@@ -3201,7 +3436,22 @@ pub fn rust_extern_numeric_vec(ty: &Ty) -> bool {
 }
 
 fn rust_extern_ty_ok(ty: &Ty) -> bool {
-    rust_extern_scalar_ok(ty) || rust_extern_vec(ty)
+    rust_extern_scalar_ok(ty) || rust_extern_vec(ty) || is_json_ty(ty)
+}
+
+fn json_ty() -> Ty {
+    Ty::Named {
+        name: "serde_json::Value".into(),
+        args: vec![],
+    }
+}
+
+pub fn is_json_ty(ty: &Ty) -> bool {
+    matches!(
+        ty,
+        Ty::Named { name, args }
+            if args.is_empty() && (name == "serde_json::Value" || name == "json")
+    )
 }
 
 /// Whether a known `rust = true` import returns Rust `Result` and should lower via Crisp `?`

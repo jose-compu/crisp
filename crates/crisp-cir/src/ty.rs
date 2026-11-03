@@ -16,6 +16,7 @@ pub enum CirTy {
     Ref { mutable: bool, inner: Box<CirTy> },
     Boxed(Box<CirTy>),
     Tuple(Vec<CirTy>),
+    Array { elem: Box<CirTy>, len: u64 },
     Fn { params: Vec<CirTy>, ret: Box<CirTy> },
     Var(u32),
     Error,
@@ -34,6 +35,10 @@ impl CirTy {
             Ty::Str | Ty::StrSlice => CirTy::Str,
             Ty::Var(v) => CirTy::Var(*v),
             Ty::Tuple(ts) => CirTy::Tuple(ts.iter().map(CirTy::from_ty).collect()),
+            Ty::Array { elem, len } => CirTy::Array {
+                elem: Box::new(CirTy::from_ty(elem)),
+                len: *len,
+            },
             Ty::Option(inner) => CirTy::Option(Box::new(CirTy::from_ty(inner))),
             Ty::Ref { mutable, inner } => CirTy::Ref {
                 mutable: *mutable,

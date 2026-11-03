@@ -190,6 +190,11 @@ fn walk_expr<'a>(expr: &'a Expr, offset: u32, best: &mut Option<(u32, Located<'a
                 walk_expr(&f.value, offset, best);
             }
         }
+        ExprKind::ObjectLit { fields } => {
+            for f in fields {
+                walk_expr(&f.value, offset, best);
+            }
+        }
         ExprKind::Catch { body, arms } => {
             walk_expr(body, offset, best);
             for arm in arms {

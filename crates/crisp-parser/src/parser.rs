@@ -1342,10 +1342,18 @@ impl Parser {
                     span,
                 })
             }
-            TokenKind::LBrace => Ok(Expr {
-                kind: ExprKind::Block(self.parse_block()?),
-                span: Span::new(start, self.previous_end()),
-            }),
+            TokenKind::LBrace => {
+                // `{ k: v, … }` is a JSON object literal (#166); `{ … }` without
+                // `ident:` remains a block. Empty `{}` stays a block.
+                if self.looks_like_object_lit() {
+                    self.parse_object_lit(start)
+                } else {
+                    Ok(Expr {
+                        kind: ExprKind::Block(self.parse_block()?),
+                        span: Span::new(start, self.previous_end()),
+                    })
+                }
+            }
             TokenKind::Dot => self.parse_point_free_section(start),
             TokenKind::LParen => {
                 self.advance();
@@ -1615,6 +1623,34 @@ match (Name { field: value }) { ... }",
         self.expect(TokenKind::RBrace)?;
         Ok(Expr {
             kind: ExprKind::StructLit { name, fields },
+            span: Span::new(start, self.previous_end()),
+        })
+    }
+
+    /// `{` then `ident` then `:` → object literal, not a block (#166).
+    fn looks_like_object_lit(&self) -> bool {
+        matches!(self.peek_kind_at(1), TokenKind::Ident(_))
+            && matches!(self.peek_kind_at(2), TokenKind::Colon)
+    }
+
+    fn parse_object_lit(&mut self, start: u32) -> Result<Expr, ParseError> {
+        self.expect(TokenKind::LBrace)?;
+        let mut fields = Vec::new();
+        while !self.check(TokenKind::RBrace) {
+            let s = self.current_start();
+            let fname = self.expect_ident()?;
+            self.expect(TokenKind::Colon)?;
+            let value = self.parse_expr()?;
+            fields.push(FieldInit {
+                name: fname,
+                value,
+                span: Span::new(s, self.previous_end()),
+            });
+            self.skip_optional_comma();
+        }
+        self.expect(TokenKind::RBrace)?;
+        Ok(Expr {
+            kind: ExprKind::ObjectLit { fields },
             span: Span::new(start, self.previous_end()),
         })
     }

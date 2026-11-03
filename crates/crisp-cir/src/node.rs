@@ -254,6 +254,12 @@ pub enum CirExpr {
         ty: CirTy,
         span: Span,
     },
+    /// Anonymous JSON object `{ k: v }` (#166).
+    ObjectLit {
+        fields: Vec<(String, CirExpr)>,
+        ty: CirTy,
+        span: Span,
+    },
     Throw {
         payload: Box<CirExpr>,
         span: Span,

@@ -805,6 +805,12 @@ impl Resolver {
                 }
                 Ok(())
             }
+            ExprKind::ObjectLit { fields } => {
+                for f in fields {
+                    self.check_expr(scope, &f.value)?;
+                }
+                Ok(())
+            }
             ExprKind::Str(parts) => {
                 for part in &parts.0 {
                     if let crisp_ast::expr::StringPart::Expr(e) = part {

@@ -576,6 +576,21 @@ fn emit_expr_inner(
             }
             let _ = write!(out, " }}");
         }
+        ExprKind::ObjectLit { fields } => {
+            let _ = write!(out, "serde_json::json!({{");
+            for (i, f) in fields.iter().enumerate() {
+                if i > 0 {
+                    let _ = write!(out, ", ");
+                }
+                let _ = write!(out, "\"{}\": ", f.name.name);
+                if matches!(f.value.kind, ExprKind::Ident(ref id) if id.name == "none") {
+                    let _ = write!(out, "null");
+                } else {
+                    emit_expr(out, &f.value, osig, ownership);
+                }
+            }
+            let _ = write!(out, "}})");
+        }
         ExprKind::Block(b) => {
             let _ = writeln!(out, "{{");
             emit_block(out, b, osig, ownership, 1);

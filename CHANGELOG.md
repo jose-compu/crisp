@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.11.0] — 2026-11-03
+
 ### Added
 
 - Implicit JSON object literals `{ k: v }` and JSON array literals `[…]` in a JSON checking position (param / return / `extern rust` `json` slot). Emit `serde_json::json!(…)`; `none` → null ([#166](https://github.com/jose-compu/crisp/issues/166), [#169](https://github.com/jose-compu/crisp/issues/169)). See `examples/json_literals`.
@@ -282,7 +284,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/jose-compu/crisp/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/jose-compu/crisp/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/jose-compu/crisp/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/jose-compu/crisp/compare/v1.8.0...v1.8.1

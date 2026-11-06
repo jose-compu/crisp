@@ -9,6 +9,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+## [1.11.1] — 2026-11-06
+
 ### Fixed
 
 - Explicit `use shim { path_is_file }` (and other OS prelude names: `path_join`, `path_parent`, `cwd`, `env_var`, …) **shadows** the prelude instead of a span-less **E0038**. A real clash between two `use`s still is **E0038**, now naming both modules and the `use` line ([#173](https://github.com/jose-compu/crisp/issues/173)). See `examples/prelude_shadow`.
@@ -288,7 +290,8 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 Scaffold through ownership, regions, and error passes. See [ROADMAP.md](ROADMAP.md) for the full milestone history.
 
-[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/jose-compu/crisp/compare/v1.11.1...HEAD
+[1.11.1]: https://github.com/jose-compu/crisp/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/jose-compu/crisp/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/jose-compu/crisp/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/jose-compu/crisp/compare/v1.8.1...v1.9.0

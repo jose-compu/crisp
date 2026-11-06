@@ -1,4 +1,4 @@
-# Known limitations (Crisp v1.11.0)
+# Known limitations (Crisp v1.11.1)
 
 This page documents behaviors that surprise users and are **not** always full language bugs. Formal deltas vs the draft spec: [SPEC_IMPL_DELTA.md](SPEC_IMPL_DELTA.md). Open follow-ups: crates.io ([#66](https://github.com/jose-compu/crisp/issues/66)), visibility ([#58](https://github.com/jose-compu/crisp/issues/58)). `dyn Trait` is **E0091**; leftover trait-impl gaps are **E0092** ([#59](https://github.com/jose-compu/crisp/issues/59)).
 
@@ -35,7 +35,7 @@ This page documents behaviors that surprise users and are **not** always full la
 
 `vec<T>` is inferred from use (`new`/`push`/`[1.0, 2.0]`). Pin with `vec<float>` or a return type. Unconstrained `new()` is **E0088**. Indexing `xs[i]` / `xs[i] = v` is `int` → `T` ([#120](https://github.com/jose-compu/crisp/issues/120)). Range index `xs[lo..hi]` copies to a new `vec<T>` ([#159](https://github.com/jose-compu/crisp/issues/159)). Annotated `[T; N]` is a fixed array ([#167](https://github.com/jose-compu/crisp/issues/167)). `map` / `set` remain names only.
 
-| Spec | 1.11.0 |
+| Spec | 1.11.1 |
 |---|---|
 | `vec<T>` (`vec<float>`, `vec<vec<float>>`) | `new` / `push` / `len` infer `T`; `[1.0, 2.0]` is a growable vec ([#119](https://github.com/jose-compu/crisp/issues/119)) |
 | Fixed `[T; N]` | Annotated type + matching-length literal → Rust `[T; N]` ([#167](https://github.com/jose-compu/crisp/issues/167)). Unannotated `[…]` stays `vec`. Wrong length **E0094**. |

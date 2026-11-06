@@ -171,6 +171,7 @@ fn spec_s20_all_examples_typecheck() {
         "design_patterns",
         "rust_import",
         "rust_shadow",
+        "prelude_shadow",
         "generics",
         "shapes_generic",
         "shapes_user",

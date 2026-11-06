@@ -10,7 +10,7 @@ User-facing Crisp toolchain errors use codes in the `E00xx`–`E009x` range. Pre
 | E0035 | resolve | Unresolved name — check spelling/`use`; help names the defining module when known |
 | E0036 | resolve | Name is private — export with `pub` or import from the defining module |
 | E0037 | resolve | Symbol not exported from module |
-| E0038 | resolve | Ambiguous import — qualify or narrow `use` |
+| E0038 | resolve | Two `use`s bind the same name from different modules — drop one or alias. Names both modules and the `use` span. An explicit `use` of a prelude name (`path_is_file`, `path_join`, `path_parent`, `cwd`, `env_var`, …) **shadows** the prelude ([#173](https://github.com/jose-compu/crisp/issues/173)). |
 | E0039 | resolve | Reserved (was shapes-unsupported); data shapes are supported — see [#61](https://github.com/jose-compu/crisp/issues/61) |
 | E0044 | resolve | `use rust…` crate missing from `[dependencies]` — add with `rust = true` ([#41](https://github.com/jose-compu/crisp/issues/41)) |
 | E0045 | resolve | Dependency used via `use rust…` must set `rust = true` |

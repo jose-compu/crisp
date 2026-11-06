@@ -1,0 +1,6 @@
+use a { foo }
+use b { foo }
+
+main = {
+    foo()
+}

@@ -92,6 +92,7 @@ fn crisp_check_all_examples() {
         "feature_gallery",
         "rust_import",
         "rust_shadow",
+        "prelude_shadow",
         "path_dep",
         "os_scalars",
         "lib_root",
@@ -179,6 +180,34 @@ fn crisp_run_rust_shadow() {
         &["run", &examples_dir().join("rust_shadow").to_string_lossy()],
     );
     assert!(out.contains("crisp-config:shadow-ok"), "output: {out}");
+}
+
+#[test]
+fn crisp_run_prelude_shadow() {
+    let out = run_ok(
+        "crisp",
+        &[
+            "run",
+            &examples_dir().join("prelude_shadow").to_string_lossy(),
+        ],
+    );
+    assert!(
+        out.contains("true") || out.contains("no_such_crisp_os_file"),
+        "output: {out}"
+    );
+}
+
+#[test]
+fn crisp_check_ambiguous_import_names_modules() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../crisp-resolve/tests/fixtures/ambiguous_import");
+    let err = run_fail_stderr("crisp", &["check", &fixture.to_string_lossy()]);
+    assert!(
+        err.contains("E0038") || err.contains("ERROR [E0038]"),
+        "stderr: {err}"
+    );
+    assert!(err.contains("`a`") && err.contains("`b`"), "stderr: {err}");
+    assert!(err.contains("foo"), "stderr: {err}");
 }
 
 #[test]

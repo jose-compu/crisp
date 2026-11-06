@@ -6,7 +6,7 @@ use crate::synthesize::{lower_enum, lower_struct, synthesize_shape_trait};
 use crate::ty::CirTy;
 use crisp_ast::Span;
 use crisp_ast::expr::{BinaryOp, Block, Expr, ExprKind, Stmt, StringPart, UnaryOp};
-use crisp_ast::item::{ExternBlock, FunctionDef, Item, TypeBody};
+use crisp_ast::item::{ExternBlock, FunctionDef, Item, SourceFile, TypeBody};
 use crisp_ast::lift_holes;
 use crisp_ast::pat::{Pat, PatKind};
 use crisp_errors::{ErrorPass, ErrorResult};
@@ -67,8 +67,15 @@ impl CirBuilder {
                 }
             }
         }
-        let mut fn_modules = collect_fn_modules(graph);
-        fn_modules.extend(stdlib_fn_modules());
+        let crate_fns = collect_fn_modules(graph);
+        let mut fn_modules = stdlib_fn_modules();
+        // Qualified `{module}::{name}` keys so same-module calls resolve without
+        // stealing prelude bare names (`len`, `path_is_file`, …).
+        for (k, v) in &crate_fns {
+            if k.contains("::") {
+                fn_modules.insert(k.clone(), v.clone());
+            }
+        }
         for imp in &typed.rust_imports {
             fn_modules.insert(imp.local_name.clone(), format!("rust.{}", imp.crate_name));
         }
@@ -99,6 +106,8 @@ impl CirBuilder {
                 continue;
             }
             let mut items = Vec::new();
+            let mut module_fns = fn_modules.clone();
+            overlay_crisp_uses(&node.ast, &crate_fns, &mut module_fns);
             for ast_item in &node.ast.items {
                 match ast_item {
                     Item::TypeDef(td) => match &td.body {
@@ -149,7 +158,7 @@ impl CirBuilder {
                                 ownership,
                                 errors,
                                 &struct_fields,
-                                &fn_modules,
+                                &module_fns,
                                 &extern_fns,
                                 &shape_fields,
                             )));
@@ -177,7 +186,7 @@ impl CirBuilder {
                                     ownership,
                                     errors,
                                     &struct_fields,
-                                    &fn_modules,
+                                    &module_fns,
                                     &extern_fns,
                                     &shape_fields,
                                 ));
@@ -424,6 +433,44 @@ fn collect_fn_modules(graph: &ModuleGraph) -> BTreeMap<String, String> {
         }
     }
     map
+}
+
+/// Explicit `use other { path_is_file }` shadows the prelude in emit (#173).
+fn overlay_crisp_uses(
+    file: &SourceFile,
+    crate_fns: &BTreeMap<String, String>,
+    fn_modules: &mut BTreeMap<String, String>,
+) {
+    for item in &file.items {
+        let Item::Use(u) = item else {
+            continue;
+        };
+        if u.path.first().is_some_and(|p| p.name == "rust") {
+            continue;
+        }
+        let path = u
+            .path
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(".");
+        if let Some(imports) = &u.imports {
+            for imp in imports {
+                let local = imp.alias.as_ref().unwrap_or(&imp.name).name.clone();
+                let q = format!("{}::{}", path, imp.name.name);
+                if let Some(module) = crate_fns.get(&q) {
+                    fn_modules.insert(local, module.clone());
+                }
+            }
+        } else {
+            let prefix = format!("{path}::");
+            for (k, module) in crate_fns {
+                if let Some(bare) = k.strip_prefix(&prefix).filter(|b| !b.contains("::")) {
+                    fn_modules.insert(bare.to_string(), module.clone());
+                }
+            }
+        }
+    }
 }
 
 fn callee_module_of(fn_modules: &BTreeMap<String, String>, current: &str, name: &str) -> String {

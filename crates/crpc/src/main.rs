@@ -264,6 +264,29 @@ fn print_resolve_diagnostic(root: &Path, err: &ResolveError) {
                 return;
             }
         }
+        ResolveError::AmbiguousImport {
+            name,
+            first,
+            second,
+            span,
+        } => {
+            if let Some((file, source)) = source_for_span(root, *span) {
+                let rendered = format_diagnostic_at(
+                    &file,
+                    &source,
+                    "E0038",
+                    &format!("ambiguous import: `{name}` is in `{first}` and `{second}`"),
+                    *span,
+                    Severity::Error,
+                    &[format!(
+                        "help: drop one `use` to keep a single binding, or alias (`use {second} {{ {name} as other }}`)"
+                    )],
+                )
+                .rendered;
+                eprintln!("{rendered}");
+                return;
+            }
+        }
         ResolveError::ShapesUnsupported { name, span } => {
             if let Some((file, source)) = source_for_span(root, *span) {
                 let rendered = format_diagnostic_at(

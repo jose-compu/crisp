@@ -1034,6 +1034,7 @@ impl TypeChecker {
         };
 
         let mut local = self.env.clone();
+        local.extend(&self.imported);
         let mut param_vars = Vec::new();
         for (i, p) in f.params.iter().enumerate() {
             let mut ty = stub_params
@@ -1200,6 +1201,7 @@ impl TypeChecker {
     ) -> Result<(), TypeError> {
         self.fn_vec_tys.clear();
         let mut local = self.env.clone();
+        local.extend(&self.imported);
         let body_ty = self.infer_block(&mut local, body)?;
         unify(&mut self.ctx, &body_ty, &Ty::Unit)?;
         let key = format!("{module}::test::{name}");
@@ -1247,6 +1249,7 @@ impl TypeChecker {
         };
 
         let mut local = self.env.clone();
+        local.extend(&self.imported);
         let mut param_vars = Vec::new();
         for (i, p) in f.params.iter().enumerate() {
             let mut ty = stub_params

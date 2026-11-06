@@ -54,6 +54,7 @@ fn parse_all_examples() {
         "float_demo",
         "rust_import",
         "rust_shadow",
+        "prelude_shadow",
         "path_dep",
         "os_scalars",
         "lib_root",

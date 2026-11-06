@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crisp Known Limitations — honest gaps vs the draft spec</title>
   <!-- SEO -->
-  <meta name="description" content="Known limitations of the Crisp v1.11.0 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
-  <meta name="keywords" content="Crisp limitations, Crisp roadmap, v1.11.0" />
+  <meta name="description" content="Known limitations of the Crisp v1.11.1 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
+  <meta name="keywords" content="Crisp limitations, Crisp roadmap, v1.11.1" />
   <meta name="author" content="Crisp / jose-compu" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="googlebot" content="index, follow, max-image-preview:large" />
@@ -17,12 +17,12 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content="https://crisp-lang.org/limitations.html" />
   <meta property="og:title" content="Crisp Known Limitations — honest gaps vs the draft spec" />
-  <meta property="og:description" content="Known limitations of the Crisp v1.11.0 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
+  <meta property="og:description" content="Known limitations of the Crisp v1.11.1 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
   <meta property="og:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta property="og:image:alt" content="Crisp programming language logo" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Crisp Known Limitations — honest gaps vs the draft spec" />
-  <meta name="twitter:description" content="Known limitations of the Crisp v1.11.0 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
+  <meta name="twitter:description" content="Known limitations of the Crisp v1.11.1 bootstrap versus the v0.2.0-draft spec. Honest gaps for high-performance prototyping." />
   <meta name="twitter:image" content="https://crisp-lang.org/crisp-logo.jpg" />
   <meta name="theme-color" content="#0b1220" />
   <!-- /SEO -->
@@ -34,7 +34,7 @@
 </head>
 <body>
   <div class="announce">
-    Public release <strong>v1.11.0</strong> · Spec <strong>v0.2.0-draft</strong> ·
+    Public release <strong>v1.11.1</strong> · Spec <strong>v0.2.0-draft</strong> ·
     <a href="https://github.com/jose-compu/crisp">Star on GitHub</a>
   </div>
   <header class="site-header">
@@ -53,7 +53,7 @@
   <section class="band-dark page-hero">
     <div class="wrap">
       <h1>Known limitations</h1>
-      <p class="lede">Honest gaps in the v1.11.0 public release versus the draft spec. Full list lives on the main branch.</p>
+      <p class="lede">Honest gaps in the v1.11.1 public release versus the draft spec. Full list lives on the main branch.</p>
     </div>
   </section>
 
@@ -73,6 +73,7 @@
         <li>Editor VSIX via <code>./scripts/package-vsix.sh</code>; Marketplace listing optional (#57)</li>
         <li>Install: <code>cargo install crisp-lang --locked</code> (#66).</li>
       </ul>
+      <p><strong>Shipped in v1.11.1:</strong> an explicit <code>use</code> of a prelude name (<code>path_is_file</code>, <code>path_join</code>, <code>cwd</code>, …) shadows the prelude instead of a span-less <code>E0038</code>. A clash between two real <code>use</code>s still is <code>E0038</code> and names both modules (#173).</p>
       <p><strong>Shipped in v1.11.0:</strong> JSON object <code>{ k: v }</code> and array <code>[…]</code> literals in a <code>json</code> slot emit <code>serde_json::json!</code> (<code>none</code> → null, #166 / #169); <code>extern rust</code> accepts <code>json</code> / <code>serde_json::Value</code> (#168); annotated <code>[T; N]</code> fixed arrays (#167). <code>map</code> / records outside a JSON slot stay <code>E0090</code>.</p>
       <p><strong>Shipped in v1.10.0:</strong> <code>xs[lo..hi]</code> copies a <code>vec&lt;T&gt;</code> subrange to a new vec (not a borrowed view, #159); <code>extern rust</code> <code>vec&lt;str&gt;</code> (<code>&amp;[String]</code>) / <code>vec&lt;bool&gt;</code> (#158); nested <code>vec&lt;vec&lt;T&gt;&gt;</code> parses; trait impl set <code>E0092</code>, <code>dyn Trait</code> <code>E0091</code> (#59).</p>
       <p><strong>Shipped in v1.9.0:</strong> <code>extern rust</code> accepts <code>vec&lt;float&gt;</code> / <code>vec&lt;int&gt;</code> (call emit <code>.as_slice()</code>, #153); prelude <code>env_var</code> / <code>env_or</code> / <code>cwd</code>, <code>path_*</code>, <code>fs_write</code> / <code>create_dir_all</code> (#151); <code>src/lib.crp</code> emits Cargo <code>[lib]</code> (#152).</p>
@@ -116,7 +117,7 @@
         </ul>
       </div>
     </div>
-    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.11.0 · Not self-hosted</p>
+    <p class="footer-copy">Spec v0.2.0-draft · Public release v1.11.1 · Not self-hosted</p>
   </footer>
   <script src="js/prism-core.min.js"></script>
   <script src="js/prism-clike.min.js"></script>

@@ -1,0 +1,16 @@
+-- examples/prelude_shadow — explicit `use` shadows a prelude name (#173)
+--
+-- `path_is_file` is in `std.path`. Importing the same name from `shim` must
+-- bind the module, not E0038.
+
+use shim { path_is_file }
+
+shadowed_missing() -> bool = path_is_file("no_such_crisp_os_file")
+
+pub main() = {
+    print(shadowed_missing())
+}
+
+test "imported path_is_file shadows prelude" = {
+    assert_eq(shadowed_missing(), true)
+}

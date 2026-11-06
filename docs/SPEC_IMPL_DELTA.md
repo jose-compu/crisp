@@ -51,7 +51,7 @@ This document records known differences between [CrispLang-SPECS-0.2.0.md](spec/
 | Nested tests / stubs | §12, §19 | Tests append to the defining module’s `.rs` ([#143](https://github.com/jose-compu/crisp/issues/143)). Fn stubs are `{module}::{name}` ([#146](https://github.com/jose-compu/crisp/issues/146)). Harness `len` is `.len()` ([#144](https://github.com/jose-compu/crisp/issues/144)). |
 | Math prelude | §15 | `exp` / `sin` / `cos` / `tanh` / `sqrt` → `f64::{…}` ([#115](https://github.com/jose-compu/crisp/issues/115)). |
 | `crisp run` cwd | §18.3 | Cwd is the Crisp crate root; cargo uses `--manifest-path target/rust/Cargo.toml`. `CRISP_CRATE_ROOT` is set (#106) |
-| OS prelude | §15.2 / §16.2 | `env_var` / `env_or` / `cwd`, `path_join` / `path_parent` / `path_is_file` / `path_is_dir`, `fs_write` / `create_dir_all` / `read_to_string` — `examples/os_scalars` ([#151](https://github.com/jose-compu/crisp/issues/151)). No git / process spawn. |
+| OS prelude | §15.2 / §16.2 | `env_var` / `env_or` / `cwd`, `path_join` / `path_parent` / `path_is_file` / `path_is_dir`, `fs_write` / `create_dir_all` / `read_to_string` — `examples/os_scalars` ([#151](https://github.com/jose-compu/crisp/issues/151)). Explicit `use` of those names shadows the prelude ([#173](https://github.com/jose-compu/crisp/issues/173), `examples/prelude_shadow`). No git / process spawn. |
 | Crate `[lib]` | §18.1 | `src/lib.crp` emits `[lib]` `src/lib.rs`; lib-only crates have no dummy `main`. `crisp run` errors; `check` / `test` work (`examples/lib_root`, [#152](https://github.com/jose-compu/crisp/issues/152)). |
 
 ## Tooling: `reveal` (§16) and LSP (§16.3)

@@ -137,8 +137,11 @@ impl Resolver {
         }
 
         for sym in collect_module_symbols(current, &file.items) {
+            // A local item shadows a prelude name of the same spelling (#173).
             scope.insert(sym.key.name.clone(), sym.key.clone());
-            if !bindings.iter().any(|b| b.local_name == sym.key.name) {
+            if let Some(b) = bindings.iter_mut().find(|b| b.local_name == sym.key.name) {
+                b.symbol = sym.key.clone();
+            } else {
                 bindings.push(ResolvedBinding {
                     local_name: sym.key.name.clone(),
                     symbol: sym.key.clone(),
@@ -318,14 +321,29 @@ impl Resolver {
         bindings: &mut Vec<ResolvedBinding>,
         span: Span,
     ) -> Result<(), ResolveError> {
-        if let Some(prev) = scope.get(local) {
-            if prev != &key {
-                return Err(ResolveError::AmbiguousImport {
-                    name: local.to_string(),
-                    span,
-                });
+        if let Some(prev) = scope.get(local).cloned() {
+            if prev == key {
+                return Ok(());
             }
-            return Ok(());
+            // Explicit `use` (or a later binding) shadows the prelude, like Rust (#173).
+            if self.is_prelude_key(&prev) {
+                scope.insert(local.to_string(), key.clone());
+                if let Some(b) = bindings.iter_mut().find(|b| b.local_name == local) {
+                    b.symbol = key;
+                } else {
+                    bindings.push(ResolvedBinding {
+                        local_name: local.to_string(),
+                        symbol: key,
+                    });
+                }
+                return Ok(());
+            }
+            return Err(ResolveError::AmbiguousImport {
+                name: local.to_string(),
+                first: prev.module,
+                second: key.module,
+                span,
+            });
         }
         scope.insert(local.to_string(), key.clone());
         bindings.push(ResolvedBinding {
@@ -333,6 +351,10 @@ impl Resolver {
             symbol: key,
         });
         Ok(())
+    }
+
+    fn is_prelude_key(&self, key: &SymbolKey) -> bool {
+        self.global.get(key).is_some_and(|s| s.from_prelude)
     }
 
     fn resolve_use_path(&self, current: &str, path: &[Ident]) -> Result<String, ResolveError> {

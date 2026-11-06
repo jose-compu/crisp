@@ -228,3 +228,46 @@ extern rust kernels {
     let msg = err.to_string();
     assert!(msg.contains("E0090"), "{msg}");
 }
+
+#[test]
+fn extern_rust_path_is_file_shadows_prelude() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_extern_fixture(
+        tmp.path(),
+        r#"
+use kernels { path_is_file }
+
+pub main() = {
+    print(path_is_file("."))
+}
+"#,
+        r#"
+extern rust kernels {
+    path_is_file(path: str) -> bool
+}
+"#,
+    );
+    let typed = TypeChecker::check_crate(tmp.path()).expect("prelude shadow #173");
+    eprintln!(
+        "rust_imports: {:?}",
+        typed
+            .rust_imports
+            .iter()
+            .map(|i| format!("{}::{}", i.crate_name, i.item))
+            .collect::<Vec<_>>()
+    );
+    assert!(
+        typed
+            .rust_imports
+            .iter()
+            .any(|i| i.item == "path_is_file" && i.crate_name == "kernels")
+    );
+    assert!(typed.signatures.contains_key("rust.kernels::path_is_file"));
+}
+
+#[test]
+fn example_prelude_shadow_typechecks() {
+    let root =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/prelude_shadow");
+    TypeChecker::check_crate(&root).expect("prelude_shadow typeck");
+}

@@ -9,6 +9,10 @@ Language edition (`crisp.toml` `edition = "2026"`) tracks the abstract language 
 
 ## [Unreleased]
 
+### Fixed
+
+- Explicit `use shim { path_is_file }` (and other OS prelude names: `path_join`, `path_parent`, `cwd`, `env_var`, …) **shadows** the prelude instead of a span-less **E0038**. A real clash between two `use`s still is **E0038**, now naming both modules and the `use` line ([#173](https://github.com/jose-compu/crisp/issues/173)). See `examples/prelude_shadow`.
+
 ## [1.11.0] — 2026-11-03
 
 ### Added

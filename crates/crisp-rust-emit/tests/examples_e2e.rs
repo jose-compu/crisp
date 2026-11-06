@@ -69,6 +69,7 @@ const EXAMPLES: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "prelude_shadow",
     "path_dep",
     "loops",
     "closures",
@@ -180,6 +181,7 @@ fn examples_with_tests_pass_crpc_test() {
         "lib_root",
         "json_literals",
         "fixed_arrays",
+        "prelude_shadow",
     ] {
         let root = example(name);
         eprintln!("crisp test: {name}");
@@ -241,6 +243,7 @@ fn runnable_examples_build_and_run() {
         "feature_gallery",
         "rust_import",
         "rust_shadow",
+        "prelude_shadow",
         "net_http",
         "path_dep",
         "os_scalars",
@@ -431,6 +434,7 @@ const BUILDABLE: &[&str] = &[
     "feature_gallery",
     "rust_import",
     "rust_shadow",
+    "prelude_shadow",
     "path_dep",
     "loops",
     "closures",

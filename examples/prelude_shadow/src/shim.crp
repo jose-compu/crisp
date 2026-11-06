@@ -1,0 +1,7 @@
+-- Always-true stand-in so a missing path still returns true.
+-- If emit called prelude `path_is_file`, this test would fail.
+
+pub path_is_file(path: str) -> bool = {
+    print(path)
+    true
+}

@@ -45,8 +45,15 @@ pub enum ResolveError {
         module: String,
         span: Span,
     },
-    #[error("[E0038] ambiguous import: `{name}` defined in multiple modules")]
-    AmbiguousImport { name: String, span: Span },
+    #[error(
+        "[E0038] ambiguous import: `{name}` is in `{first}` and `{second}`; drop one `use`, or alias it"
+    )]
+    AmbiguousImport {
+        name: String,
+        first: String,
+        second: String,
+        span: Span,
+    },
     #[error(
         "[E0039] shapes are not yet supported (`{name}`); remove the `shape` definition or bound (tracked: #21)"
     )]
